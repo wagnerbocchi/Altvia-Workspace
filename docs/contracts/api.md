@@ -79,6 +79,39 @@ revoke prior sessions and preserve at least one active platform administrator.
 No-op requests create no repeated audit/outbox effect. Platform administration
 does not confer customer-content access. See the development runbook for commands.
 
+### Phase 1C-b team administration contract
+
+ADR-0009 distinguishes identity team metadata from operational/client content.
+All routes in this slice require current identity.manage; membership alone grants
+none. GET /users returns bounded internal summaries {id,display_name,email,active}
+for selecting an existing account, without password/session/role details.
+
+Team response: {id,name,active,version,created_at,updated_at}. POST /teams accepts
+{name}; PATCH /teams/{id} accepts a nonempty subset of {name,active}. Names are
+trimmed, 1..150 characters; unknown fields are forbidden. Archive preserves
+roster/history. No hard delete. GET detail/PATCH returns ETag: "<version>".
+
+GET /teams/{id}/members lists active roster entries {user_id,display_name,
+account_active}. POST accepts {user_id}, requires an active team/account, returns
+201 {team_id,user_id,team_version}, or 200 when already present without change.
+DELETE /teams/{id}/members/{user_id} marks membership inactive, returns 204 and
+the team's current ETag. An absent/inactive membership is a no-op with a current
+If-Match. Each real change increments the team once and audits/publishes outbox
+atomically. PATCH and roster writes require the team If-Match; no-op retains it.
+
+Critical POSTs require a 1..128-character Idempotency-Key using letters, digits,
+period, underscore, colon or hyphen. The hash includes normalized body and the
+membership If-Match. Matching replay returns the original result with 200 after
+fresh authorization, even if that result's version is now historical. Refetch
+before another edit. Different hash: 409. Failed validation/version checks do
+not consume a new key. Records persist at least seven days; no purge/reuse job.
+
+Lists use limit 1..100 (default 50), fixed ascending UUID order and opaque cursor
+bound to users, teams or that team's member list. Invalid/cross-route cursors
+return 422. No filters/sort parameter in this bounded slice. Writes accept small
+JSON bodies only, bounded before parsing. Authentication failures and Origin/CSRF
+errors follow the common contract; private responses are no-store.
+
 ## Domain resource schemas
 
 | DTO | Required create fields | Optional/derived response fields |

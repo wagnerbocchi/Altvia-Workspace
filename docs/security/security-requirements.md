@@ -35,7 +35,8 @@ approved and audited emergency grant. Never implement blanket `is_admin` bypass.
 | --- | --- | --- | --- | --- | --- |
 | Identity/system/mailbox secrets reference | manage | deny | deny | deny | deny |
 | Customer/project/work/ticket content read | explicit content grant | allowed team/client | allowed projects | allowed membership/queue | explicit read scope |
-| Client/team/project management | explicit content role | delegated scope | project/member scope only | deny | deny |
+| Team identity metadata/roster | manage identity only | explicit delegation, later slice | deny | deny | deny |
+| Client/project/operational team content | explicit content role | delegated scope | project/member scope only | deny | deny |
 | Work create/assign/update/transition | explicit content role | permitted scope | permitted project | assigned/member scope, no grant administration | deny |
 | Ticket create/assign/transition/reply | explicit content role | permitted queue/client | only additional queue role | permitted queue/client | deny |
 | Internal notes read/write | separate note permission | scoped note grant | scoped note grant | scoped note grant | deny by default |

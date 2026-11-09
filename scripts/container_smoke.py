@@ -697,6 +697,9 @@ with Session(make_engine(WorkerSettings())) as db:
                 assert shutdown_seconds < 30
             finally:
                 run([*compose, "unpause", "redis"])
+            # Unpause restores sockets before the next healthcheck updates state.
+            # Wait for that real dependency recovery before restarting the worker.
+            run([*compose, "up", "-d", "--no-deps", "--no-build", "--wait", "redis"])
             run([*compose, "start", "worker"])
             for _ in range(120):
                 if batch_count(True) == 27:

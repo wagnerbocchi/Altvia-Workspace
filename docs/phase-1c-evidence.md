@@ -545,3 +545,37 @@ agree. Third-party action Node20/URL deprecation warnings are benign toolchain
 metadata warnings; no container/test gate failed. The earlier reported installed
 high/critical findings no longer reproduce. Residual lower severities and all
 actual VM/production gates remain explicit. No real cluster or account changed.
+
+## Phase1C-g: residual runtime findings
+
+2026-11-09. Corrected the8 MEDIUM/1 LOW/1 UNKNOWN remaining occurrences through
+owning image inputs: signed zlib1.4-r0 for API/PostgreSQL; complete pip/ensurepip
+capability removal from the final API; gosu's pinned corrected moby/sys/user0.5.0
+and x/sys0.44.0 modules. ADR-0013's supplement explicitly narrows the immutable
+runtime capability, preserving developer/builder behavior and all required APIs.
+
+Same-DB scans of all three actual images report zero vulnerabilities at every
+severity, with no ignore or unfixed filter. Local API image SHA256
+f922fdd0dedbc88e535294fed55a36fb06e430c86769ac2511403866e7e66117;
+PostgreSQL1dba65f0d1b47737ef1afcd8dfd181a2d65c7d8a567511ffd17c55334a1ed3de;
+ingress is unchanged. Actual report bytes and image/DB provenance are retained
+through managed Codex Security artifacts/residual-runtime-findings/, manifest
+SHA256 bde881f27a9057bcb6b3029bd2a320bae4ac4af8a8de29ef01324a1723c2c002.
+
+Global/base Python pip and stdlib ensurepip absence probes failed before removal.
+Final non-root/read-only guard passed, including base/venv files, bootstrap wheel,
+entrypoints, required imports and native zlib1.4 compression roundtrip. Independent
+installer rejection on the actual untrimmed builder passed. Existing SQLite
+negative control remains separate. No Python production package version changed.
+
+Gosu's upstream moby/user0.4.1 tests initially failed because their read-cap fixture
+used invalid NUL padding and an overlong line. Upstream0.5.0 corrects that fixture;
+its full tests passed without skipping/patching tests. Recorded module hashes
+verify before readonly build with Go1.27.3/CGO0/GOAMD64=v1. Actual named/numeric
+UID/GID, explicit group, HOME and unknown-user denial controls passed. The Windows
+x/sys finding was removed from inventory without inventing Linux exploitability.
+
+Ruff/format, mypy, image-gate tests and diff checks passed. Fresh independent
+candidate review and full hosted API/browser/Compose/recovery/security gates are
+recorded after publication. No schema, volume-family or real account change.
+Q-01/actual target-VM homologation and production readiness remain open.

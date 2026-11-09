@@ -11,6 +11,7 @@ ENV PATH="/opt/altvia/.venv/bin:$PATH" PYTHONPATH=/opt/altvia/apps/api \
     PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 WORKDIR /opt/altvia
 RUN addgroup -g 10001 altvia && adduser -D -H -u 10001 -G altvia altvia
+RUN apk add --no-cache --upgrade zlib=1.4-r0
 # PostgreSQL is the only supported API database. Drop unused SQLite capability
 # from the runtime, retaining the general-purpose builder and other stdlib modules.
 RUN python -c "import pathlib,shutil,sysconfig; p=pathlib.Path(sysconfig.get_path('stdlib')); shutil.rmtree(p/'sqlite3'); [f.unlink() for f in (p/'lib-dynload').glob('_sqlite3*.so')]" \
@@ -18,6 +19,10 @@ RUN python -c "import pathlib,shutil,sysconfig; p=pathlib.Path(sysconfig.get_pat
     && test -n "$rundeps" \
     && apk add --no-network --virtual .altvia-python-rundeps $rundeps \
     && apk del --no-network .python-rundeps sqlite-libs
+# Dependencies are installed by uv in the builder. The immutable service has no
+# package installer or offline bootstrap payload in either base Python or venv.
+RUN /usr/local/bin/python -m pip uninstall --yes pip \
+    && /usr/local/bin/python -c "import pathlib,shutil,sysconfig; shutil.rmtree(pathlib.Path(sysconfig.get_path('stdlib'))/'ensurepip')"
 COPY --from=dependencies /opt/altvia/.venv /opt/altvia/.venv
 COPY apps/api/altvia apps/api/altvia
 COPY apps/api/migrations apps/api/migrations

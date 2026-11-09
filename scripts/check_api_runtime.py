@@ -7,7 +7,23 @@ import importlib.util
 import json
 import subprocess
 import sys
+import sysconfig
 from pathlib import Path
+
+
+def check_package_installers() -> None:
+    for module in ("pip", "ensurepip"):
+        if importlib.util.find_spec(module) is not None:
+            raise RuntimeError("Unsupported package installer capability is installed")
+    stdlib = Path(sysconfig.get_path("stdlib"))
+    for directory in {stdlib / "site-packages", Path(sysconfig.get_path("purelib"))}:
+        if (directory / "pip").exists() or any(directory.glob("pip-*.dist-info")):
+            raise RuntimeError("Unsupported global or virtual package installer remains")
+    if any(stdlib.rglob("pip*.whl")):
+        raise RuntimeError("Unsupported package installer bootstrap wheel remains")
+    for name in ("pip", "pip3", f"pip{sys.version_info.major}.{sys.version_info.minor}"):
+        if (Path(sys.base_prefix) / "bin" / name).exists():
+            raise RuntimeError("Unsupported package installer entrypoint remains")
 
 
 def check_runtime() -> dict[str, str]:
@@ -33,6 +49,7 @@ def check_runtime() -> dict[str, str]:
     for directory in {Path(sys.base_prefix) / "lib", Path(sys.prefix) / "lib", Path("/usr/lib")}:
         if any(directory.rglob("*sqlite*.so*")):
             raise RuntimeError("SQLite native object remains in the runtime")
+    check_package_installers()
     # Keep the API's required native/stdlib and CLI/migration paths usable.
     for module in (
         "ssl",
@@ -51,7 +68,18 @@ def check_runtime() -> dict[str, str]:
         "altvia.provision",
     ):
         importlib.import_module(module)
-    return {"python": sys.version.split()[0], "sqlite": "absent", "api_imports": "passed"}
+    import zlib
+
+    data = b"Altvia native compression control" * 1024
+    if zlib.decompress(zlib.compress(data)) != data:
+        raise RuntimeError("Required native zlib roundtrip failed")
+    return {
+        "python": sys.version.split()[0],
+        "sqlite": "absent",
+        "package_installers": "absent",
+        "zlib": zlib.ZLIB_RUNTIME_VERSION,
+        "api_imports": "passed",
+    }
 
 
 if __name__ == "__main__":

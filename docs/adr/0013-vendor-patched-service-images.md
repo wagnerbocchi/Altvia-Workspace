@@ -21,9 +21,9 @@ must verify before compilation. Keep the PostgreSQL entrypoint and PGDATA path.
 No private libc, zlib or CPython fork, forced dependency removal or CVE suppression.
 
 The API keeps its locked production Python dependencies, installed from wheels
-only. Remove only the optional SQLite modules and sqlite-libs. Replace upstream's
+only. Remove the optional SQLite modules and sqlite-libs. Replace upstream's
 virtual Python runtime dependency set with the identical SO requirements except
-SQLite, then use apk's ordinary dependency resolution. All other Python modules
+SQLite, then use apk's ordinary dependency resolution. Required Python modules
 and libraries remain supported. Check package, filesystem and loader absence and
 real API/CLI/migration/native imports during the build and running-stack proof.
 
@@ -76,3 +76,23 @@ Primary sources: official docker-library/python 3.12/alpine3.24 Dockerfile;
 docker-library/postgres 17/alpine3.24 Dockerfile; tianon/gosu 1.19 source/go.sum;
 Alpine v3.24 signed package repositories and aports secfixes; Alpine abuild
 default.conf and gcc APKBUILD. Immutable inputs are recorded in the Dockerfiles.
+
+## Residual-finding capability supplement
+
+The final immutable API image also excludes pip and ensurepip, including global
+entrypoints, base site-packages metadata and the bundled bootstrap wheel. The
+application uses uv-built locked wheels; no supported runtime flow installs
+packages or bootstraps a second environment. Developer Python and the dependency
+builder retain these capabilities. New dependencies require a reviewed rebuild.
+The guard inspects both active and base interpreter paths; checking only venv
+imports is insufficient. Actual builder rejection and final-image success are
+required for installer and SQLite controls independently.
+
+Alpine zlib1.4-r0 preserves the required libz.so.1 ABI in API/PostgreSQL; native
+compression and database recovery must pass. The gosu source stays1.19, while
+infra/gosu.go.mod/go.sum explicitly pin corrected moby/sys/user0.5.0 and x/sys0.44.0.
+Both modules verify before readonly build; the upstream user-package tests run.
+Its named/numeric user/group, HOME and error paths are checked in the image build.
+No change to PostgreSQL's UID, PGDATA family, grants, capabilities or entrypoint.
+The x/sys advisory names a Windows-only API; module inventory correction is not a
+claim that a Linux application call reached that Windows sink.

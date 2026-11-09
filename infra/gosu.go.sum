@@ -1,0 +1,4 @@
+github.com/moby/sys/user v0.5.0 h1:5+S4lyoavGyX1DGs68NW8xpx48T9+a7ogSUc0KjZg8Y=
+github.com/moby/sys/user v0.5.0/go.mod h1:4mQzP5aTmaLjDLp/dc870oNkik6E9vjRtWYwI05gvow=
+golang.org/x/sys v0.44.0 h1:ildZl3J4uzeKP07r2F++Op7E9B29JRUy+a27EibtBTQ=
+golang.org/x/sys v0.44.0/go.mod h1:4GL1E5IUh+htKOUEOaiffhrAeqysfVGipDYzABqnCmw=

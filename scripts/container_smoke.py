@@ -207,6 +207,36 @@ def main():
             or "Unsupported SQLite Python capability is installed" not in rejection.stderr
         ):
             raise RuntimeError("Untrimmed builder capability rejection proof failed")
+        installer_probe = (
+            "namespace={'__name__':'installer_probe'}; exec("
+            + repr((ROOT / "scripts/check_api_runtime.py").read_text(encoding="utf-8"))
+            + ",namespace); namespace['check_package_installers']()"
+        )
+        installer_rejection = subprocess.run(
+            [
+                args.engine,
+                "run",
+                "--rm",
+                "-i",
+                "--read-only",
+                "--network=none",
+                "--cap-drop=ALL",
+                builder_probe,
+                "python",
+                "-",
+            ],
+            input=installer_probe,
+            text=True,
+            capture_output=True,
+            cwd=ROOT,
+            env=env,
+            timeout=60,
+        )
+        if (
+            installer_rejection.returncode != 1
+            or "package installer" not in installer_rejection.stderr
+        ):
+            raise RuntimeError("Untrimmed builder installer rejection proof failed")
         started = True
         run([*compose, "up", "-d", "--no-build", "--wait", "--wait-timeout", "150"])
         for service in ["api", "ingress"]:
@@ -222,6 +252,8 @@ def main():
         )
         assert runtime_inventory["sqlite"] == "absent"
         assert runtime_inventory["api_imports"] == "passed"
+        assert runtime_inventory["package_installers"] == "absent"
+        assert runtime_inventory["zlib"] == "1.4"
         # Cross-libc recovery uses logical SQL and a fresh database, never an old
         # data directory. The disconnected legacy source has synthetic data only.
         legacy = project + "-legacy"

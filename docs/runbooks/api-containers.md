@@ -196,6 +196,13 @@ migration, TLS and compression imports. Do not reinstall SQLite, override its
 library search path or bypass the check to accommodate an unsupported script.
 A real future requirement needs a reviewed corrected library/capability contract.
 
+The final service also excludes pip and ensurepip, including base Python's hidden
+global installer and bundled wheel. Dependencies are supplied by a reviewed image
+rebuild with uv and the committed lockfile. Do not install packages into a running
+service or use it to bootstrap another Python environment. The builder/developer
+environment remains general-purpose. The diagnostic additionally reports
+package_installers=absent and zlib=1.4 and exercises native compression.
+
 Measured same-DB image scans removed all 19 SQLite findings, including the
 applicable installed critical, while keeping all 27 Python dependency entries
 unchanged. Remaining image findings and exact hashes are in

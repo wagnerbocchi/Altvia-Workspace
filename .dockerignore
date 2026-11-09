@@ -24,3 +24,5 @@ scripts/**
 infra/**
 !infra/start-postgres.sh
 !infra/postgres-runtime-marker.sh
+!infra/gosu.go.mod
+!infra/gosu.go.sum

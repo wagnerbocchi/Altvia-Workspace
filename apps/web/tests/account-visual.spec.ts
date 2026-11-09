@@ -13,6 +13,8 @@ test("@account-captures directory confirmation and uncertain-result states", asy
   expect(login.status()).toBe(201);
   const me = (await login.json()).user;
   await page.goto("/admin/users");
+  await expect(page.getByLabel("Nome da nova conta")).toBeVisible();
+  await expect(page.locator(".account-form-grid .field").first()).toHaveCSS("margin-bottom", "0px");
   for (const theme of ["light", "dark"]) {
     await page.evaluate(value => localStorage.setItem("theme", value), theme); await page.reload();
     await expect(page.getByRole("list", { name: "Contas cadastradas" })).toBeVisible();

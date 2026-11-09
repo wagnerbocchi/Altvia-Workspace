@@ -87,6 +87,7 @@ dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 .session-actions { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
 .account-admin-link { margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
 .account-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 24px; }
+.account-form-grid .field { margin-bottom: 0; }
 .account-picker.role-picker { margin-top: 28px; }
 .workspace-main { display: block; padding: 40px 24px 64px; }
 .admin-workspace { width: 100%; max-width: 1120px; margin-inline: auto; }

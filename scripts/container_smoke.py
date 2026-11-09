@@ -663,19 +663,28 @@ import json,sys
 from uuid import UUID
 from sqlalchemy import select,func
 from sqlalchemy.orm import Session
-from altvia.config import Settings
+from altvia.config import WorkerSettings
 from altvia.database import make_engine
 from altvia.models import OutboxEvent,ActivityEvent
 data=json.load(sys.stdin)
-with Session(make_engine(Settings())) as db:
+with Session(make_engine(WorkerSettings())) as db:
     table=ActivityEvent if data['projected'] else OutboxEvent
     resource=table.resource_id if data['projected'] else table.aggregate_id
     query=select(func.count()).select_from(table).where(resource==UUID(data['id']))
     if not data['projected']: query=query.where(table.status=='processing')
     print(db.scalar(query))
 """
+
+                def batch_count(projected):
+                    return int(
+                        run(
+                            [*compose, "exec", "-T", "worker", "python", "-c", count_batch],
+                            data=json.dumps({"id": batch_id, "projected": projected}),
+                        )
+                    )
+
                 for _ in range(40):
-                    if int(exec_api(count_batch, {"id": batch_id, "projected": False})) >= 24:
+                    if batch_count(False) >= 24:
                         break
                     time.sleep(0.25)
                 else:
@@ -690,7 +699,7 @@ with Session(make_engine(Settings())) as db:
                 run([*compose, "unpause", "redis"])
             run([*compose, "start", "worker"])
             for _ in range(120):
-                if int(exec_api(count_batch, {"id": batch_id, "projected": True})) == 27:
+                if batch_count(True) == 27:
                     break
                 time.sleep(0.5)
             else:

@@ -63,6 +63,43 @@ def provision_runtime(engine: Engine, runtime_url: str) -> None:
             )
             if any(role[1:]) or inherited or owns:
                 raise ValueError("Existing runtime role is elevated; explicit review required")
+            database_or_schema_ddl = connection.scalar(
+                text(
+                    "SELECT EXISTS(SELECT 1 FROM pg_database d, LATERAL aclexplode(d.datacl) a "
+                    "WHERE d.datname=current_database() AND a.grantee=:oid "
+                    "AND a.privilege_type IN ('CREATE','TEMPORARY')) OR "
+                    "EXISTS(SELECT 1 FROM pg_namespace n, LATERAL aclexplode(n.nspacl) a "
+                    "WHERE a.grantee=:oid AND a.privilege_type='CREATE')"
+                ),
+                {"oid": role.oid},
+            )
+            if database_or_schema_ddl:
+                raise ValueError(
+                    "Existing runtime role has DDL privileges; explicit review required"
+                )
+        # Table REVOKE does not revoke column grants. Check both ACL sources,
+        # including PUBLIC, before rotating a credential or changing any grant.
+        unexpected_acl = connection.scalar(
+            text(
+                "WITH grants AS ("
+                "SELECT c.relname,a.grantee,a.privilege_type,a.is_grantable "
+                "FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace, "
+                "LATERAL aclexplode(c.relacl) a WHERE n.nspname='public' UNION ALL "
+                "SELECT c.relname,a.grantee,a.privilege_type,a.is_grantable FROM pg_attribute col "
+                "JOIN pg_class c ON c.oid=col.attrelid "
+                "JOIN pg_namespace n ON n.oid=c.relnamespace, "
+                "LATERAL aclexplode(col.attacl) a WHERE n.nspname='public') "
+                "SELECT EXISTS(SELECT 1 FROM grants WHERE grantee=0 OR "
+                "(grantee=:oid AND (is_grantable OR NOT ((relname=ANY(:crud) AND "
+                "privilege_type IN ('SELECT','INSERT','UPDATE','DELETE')) OR "
+                "(relname IN ('audit_logs','outbox_events') AND privilege_type='INSERT')))))"
+            ),
+            {"oid": role.oid if role is not None else -1, "crud": list(CRUD_TABLES)},
+        )
+        if unexpected_acl:
+            raise ValueError(
+                "Unexpected runtime/PUBLIC table or column ACL; explicit review required"
+            )
         raw = connection.connection.driver_connection
         assert raw is not None and owner.database is not None
         # PostgreSQL role DDL does not accept bind parameters for PASSWORD.

@@ -30,7 +30,17 @@ def main():
     with socket.socket() as probe:
         probe.bind(("127.0.0.1", 0))
         port = probe.getsockname()[1]
-    origin = f"https://127.0.0.1:{port}"
+    origin = f"https://workspace.altvia.test:{port}"
+    original_dns = socket.getaddrinfo
+
+    def test_dns(host, *args, **kwargs):
+        # Resolve only this reserved test name locally; preserve TLS/SNI validation
+        # against a domain-only certificate with no loopback-IP SAN.
+        if host in ("workspace.altvia.test", b"workspace.altvia.test"):
+            host = "127.0.0.1"
+        return original_dns(host, *args, **kwargs)
+
+    socket.getaddrinfo = test_dns
     owner_password, runtime_password, password = [secrets.token_urlsafe(32) for _ in range(3)]
     files = {
         "postgres_password": owner_password,
@@ -101,6 +111,9 @@ def main():
             env["ALTVIA_API_IMAGE"],
             ".",
         ]
+        if args.engine == "podman":
+            # OCI output discards Docker HEALTHCHECK metadata in Podman builds.
+            build.insert(2, "--format=docker")
         run(build, timeout=600)
         started = True
         run([*compose, "up", "-d", "--no-build", "--wait", "--wait-timeout", "150"])
@@ -218,6 +231,7 @@ with Session(make_engine(Settings())) as db,db.begin():
         assert all(value not in logs for value in [password, owner_password, runtime_password])
         print("Container TLS/ACL/persistence/readiness/non-root/secret/SIGTERM proof passed.")
     finally:
+        socket.getaddrinfo = original_dns
         canary.unlink(missing_ok=True)
         if started:
             run([*compose, "down"], timeout=90)

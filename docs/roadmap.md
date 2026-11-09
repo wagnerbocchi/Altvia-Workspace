@@ -55,6 +55,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-11 | Infrastructure/security: storage/scanner/proxy selection and CPU-approved builds | Local private storage adapter, quarantine fail-closed | Production attachment/proxy acceptance |
 | Q-12 | Infrastructure admin: hypervisor ownership and CPU-model change possibility | x86-64-v1 remains mandatory | None: CPU upgrade is not assumed |
 | Q-13 | Product owner: approved logo/brand and visual preferences | Provisional restrained Portuguese interface, system fonts, no invented assets or claims; review after return | Final visual approval only |
+| Q-14 | Engineering/security: corrected baseline-compatible base/SQLite artifact and disposition of the40 high image findings | Development candidate only; preserve scan/vendor evidence and no risk acceptance; see docs/security/api-container-scan.md | Production image security gate |
 
 ## Backlog after core
 

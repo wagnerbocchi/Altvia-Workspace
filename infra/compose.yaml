@@ -68,6 +68,8 @@ services:
     stop_grace_period: 30s
   ingress:
     image: docker.io/nginxinc/nginx-unprivileged@sha256:10bf30f80ce9af183b2db50a91ea59cea5eb5e4106820656bac8cd369ed14904
+    environment:
+      ALTVIA_PUBLIC_ORIGIN: ${ALTVIA_PUBLIC_ORIGIN:?Set exact HTTPS origin}
     entrypoint: [/bin/sh, /etc/nginx/start-ingress.sh]
     volumes:
       - ./nginx.conf:/etc/nginx/altvia.conf.template:ro
@@ -86,7 +88,7 @@ services:
     pids_limit: 64
     restart: unless-stopped
     healthcheck:
-      test: [CMD, curl, --fail, --silent, --max-time, '3', --cacert, /run/secrets/tls_cert, 'https://127.0.0.1:8443/api/v1/health/ready']
+      test: [CMD-SHELL, 'curl --fail --silent --max-time 3 --cacert /run/secrets/tls_cert --connect-to "::127.0.0.1:8443" "$$ALTVIA_PUBLIC_ORIGIN/api/v1/health/ready"']
       interval: 10s
       timeout: 5s
       retries: 10

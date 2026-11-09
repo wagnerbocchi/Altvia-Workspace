@@ -130,6 +130,14 @@ persistent test volumes on the guest:
 | Load and recovery measured | not executed |
 | No prohibited dependency or native ISA | architecture prohibits; artifact proof pending |
 
+Phase1C-d records actual bookworm amd64 API/PostgreSQL/ingress candidates in
+docs/phase-1c-evidence.md. Non-root/read-only imports, Argon2id and a domain-name
+TLS regression ran locally. Full Compose resource proof uses hosted Docker/Linux
+because the existing local Podman VM lacks cgroup controllers; no resource limit
+was removed. Trivy findings/dispositions are in docs/security/api-container-scan.md:
+production image-security acceptance remains blocked. These observations do not
+change any actual guest gate above or approve a different ISA baseline.
+
 Phase 1 can develop and test locally while access is missing. Its VM gate
 remains open. No production compatibility, performance or availability claim
 is permitted until these checks produce real evidence.

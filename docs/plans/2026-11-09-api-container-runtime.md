@@ -39,11 +39,11 @@ Produces: native fixed file-secret discovery and provision_runtime(engine, runti
 with fixed altvia_app login, same-target validation, elevated-role rejection,
 explicit CRUD table privileges, audit/outbox INSERT only and no DDL grants.
 
-- [ ] Write tests first: runtime credentials load from mounted source without
+- [x] Write tests first: runtime credentials load from mounted source without
   disclosure; invalid/missing files fail closed; privilege matrix and duplicate
   provisioning; reject mismatched target and elevated/inherited runtime roles.
-- [ ] Observe RED before implementation; implement narrow settings/provision logic.
-- [ ] Run real DB permission/API proof and full API suite, lint/types/build; commit.
+- [x] Observe RED before implementation; implement narrow settings/provision logic.
+- [x] Run real DB permission/API proof and full API suite, lint/types/build; commit.
 
 ## Task 2: Container image, HTTPS stack and black-box proof
 
@@ -53,8 +53,8 @@ Consumes: Task1 secret convention/provision function; existing API/CLI/migration
 Produces: runnable non-root API image, one-off migration job, private DB/API and
 TLS ingress, guarded smoke with persistence/negative ACL/credential/privilege proof.
 
-- [ ] Define black-box checks before stack code; observe absent artifact failure.
-- [ ] Implement digest-pinned multi-stage image and Compose with file secrets,
+- [x] Define black-box checks before stack code; observe absent artifact failure.
+- [x] Implement digest-pinned multi-stage image and Compose with file secrets,
   separate roles, health, bounded resources, volumes and no API/DB host ports.
 - [ ] Build/run actual images; prove TLS login/team ACL/CSRF, DB permission matrix,
   migration rerun, container recreation and session/data survival, readiness503,

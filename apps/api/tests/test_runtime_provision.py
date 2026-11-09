@@ -30,6 +30,8 @@ def test_runtime_role_can_operate_api_but_cannot_migrate_or_rewrite_history(
             assert connection.scalar(text("SELECT current_user")) == "altvia_app"
         for statement in [
             "CREATE TABLE forbidden_runtime_ddl(id int)",
+            "CREATE SCHEMA forbidden_runtime_schema",
+            "CREATE TEMP TABLE forbidden_runtime_temp(id int)",
             "SELECT * FROM audit_logs",
             "UPDATE audit_logs SET action='tampered'",
             "DELETE FROM audit_logs",
@@ -90,6 +92,60 @@ def test_provision_failure_does_not_echo_secrets(monkeypatch, capsys):
     assert provision.main() == 1
     captured = capsys.readouterr()
     assert secret not in captured.out + captured.err
+
+
+@pytest.mark.parametrize(
+    "grant,revoke",
+    [
+        (
+            "GRANT SELECT ON users TO altvia_app WITH GRANT OPTION",
+            "REVOKE GRANT OPTION FOR SELECT ON users FROM altvia_app",
+        ),
+        (
+            "GRANT CREATE ON DATABASE {} TO altvia_app",
+            "REVOKE CREATE ON DATABASE {} FROM altvia_app",
+        ),
+        ("GRANT TEMP ON DATABASE {} TO altvia_app", "REVOKE TEMP ON DATABASE {} FROM altvia_app"),
+        (
+            "GRANT CREATE ON SCHEMA public TO altvia_app",
+            "REVOKE CREATE ON SCHEMA public FROM altvia_app",
+        ),
+        (
+            "GRANT UPDATE(action) ON audit_logs TO altvia_app",
+            "REVOKE UPDATE(action) ON audit_logs FROM altvia_app",
+        ),
+        ("GRANT SELECT ON audit_logs TO PUBLIC", "REVOKE SELECT ON audit_logs FROM PUBLIC"),
+        (
+            "GRANT UPDATE(action) ON audit_logs TO PUBLIC",
+            "REVOKE UPDATE(action) ON audit_logs FROM PUBLIC",
+        ),
+    ],
+)
+def test_preexisting_database_schema_or_history_acl_is_refused_atomically(
+    db_engine, seeded_user, grant, revoke
+):
+    url = runtime_url(db_engine)
+    provision.provision_runtime(db_engine, url.render_as_string(hide_password=False))
+    with db_engine.begin() as connection:
+        connection.connection.driver_connection.execute(
+            sql.SQL(grant).format(sql.Identifier(db_engine.url.database))
+        )
+    try:
+        changed = url.set(password=secrets.token_urlsafe(32))
+        with pytest.raises(ValueError):
+            provision.provision_runtime(db_engine, changed.render_as_string(hide_password=False))
+        # Rejection must precede password rotation or partial privilege mutation.
+        engine = create_engine(url, hide_parameters=True)
+        try:
+            with engine.connect() as connection:
+                assert connection.scalar(text("SELECT current_user")) == "altvia_app"
+        finally:
+            engine.dispose()
+    finally:
+        with db_engine.begin() as connection:
+            connection.connection.driver_connection.execute(
+                sql.SQL(revoke).format(sql.Identifier(db_engine.url.database))
+            )
 
 
 @pytest.mark.parametrize(

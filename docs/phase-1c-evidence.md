@@ -287,6 +287,41 @@ configuration. Local HTTPS/recreation acceptance is therefore not claimed.
 The new hosted Linux Docker Compose gate must supply that proof before this
 runtime slice is accepted. Review, scan and hosted results follow when observed.
 
+### Review corrections and final local checks
+
+Fresh read-only review of f412fd5..ee70bea identified three Important defects:
+residual column/PUBLIC ACLs, existing direct database CREATE/TEMP and TLS health
+verification against loopback instead of the configured certificate name. Six
+real DB regressions failed before the ACL fix; an additional GRANT OPTION case
+also failed before grantability checks. Provisioning now refuses these states
+before password or privilege changes. Focused18 passed (24.83s); final full suite
+**234 passed** (249.89s), including persistent schema and temporary DDL denial.
+
+An isolated actual nginx/container TLS regression used a domain-only certificate:
+original IP health command failed with curl60, hostname-aware local --connect-to
+passed with exit0 and no TLS bypass. Read-only startup also reproduced missing
+fastcgi temporary-directory failure; all HTTP module temporary paths now use/tmp.
+The black-box fixture now uses only the reserved workspace.altvia.test DNS SAN,
+with host resolution scoped to the test process. This is TLS regression evidence,
+not full API/Compose acceptance or production DNS configuration.
+
+Podman's default OCI build discarded HEALTHCHECK metadata (observed null).
+Explicit --format=docker preserved the actual healthcheck; final local imageID
+sha256:e38f8a86d098c3c81155f12c0bd4aa6431e67053b551d786d9745cc8e6dad2b5.
+The smoke helper now selects that format for Podman. Actual Argon2id hash/verify
+passed inside this non-root/read-only/cap-drop image. Compose config validation,
+API/scripts Ruff/format, strict mypy, package build, shell syntax/ShellCheck and
+JS syntax passed. No second reviewer was dispatched; regression/full-suite proof
+verifies the single final review's correction pass. No Minor finding was deferred.
+
+Trivy successfully scanned the original candidate's Docker archive:2 critical,
+40 high,122 medium,109 low package occurrences. Vendor evidence shows the flagged
+MiniZip code is absent from the installed zlib binary. SQLite remains a vulnerable
+installed package without a current API SQL path; its release disposition and all
+high findings remain open, without risk acceptance. Exact artifact, raw-report
+hash, vendor sources and actions are in docs/security/api-container-scan.md and
+Q-14. Functional CI cannot waive this production image-security gate.
+
 Candidate amd64 platform artifacts, resolved2026-11-09:
 
 | Component | Source/version observed | Immutable manifest |

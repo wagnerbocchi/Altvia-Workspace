@@ -14,6 +14,9 @@ explicit table privilege list. The API receives only that runtime credential.
 Audit/outbox are insert-only for the API. Public schema creation is revoked.
 Do not grant ownership, DDL, role management, audit reads or future table privileges.
 Existing elevated runtime roles are refused instead of silently normalized.
+Refusal includes direct database/schema DDL, unexpected table/column/PUBLIC ACLs
+and grant options, before password rotation or partial grants. A table REVOKE
+does not remove column grants and is not used as the sole elevation check.
 
 Compose includes postgres, migrate, api and an unprivileged nginx HTTPS ingress.
 Only ingress publishes a loopback-bound HTTPS port by default; API/Postgres have
@@ -26,6 +29,9 @@ filesystems, dropped capabilities and no-new-privileges are enforced.
 
 The proxy forwards only API paths, preserves Host and never enables arbitrary
 forwarded-IP trust. TLS 1.2/1.3; no access logs containing URLs, cookies or bodies.
+Its healthcheck connects locally while validating the configured origin's TLS
+hostname, including certificates without a loopback IP SAN. All nginx temporary
+directories live on /tmp so a read-only root filesystem can start successfully.
 No browser UI change or new auth capability. Web ingress, worker/Redis and storage
 remain later increments; do not add idle services or acknowledge events without
 a real consumer. Outbox business/event contracts remain ADR-0004.

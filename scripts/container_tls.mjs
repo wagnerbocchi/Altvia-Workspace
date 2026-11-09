@@ -8,9 +8,9 @@ const selfsigned = require("selfsigned");
 if (process.env.ALTVIA_ALLOW_CONTAINER_TEST !== "1") throw Error("Explicit test opt-in required");
 const directory = process.argv[2];
 if (!directory) throw Error("Test secret directory required");
-const certificate = await selfsigned.generate([{ name: "commonName", value: "localhost" }], {
+const certificate = await selfsigned.generate([{ name: "commonName", value: "workspace.altvia.test" }], {
   keySize: 2048, algorithm: "sha256", extensions: [{ name: "subjectAltName", altNames: [
-    { type: 7, ip: "127.0.0.1" }, { type: 2, value: "localhost" },
+    { type: 2, value: "workspace.altvia.test" },
   ] }],
 });
 await writeFile(resolve(directory, "tls_cert"), certificate.cert, { mode: 0o444 });

@@ -69,6 +69,10 @@ creates users or migrates schema in the API process.
 
 The cluster must be dedicated to this application. Existing altvia_app ownership,
 role memberships, superuser/createdb/createrole/replication/bypassrls are refused.
+Unexpected database/schema DDL rights or table/column/PUBLIC grants are also
+refused before password or privilege changes, including GRANT OPTION. Table REVOKE
+alone is insufficient to remove column ACLs. Operator review is required for an elevated pre-existing
+state; the provisioner does not silently adopt it.
 Provisioning serializes, resets this role's direct public-schema table grants and
 allows CRUD only on the current identity/team tables. Audit/outbox are INSERT
 only, Alembic metadata is not readable, and persistent DDL/role management are

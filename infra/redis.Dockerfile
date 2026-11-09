@@ -8,7 +8,8 @@ RUN wget -O /tmp/redis.tar.gz https://codeload.github.com/redis/redis/tar.gz/ref
     && make -C src -j2 MALLOC=libc OPTIMIZATION='-O2 -march=x86-64 -mtune=generic' redis-server redis-cli
 
 FROM alpine@sha256:644c1ad8fc45cc581ab1b5ea7ec1bebc9b037fd4801ad697ca124deb3f9c9332
-RUN addgroup -g 10001 altvia && adduser -D -H -u 10001 -G altvia altvia
+RUN apk add --no-cache --upgrade zlib=1.4-r0 \
+    && addgroup -g 10001 altvia && adduser -D -H -u 10001 -G altvia altvia
 COPY --from=build /src/src/redis-server /src/src/redis-cli /usr/local/bin/
 COPY infra/redis-health.sh infra/start-redis.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/redis-health.sh /usr/local/bin/start-redis.sh

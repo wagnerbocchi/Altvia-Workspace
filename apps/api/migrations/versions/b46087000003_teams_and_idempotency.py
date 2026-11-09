@@ -58,7 +58,7 @@ def upgrade() -> None:
         sa.CheckConstraint("key ~ '^[A-Za-z0-9._:-]{1,128}$'", name="ck_idempotency_key"),
         sa.CheckConstraint("status_code BETWEEN 200 AND 299", name="ck_idempotency_status"),
         sa.CheckConstraint(
-            "expires_at >= created_at + INTERVAL '7 days'", name="ck_idempotency_retention"
+            "expires_at >= created_at + INTERVAL '168 hours'", name="ck_idempotency_retention"
         ),
         sa.ForeignKeyConstraint(["actor_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("actor_id", "route", "key"),

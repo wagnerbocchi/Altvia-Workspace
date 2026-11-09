@@ -96,7 +96,7 @@ account_active}. POST accepts {user_id}, requires an active team/account, return
 201 {team_id,user_id,team_version}, or 200 when already present without change.
 DELETE /teams/{id}/members/{user_id} marks membership inactive, returns 204 and
 the team's current ETag. An absent/inactive membership is a no-op with a current
-If-Match. Each real change increments the team once and audits/publishes outbox
+If-Match. Each real change increments the team once and appends audit/outbox
 atomically. PATCH and roster writes require the team If-Match; no-op retains it.
 
 Critical POSTs require a 1..128-character Idempotency-Key using letters, digits,
@@ -108,7 +108,8 @@ not consume a new key. Records persist at least seven days; no purge/reuse job.
 
 Lists use limit 1..100 (default 50), fixed ascending UUID order and opaque cursor
 bound to users, teams or that team's member list. Invalid/cross-route cursors
-return 422. No filters/sort parameter in this bounded slice. Writes accept small
+and unsupported query parameters return 422. No filters/sort parameter in this
+bounded slice. Writes accept small
 JSON bodies only, bounded before parsing. Authentication failures and Origin/CSRF
 errors follow the common contract; private responses are no-store.
 

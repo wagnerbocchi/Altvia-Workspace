@@ -1,8 +1,24 @@
+import hmac
 import re
 from uuid import uuid4
 
+from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
+
+from altvia import identity
+from altvia.models import SessionRecord
+
+
+def require_origin(request: Request, public_origin: str) -> None:
+    if request.headers.get("origin") != public_origin:
+        raise identity.IdentityError(403, "origin_rejected")
+
+
+def require_csrf(request: Request, session: SessionRecord) -> None:
+    provided = request.headers.get("x-csrf-token", "")
+    if not hmac.compare_digest(identity.digest(provided), session.csrf_hash):
+        raise identity.IdentityError(403, "csrf_rejected")
 
 
 def problem(status: int, code: str, correlation_id: str, **extra: object) -> JSONResponse:
@@ -26,7 +42,7 @@ def problem(status: int, code: str, correlation_id: str, **extra: object) -> JSO
 
 
 class RequestBoundary:
-    """Bound credential input before JSON parsing and redact error correlation."""
+    """Bound current small JSON writes before parsing and redact error correlation."""
 
     def __init__(self, app: ASGIApp):
         self.app = app
@@ -49,7 +65,11 @@ class RequestBoundary:
                 ]
             await send(message)
 
-        if scope["path"] == "/api/v1/auth/sessions" and scope["method"] == "POST":
+        small_json = (scope["path"] == "/api/v1/auth/sessions" and scope["method"] == "POST") or (
+            (scope["path"] == "/api/v1/teams" or scope["path"].startswith("/api/v1/teams/"))
+            and scope["method"] in {"POST", "PATCH"}
+        )
+        if small_json:
             body = bytearray()
             while True:
                 chunk = await receive()
@@ -62,7 +82,10 @@ class RequestBoundary:
                 body.extend(data)
                 if not chunk.get("more_body", False):
                     break
-            if headers.get(b"content-type", b"").split(b";")[0].strip() != b"application/json":
+            if (
+                headers.get(b"content-type", b"").split(b";")[0].strip().lower()
+                != b"application/json"
+            ):
                 await problem(415, "unsupported_media_type", correlation)(
                     scope, receive, send_headers
                 )

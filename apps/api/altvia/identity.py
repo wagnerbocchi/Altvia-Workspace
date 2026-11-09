@@ -50,7 +50,11 @@ def record_event(
     now: datetime,
     correlation_id: str,
     version: int,
+    *,
+    aggregate_type: str = "identity",
+    details: dict[str, str] | None = None,
 ) -> None:
+    metadata = details or {}
     db.add(
         AuditLog(
             actor_id=actor_id,
@@ -58,17 +62,18 @@ def record_event(
             resource_id=resource_id,
             occurred_at=now,
             correlation_id=correlation_id,
-            details={"actor_kind": "user" if actor_id else "management_command"},
+            details={**metadata, "actor_kind": "user" if actor_id else "management_command"},
         )
     )
     db.add(
         OutboxEvent(
-            aggregate_type="identity",
+            aggregate_type=aggregate_type,
             aggregate_id=resource_id,
             aggregate_version=version,
             event_type=event,
             schema_version=1,
             payload={
+                **metadata,
                 "actor_id": str(actor_id) if actor_id else None,
                 "actor_kind": "user" if actor_id else "management_command",
             },

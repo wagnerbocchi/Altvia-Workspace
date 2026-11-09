@@ -1,6 +1,9 @@
 # Data model and planned migrations
 
-Design contract, not applied DDL. UUID primary keys unless stated. Timestamps
+Design contract for the complete product. Applied development schema is limited
+to the identity and team/idempotency Alembic migrations; other tables below
+remain planned. Execution evidence is in the Phase 1/1C reports, not this ERD.
+UUID primary keys unless stated. Timestamps
 are TIMESTAMPTZ in UTC; business calendars name an IANA timezone. Mutable
 aggregates have positive integer version and created_at/updated_at. State
 values use CHECK constraints for incremental migration, not silent free text.
@@ -48,7 +51,7 @@ entities. Dotted operational domains are not implied shared authorization.
 | --- | --- |
 | users | id, email_normalized UNIQUE, display_name, password_hash nullable for future OIDC, active, auth_version; no source-name provisioning |
 | sessions | id, user_id FK, token_hash UNIQUE, csrf_hash, created/expires/last_seen/revoked_at; opaque token never stored plaintext |
-| teams/team_members | team identity; PK(team_id,user_id), active membership |
+| teams/team_members | team UUID/name/active/version/created_at/updated_at; PK(team_id,user_id), active membership with timestamps; identity roster never grants content access |
 | roles/permissions/role_permissions | Stable unique names; PK(role_id,permission_id); role changes audited |
 | role_bindings | user_id, role_id, scope_type, nullable client/project/team/queue FKs; CHECK matches exactly one scope or permitted global platform role; unique binding indexes for nullable scopes |
 | client_access_grants | PK(user_id,client_id), granted_by, created_at; explicit ceiling on access to that client's content |

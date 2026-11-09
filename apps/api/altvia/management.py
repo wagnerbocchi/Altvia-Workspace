@@ -15,7 +15,7 @@ def hash_new_password(password: str) -> str:
     return PASSWORDS.hash(password)
 
 
-def _lock_management(db: Session) -> None:
+def lock_identity_writes(db: Session) -> None:
     # Shared with one-time bootstrap: active-admin checks must serialize.
     db.execute(text("SELECT pg_advisory_xact_lock(723504391)"))
 
@@ -45,14 +45,14 @@ def _insert_user(db: Session, user: User) -> None:
 
 def create_user(db: Session, email: str, display_name: str, password: str) -> None:
     user = _new_user(email, display_name, password)
-    _lock_management(db)
+    lock_identity_writes(db)
     _insert_user(db, user)
     record_event(db, None, user.id, "identity.user_created", user.created_at, uuid4().hex, 1)
 
 
 def bootstrap_admin(db: Session, email: str, display_name: str, password: str) -> None:
     user = _new_user(email, display_name, password)
-    _lock_management(db)
+    lock_identity_writes(db)
     if db.scalar(select(RoleBinding).where(RoleBinding.role_name == "platform_admin")):
         raise IdentityError(409, "already_bootstrapped")
     _insert_user(db, user)
@@ -84,7 +84,7 @@ def _invalidate_sessions(db: Session, user: User, now: datetime) -> None:
 
 
 def reset_password(db: Session, email: str, password: str) -> None:
-    _lock_management(db)
+    lock_identity_writes(db)
     user = _locked_user(db, email)
     user.password_hash = hash_new_password(password)
     now = datetime.now(UTC)
@@ -122,7 +122,7 @@ def _require_another_admin(db: Session, user: User) -> None:
 
 
 def set_account_active(db: Session, email: str, active: bool) -> bool:
-    _lock_management(db)
+    lock_identity_writes(db)
     user = _locked_user(db, email)
     if user.active == active:
         return False
@@ -137,7 +137,7 @@ def set_account_active(db: Session, email: str, active: bool) -> bool:
 
 
 def set_platform_admin(db: Session, email: str, enabled: bool) -> bool:
-    _lock_management(db)
+    lock_identity_writes(db)
     user = _locked_user(db, email)
     if enabled and not user.active:
         raise IdentityError(409, "account_inactive")

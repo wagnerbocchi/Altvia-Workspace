@@ -1,4 +1,3 @@
-import hmac
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -7,7 +6,7 @@ from uuid import UUID
 from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import text
+from sqlalchemy import inspect, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException
@@ -15,8 +14,10 @@ from starlette.responses import JSONResponse
 
 from altvia import identity
 from altvia.config import Settings
-from altvia.database import make_engine
-from altvia.http import RequestBoundary, problem
+from altvia.database import Base, make_engine
+from altvia.http import RequestBoundary, problem, require_csrf, require_origin
+from altvia.models import User
+from altvia.team_api import create_team_router
 
 
 class LoginInput(BaseModel):
@@ -85,10 +86,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             request.state.correlation_id,
         )
 
-    def require_origin(request: Request) -> None:
-        if request.headers.get("origin") != config.public_origin:
-            raise identity.IdentityError(403, "origin_rejected")
-
     @app.get("/api/v1/health/live")
     def live() -> dict[str, str]:
         return {"status": "ok"}
@@ -96,12 +93,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/api/v1/health/ready")
     def ready() -> dict[str, str]:
         with engine.connect() as connection:
-            connection.execute(text("SELECT id FROM users LIMIT 0"))
+            # Inspect structure without requiring SELECT on insert-only audit
+            # tables. An incomplete migration must not advertise readiness.
+            tables = list(Base.metadata.tables.values())
+            reflected = inspect(connection).get_multi_columns(filter_names=[t.name for t in tables])
+            for table in tables:
+                actual = {
+                    column["name"] for column in reflected.get((table.schema, table.name), [])
+                }
+                if not set(table.columns.keys()).issubset(actual):
+                    raise identity.IdentityError(503, "database_unavailable", 5)
+            connection.execute(select(User.id).limit(0))
         return {"status": "ready"}
 
     @app.post("/api/v1/auth/sessions", response_model=LoginOutput, status_code=201)
     def login(body: LoginInput, request: Request, response: Response) -> LoginOutput:
-        require_origin(request)
+        require_origin(request, config.public_origin)
         with Session(engine, expire_on_commit=False) as db:
             user, session, token = identity.login(
                 db,
@@ -147,13 +154,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.delete("/api/v1/auth/sessions/current", status_code=204)
     def logout(request: Request, response: Response) -> None:
-        require_origin(request)
+        require_origin(request, config.public_origin)
         try:
             with Session(engine) as db, db.begin():
                 user, session = identity.authenticate(db, request.cookies.get(identity.COOKIE_NAME))
-                provided = request.headers.get("x-csrf-token", "")
-                if not hmac.compare_digest(identity.digest(provided), session.csrf_hash):
-                    raise identity.IdentityError(403, "csrf_rejected")
+                require_csrf(request, session)
                 session.revoked_at = datetime.now(UTC)
                 identity.record_event(
                     db,
@@ -172,4 +177,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             identity.COOKIE_NAME, secure=True, httponly=True, samesite="lax", path="/"
         )
 
+    app.include_router(create_team_router(engine, config))
     return app

@@ -56,14 +56,14 @@ Consumes: Task 1 models; existing authenticate/capabilities/record_event.
 Produces GET /users, GET/POST /teams, GET/PATCH /teams/{id}, GET/POST
 /teams/{id}/members and DELETE /teams/{id}/members/{user_id}.
 
-- [ ] Write failing real-HTTP/DB tests for lifecycle/account lookup and all five
+- [x] Write failing real-HTTP/DB tests for lifecycle/account lookup and all five
   review-focus cases, body/media bounds, cursor isolation, If-Match syntax,
   idempotency hash conflict, authorization-before-replay and rollback safety.
-- [ ] Observe absent-endpoint failures.
-- [ ] Implement router-owned transactions, bounded typed DTOs, shared HTTP guards,
+- [x] Observe absent-endpoint failures.
+- [x] Implement router-owned transactions, bounded typed DTOs, shared HTTP guards,
   public lock_identity_writes helper, route-bound cursors, ETag and replay records.
   All write transactions acquire the identity lock before session authentication.
-- [ ] Run all API tests, lint/format/mypy/build, migration checks, export OpenAPI
+- [x] Run all API tests, lint/format/mypy/build, migration checks, export OpenAPI
   and generate/verify TS contracts; obtain fresh review and fix material defects.
 - [ ] Record exact evidence/limits, commit/push main and observe both Linux CIs.
 
@@ -76,3 +76,6 @@ Produces GET /users, GET/POST /teams, GET/PATCH /teams/{id}, GET/POST
 - Pre-flight: Task 2 consumes the three Task 1 models without changing their
   signatures. Existing auth DTOs remain stable; generated files change only by
   export/generation. No UI edits require an impeccable design round.
+- Final local proof: 160 tests passed; strict checks, build, migration roundtrip/
+  drift and generated contracts passed. Independent review P2 schema finding
+  resolved; see Phase 1C evidence for precise scope and commands.

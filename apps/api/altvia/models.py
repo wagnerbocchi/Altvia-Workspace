@@ -128,7 +128,7 @@ class IdempotencyRecord(Base):
         CheckConstraint("key ~ '^[A-Za-z0-9._:-]{1,128}$'", name="ck_idempotency_key"),
         CheckConstraint("status_code BETWEEN 200 AND 299", name="ck_idempotency_status"),
         CheckConstraint(
-            "expires_at >= created_at + INTERVAL '7 days'", name="ck_idempotency_retention"
+            "expires_at >= created_at + INTERVAL '168 hours'", name="ck_idempotency_retention"
         ),
     )
     actor_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)

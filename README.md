@@ -9,6 +9,8 @@ login, account and logout flow with dark/light themes. The full workspace is not
 implemented or production-validated. No target CPU homologation is claimed.
 Phase 1C-a extends restricted host administration for ordinary accounts and
 platform privileges, with session revocation and last-active-admin protection.
+Phase 1C-b adds the team identity/roster API, optimistic concurrency and protected
+POST replay. Team membership grants no implicit client-content permission.
 
 ## Project references
 
@@ -24,6 +26,7 @@ platform privileges, with session revocation and last-active-admin protection.
 - [Phase 0 evidence](docs/phase-0-report.md)
 - [Development setup and checks](docs/runbooks/development.md)
 - [Browser setup and HTTPS integration checks](docs/runbooks/browser-development.md)
+- [Team identity API and concurrency/retry protocol](docs/runbooks/team-api.md)
 - [Phase 1 implementation evidence](docs/phase-1-evidence.md)
 - [Phase 1C administration evidence](docs/phase-1c-evidence.md)
 

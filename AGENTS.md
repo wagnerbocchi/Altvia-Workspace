@@ -9,6 +9,9 @@
 - Administrative account/role mutations must reuse altvia.management's lock protocol,
   last-active-admin guard, session invalidation and audit/outbox. A profile edit
   never grants roles; platform administration never bypasses customer scope.
+- Team identity metadata/roster writes require identity.manage and the same
+  identity write lock before session authentication. Team membership is never a
+  content grant; use versions and protected POST replay as specified in ADR-0009.
 - Never add Elasticsearch, OpenSearch, Solr, MongoDB, vector engines, local model
   runtimes or mandatory dependencies requiring ISA beyond x86-64-v1.
   Never use `-march=native`. Real target-VM testing is required for homologation.

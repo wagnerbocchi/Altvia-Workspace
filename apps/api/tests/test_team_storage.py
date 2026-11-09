@@ -3,7 +3,7 @@ from uuid import uuid4
 
 import pytest
 from altvia import models
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
@@ -121,4 +121,12 @@ def test_idempotency_records_reject_invalid_keys_status_and_retention(
 ):
     with Session(db_engine) as db, db.begin(), pytest.raises(DBAPIError):
         db.add(operation(seeded_user, **changes))
+        db.flush()
+
+
+def test_seven_day_retention_uses_elapsed_time_across_database_dst(db_engine, seeded_user):
+    start = datetime(2026, 10, 30, 12, tzinfo=UTC)
+    with Session(db_engine) as db, db.begin():
+        db.execute(text("SET LOCAL TIME ZONE 'America/New_York'"))
+        db.add(operation(seeded_user, created_at=start, expires_at=start + timedelta(days=7)))
         db.flush()

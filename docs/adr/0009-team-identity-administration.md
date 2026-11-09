@@ -34,7 +34,8 @@ canonical route/key, normalized request hash (including If-Match for membership)
 original safe result/status and timestamps in idempotency_records. Replay with
 the same hash returns 200 and the original outcome after current authorization;
 a different hash returns 409. No new domain/audit/outbox effect on replay. Records
-are retained for at least seven days; no purge/reuse job is added while retention
+are retained for at least 168 elapsed hours, independent of DB session timezone;
+no purge/reuse job is added while retention
 is unresolved. A replay is historical outcome, so refetch current state before
 another edit. Unique DB keys and serialized writes protect concurrent retries.
 
@@ -42,7 +43,9 @@ PATCH and membership writes require the team's quoted positive If-Match version:
 missing 428, malformed 422, stale 409. A real roster or metadata change increments
 the team once. A no-op retains the version and emits no event. A fresh mutation
 uses current version; a matching idempotent replay precedes version comparison.
-GET detail and mutation responses include ETag. Lists use fixed UUID order,
+GET detail and mutation responses include ETag. PATCH fields are optional but
+not nullable, and require at least one supplied field in both runtime and schema.
+Lists use fixed UUID order,
 bounded limits and route-scoped opaque cursors; no shared identity cache.
 
 Consequences: identity metadata is globally administrative but resource content

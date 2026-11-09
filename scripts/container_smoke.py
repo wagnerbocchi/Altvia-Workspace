@@ -115,6 +115,47 @@ def main():
             # OCI output discards Docker HEALTHCHECK metadata in Podman builds.
             build.insert(2, "--format=docker")
         run(build, timeout=600)
+        # The builder remains general-purpose. Check rejection on that actual
+        # untrimmed stage so a disabled/broken capability checker cannot pass.
+        builder_probe = project + ":builder-probe"
+        run(
+            [
+                args.engine,
+                "build",
+                "--target",
+                "dependencies",
+                "-f",
+                "infra/api.Dockerfile",
+                "-t",
+                builder_probe,
+                ".",
+            ],
+            timeout=600,
+        )
+        rejection = subprocess.run(
+            [
+                args.engine,
+                "run",
+                "--rm",
+                "--read-only",
+                "--network=none",
+                "--cap-drop=ALL",
+                builder_probe,
+                "python",
+                "-",
+            ],
+            input=(ROOT / "scripts/check_api_runtime.py").read_text(encoding="utf-8"),
+            text=True,
+            capture_output=True,
+            cwd=ROOT,
+            env=env,
+            timeout=60,
+        )
+        if (
+            rejection.returncode != 1
+            or "Unsupported SQLite Python capability is installed" not in rejection.stderr
+        ):
+            raise RuntimeError("Untrimmed builder capability rejection proof failed")
         started = True
         run([*compose, "up", "-d", "--no-build", "--wait", "--wait-timeout", "150"])
         for service in ["api", "ingress"]:
@@ -125,6 +166,11 @@ def main():
             assert not container(service)["HostConfig"].get("PortBindings")
         api_env = container("api")["Config"]["Env"]
         assert not any(item.startswith("ALTVIA_DATABASE_URL=") for item in api_env)
+        runtime_inventory = json.loads(
+            run([*compose, "exec", "-T", "api", "python", "check_api_runtime.py"])
+        )
+        assert runtime_inventory["sqlite"] == "absent"
+        assert runtime_inventory["api_imports"] == "passed"
         exec_api(
             "from pathlib import Path; import importlib.util; "
             "assert not Path('/run/secrets/ALTVIA_RUNTIME_DATABASE_URL').exists(); "

@@ -11,6 +11,12 @@ def test_invalid_database_configuration_never_discloses_credentials():
     assert "pass@" not in str(error.value)
 
 
+@pytest.mark.parametrize("url", ["sqlite:///:memory:", "sqlite+pysqlite:///private.sqlite"])
+def test_sqlite_is_not_a_supported_application_database(url):
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, database_url=url, public_origin="https://example.test")
+
+
 @pytest.mark.parametrize(
     "origin",
     [

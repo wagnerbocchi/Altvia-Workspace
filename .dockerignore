@@ -17,3 +17,6 @@ apps/api/migrations/**
 !apps/api/migrations/versions/
 apps/api/migrations/versions/**
 !apps/api/migrations/versions/*.py
+!scripts/
+scripts/**
+!scripts/check_api_runtime.py

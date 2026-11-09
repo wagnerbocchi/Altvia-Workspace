@@ -361,6 +361,58 @@ runtime development increment; it does not approve production, image risk,
 x86-64-v1 on the actual guest, backups/restore, capacity or the unfinished worker,
 Redis/web ingress and remaining Phase1 functionality.
 
+## Phase 1C-e: remove unused SQLite runtime capability
+
+2026-11-09. ADR-0012 and its plan preceded implementation. Commit 1d8ed76 removes
+only the final API image's unused libsqlite3-0 package and optional CPython
+sqlite3/_sqlite3 modules. The application already requires PostgreSQL. Builder,
+developer Python, base digests, dependency lockfiles, schema and API behavior
+remain unchanged. No patched private library, new native dependency, forced
+package removal or OS-family change was introduced.
+
+The image build runs scripts/check_api_runtime.py as its non-root user, and the
+actual running Compose API runs the same diagnostic. The guarded container test
+also verifies that the unchanged dependency-builder stage is rejected for its
+SQLite capability. A missing stdin attachment initially produced an empty
+program/exit0; commit 1b8ac9a adds -i and the exact rejection/exit1 was observed.
+No acceptance was inferred from the empty run.
+
+### Local proof and scan comparison
+
+- RED: checker rejected the published image with the specific installed SQLite
+  capability error. GREEN: actual new Docker-format image
+  acba1ed82e79aaa7e335dcde023c0935b0c7d741f930ab8fc793345a32b4226f passed the
+  module/package/native-object/loader guard under non-root/read-only/cap-drop
+  execution, including API/CLI/migration and TLS/compression imports.
+- Actual Argon2id hash/verify passed inside the pruned image as UID10001.
+- A separate negative probe mounted the original SQLite shared library through
+  LD_LIBRARY_PATH into the pruned image. Even with package/modules absent, the
+  guard rejected the loadable library. The temporary helper was removed.
+- Both explicit unsupported SQLite URL cases pass the existing configuration
+  boundary. All9 focused configuration tests passed. API/scripts Ruff/format,
+  strict mypy (12 source files), package build and unchanged OpenAPI passed.
+  Application logic is unchanged; hosted gates must run the new236-test suite.
+- Same-scanner/same-vulnerability-DB comparison removed exactly19 SQLite finding
+  identities:1 critical,5 high,9 medium,4 low. Zero added identities. Debian
+  inventory105 to104, only libsqlite3-0 removed; all27 Python distributions and
+  versions remain identical. Raw counts are now1 critical/35 high/113 medium/105
+  low; the remaining critical is the already vendor-classified MiniZip false
+  positive for the actual installed binary, whose vulnerable symbol is absent.
+  Exact input/report/DB hashes and all eliminated CVEs are in the image scan report.
+
+Fresh read-only review of 4141cb5..1b8ac9a found no actionable Critical, Important
+or Minor issue. The reviewer recalculated report/DB hashes and the finding/package
+delta; all matched the documented evidence. It did not mutate/re-execute
+containers or databases. Actual hosted API/browser/Compose results remain the
+acceptance gate; prior hosted results are not substituted for new runtime proof.
+
+Local full Compose remains blocked by the existing Podman VM's missing cgroup
+controllers. No production resource/security setting was weakened. This work did
+not start PostgreSQL or alter data volumes. No frontend/UI code or real data
+operation occurred. Remaining35 high findings, other service images, actual
+x86-64-v1 guest, capacity/recovery and all production gates stay open. No risk
+acceptance or complete clean-image claim is made.
+
 Candidate amd64 platform artifacts, resolved2026-11-09:
 
 | Component | Source/version observed | Immutable manifest |

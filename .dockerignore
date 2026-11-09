@@ -26,3 +26,26 @@ infra/**
 !infra/postgres-runtime-marker.sh
 !infra/gosu.go.mod
 !infra/gosu.go.sum
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!apps/web/
+apps/web/**
+!apps/web/package.json
+!apps/web/next.config.ts
+!apps/web/tsconfig.json
+!apps/web/next-env.d.ts
+!apps/web/postcss.config.mjs
+!apps/web/src/
+apps/web/src/**
+!apps/web/src/**/
+!apps/web/src/**/*.ts
+!apps/web/src/**/*.tsx
+!apps/web/src/**/*.css
+!scripts/check_web_native.mjs
+!scripts/check_web_runtime.mjs
+# Deny operational files even when their extension resembles allowed source.
+**/.env
+**/.env.*
+**/*.pem
+**/*.key

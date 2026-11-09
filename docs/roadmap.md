@@ -64,6 +64,11 @@ remaining identity administration UX, and a worker/Redis slice only when it has 
 real durable consumer. Preserve Q-01 as the Phase1 exit gate; do not substitute
 modern CI execution for the unavailable VM or begin Phase2 prematurely.
 
+Current increment: residual findings fixed on683e34d with all four hosted gates
+passing; packaged same-origin frontend under ADR-0014 is now under acceptance.
+After it passes, remaining Foundation priorities are identity administration UX
+and a real durable worker consumer, alongside Q-01 and operational readiness.
+
 FR-013 preferences/mentions/notifications, FR-014 time tracking, FR-015 authorized
 CSV/XLSX export, FR-016 advanced calendar/Gantt/dependencies, FR-017 external
 portal/knowledge base. Billing/subscriptions, marketplace, advanced ITIL/CMDB,

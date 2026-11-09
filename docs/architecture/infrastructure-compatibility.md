@@ -152,3 +152,12 @@ changes require a fresh-volume logical restore; the image refuses unmarked data.
 Phase 1 can develop and test locally while access is missing. Its VM gate
 remains open. No production compatibility, performance or availability claim
 is permitted until these checks produce real evidence.
+
+ADR-0014 adds the actual standalone web runtime: signed Alpine Node24.22.1-r1,
+full ICU for pt-BR, shared zlib1.4/Brotli1.2.1/OpenSSL3.5.9 and Sharp exclusion.
+Pinned builder/runtime inputs are in infra/web.Dockerfile. Local actual SSR,
+static assets, read-only/non-root native guard and SIGTERM cleanup passed; all
+four installed-image scans report zero findings. This does not close any guest
+gate. The Alpine nodejs APKBUILD uses generic compiler flags and shared-library
+switches; SIMD-enabled libraries still require functional tests on the actual VM:
+https://github.com/alpinelinux/aports/blob/3.24-stable/main/nodejs/APKBUILD.

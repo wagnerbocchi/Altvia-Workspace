@@ -32,7 +32,14 @@ jobs:
       - run: uv run ruff check scripts
       - run: uv run ruff format --check scripts
       - run: shellcheck -s sh infra/start-ingress.sh infra/start-postgres.sh infra/postgres-runtime-marker.sh
+      - run: pnpm --filter @altvia/web exec playwright install --with-deps chromium
       - run: uv run python scripts/container_smoke.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: packaged-browser-${{ github.sha }}
+          path: .superpowers/container-tests/*/screenshots/*.png
+          if-no-files-found: error
+          retention-days: 14
 
 # Real Docker/Linux image, HTTPS and recovery proof; not target-VM homologation.
 # Smoke cleanup stops only its random task project and never deletes volumes.

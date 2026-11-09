@@ -69,6 +69,21 @@ services:
     pids_limit: 128
     restart: unless-stopped
     stop_grace_period: 30s
+  web:
+    image: ${ALTVIA_WEB_IMAGE:-altvia-web:local}
+    build:
+      context: ..
+      dockerfile: infra/web.Dockerfile
+    networks: [ingress]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
+    restart: unless-stopped
+    stop_grace_period: 30s
   ingress:
     image: ${ALTVIA_INGRESS_IMAGE:-altvia-ingress:local}
     build:
@@ -85,6 +100,7 @@ services:
     networks: [ingress]
     depends_on:
       api: {condition: service_healthy}
+      web: {condition: service_healthy}
     read_only: true
     tmpfs: [/tmp]
     cap_drop: [ALL]
@@ -94,7 +110,7 @@ services:
     pids_limit: 64
     restart: unless-stopped
     healthcheck:
-      test: [CMD-SHELL, 'curl --fail --silent --max-time 3 --cacert /run/secrets/tls_cert --connect-to "::127.0.0.1:8443" "$$ALTVIA_PUBLIC_ORIGIN/api/v1/health/ready"']
+      test: [CMD-SHELL, 'curl --fail --silent --max-time 3 --cacert /run/secrets/tls_cert --connect-to "::127.0.0.1:8443" "$$ALTVIA_PUBLIC_ORIGIN/api/v1/health/ready" && curl --fail --silent --output /dev/null --max-time 3 --cacert /run/secrets/tls_cert --connect-to "::127.0.0.1:8443" "$$ALTVIA_PUBLIC_ORIGIN/"']
       interval: 10s
       timeout: 5s
       retries: 10

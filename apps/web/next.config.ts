@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
+import { resolve } from "node:path";
 
 const config: NextConfig = {
+  output: "standalone",
+  outputFileTracingRoot: resolve(import.meta.dirname, "../.."),
   poweredByHeader: false,
   // Prebuilt Sharp/libvips on Linux x64 requires SSE4.2. Excluded at install.
   images: { unoptimized: true },

@@ -1,8 +1,8 @@
 # API container runtime
 
-Scope: Phase 1C-d, ADR-0011. This packages the existing identity/team API,
-PostgreSQL and API-only HTTPS ingress. Web pages, worker/Redis, production ingress
-trust, backups/load/security gates and target-VM homologation remain separate.
+Scope: Foundation, ADR-0011/0013/0014. This packages the existing identity/team API,
+PostgreSQL, standalone web frontend and same-origin HTTPS ingress. Worker/Redis,
+production ingress trust, backups/load gates and target-VM homologation remain separate.
 No real account, production role or deployment is created by this repository.
 
 ## Requirements and secrets
@@ -48,16 +48,17 @@ export ALTVIA_PUBLIC_ORIGIN=https://workspace.example.invalid:3444
 export ALTVIA_API_IMAGE=altvia-api:reviewed-build
 export ALTVIA_DATABASE_NAME=altvia_workspace
 docker compose -f infra/compose.yaml config --quiet
-docker compose -f infra/compose.yaml build migrate postgres ingress
+docker compose -f infra/compose.yaml build migrate postgres ingress web
 docker compose -f infra/compose.yaml up -d --wait --wait-timeout 150
 docker compose -f infra/compose.yaml ps -a
 curl --fail --cacert "$ALTVIA_SECRET_DIR/tls_cert" "$ALTVIA_PUBLIC_ORIGIN/api/v1/health/ready"
 ```
 
 Only ingress publishes 127.0.0.1:3444 by default. API/Postgres have no host ports;
-the database network is internal. External availability requires a separately
-authorized infrastructure plan. API-only ingress returns404 for page routes.
-Proxy resolves the container engine's DNS again after API recreation, preserves
+the database network is internal. Web also has no host port or database network,
+and receives no credentials. The same HTTPS origin serves the existing login and
+account screen at /. External availability requires a separately authorized
+infrastructure plan. Proxy resolves DNS again after API or web recreation, preserves
 Host, removes client forwarding headers and never enables arbitrary proxy trust.
 TLS verification is required; do not use curl -k as acceptance evidence.
 
@@ -97,6 +98,7 @@ With Node/pnpm installed and locked dependencies synchronized:
 ```bash
 uv sync --locked
 pnpm install --frozen-lockfile
+pnpm --filter @altvia/web exec playwright install --with-deps chromium
 export ALTVIA_ALLOW_CONTAINER_TEST=1
 uv run python scripts/container_smoke.py
 ```
@@ -107,6 +109,16 @@ builds the real API image, including a dirty-context secret canary, and tests TL
 login, Secure/HttpOnly cookies, Origin/CSRF denial, explicit scope isolation, API
 and database recreation with session/data survival, failed DB readiness with
 healthy liveness, migration rerun, non-root/read-only runtime and graceful SIGTERM.
+The actual packaged browser flow verifies login/reload, session survival after
+web recreation, logout/revocation, document CSP, no identity in SSR, desktop/mobile
+light/dark rendering and axe checks. Chromium accepts only the generated test
+certificate's public-key pin and maps only the reserved workspace.altvia.test
+name. Separate HTTP probes validate the CA/domain SAN without TLS bypass. Browser
+probes use browser fetch, because Playwright's Node APIRequestContext does not
+share that DNS/certificate configuration. No machine trust store is modified.
+Only synthetic PNG captures under each task's screenshots directory are uploaded;
+never upload its parent directory, private logs, secret files or browser state.
+
 The API suite separately exercises real database privilege denial and elevated
 role refusal. Logs are checked for the generated credential values.
 

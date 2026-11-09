@@ -576,6 +576,51 @@ UID/GID, explicit group, HOME and unknown-user denial controls passed. The Windo
 x/sys finding was removed from inventory without inventing Linux exploitability.
 
 Ruff/format, mypy, image-gate tests and diff checks passed. Fresh independent
-candidate review and full hosted API/browser/Compose/recovery/security gates are
-recorded after publication. No schema, volume-family or real account change.
+candidate review found no concrete surviving bypass/regression. All four hosted
+gates passed on683e34d: [API244 tests42634012848](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42634012848),
+[Browser7 E2E42634012844](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42634012844),
+[Compose/recovery42634012879](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42634012879)
+and [zero-finding image security42634012896](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42634012896).
+No schema, volume-family or real account change.
 Q-01/actual target-VM homologation and production readiness remain open.
+
+## Phase1C-h: packaged same-origin frontend
+
+2026-11-09. ADR-0014 established contracts before implementation. The existing
+Impeccable identity interface is packaged as Next standalone and routed through
+the same real HTTPS proxy as /api/v1/. No new business UI, auth store, backend or
+schema. Shared edge forwarding rules cover both upstreams; web has no direct port,
+DB network or credential mounts. Read-only/non-root/capability/resource controls
+are preserved. The default still publishes HTTPS on loopback only.
+
+Official Node24.22.2 Alpine builder, locked pnpm11.25.0/Next16.4.5, signed vendor
+Node24.22.1-r1 on pinned Alpine3.24 runtime. Shared native libraries report zlib1.4,
+Brotli1.2.1 and OpenSSL3.5.9. No npm/corepack/yarn, build/test tools or Sharp in the
+actual standalone image. The locale probe failed with English-only ICU; installing
+vendor full ICU data restored pt-BR without a private native build. The guard
+checks that capability too. Immutable manifests are in infra/web.Dockerfile.
+
+Local pnpm web:check and pnpm web:build passed on Windows; the actual Linux
+multistage image built successfully. Its non-root/read-only/cap-drop/no-network
+HTTP probe passed dynamic SSR, nonce CSP, no-store and real static assets. Native
+Next16.4.5 closes HTTP/Next resources then exits143 on SIGTERM; source inspection
+and a local cleanup-finished diagnostic proved that behavior. The initial exit0
+test expectation failed and was corrected to preserve framework semantics, not
+normalize exit codes. Forced137/OOM/unexpected exits remain failures.
+
+Same-DB local scans of all four actual images report zero findings at every
+severity, with no suppressions. Web image SHA256
+07dd573216d5eddd85c8ed9e2baddf05340ccf63a38293760939d6adcb43b58a;
+raw reports/manifest are retained through managed security artifacts/web-ingress/.
+Stock Node24.21 retained vulnerable embedded/installer copies; distroless Node24
+retained unfixed Debian occurrences. The vendor shared-library model avoids both.
+Alpine nodejs APKBUILD uses generic flags and shared native dependencies; this
+source evidence and modern local execution do not homologate the real target VM.
+
+Fresh read-only final review found that Playwright's Node APIRequestContext does
+not inherit Chromium's reserved-host DNS mapping or SPKI pin. Independent DNS and
+self-signed-certificate reproductions confirmed failure. Same-origin probes now
+use actual browser fetch/cookies, while the existing strict-CA Python probe owns
+forged-Origin denial. No other important source-backed review finding. Full
+hosted packaged-browser/Compose/API/security acceptance remains pending below.
+No real deployment, user provisioning or data/volume migration. Phase1 stays open.

@@ -33,4 +33,4 @@ jobs:
           retention-days: 30
 
 # Scan every installed OS/Python/Go target. No ignores, no unfixed filter.
-# All three images use one DB. Reports include lower severities and image IDs.
+# All four images use one DB. Reports include lower severities and image IDs.

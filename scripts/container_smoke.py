@@ -87,6 +87,7 @@ def main():
         "ALTVIA_API_IMAGE": project + ":test",
         "ALTVIA_POSTGRES_IMAGE": project + ":postgres",
         "ALTVIA_INGRESS_IMAGE": project + ":ingress",
+        "ALTVIA_WEB_IMAGE": project + ":web",
     }
     # Never inherit a host DB credential into the test stack.
     env.pop("ALTVIA_DATABASE_URL", None)
@@ -134,10 +135,13 @@ def main():
 
     started = False
     canary = ROOT / "apps/api/altvia" / (".env.container-test-" + uuid4().hex)
+    web_canary = ROOT / "apps/web/src" / (".env.container-test-" + uuid4().hex + ".ts")
     try:
         run(["node", "scripts/container_tls.mjs", str(secret_dir)])
         with canary.open("x", encoding="utf-8") as source:
             source.write(password)
+        with web_canary.open("x", encoding="utf-8") as source:
+            source.write("export const mustNeverShip = " + json.dumps(password) + ";")
         build = [
             args.engine,
             "build",
@@ -151,7 +155,7 @@ def main():
             # OCI output discards Docker HEALTHCHECK metadata in Podman builds.
             build.insert(2, "--format=docker")
         run(build, timeout=600)
-        for service in ("postgres", "ingress"):
+        for service in ("postgres", "ingress", "web"):
             service_build = [
                 args.engine,
                 "build",
@@ -164,6 +168,39 @@ def main():
             if args.engine == "podman":
                 service_build.insert(2, "--format=docker")
             run(service_build, timeout=600)
+        # Verify the allowlist at the builder boundary too, before file tracing
+        # could omit an accidentally copied secret from only the final image.
+        web_builder = project + ":web-builder-probe"
+        run(
+            [
+                args.engine,
+                "build",
+                "--target",
+                "build",
+                "-f",
+                "infra/web.Dockerfile",
+                "-t",
+                web_builder,
+                ".",
+            ],
+            timeout=600,
+        )
+        run(
+            [
+                args.engine,
+                "run",
+                "--rm",
+                "--read-only",
+                "--network=none",
+                "--cap-drop=ALL",
+                web_builder,
+                "node",
+                "-e",
+                "require('node:assert/strict').equal(require('node:fs').existsSync("
+                + json.dumps("/opt/altvia/apps/web/src/" + web_canary.name)
+                + "),false)",
+            ]
+        )
         check_legacy_volume_refusal(args.engine, env["ALTVIA_POSTGRES_IMAGE"])
         # The builder remains general-purpose. Check rejection on that actual
         # untrimmed stage so a disabled/broken capability checker cannot pass.
@@ -239,12 +276,26 @@ def main():
             raise RuntimeError("Untrimmed builder installer rejection proof failed")
         started = True
         run([*compose, "up", "-d", "--no-build", "--wait", "--wait-timeout", "150"])
-        for service in ["api", "ingress"]:
+        for service in ["api", "ingress", "web"]:
             inspect = container(service)
             assert inspect["Config"]["User"] not in ("", "0", "root")
             assert inspect["HostConfig"]["ReadonlyRootfs"]
-        for service in ["api", "postgres"]:
+        for service in ["api", "postgres", "web"]:
             assert not container(service)["HostConfig"].get("PortBindings")
+        web_config = container("web")
+        assert list(web_config["NetworkSettings"]["Networks"]) == [project + "_ingress"]
+        assert not any(item.startswith("ALTVIA_") for item in web_config["Config"]["Env"])
+        assert not any(
+            mount["Destination"].startswith("/run/secrets") for mount in web_config["Mounts"]
+        )
+        web_inventory = json.loads(
+            run(
+                [*compose, "exec", "-T", "web", "node", "scripts/check_web_runtime.mjs"]
+            ).splitlines()[-1]
+        )
+        assert web_inventory["standalone"] == "present" and web_inventory["sharp"] == "absent"
+        assert web_inventory["package_installers"] == "absent"
+        assert web_inventory["zlib"] == "1.4" and web_inventory["brotli"] == "1.2.1"
         api_env = container("api")["Config"]["Env"]
         assert not any(item.startswith("ALTVIA_DATABASE_URL=") for item in api_env)
         runtime_inventory = json.loads(
@@ -438,6 +489,11 @@ with Session(make_engine(s)) as db, db.begin():
             trust_env=False,
         ) as client:
             await_ready(client)
+            document = client.get("/")
+            assert document.status_code == 200 and "Altvia Workspace" in document.text
+            assert "no-store" in document.headers["cache-control"]
+            assert "'nonce-" in document.headers["content-security-policy"]
+            assert "'unsafe-eval'" not in document.headers["content-security-policy"]
             assert client.get("/api/v1/auth/me").status_code == 401
             login = client.post(
                 "/api/v1/auth/sessions", json={"email": "admin@example.test", "password": password}
@@ -503,7 +559,19 @@ with Session(make_engine(Settings())) as db,db.begin():
             assert client.get(f"/api/v1/teams/{teams[1]}").status_code == 404
             assert client.get("/api/v1/users").status_code == 403
             assert client.get(f"{path}/members").status_code == 200
+        run(
+            ["node", "scripts/container_browser.mjs", args.engine, project, str(work)],
+            data=json.dumps(
+                {"origin": origin, "email": "admin@example.test", "password": password}
+            ),
+            timeout=240,
+        )
         run([*compose, "run", "--rm", "migrate"])
+        run([*compose, "stop", "-t", "30", "web"])
+        # Next16.4.5 closes the HTTP server/Next resources, then explicitly exits
+        # 143 for SIGTERM (dist/server/lib/start-server.js). Do not normalize it.
+        web_state = container("web")["State"]
+        assert web_state["ExitCode"] == 143 and not web_state["OOMKilled"]
         run([*compose, "stop", "-t", "30", "api"])
         assert container("api")["State"]["ExitCode"] == 0
         logs = run([*compose, "logs", "--no-color"])
@@ -512,6 +580,7 @@ with Session(make_engine(Settings())) as db,db.begin():
     finally:
         socket.getaddrinfo = original_dns
         canary.unlink(missing_ok=True)
+        web_canary.unlink(missing_ok=True)
         if started:
             run([*compose, "down"], timeout=90)
         print(f"Task stack stopped; volumes preserved. Private test configuration: {work}")

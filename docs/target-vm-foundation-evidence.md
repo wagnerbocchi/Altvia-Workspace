@@ -144,3 +144,13 @@ artifacts and future worker/Redis/storage/scanner components. Representative loa
 IOPS, production backup/retention, operational RPO/RTO, external ingress trust and
 production deployment remain separate gates. Account/role browser administration
 and the remaining Foundation work are not completed by this infrastructure proof.
+
+## Subsequent qualified account increment
+
+The updated account/security/browser stack 7e0e66b also passed actual isolated
+target execution, exact-image scanning and resource/native verification on
+2026-11-09. Account administration is now delivered; see
+docs/account-administration-evidence.md for its distinct source/image identities
+and all four successful hosted gates. The image table above remains the earlier
+Foundation artifact, not a substitute for the updated proof. Production and
+remaining Foundation gates stay open.

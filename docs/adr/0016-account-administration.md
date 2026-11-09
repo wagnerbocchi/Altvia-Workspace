@@ -1,6 +1,7 @@
 # ADR-0016: Account and permission administration
 
-Date: 2026-11-09. Status: accepted for implementation. Foundation increment.
+Date: 2026-11-09. Status: implemented in 207c203/30c577d, reviewed fix 7e0e66b.
+Evidence: docs/account-administration-evidence.md. Foundation increment.
 Extends ADR-0003/0009/0010/0015; no new database schema or dependency.
 
 ## Behavior and ownership
@@ -37,25 +38,25 @@ All paths below have prefix /api/v1. Existing GET /users summary stays unchanged
 UserAdminOutput contains id, display_name, email, active, platform_admin,
 version and created_at. Version is the existing User.auth_version. Security
 changes advance it and revoke all sessions; no-op grants/status changes do neither.
-Overflow is rejected with409 version_exhausted. Existing-user POST requires the
-reviewed If-Match. Every POST requires Idempotency-Key. Missing precondition428,
-invalid syntax422, stale version409, changed-payload replay409. All models forbid
-extra fields. Names trim to1..150 characters, normalized email follows the existing
-identity policy, password requires14 characters and at most1024 UTF-8 bytes.
+Overflow is rejected with 409 version_exhausted. Existing-user POST requires the
+reviewed If-Match. Every POST requires Idempotency-Key. Missing precondition 428,
+invalid syntax 422, stale version 409, changed-payload replay 409. All models forbid
+extra fields. Names trim to 1..150 characters, normalized email follows the existing
+identity policy, password requires 14 characters and at most 1024 UTF-8 bytes.
 
 Role-page rows contain binding id, team_id, team_name, team_active and role_name.
-Limit1..100, default50; opaque cursor bound to the account, no invented totals or
+Limit 1..100, default 50; opaque cursor bound to the account, no invented totals or
 search. Grants require active account and team; revocation remains possible when
 either is inactive. User ETag binds role review to account security state. A team
 may change independently; the service checks its current state under the lock.
 
 ## Secret-safe replay and session boundary
 
-Receipt scope is actor + route + key, retained at least7days. Ordinary payloads
+Receipt scope is actor + route + key, retained at least 7 days. Ordinary payloads
 use the existing SHA256 fingerprint. Credential-bearing payloads instead use
-Argon2id (memory65536KiB, time3, parallelism1,32-byte output) over canonical JSON,
-with a deterministic16-byte salt from SHA256(actor, route, key). This fits the
-existing64-character request_hash and avoids storing a fast password verifier.
+Argon2id (memory 65536 KiB, time 3, parallelism 1,32-byte output) over canonical JSON,
+with a deterministic 16-byte salt from SHA256(actor, route, key). This fits the
+existing 64-character request_hash and avoids storing a fast password verifier.
 Comparison is constant-time. Receipt results contain public DTOs only. No plaintext
 password or password hash enters audit/outbox, response, receipt, URL or log.
 Fresh authorization precedes replay. Replay returns the historical public receipt;

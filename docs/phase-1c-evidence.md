@@ -779,3 +779,14 @@ exact versions, immutable identities, commands, correction evidence and limitati
 Q-01 is satisfied for the currently selected artifacts. Future native components,
 representative capacity, production backup/retention/readiness and remaining
 Foundation features remain separate work. No public or production deployment.
+
+## Phase 1C-k: Account and permission administration
+
+Contract d0773bb preceded API 207c203 and browser 30c577d. Packaged tests 515f9f1
+and reviewed spacing fix 7e0e66b passed 270 API/30 browser tests and all four hosted
+gates. Exact final images passed real target-VM account/replay/HTTPS/ACL/recovery/
+browser/resource proof with zero reported image vulnerabilities. Source review
+had no findings; Impeccable scored the spacing correction resolved and preserved
+the incumbent design system. See docs/account-administration-evidence.md for
+commands, source/image hashes, workflow links, retained raw evidence and remaining
+gates. No public deployment or Phase 1 completion claim.

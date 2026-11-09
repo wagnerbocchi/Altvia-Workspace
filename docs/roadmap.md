@@ -60,11 +60,16 @@ currently covers this GitHub repository's main only, not production services.
 
 ## Backlog after core
 
-Current Foundation priorities: account/status/password/role administration UX,
-building on the existing CLI invariants and the completed team/roster browser
-slice (960cd7d, ADR-0015), and a
-worker/Redis slice only when it has a real durable consumer, alongside operational
-readiness. Q-01 is satisfied for the current stack, with repeated target execution
+Account/status/password/role browser administration is implemented in30c577d,
+with protected persisted API 207c203 and ADR-0016; reviewed fix 7e0e66b. Local and
+hosted API 270/browser 30 passed, along with all four hosted gates. Independent
+source review had no findings; Impeccable's spacing fix was scored resolved and
+the incumbent system preserved. Updated actual target images passed packaged
+account/TLS/ACL/recovery/cgroup proof and have zero reported image findings.
+Exact evidence: docs/account-administration-evidence.md.
+Current Foundation priorities include a worker/Redis slice only when it has a real
+durable consumer, alongside operational readiness. Q-01 is satisfied for the updated
+stack, with repeated target execution
 required for future native artifacts. Remaining Foundation gates still precede Phase2.
 
 Residual findings were fixed on683e34d; packaged same-origin web ingress passed
@@ -77,6 +82,14 @@ portal/knowledge base. Billing/subscriptions, marketplace, advanced ITIL/CMDB,
 native mobile and local AI remain outside MVP. No speculative code for backlog.
 
 ## Evidence ledger
+
+- Phase1C-k: account/security API 207c203, browser 30c577d, packaged proof515f9f1
+  and reviewed spacing fix 7e0e66b. Full 270 API/30 browser and all four hosted gates
+  passed. Exact final source/images qualified on supplied baseline CPU through
+  actual HTTPS/account/replay/ACL/recovery/browser/resource checks, with zero
+  reported image vulnerabilities. SSH master closed; isolated task stopped and
+  volumes retained. See docs/account-administration-evidence.md. Remaining
+  Foundation/production gates remain open; no real account provisioning/deployment.
 
 - Phase 1C-j: authorized Docker/Compose installation and actual target qualification.
   Four images built and passed the packaged identity/team/roster/TLS/ACL/recovery

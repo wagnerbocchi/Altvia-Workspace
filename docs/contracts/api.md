@@ -79,6 +79,29 @@ revoke prior sessions and preserve at least one active platform administrator.
 No-op requests create no repeated audit/outbox effect. Platform administration
 does not confer customer-content access. See the development runbook for commands.
 
+### Phase 1C-k account administration contract
+
+ADR-0016 supersedes the planned generic profile/role HTTP rows for this delivered
+increment. GET /users keeps its summary shape. POST /users creates an ordinary
+active account; GET /users/{id} returns the public administrative snapshot.
+POST /users/{id}/activation, /password, /platform-admin and /team-roles expose
+only the corresponding management operation. GET /users/{id}/team-roles returns
+a bounded account-scoped binding page. Exact request/response models are generated
+in openapi.json. No profile PATCH or arbitrary role-binding endpoint is implemented.
+
+All require fresh identity.manage. Writes acquire the identity lock before session
+authentication, check exact Origin/CSRF and require Idempotency-Key; existing-account
+writes also require the reviewed If-Match. User.auth_version is the public version.
+Every security change invalidates sessions, advances version and atomically records
+attributed audit/outbox; no-ops preserve sessions/version. Last-active-admin and
+inactive-account/team grant checks remain in the management service.
+
+Credential receipts fingerprint canonical payloads with scoped Argon2id, never a
+fast password verifier. Results contain public fields only. Replays reauthorize
+and return the historical receipt without reapplying the effect. A fresh self
+mutation clears the cookie and returns X-Session-Revoked:true; that header is never
+stored or replayed. The browser refetches current state before further writes.
+
 ### Phase 1C-b team administration contract
 
 ADR-0009 distinguishes identity team metadata from operational/client content.

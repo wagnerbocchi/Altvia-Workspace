@@ -1,3 +1,4 @@
+from pathlib import Path
 from urllib.parse import urlsplit
 
 from pydantic import SecretStr, field_validator
@@ -6,7 +7,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="ALTVIA_", env_file=".env", extra="ignore", hide_input_in_errors=True
+        env_prefix="ALTVIA_",
+        env_file=".env",
+        extra="ignore",
+        hide_input_in_errors=True,
+        secrets_dir=Path("/run/secrets") if Path("/run/secrets").is_dir() else None,
     )
 
     database_url: SecretStr

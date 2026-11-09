@@ -8,7 +8,9 @@ Phase 1 is closed on 2026-11-09. Final source 2f6ba60 passed all five hosted gat
 290 API and 31 browser tests, and the full five-image/six-service stack passed on
 the actual x86-64-v1 VM. Exact tested images have zero reported vulnerabilities.
 Worker shutdown during broker loss and all 27 recovered events are proven.
-See docs/phase-1-closure-evidence.md. Stop here: Phase 2 has not started.
+See docs/phase-1-closure-evidence.md. The user subsequently authorized continued
+development. Phase 2A starts with the scoped client registry in ADR-0018 and
+docs/plans/2026-11-09-phase2-client-registry.md; Phase 2 remains open.
 
 ## Milestones and gates
 
@@ -75,8 +77,8 @@ account/TLS/ACL/recovery/cgroup proof and have zero reported image findings.
 Exact evidence: docs/account-administration-evidence.md.
 The final Foundation increment now delivers the actual durable identity activity
 consumer, restricted browser history, private Redis, safe logs and source-security
-gates under ADR-0017. All Foundation gates passed on 2f6ba60; Phase 2 awaits the
-user's next instruction. Production capacity/retention/provider decisions remain
+gates under ADR-0017. All Foundation gates passed on 2f6ba60. Phase 2A now starts
+under the user's subsequent instruction. Production capacity/retention/provider decisions remain
 the later gates listed above, not unimplemented Foundation requirements.
 
 Residual findings were fixed on683e34d; packaged same-origin web ingress passed

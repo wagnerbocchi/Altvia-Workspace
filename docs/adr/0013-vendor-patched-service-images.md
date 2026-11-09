@@ -1,6 +1,8 @@
 # ADR-0013: Vendor-patched service image closure
 
-Date: 2026-11-09. Status: candidate, pending measured acceptance below.
+Date: 2026-11-09. Status: implemented and development-validated on27b0bcb.
+All four hosted gates passed; see docs/phase-1c-evidence.md. Actual target-VM
+homologation and production readiness remain open.
 Supersedes the Bookworm image-family selection in ADR-0011 and the package-manager
 detail in ADR-0012. Their application, privilege and capability contracts remain.
 

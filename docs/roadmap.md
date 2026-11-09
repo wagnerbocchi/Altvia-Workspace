@@ -59,12 +59,27 @@ currently covers this GitHub repository's main only, not production services.
 
 ## Backlog after core
 
+Current Foundation priority after the verified image/recovery slice: web ingress,
+remaining identity administration UX, and a worker/Redis slice only when it has a
+real durable consumer. Preserve Q-01 as the Phase1 exit gate; do not substitute
+modern CI execution for the unavailable VM or begin Phase2 prematurely.
+
 FR-013 preferences/mentions/notifications, FR-014 time tracking, FR-015 authorized
 CSV/XLSX export, FR-016 advanced calendar/Gantt/dependencies, FR-017 external
 portal/knowledge base. Billing/subscriptions, marketplace, advanced ITIL/CMDB,
 native mobile and local AI remain outside MVP. No speculative code for backlog.
 
 ## Evidence ledger
+
+- Phase1C-f: 27b0bcb fixes installed API/PostgreSQL/ingress high/critical image
+  findings with vendor-patched Alpine artifacts and baseline gosu rebuild.
+  Adds blocking all-service SCA/image CI and cross-libc logical restore proof.
+  Independent review's PGDATA reuse finding was confirmed and fixed with an
+  entrypoint refusal/fresh-init marker. 244 API tests passed locally on Alpine
+  and in hosted CI;7 E2E, actual Docker Compose/recovery and image security gates
+  passed. Zero HIGH/CRITICAL across all three actual images; lower severities
+  remain visible. See the exact evidence/rollback in docs/phase-1c-evidence.md
+  and ADR-0013. Actual VM/worker/Redis/web ingress and remaining Phase1 gates stay open.
 
 - Phase 0: `docs/phase-0-report.md` and workbook reconciliation.
 - Phase 1A: identity API implementation, 44 real automated checks, migrations,

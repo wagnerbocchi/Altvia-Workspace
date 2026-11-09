@@ -514,7 +514,34 @@ Local commands and evidence:
 The continued Foundation delivery adds a blocking all-service image-security
 workflow and guarded synthetic Bookworm-to-Alpine logical recovery tests. Full
 Docker/Linux Compose/TLS/ACL/recreation/readiness/SIGTERM/recovery acceptance and
-hosted API/browser/security results are pending publication below. No schema,
+hosted API/browser/security results passed as recorded below. No schema,
 account grants, API contracts or UI changed; no real migration/deployment occurred.
 Actual target-VM/x86-64-v1, lower-severity follow-up, worker/Redis/web ingress,
 capacity and production backup/load acceptance remain open. Phase1 is not closed.
+
+### Service-image remediation publication evidence
+
+Code27b0bcb was pushed directly to main under standing authorization. All four
+hosted Linux workflows passed on that exact revision:
+
+- [API checks42630904890](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42630904890):
+  244 tests passed (55.60s), lint/format/mypy, fresh migration/drift and package build.
+- [Browser checks42630904953](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42630904953):
+  7 E2E passed (9.2s), frontend build/check, native dependency exclusion, generated
+  contracts and dependency audit. No frontend implementation changed.
+- [Container checks42630904852](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42630904852):
+  actual Docker builds/Compose protections, capability and legacy-volume guards,
+  TLS/login/CSRF/team ACL, session/data survival across API/database recreation,
+  DB-loss readiness, migration replay and SIGTERM all passed. Synthetic old-to-new
+  logical restore, Unicode checksums, Portuguese FTS and primary key passed.
+- [Service image security42630904985](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42630904985):
+  all three actual Docker-built images scanned with zero HIGH/CRITICAL, with the
+  same DB SHA256 as the local comparison. Complete reports and image identities
+  are in its service-image-security-27b0bcbac11772c1010aa00c59088359d896d302 artifact.
+  Exact bytes are also retained in managed hosted-27b0bcb evidence.
+
+Hosted image IDs differ from local build IDs; use each run's manifest. The counts
+agree. Third-party action Node20/URL deprecation warnings are benign toolchain
+metadata warnings; no container/test gate failed. The earlier reported installed
+high/critical findings no longer reproduce. Residual lower severities and all
+actual VM/production gates remain explicit. No real cluster or account changed.

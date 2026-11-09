@@ -129,6 +129,7 @@ def main():
             "from pathlib import Path; import importlib.util; "
             "assert not Path('/run/secrets/ALTVIA_RUNTIME_DATABASE_URL').exists(); "
             "assert not Path('/opt/altvia/.env').exists(); "
+            "assert not Path('/opt/altvia/apps/api/altvia/__pycache__').exists(); "
             "assert importlib.util.find_spec('pytest') is None"
         )
         exec_api(

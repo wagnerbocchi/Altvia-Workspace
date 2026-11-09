@@ -322,6 +322,16 @@ high findings remain open, without risk acceptance. Exact artifact, raw-report
 hash, vendor sources and actions are in docs/security/api-container-scan.md and
 Q-14. Functional CI cannot waive this production image-security gate.
 
+First hosted container gate on7b0a933 failed at the dirty-context canary assertion
+before synthetic user provisioning. Negating a parent directory in .dockerignore
+had also re-included its children. A local real-image regression reproduced the
+copied canary before correction. Each allowed parent now explicitly excludes
+children again before individual source-file exceptions. Rebuilt actual image
+sha256:769c5489fd0d88348ecc3b7b9af996b978220c5e8eb5017ef4d290be64055ed7
+passed canary, source-cache and test exclusion plus production imports. The smoke
+also checks absent source __pycache__. Only synthetic test material was used;
+no image was published to a registry. Hosted acceptance requires a fresh green run.
+
 Candidate amd64 platform artifacts, resolved2026-11-09:
 
 | Component | Source/version observed | Immutable manifest |

@@ -13,6 +13,7 @@ import { LoadingRows, Paging, ReadError, usePaging } from "@/components/team-adm
 import type { TeamApi } from "@/lib/teams";
 import type { AccountApi, AccountCreate } from "@/lib/users";
 import { AccountWriteFeedback, passwordError, useAccountWrite } from "./write";
+import { IdentityActivity } from "./activity";
 
 const schema = z.object({ display_name: z.string().trim().refine(value =>
   Array.from(value).length >= 1 && Array.from(value).length <= 150, "Use um nome de 1 a 150 caracteres."),
@@ -70,6 +71,6 @@ export function AccountDirectory({ api, teams, session }: { api: AccountApi; tea
               <span className="record-meta">{account.email}</span></div><span className="record-status">{account.active ? "Ativa" : "Desativada"}</span></li>)}
           </ul> : <p>{paging.index ? "Nenhuma conta nesta página. Volte à página anterior." : "Nenhuma conta cadastrada."}</p>}
       <Paging paging={paging} next={query.data?.next_cursor} label="contas" disabled={write.locked || query.isFetching} />
-    </section></div>
+    </section><IdentityActivity session={session} /></div>
   </div>;
 }

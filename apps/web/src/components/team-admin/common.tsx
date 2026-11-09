@@ -27,10 +27,10 @@ export function Paging({ paging, next, label, disabled = false }: {
 }) {
   return <nav className="paging" aria-label={`Páginas de ${label}`}>
     <Button variant="outline" disabled={disabled || paging.index === 0} onClick={paging.previous}>
-      {label === "equipes" ? "Equipes anteriores" : label === "contas" ? "Contas anteriores" : label === "acessos" ? "Acessos anteriores" : "Participantes anteriores"}
+      {label === "equipes" ? "Equipes anteriores" : label === "contas" ? "Contas anteriores" : label === "acessos" ? "Acessos anteriores" : label === "atividades" ? "Atividades anteriores" : "Participantes anteriores"}
     </Button><span>Página {paging.index + 1}</span>
     <Button variant="outline" disabled={disabled || !next} onClick={() => next && paging.next(next)}>
-      {label === "equipes" ? "Próximas equipes" : label === "contas" ? "Próximas contas" : label === "acessos" ? "Próximos acessos" : "Próximos participantes"}
+      {label === "equipes" ? "Próximas equipes" : label === "contas" ? "Próximas contas" : label === "acessos" ? "Próximos acessos" : label === "atividades" ? "Próximas atividades" : "Próximos participantes"}
     </Button>
   </nav>;
 }

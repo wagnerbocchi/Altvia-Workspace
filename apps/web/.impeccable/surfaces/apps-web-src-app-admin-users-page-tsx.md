@@ -41,3 +41,14 @@ automatic retry. Preserve uncertain original intent across independent read
 recovery. Bound paging and fence callbacks to current session. Inline confirmation
 warns of session revocation, with actionable last-admin refusal. No design-system
 change. Existing provisional branding and pre-existing sidecar drift remain.
+
+## Foundation activity extension
+
+ADR-0017 adds a recent administrative-history section below the existing account
+list in the same flat plane. Preserve the complete directory/detail system. Use
+real cursor-paged activity, semantic action labels, real timestamps, resource and
+actor identifiers with wrapping text, local refresh/error/empty states. No metrics,
+ornament, new palette, assets or new visual world. Ordinary identity users never
+mount this section. History read recovery remains independent of credential
+intent recovery; session replacement disposes both. Review desktop/mobile in
+both themes and verify full-page overflow with the longer directory.

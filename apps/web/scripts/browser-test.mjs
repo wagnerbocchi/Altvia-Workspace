@@ -39,6 +39,7 @@ try {
   process.loadEnvFile(resolve(root, ".env.browser-session"));
   const python = resolve(root, process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python");
   run(python, ["-m", "uvicorn", "altvia.main:create_app", "--factory", "--host", "127.0.0.1", "--port", "8000", "--no-proxy-headers", "--no-access-log"]);
+  if (process.env.ALTVIA_REDIS_URL) run(python, ["-m", "altvia.worker", "run"]);
   run(process.execPath, [require.resolve("next/dist/bin/next"), "start", "--hostname", "127.0.0.1"], web);
   const certificates = await selfsigned.generate([{ name: "commonName", value: "localhost" }], {
     keySize: 2048, algorithm: "sha256", extensions: [{ name: "subjectAltName", altNames: [

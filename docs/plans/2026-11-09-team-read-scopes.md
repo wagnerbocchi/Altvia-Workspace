@@ -60,14 +60,14 @@ Consumes: Task 1 signature/constraints and existing auth/CSRF/metadata DTOs.
 Produces: grant-team-role/revoke-team-role commands with --team-id/--role and
 email+scope confirmation; team.read policy; filtered GET teams/detail/members.
 
-- [ ] Write failing tests for both fixed roles' API isolation, filter-before-page,
+- [x] Write failing tests for both fixed roles' API isolation, filter-before-page,
   own/other rosters, ordinary membership denial, all write/user-directory denial,
   revoke/disable behavior, global-admin compatibility and CLI safe confirmations.
-- [ ] Observe the old global-only denial/parser/policy failures.
-- [ ] Implement read SQL subquery and typed team.read policy; retain identity.manage
+- [x] Observe the old global-only denial/parser/policy failures.
+- [x] Implement read SQL subquery and typed team.read policy; retain identity.manage
   for all existing writes and /users. Extend the restricted parser without secret
   echo or arbitrary role/scope parameters. Global capability response stays stable.
-- [ ] Run the complete suite and required checks; export/verify generated contracts,
+- [x] Run the complete suite and required checks; export/verify generated contracts,
   obtain fresh read-only review and fix material findings with regression proof.
 - [ ] Document exact evidence/limits, commit/push main and observe both Linux CIs.
 

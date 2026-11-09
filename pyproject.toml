@@ -11,6 +11,8 @@ dependencies = [
   "psycopg[binary]>=3.2,<4",
   "argon2-cffi>=23.1,<26",
   "pydantic-settings>=2.7,<3",
+  "dramatiq[redis]==2.2.1",
+  "redis==8.1.0",
 ]
 
 [dependency-groups]
@@ -20,6 +22,7 @@ dev = [
     "ruff>=0.11,<1",
     "mypy>=1.15,<2",
     "httpx2>=2.16.0",
+    "bandit==1.9.4",
 ]
 
 [build-system]

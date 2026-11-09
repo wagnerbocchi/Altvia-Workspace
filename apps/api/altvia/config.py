@@ -5,7 +5,7 @@ from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings(BaseSettings):
+class DatabaseSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="ALTVIA_",
         env_file=".env",
@@ -15,7 +15,6 @@ class Settings(BaseSettings):
     )
 
     database_url: SecretStr
-    public_origin: str
 
     @field_validator("database_url")
     @classmethod
@@ -23,6 +22,10 @@ class Settings(BaseSettings):
         if not value.get_secret_value().startswith("postgresql+psycopg://"):
             raise ValueError("A PostgreSQL psycopg URL is required")
         return value
+
+
+class Settings(DatabaseSettings):
+    public_origin: str
 
     @field_validator("public_origin")
     @classmethod
@@ -39,3 +42,23 @@ class Settings(BaseSettings):
         ):
             raise ValueError("An exact HTTPS origin without credentials/path is required")
         return value.rstrip("/")
+
+
+class WorkerSettings(DatabaseSettings):
+    redis_url: SecretStr
+    worker_state_dir: Path = Path("/run/altvia")
+
+    @field_validator("redis_url")
+    @classmethod
+    def require_authenticated_redis(cls, value: SecretStr) -> SecretStr:
+        parsed = urlsplit(value.get_secret_value())
+        if (
+            parsed.scheme != "redis"
+            or not parsed.hostname
+            or not parsed.password
+            or parsed.path not in ("", "/0")
+            or parsed.query
+            or parsed.fragment
+        ):
+            raise ValueError("An authenticated private Redis database 0 URL is required")
+        return value

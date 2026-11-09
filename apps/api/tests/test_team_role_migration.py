@@ -3,6 +3,7 @@
 import pytest
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from altvia import management
 from altvia.models import Team
 from sqlalchemy import text
@@ -12,6 +13,7 @@ from sqlalchemy.orm import Session
 
 def test_scope_migration_preserves_global_grants_and_refuses_loss(db_engine, seeded_user):
     config = Config("apps/api/alembic.ini")
+    head = ScriptDirectory.from_config(config).get_current_head()
     with Session(db_engine) as db, db.begin():
         management.set_platform_admin(db, "employee@example.test", True)
         team = Team(name="Migration proof")
@@ -54,7 +56,7 @@ def test_scope_migration_preserves_global_grants_and_refuses_loss(db_engine, see
         management.set_team_role(db, "employee@example.test", team_id, "viewer", True)
     with pytest.raises(DBAPIError, match="Cannot downgrade while scoped grants exist"):
         command.downgrade(config, "b46087000003")
-    assert version() == "b46087000004"
+    assert version() == head
     assert len(global_grants()) == 2
     with Session(db_engine) as db, db.begin():
         management.set_team_role(db, "employee@example.test", team_id, "viewer", False)

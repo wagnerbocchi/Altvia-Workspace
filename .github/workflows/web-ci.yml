@@ -27,6 +27,9 @@ jobs:
       ALTVIA_DATABASE_URL: postgresql+psycopg://altvia_test:test-${{ github.run_id }}-${{ github.run_attempt }}@127.0.0.1:5432/altvia_test
       ALTVIA_PUBLIC_ORIGIN: https://127.0.0.1:3443
       ALTVIA_ALLOW_TEST_DB: "1"
+      ALTVIA_REDIS_URL: redis://:test-${{ github.run_id }}-${{ github.run_attempt }}@127.0.0.1:6379/0
+      ALTVIA_CI_REDIS_PASSWORD: test-${{ github.run_id }}-${{ github.run_attempt }}
+      ALTVIA_WORKER_STATE_DIR: /tmp/altvia-ci-worker
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -42,6 +45,7 @@ jobs:
           node-version: "24.21.0"
           cache: pnpm
       - run: uv sync --locked
+      - run: sh scripts/ci_redis.sh
       - run: pnpm install --frozen-lockfile
       - run: node scripts/check_web_native.mjs
       - run: uv run ruff check scripts
@@ -54,5 +58,7 @@ jobs:
       - run: pnpm audit --audit-level=moderate
       - run: pnpm --filter @altvia/web exec playwright install --with-deps chromium
       - run: uv run node apps/web/scripts/browser-test.mjs
+      - if: always()
+        run: docker rm -f altvia-ci-redis
 
 # Real HTTPS browser/API/PostgreSQL integration; not target-VM homologation.

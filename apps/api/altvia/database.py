@@ -1,14 +1,14 @@
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import DeclarativeBase
 
-from altvia.config import Settings
+from altvia.config import DatabaseSettings
 
 
 class Base(DeclarativeBase):
     pass
 
 
-def make_engine(settings: Settings) -> Engine:
+def make_engine(settings: DatabaseSettings) -> Engine:
     return create_engine(
         settings.database_url.get_secret_value(),
         pool_pre_ping=True,

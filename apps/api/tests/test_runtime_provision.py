@@ -16,6 +16,38 @@ def runtime_url(db_engine):
     return db_engine.url.set(username="altvia_app", password=secrets.token_urlsafe(24))
 
 
+def test_worker_role_is_restricted_and_api_activity_is_read_only(db_engine, seeded_user):
+    worker = runtime_url(db_engine).set(username="altvia_worker")
+    provision.provision_runtime(
+        db_engine,
+        runtime_url(db_engine).render_as_string(hide_password=False),
+        worker.render_as_string(hide_password=False),
+    )
+    engine = create_engine(worker, hide_parameters=True)
+    try:
+        with engine.begin() as connection:
+            connection.execute(text("SELECT event_id FROM outbox_events LIMIT 1"))
+            connection.execute(text("SELECT event_id FROM activity_events LIMIT 1"))
+            connection.execute(text("SELECT event_id FROM processed_events LIMIT 1"))
+        for statement in (
+            "SELECT * FROM users",
+            "SELECT * FROM sessions",
+            "SELECT * FROM audit_logs",
+            "UPDATE users SET active=false",
+            "UPDATE outbox_events SET payload='{}'",
+            "DELETE FROM outbox_events",
+            "DELETE FROM activity_events",
+            "DELETE FROM processed_events",
+            "UPDATE activity_events SET event_type='forged'",
+            "CREATE TABLE forbidden_worker(id int)",
+            "CREATE ROLE forbidden_worker_admin SUPERUSER",
+        ):
+            with engine.begin() as connection, pytest.raises(DBAPIError):
+                connection.execute(text(statement))
+    finally:
+        engine.dispose()
+
+
 def test_runtime_role_can_operate_api_but_cannot_migrate_or_rewrite_history(
     db_engine, seeded_user, settings
 ):

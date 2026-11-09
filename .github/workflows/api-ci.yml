@@ -28,6 +28,8 @@ jobs:
       ALTVIA_DATABASE_URL: postgresql+psycopg://altvia_test:test-${{ github.run_id }}-${{ github.run_attempt }}@127.0.0.1:5432/altvia_test
       ALTVIA_PUBLIC_ORIGIN: https://testserver
       ALTVIA_ALLOW_TEST_DB: "1"
+      ALTVIA_REDIS_URL: redis://:test-${{ github.run_id }}-${{ github.run_attempt }}@127.0.0.1:6379/0
+      ALTVIA_CI_REDIS_PASSWORD: test-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
@@ -35,6 +37,7 @@ jobs:
           enable-cache: true
           python-version: "3.12"
       - run: uv sync --locked
+      - run: sh scripts/ci_redis.sh
       - run: uv run ruff check apps/api
       - run: uv run ruff format --check apps/api
       - run: uv run mypy
@@ -42,6 +45,8 @@ jobs:
       - run: uv run alembic -c apps/api/alembic.ini check
       - run: uv run pytest -q
       - run: uv build
+      - if: always()
+        run: docker rm -f altvia-ci-redis
 
 # This job validates API development. It does not homologate the target CPU,
 # scan production images or replace the Phase 1/6 deployment/security gates.

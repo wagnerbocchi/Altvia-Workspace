@@ -66,6 +66,9 @@ def check_runtime() -> dict[str, str]:
         "altvia.main",
         "altvia.cli",
         "altvia.provision",
+        "altvia.worker",
+        "dramatiq.brokers.redis",
+        "redis",
     ):
         importlib.import_module(module)
     import zlib

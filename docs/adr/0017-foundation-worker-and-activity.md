@@ -56,9 +56,10 @@ worker start. Downgrade refuses while new durable rows exist; never erase histor
 to roll back. Old API remains compatible with the expanded schema.
 
 API uses existing altvia_app, adding SELECT on activity_events only. Worker uses
-separate altvia_worker credential: SELECT/UPDATE outbox_events, SELECT/INSERT
-processed_events/activity_events, no user/role/session mutation, audit access,
-schema/database creation or role administration. Migrations alone use owner.
+separate altvia_worker credential: SELECT outbox_events and UPDATE only processing
+status columns, SELECT/INSERT processed_events/activity_events and insert-only
+audit for confirmed DLQ replay. No event-payload/user/role/session mutation, audit
+reads/edits, schema/database creation or role administration. Migrations alone use owner.
 Redis and worker secrets stay in external read-only files; API/web get no Redis
 or worker credential. Redis has no host port, runs non-root in a private queue
 network with authentication, memory bound and no persistence assumption.

@@ -117,6 +117,7 @@ class OutboxEvent(Base):
     attempts: Mapped[int] = mapped_column(default=0)
     next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_error_code: Mapped[str | None] = mapped_column(String(50))
 
 
 class LoginBucket(Base):
@@ -167,3 +168,30 @@ class IdempotencyRecord(Base):
     result: Mapped[dict[str, object]] = mapped_column(JSONB)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ProcessedEvent(Base):
+    __tablename__ = "processed_events"
+    consumer: Mapped[str] = mapped_column(String(50), primary_key=True)
+    event_id: Mapped[UUID] = mapped_column(ForeignKey("outbox_events.event_id"), primary_key=True)
+    processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ActivityEvent(Base):
+    __tablename__ = "activity_events"
+    __table_args__ = (
+        CheckConstraint("aggregate_version > 0", name="ck_activity_version"),
+        CheckConstraint("resource_type IN ('identity','team')", name="ck_activity_resource"),
+        CheckConstraint("actor_kind IN ('user','management_command')", name="ck_activity_actor"),
+        Index("ix_activity_order", "occurred_at", "event_id"),
+    )
+    event_id: Mapped[UUID] = mapped_column(ForeignKey("outbox_events.event_id"), primary_key=True)
+    resource_type: Mapped[str] = mapped_column(String(50))
+    resource_id: Mapped[UUID]
+    event_type: Mapped[str] = mapped_column(String(80))
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    actor_id: Mapped[UUID | None]
+    actor_kind: Mapped[str] = mapped_column(String(30))
+    aggregate_version: Mapped[int]
+    correlation_id: Mapped[str] = mapped_column(String(64))
+    details: Mapped[dict[str, str]] = mapped_column(JSONB)

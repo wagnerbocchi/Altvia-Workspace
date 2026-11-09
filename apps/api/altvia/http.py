@@ -1,5 +1,7 @@
 import hmac
+import logging
 import re
+from time import perf_counter
 from uuid import uuid4
 
 from starlette.requests import Request
@@ -55,9 +57,22 @@ class RequestBoundary:
         supplied = headers.get(b"x-correlation-id", b"").decode("ascii", errors="ignore")
         correlation = supplied if re.fullmatch(r"[A-Za-z0-9_-]{1,64}", supplied) else uuid4().hex
         scope.setdefault("state", {})["correlation_id"] = correlation
+        started = perf_counter()
 
         async def send_headers(message: Message) -> None:
             if message["type"] == "http.response.start":
+                route = getattr(scope.get("route"), "path", "unmatched")
+                logging.getLogger("altvia.requests").info(
+                    "",
+                    extra={
+                        "event_code": "http_request",
+                        "correlation_id": correlation,
+                        "route": route,
+                        "method": scope["method"],
+                        "status": message["status"],
+                        "duration_ms": round((perf_counter() - started) * 1000, 3),
+                    },
+                )
                 message["headers"] = list(message.get("headers", [])) + [
                     (b"x-correlation-id", correlation.encode()),
                     (b"cache-control", b"no-store"),

@@ -13,10 +13,12 @@ from starlette.exceptions import HTTPException
 from starlette.responses import JSONResponse
 
 from altvia import identity
+from altvia.activity_api import create_activity_router
 from altvia.config import Settings
 from altvia.database import Base, make_engine
 from altvia.http import RequestBoundary, problem, require_csrf, require_origin
 from altvia.models import User
+from altvia.observability import configure_logging
 from altvia.team_api import create_team_router
 from altvia.user_api import create_user_router
 
@@ -47,6 +49,7 @@ class LoginOutput(BaseModel):
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
+    configure_logging()
     config = settings or Settings()
     engine = make_engine(config)
 
@@ -180,4 +183,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app.include_router(create_team_router(engine, config))
     app.include_router(create_user_router(engine, config))
+    app.include_router(create_activity_router(engine, config))
     return app

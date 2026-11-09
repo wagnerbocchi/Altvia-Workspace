@@ -1,0 +1,45 @@
+name: Source security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  source-security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          python-version: '3.12'
+          enable-cache: true
+      - run: uv sync --locked
+      - name: SAST with complete metadata evidence
+        run: |
+          uv run bandit -r apps/api/altvia -f json -o "$RUNNER_TEMP/bandit-raw.json" --exit-zero
+          uv run python scripts/summarize_source_security.py bandit "$RUNNER_TEMP/bandit-raw.json" "$RUNNER_TEMP/source-sast-summary.json"
+      - name: Secret scan of tracked source
+        run: |
+          mkdir "$RUNNER_TEMP/altvia-tracked-source"
+          git archive HEAD | tar -x -C "$RUNNER_TEMP/altvia-tracked-source"
+          docker run --rm \
+            --mount "type=bind,source=$RUNNER_TEMP/altvia-tracked-source,target=/source,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP,target=/scan" \
+            docker.io/aquasec/trivy@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa \
+            fs --quiet --scanners secret --ignorefile=/dev/null --format json --output /scan/trivy-secrets-raw.json /source
+          uv run python scripts/summarize_source_security.py trivy "$RUNNER_TEMP/trivy-secrets-raw.json" "$RUNNER_TEMP/source-secret-summary.json"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: source-security-${{ github.sha }}
+          path: ${{ runner.temp }}/source-*-summary.json
+          if-no-files-found: error
+          retention-days: 30
+
+# Raw matches/code never leave runner temporary storage. SAST medium+ and every
+# detected secret fail; low SAST metadata remains visible without blanket ignores.

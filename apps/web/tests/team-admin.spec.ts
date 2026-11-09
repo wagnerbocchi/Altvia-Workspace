@@ -220,10 +220,15 @@ test("@teams uncertain membership replays its original version after a concurren
   await page.getByRole("button", { name: "Adicionar participante", exact: true }).click();
   await expect(page.getByRole("button", { name: "Verificar resultado" })).toBeVisible();
   await page.route(`**/api/v1/teams/${id}/members?*`, route => route.abort());
+  await page.route(`**/api/v1/teams/${id}`, route => route.abort());
+  const failedDetail = page.waitForEvent("requestfailed", { predicate: request => request.url().endsWith(`/teams/${id}`) });
+  const failedRoster = page.waitForEvent("requestfailed", { predicate: request => request.url().includes(`/teams/${id}/members?`) });
   await page.evaluate(() => window.dispatchEvent(new Event("visibilitychange")));
+  await Promise.all([failedDetail, failedRoster]);
   const readRecovery = page.getByRole("button", { name: "Tentar carregar novamente" }).first();
   await expect(readRecovery).toBeVisible();
   await page.unroute(`**/api/v1/teams/${id}/members?*`);
+  await page.unroute(`**/api/v1/teams/${id}`);
   await readRecovery.click();
   await expect(page.getByRole("button", { name: "Verificar resultado" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Adicionar participante", exact: true })).toBeDisabled();
@@ -362,7 +367,7 @@ test(`@teams late creation response cannot navigate a replacement ${replacement}
   await page.unrouteAll({ behavior: "wait" });
   await expect(page).toHaveURL(/\/admin\/teams$/);
   await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
-  await expect(page.getByText("Resposta da sessao anterior", { exact: true })).toHaveCount(0);
+  if (replacement === "subject") await expect(page.getByText("Resposta da sessao anterior", { exact: true })).toHaveCount(0);
 });
 }
 

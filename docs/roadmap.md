@@ -42,8 +42,8 @@ currently covers this GitHub repository's main only, not production services.
 
 | ID | Needed answer / owner | Safe action while pending | Gate blocked |
 | --- | --- | --- | --- |
-| Q-01 | Infrastructure admin: target hostname/SSH user and approved access path; raw guest flags/OS | Local development; no fabricated guest evidence, no SSH setting changes | Phase 1 CPU homologation |
-| Q-02 | Infrastructure admin: RAM/disk/IOPS/persistent volumes, load/users/mail per day | Conservative bounded defaults; no performance promise | Capacity/prod readiness |
+| Q-01 | Target SSH access and raw CPU/OS inventory obtained on 2026-11-09; Docker/Compose absent, host installation authorization pending | Retain read-only evidence; prepare isolated runtime validation; no SSH setting changes | Phase 1 CPU/runtime homologation |
+| Q-02 | Infrastructure admin: IOPS, workload/users/mail per day and production volume/backup policy; observed 8 vCPUs, 31.3 GiB RAM and 500 GiB disk | Conservative bounded defaults; inventory alone establishes no capacity or performance promise | Capacity/prod readiness |
 | Q-03 | Support owner: mailboxes, TLS/auth/forwarding/trusted MTA and SMTP limits | Adapter contracts and controlled test SMTP/IMAP only | Real Phase 3 email acceptance |
 | Q-04 | Operations: actual client/team/project/queue membership matrix | Deny by default; test explicit grants with synthetic test data only | Provisioning/pilot |
 | Q-05 | Operations: approve 29 source-label mappings and 8 participant aliases | Preserve unresolved source; no automatic client merges/user creation | Real import |
@@ -64,7 +64,7 @@ building on the existing CLI invariants and the completed team/roster browser
 slice (960cd7d, ADR-0015), and a
 worker/Redis slice only when it has a real durable consumer, alongside Q-01 and
 operational readiness. Preserve Q-01 as the Phase1 exit gate; do not substitute
-modern CI execution for the unavailable VM or begin Phase2 prematurely.
+modern CI execution for actual target runtime validation or begin Phase2 prematurely.
 
 Residual findings were fixed on683e34d; packaged same-origin web ingress passed
 acceptance on465a85b. Both revisions passed all four hosted gates. The four actual

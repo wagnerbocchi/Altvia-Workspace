@@ -161,3 +161,30 @@ four installed-image scans report zero findings. This does not close any guest
 gate. The Alpine nodejs APKBUILD uses generic compiler flags and shared-library
 switches; SIMD-enabled libraries still require functional tests on the actual VM:
 https://github.com/alpinelinux/aports/blob/3.24-stable/main/nodejs/APKBUILD.
+
+## Actual target inventory, 2026-11-09
+
+The owner supplied password-based SSH access after updating the VM. Read-only
+inventory completed with SSH exit 0 and strict verification against the existing
+known-host key. No package, service, SSH setting, firewall rule or application data
+was changed. Target address and complete raw results remain in private managed
+artifacts/target-vm/initial-inventory-2026-11-09/, outside Git.
+
+The current observed guest differs from the original reported baseline above:
+
+| Item | Observed result |
+| --- | --- |
+| OS/kernel | Ubuntu 26.04.1 LTS; 7.0.0-43-generic |
+| CPU | x86_64; 8 vCPUs; KVM; QEMU Virtual CPU version 2.5+ |
+| Relevant flags | sse, sse2, pni, cx16; no ssse3, sse4_1, sse4_2, avx, avx2, fma or bmi2 |
+| RAM | 33,635,188,736 bytes, approximately 31.3 GiB |
+| Storage | 500 GiB virtual disk; ext4 root; 497,031,471,104 bytes available at collection |
+| Docker/Compose | Executables absent; version/info/runtime probes recorded exit 127 |
+
+The raw inventory is evidence of actual guest resources and advertised CPU flags,
+not of application/native artifact compatibility. Runtime, functional, recovery
+and load gates remain open. Docker/Compose installation and an isolated test stack
+require host-change authorization; that next action is pending. Check repository
+package candidates and simulate dependencies before installing, and retain exact
+versions and command outcomes. Keep application test listeners on loopback and
+preserve all existing VM data. Do not substitute OS metadata for execution proof.

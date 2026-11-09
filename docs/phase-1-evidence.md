@@ -169,6 +169,22 @@ The independent documenter extracted source-backed tokens to DESIGN.md and
 .impeccable/design.json, validated YAML/JSON references and schema structure,
 and preserved the provisional-brand status. No shipping raster assets exist.
 
+### Hosted publication evidence
+
+Implementation commit `88d945c` was pushed directly to main under the user's
+authorization, without PR. Both Linux workflows passed:
+
+- [Browser checks 42556327634](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42556327634):
+  clean locked installation, Sharp absence guard, Python script checks,
+  generated-contract drift check, frontend lint/types/production build,
+  dependency audit and all 7 real HTTPS/PostgreSQL Playwright tests.
+- [API checks 42556327651](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42556327651):
+  unchanged API lint/format/mypy, real PostgreSQL migration/drift checks, all
+  44 tests and wheel/source build.
+
+These hosted runs validate the application/tool chain on Ubuntu GitHub runners,
+not the target VM CPU or production topology. No required step was skipped.
+
 ### CPU and remaining acceptance limits
 
 Sharp's upstream Linux x64 prebuilts require SSE4.2. It is an optional Next

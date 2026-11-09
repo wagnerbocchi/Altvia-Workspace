@@ -71,7 +71,8 @@ native mobile and local AI remain outside MVP. No speculative code for backlog.
   open for administration/process/runtime/security/target-VM gates.
 - Phase 1B: real browser login/account/logout, generated API types, 7 real
   HTTPS/PostgreSQL browser tests, theme/responsive/axe checks and reviewed focus
-  recovery. Sharp excluded to avoid its Linux x64 SSE4.2 requirement. Phase 1C
+  recovery, published in `88d945c` with both Linux workflows green. Sharp
+  excluded to avoid its Linux x64 SSE4.2 requirement. Phase 1C
   administration/processes/ingress/security and target-VM gates remain open.
 - Future implementation entries must include commit, exact commands/results,
   target artifact/host when relevant and outstanding gates. Do not mark a phase

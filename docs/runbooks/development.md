@@ -2,7 +2,8 @@
 
 Scope: Phase 1A. Python 3.12, uv, PostgreSQL 17. No SQLite fallback. The checked
 uv.lock pins the tested dependency versions and hashes. No production account
-or database is created automatically. Frontend/worker/Compose are later slices.
+or database is created automatically. The Phase 1B browser runbook is
+`docs/runbooks/browser-development.md`. Worker/Compose remain later slices.
 
 ## Local API
 

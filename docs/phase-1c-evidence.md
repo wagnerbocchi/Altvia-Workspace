@@ -225,7 +225,24 @@ No Critical, Important or Minor defect was identified. The reviewer did not run
 DB tests or mutate the checkout. It excluded actual VM/production acceptance and
 administrative UI/future client integration, as already bounded by this plan.
 Those exclusions do not waive any phase gate or imply those features are complete.
-Publication evidence follows after the hosted workflows actually finish.
+
+### Team scope publication evidence
+
+Storage/service fd92682, CLI/API ea7f081 and reviewed evidence d59709f were pushed
+directly to main under standing authorization, without a PR. On d59709f both
+hosted Linux workflows completed successfully:
+
+- [API checks 42611582148](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42611582148):
+  fresh migrations/drift, Ruff/format/mypy, **213 passed** (59.09s), wheel/source build.
+- [Browser checks 42611582196](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42611582196):
+  clean locked install, Sharp exclusion, contract generation/drift, frontend
+  checks/build, dependency audit with no known vulnerabilities and **7 passed**
+  real HTTPS/PostgreSQL E2E cases (7.7s).
+
+The connector did not return the known workflow runs, so their status and test
+summaries were verified using gh. Task-owned PostgreSQL and its local SSH forward
+were stopped after validation; volumes and pre-existing user containers were
+preserved. This is development/hosted CI evidence, not target-CPU homologation.
 
 Phase 1 remains open: worker/outbox delivery, Redis/Compose/ingress/non-root images,
 client/operational grants, HTTP account mutation/admin UI, complete security/image

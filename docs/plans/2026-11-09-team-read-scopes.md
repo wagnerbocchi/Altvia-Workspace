@@ -69,7 +69,7 @@ email+scope confirmation; team.read policy; filtered GET teams/detail/members.
   echo or arbitrary role/scope parameters. Global capability response stays stable.
 - [x] Run the complete suite and required checks; export/verify generated contracts,
   obtain fresh read-only review and fix material findings with regression proof.
-- [ ] Document exact evidence/limits, commit/push main and observe both Linux CIs.
+- [x] Document exact evidence/limits, commit/push main and observe both Linux CIs.
 
 ## Rulings and pre-flight
 

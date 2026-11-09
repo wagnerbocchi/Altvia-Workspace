@@ -37,9 +37,14 @@ test("@activity real persisted administrative history has bounded pages and safe
   for (const theme of ["light", "dark"]) {
     await page.evaluate(value => localStorage.setItem("theme", value), theme); await page.reload();
     await expect(history.getByRole("listitem")).toHaveCount(10);
+    await expect(page.getByText("Carregando contas...", { exact: true })).toBeHidden();
     for (const [name, width] of [["desktop", 1440], ["mobile", 390]] as const) {
       await page.setViewportSize({ width, height: 1000 });
+      await page.evaluate(() => window.scrollTo(0, 0));
       await page.screenshot({ path: `${shots}/${name}-${theme}.png`, fullPage: true });
+      const region = await page.getByRole("region", { name: "Histórico administrativo" }).boundingBox();
+      expect(region).not.toBeNull();
+      await page.screenshot({ path: `${shots}/${name}-${theme}-history.png`, fullPage: true, clip: region! });
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       expect((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations).toEqual([]);
     }

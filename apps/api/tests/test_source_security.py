@@ -46,6 +46,24 @@ def test_ci_source_reports_keep_all_severities_but_never_source_or_match():
     assert secret not in json.dumps(low)
 
 
+def test_clean_pinned_trivy_report_can_omit_results_but_not_scanner_metadata():
+    sanitize = runpy.run_path("scripts/summarize_source_security.py")["sanitize"]
+    # The pinned scanner emits this shape with exit0 for a clean fs/secret scan.
+    clean = {
+        "SchemaVersion": 2,
+        "Trivy": {"Version": "0.75.0"},
+        "ReportID": "e0a76dd5-777b-4cbd-9c0e-4a839b2edc40",
+        "CreatedAt": "2026-11-09T22:00:00Z",
+        "ArtifactName": "/source",
+        "ArtifactType": "filesystem",
+    }
+    assert sanitize(clean, "trivy") == {"tool": "trivy", "findings": [], "blocking_count": 0}
+    for field in ("Trivy", "ArtifactName", "ArtifactType"):
+        incomplete = {key: value for key, value in clean.items() if key != field}
+        with pytest.raises(ValueError):
+            sanitize(incomplete, "trivy")
+
+
 @pytest.mark.parametrize(
     "report,kind",
     [

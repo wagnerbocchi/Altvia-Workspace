@@ -638,6 +638,76 @@ with Session(make_engine(s)) as db, db.begin():
                 headers={"Idempotency-Key": uuid4().hex, "If-Match": '"9"'},
             )
             assert changed.status_code == 200 and changed.json()["version"] == 10
+            # Freeze only this disposable broker: existing sockets blackhole,
+            # unlike a stopped service that immediately refuses connections.
+            run([*compose, "pause", "redis"])
+            try:
+                batch = exec_api(
+                    """
+import json,sys
+from sqlalchemy.orm import Session
+from altvia.config import Settings
+from altvia.database import make_engine
+from altvia import management
+with Session(make_engine(Settings())) as db, db.begin():
+    user=management.create_user(db,'shutdown@example.test','Shutdown',json.load(sys.stdin)['password'])
+    for active in [False,True]*13:
+        management.set_account_active(db,'shutdown@example.test',active)
+    print(json.dumps({'id':str(user.id)}))
+""",
+                    {"password": password},
+                )
+                batch_id = json.loads(batch)["id"]
+                count_batch = """
+import json,sys
+from uuid import UUID
+from sqlalchemy import select,func
+from sqlalchemy.orm import Session
+from altvia.config import Settings
+from altvia.database import make_engine
+from altvia.models import OutboxEvent,ActivityEvent
+data=json.load(sys.stdin)
+with Session(make_engine(Settings())) as db:
+    table=ActivityEvent if data['projected'] else OutboxEvent
+    resource=table.resource_id if data['projected'] else table.aggregate_id
+    query=select(func.count()).select_from(table).where(resource==UUID(data['id']))
+    if not data['projected']: query=query.where(table.status=='processing')
+    print(db.scalar(query))
+"""
+                for _ in range(40):
+                    if int(exec_api(count_batch, {"id": batch_id, "projected": False})) >= 24:
+                        break
+                    time.sleep(0.25)
+                else:
+                    raise RuntimeError("Outage proof did not observe a claimed dispatch batch")
+                shutdown_started = time.monotonic()
+                run([*compose, "stop", "-t", "30", "worker"], timeout=40)
+                shutdown_seconds = time.monotonic() - shutdown_started
+                worker_state = container("worker")["State"]
+                assert worker_state["ExitCode"] == 0 and not worker_state["OOMKilled"]
+                assert shutdown_seconds < 30
+            finally:
+                run([*compose, "unpause", "redis"])
+            run([*compose, "start", "worker"])
+            for _ in range(120):
+                if int(exec_api(count_batch, {"id": batch_id, "projected": True})) == 27:
+                    break
+                time.sleep(0.5)
+            else:
+                raise RuntimeError("Interrupted dispatch leases did not recover after restart")
+            (work / "worker-outage-proof.json").write_text(
+                json.dumps(
+                    {
+                        "exit_code": 0,
+                        "shutdown_seconds": shutdown_seconds,
+                        "recovered_events": 27,
+                        "broker_blackholed": True,
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
             assert (
                 client.patch(
                     path,

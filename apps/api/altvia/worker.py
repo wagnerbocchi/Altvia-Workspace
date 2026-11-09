@@ -15,7 +15,9 @@ from dramatiq.brokers.redis import RedisBroker
 from dramatiq.middleware import Retries
 from dramatiq.worker import Worker
 from pydantic import ValidationError
+from redis.backoff import NoBackoff
 from redis.exceptions import RedisError
+from redis.retry import Retry
 from sqlalchemy import Engine, func, select, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -37,8 +39,9 @@ def build_worker(
         url=settings.redis_url.get_secret_value(),
         namespace="altvia",
         middleware=[Retries(max_retries=0)],
-        socket_connect_timeout=3,
-        socket_timeout=5,
+        socket_connect_timeout=1,
+        socket_timeout=2,
+        retry=Retry(NoBackoff(), 0),
     )
 
     def project_identity(event_id: str) -> None:
@@ -73,9 +76,16 @@ def build_worker(
     return broker, Worker(broker, queues={"identity"}, worker_threads=2), registered
 
 
-def dispatch_once(engine: Engine, registered: Actor[[str], None], now: datetime) -> int:
+def dispatch_once(
+    engine: Engine, registered: Actor[[str], None], now: datetime, stop: Event | None = None
+) -> int:
     sent = 0
+    if stop is not None and stop.is_set():
+        return sent
     for event_id, lease in claim_events(engine, now):
+        if stop is not None and stop.is_set():
+            # Unsubmitted claims retain their leases and are recovered after expiry.
+            break
         try:
             registered.send(str(event_id))
             sent += 1
@@ -139,7 +149,9 @@ def main() -> int:
         LOGGER.info("", extra={"event_code": "worker_started"})
         while not stop.is_set():
             try:
-                count = dispatch_once(engine, registered, datetime.now(UTC))
+                count = dispatch_once(engine, registered, datetime.now(UTC), stop)
+                if stop.is_set():
+                    break
                 if (
                     broker.client.ping()
                     and all(t.is_alive() for t in worker.workers)
@@ -151,7 +163,9 @@ def main() -> int:
             except (RedisError, SQLAlchemyError):
                 LOGGER.error("", extra={"event_code": "worker_dependency_unavailable"})
             stop.wait(1)
-        worker.stop(timeout=20000)
+        # Dramatiq applies this budget separately to worker and consumer joins.
+        # Leave room within Compose's 30s grace for bounded broker I/O as well.
+        worker.stop(timeout=5000)
         worker = None
         LOGGER.info("", extra={"event_code": "worker_stopped"})
         return 0
@@ -160,7 +174,7 @@ def main() -> int:
         return 1
     finally:
         if worker is not None and worker.workers:
-            worker.stop(timeout=20000)
+            worker.stop(timeout=5000)
         if broker is not None:
             broker.client.close()
         if engine is not None:

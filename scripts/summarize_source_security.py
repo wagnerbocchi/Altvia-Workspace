@@ -21,10 +21,27 @@ def sanitize(report: dict, kind: str) -> dict:
             for row in report["results"]
         ]
     elif kind == "trivy":
-        if report.get("SchemaVersion") != 2 or not isinstance(report.get("Results"), list):
+        if report.get("SchemaVersion") != 2:
+            raise ValueError("Incomplete secret scan")
+        if "Results" not in report:
+            # Trivy 0.75 omits Results on a successful clean filesystem scan.
+            # An absent report or an explicit null must never become a clean scan.
+            if (
+                not isinstance(report.get("Trivy"), dict)
+                or report["Trivy"].get("Version") != "0.75.0"
+                or not isinstance(report.get("ArtifactName"), str)
+                or not report["ArtifactName"]
+                or report.get("ArtifactType") != "filesystem"
+                or not isinstance(report.get("ReportID"), str)
+                or not report["ReportID"]
+                or not isinstance(report.get("CreatedAt"), str)
+                or not report["CreatedAt"]
+            ):
+                raise ValueError("Incomplete secret scan")
+        elif not isinstance(report["Results"], list):
             raise ValueError("Incomplete secret scan")
         rows = []
-        for target in report["Results"]:
+        for target in report.get("Results", []):
             secrets = target.get("Secrets", [])
             if not isinstance(secrets, list):
                 raise ValueError("Invalid secret scan result")

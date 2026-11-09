@@ -1,6 +1,7 @@
 import os
 import time
 from datetime import UTC, datetime, timedelta
+from threading import Event
 
 import pytest
 from altvia import management
@@ -62,4 +63,34 @@ def test_real_json_transport_recovers_redis_loss_without_duplicate_effect(
             assert len(list(db.scalars(select(ActivityEvent)))) == 1
     finally:
         worker.stop(timeout=5000)
+        broker.client.close()
+
+
+def test_dispatch_cancellation_leaves_remaining_leases_recoverable(
+    broker_settings, db_engine, seeded_user, monkeypatch
+):
+    from altvia.worker import build_worker, dispatch_once
+
+    with Session(db_engine) as db, db.begin():
+        management.create_user(db, "cancel@example.test", "Cancel", TEST_PASSWORD)
+        for active in (False, True, False, True):
+            management.set_account_active(db, "cancel@example.test", active)
+    broker, worker, actor = build_worker(db_engine, broker_settings)
+    stopped = Event()
+    original = actor.send
+
+    def send_once(identifier):
+        result = original(identifier)  # Real JSON message goes through authenticated Redis.
+        stopped.set()
+        return result
+
+    monkeypatch.setattr(actor, "send", send_once)
+    try:
+        assert dispatch_once(db_engine, actor, datetime.now(UTC), stopped) == 1
+        with Session(db_engine) as db:
+            rows = list(db.scalars(select(OutboxEvent)))
+            assert len(rows) == 5 and all(
+                row.status == "processing" and row.lease_until is not None for row in rows
+            )
+    finally:
         broker.client.close()

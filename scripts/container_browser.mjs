@@ -125,6 +125,29 @@ try {
   await page.getByRole("link", { name: "Voltar às equipes" }).click();
   await expect(page.getByRole("link", { name: teamName, exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Voltar à minha conta" }).click();
+  await page.getByRole("link", { name: "Administrar contas" }).click();
+  const accountName = `Conta ${project}`;
+  await page.getByLabel("Nome da nova conta").fill(accountName);
+  await page.getByLabel("E-mail da nova conta").fill(`${project}@example.invalid`);
+  await page.getByLabel("Senha inicial").fill(password);
+  await page.getByRole("button", { name: "Criar conta", exact: true }).click();
+  await expect(page.getByRole("heading", { name: accountName, exact: true })).toBeVisible();
+  await page.getByLabel("Nova senha", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Redefinir senha", exact: true }).click();
+  await page.getByRole("button", { name: "Confirmar nova senha", exact: true }).click();
+  await expect(page.getByLabel("Nova senha", { exact: true })).toHaveValue("");
+  await page.getByRole("button", { name: "Desativar conta", exact: true }).click();
+  await page.getByRole("button", { name: "Confirmar desativação", exact: true }).click();
+  await expect(page.getByText("Conta desativada", { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("Conta desativada", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Ativar conta", exact: true }).click();
+  await page.getByRole("button", { name: "Confirmar ativação", exact: true }).click();
+  await expect(page.getByText("Conta ativa", { exact: true })).toBeVisible();
+  await page.screenshot({ path: resolve(screenshots, "admin-account-mobile.png"), fullPage: true });
+  assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations, []);
+  await page.getByRole("link", { name: "Voltar às contas" }).click();
+  await page.getByRole("link", { name: "Voltar à minha conta" }).click();
   await page.getByRole("button", { name: "Sair da conta" }).click();
   await expect(page.getByRole("status")).toHaveText("Você saiu da conta com segurança.");
   await expect(page.getByRole("heading", { name: "Acesse seu workspace" })).toBeFocused();
@@ -132,7 +155,7 @@ try {
   assert.equal((await context.cookies()).some(item => item.name === "__Host-altvia_session"), false);
   assert.deepEqual(errors, []);
   await context.close();
-  console.log("Packaged browser login/HTTPS/CSP/CSRF/recreation/teams/roster/logout/themes/axe proof passed.");
+  console.log("Packaged browser login/HTTPS/CSP/CSRF/recreation/teams/roster/accounts/logout/themes/axe proof passed.");
 } catch (error) {
   // Playwright locator diagnostics can include fill arguments. Never publish them.
   console.error(String(error).replaceAll(password, "[REDACTED]"));

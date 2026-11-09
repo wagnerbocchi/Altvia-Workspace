@@ -514,6 +514,50 @@ with Session(make_engine(s)) as db, db.begin():
                 assert response.status_code == 201
                 teams.append(response.json()["id"])
             path = f"/api/v1/teams/{teams[0]}"
+            account_body = {
+                "email": "http-administered@example.test",
+                "display_name": "Container HTTP Account",
+                "password": password,
+            }
+            account_headers = {"Idempotency-Key": uuid4().hex}
+            account_response = client.post(
+                "/api/v1/users", json=account_body, headers=account_headers
+            )
+            assert account_response.status_code == 201
+            assert (
+                client.post("/api/v1/users", json=account_body, headers=account_headers).json()
+                == account_response.json()
+            )
+            account_path = f"/api/v1/users/{account_response.json()['id']}"
+            password_headers = {"Idempotency-Key": uuid4().hex, "If-Match": '"1"'}
+            reset = client.post(
+                account_path + "/password", json={"password": password}, headers=password_headers
+            )
+            assert reset.status_code == 200 and reset.json()["version"] == 2
+            assert (
+                client.post(
+                    account_path + "/password",
+                    json={"password": password},
+                    headers=password_headers,
+                ).json()
+                == reset.json()
+            )
+            changes = [
+                ("team-roles", {"team_id": teams[0], "role_name": "viewer", "enabled": True}),
+                ("team-roles", {"team_id": teams[0], "role_name": "viewer", "enabled": False}),
+                ("activation", {"active": False}),
+                ("activation", {"active": True}),
+                ("platform-admin", {"enabled": True}),
+                ("platform-admin", {"enabled": False}),
+            ]
+            for version, (suffix, body) in enumerate(changes, 2):
+                changed = client.post(
+                    account_path + "/" + suffix,
+                    json=body,
+                    headers={"Idempotency-Key": uuid4().hex, "If-Match": f'"{version}"'},
+                )
+                assert changed.status_code == 200 and changed.json()["version"] == version + 1
+            assert client.get(account_path + "/team-roles").json()["items"] == []
             assert (
                 client.patch(
                     path,
@@ -536,6 +580,7 @@ with Session(make_engine(s)) as db, db.begin():
             run([*compose, "up", "-d", "--no-deps", "--force-recreate", "postgres"])
             await_ready(client)
             assert client.get(path).json()["name"] == "Visible"
+            assert client.get(account_path).json()["version"] == 8
             assert client.get("/api/v1/auth/me").status_code == 200
             run([*compose, "stop", "postgres"])
             assert client.get("/api/v1/health/ready").status_code == 503
@@ -578,7 +623,10 @@ with Session(make_engine(Settings())) as db,db.begin():
         assert container("api")["State"]["ExitCode"] == 0
         logs = run([*compose, "logs", "--no-color"])
         assert all(value not in logs for value in [password, owner_password, runtime_password])
-        print("Container TLS/ACL/persistence/readiness/non-root/secret/SIGTERM proof passed.")
+        print(
+            "Container TLS/ACL/accounts/replay/persistence/readiness/"
+            "non-root/secret/SIGTERM proof passed."
+        )
     finally:
         socket.getaddrinfo = original_dns
         canary.unlink(missing_ok=True)

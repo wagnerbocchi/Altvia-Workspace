@@ -11,6 +11,7 @@ ENV PATH="/opt/altvia/.venv/bin:$PATH" PYTHONPATH=/opt/altvia/apps/api \
     PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 WORKDIR /opt/altvia
 RUN addgroup -g 10001 altvia && adduser -D -H -u 10001 -G altvia altvia
+RUN mkdir -p /run/altvia && chown 10001:10001 /run/altvia
 RUN apk add --no-cache --upgrade zlib=1.4-r0
 # PostgreSQL is the only supported API database. Drop unused SQLite capability
 # from the runtime, retaining the general-purpose builder and other stdlib modules.

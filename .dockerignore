@@ -26,6 +26,8 @@ infra/**
 !infra/postgres-runtime-marker.sh
 !infra/gosu.go.mod
 !infra/gosu.go.sum
+!infra/redis-health.sh
+!infra/start-redis.sh
 !package.json
 !pnpm-lock.yaml
 !pnpm-workspace.yaml

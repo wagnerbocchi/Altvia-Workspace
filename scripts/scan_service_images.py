@@ -71,7 +71,7 @@ def main() -> None:
         with (cache / "db/trivy.db").open("rb") as database_file:
             manifest["database_sha256"] = hashlib.file_digest(database_file, "sha256").hexdigest()
         failed = False
-        for service in ("api", "postgres", "ingress", "web"):
+        for service in ("api", "postgres", "ingress", "web", "redis"):
             tag = f"{prefix}:{service}"
             build = [engine, "build", "-f", f"infra/{service}.Dockerfile", "-t", tag, "."]
             if engine == "podman":

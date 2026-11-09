@@ -38,6 +38,8 @@ services:
         target: ALTVIA_DATABASE_URL
       - source: runtime_database_url
         target: ALTVIA_RUNTIME_DATABASE_URL
+      - source: worker_database_url
+        target: ALTVIA_WORKER_DATABASE_URL
     networks: [database]
     depends_on:
       postgres: {condition: service_healthy}
@@ -84,6 +86,48 @@ services:
     pids_limit: 128
     restart: unless-stopped
     stop_grace_period: 30s
+  redis:
+    image: ${ALTVIA_REDIS_IMAGE:-altvia-redis:local}
+    build:
+      context: ..
+      dockerfile: infra/redis.Dockerfile
+    secrets: [redis_password]
+    networks: [queue]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 64
+    restart: unless-stopped
+  worker:
+    image: ${ALTVIA_API_IMAGE:-altvia-api:local}
+    command: [python, -m, altvia.worker, run]
+    secrets:
+      - source: worker_database_url
+        target: ALTVIA_DATABASE_URL
+      - source: redis_url
+        target: ALTVIA_REDIS_URL
+    networks: [database, queue]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+    read_only: true
+    tmpfs: [/tmp, '/run/altvia:uid=10001,gid=10001,mode=0700']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 1.0
+    pids_limit: 64
+    restart: unless-stopped
+    stop_grace_period: 30s
+    healthcheck:
+      test: [CMD, python, -m, altvia.worker, health]
+      interval: 10s
+      timeout: 10s
+      start_period: 15s
+      retries: 6
   ingress:
     image: ${ALTVIA_INGRESS_IMAGE:-altvia-ingress:local}
     build:
@@ -117,6 +161,7 @@ services:
 networks:
   database: {internal: true}
   ingress: {}
+  queue: {internal: true}
 volumes:
   postgres_data: {}
 secrets:
@@ -126,6 +171,12 @@ secrets:
     file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/owner_database_url
   runtime_database_url:
     file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/runtime_database_url
+  worker_database_url:
+    file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/worker_database_url
+  redis_url:
+    file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/redis_url
+  redis_password:
+    file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/redis_password
   tls_cert:
     file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/tls_cert
   tls_key:

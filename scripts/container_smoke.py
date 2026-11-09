@@ -70,11 +70,16 @@ def main():
         return original_dns(host, *args, **kwargs)
 
     socket.getaddrinfo = test_dns
-    owner_password, runtime_password, password = [secrets.token_urlsafe(32) for _ in range(3)]
+    owner_password, runtime_password, password, worker_password, redis_password = [
+        secrets.token_urlsafe(32) for _ in range(5)
+    ]
     files = {
         "postgres_password": owner_password,
         "owner_database_url": f"postgresql+psycopg://altvia_owner:{owner_password}@postgres/altvia_test",
         "runtime_database_url": f"postgresql+psycopg://altvia_app:{runtime_password}@postgres/altvia_test",
+        "worker_database_url": f"postgresql+psycopg://altvia_worker:{worker_password}@postgres/altvia_test",
+        "redis_url": f"redis://:{redis_password}@redis:6379/0",
+        "redis_password": redis_password,
     }
     for name, content in files.items():
         path = secret_dir / name
@@ -90,6 +95,7 @@ def main():
         "ALTVIA_POSTGRES_IMAGE": project + ":postgres",
         "ALTVIA_INGRESS_IMAGE": project + ":ingress",
         "ALTVIA_WEB_IMAGE": project + ":web",
+        "ALTVIA_REDIS_IMAGE": project + ":redis",
     }
     # Never inherit a host DB credential into the test stack.
     env.pop("ALTVIA_DATABASE_URL", None)
@@ -157,7 +163,7 @@ def main():
             # OCI output discards Docker HEALTHCHECK metadata in Podman builds.
             build.insert(2, "--format=docker")
         run(build, timeout=600)
-        for service in ("postgres", "ingress", "web"):
+        for service in ("postgres", "ingress", "web", "redis"):
             service_build = [
                 args.engine,
                 "build",
@@ -278,11 +284,11 @@ def main():
             raise RuntimeError("Untrimmed builder installer rejection proof failed")
         started = True
         run([*compose, "up", "-d", "--no-build", "--wait", "--wait-timeout", "150"])
-        for service in ["api", "ingress", "web"]:
+        for service in ["api", "ingress", "web", "worker", "redis"]:
             inspect = container(service)
             assert inspect["Config"]["User"] not in ("", "0", "root")
             assert inspect["HostConfig"]["ReadonlyRootfs"]
-        for service in ["api", "postgres", "web"]:
+        for service in ["api", "postgres", "web", "worker", "redis"]:
             assert not container(service)["HostConfig"].get("PortBindings")
         web_config = container("web")
         assert list(web_config["NetworkSettings"]["Networks"]) == [project + "_ingress"]
@@ -300,6 +306,40 @@ def main():
         assert web_inventory["zlib"] == "1.4" and web_inventory["brotli"] == "1.2.1"
         api_env = container("api")["Config"]["Env"]
         assert not any(item.startswith("ALTVIA_DATABASE_URL=") for item in api_env)
+        assert not any(item.startswith("ALTVIA_REDIS_URL=") for item in api_env)
+        assert list(container("redis")["NetworkSettings"]["Networks"]) == [project + "_queue"]
+        assert set(container("worker")["NetworkSettings"]["Networks"]) == {
+            project + "_queue",
+            project + "_database",
+        }
+        assert (
+            run(
+                [args.engine, "network", "inspect", "--format", "{{.Internal}}", project + "_queue"]
+            ).strip()
+            == "true"
+        )
+        assert container("worker")["Image"] == container("api")["Image"]
+        worker_probe = """
+from pathlib import Path
+from sqlalchemy import text
+from sqlalchemy.exc import DBAPIError
+from sqlalchemy.engine import make_url
+from altvia.config import WorkerSettings
+from altvia.database import make_engine
+s=WorkerSettings()
+assert make_url(s.database_url.get_secret_value()).username == 'altvia_worker'
+assert not Path('/run/secrets/ALTVIA_RUNTIME_DATABASE_URL').exists()
+assert not Path('/run/secrets/ALTVIA_WORKER_DATABASE_URL').exists()
+e=make_engine(s)
+for statement in ['SELECT * FROM users', 'SELECT * FROM sessions', 'SELECT * FROM audit_logs',
+                  "UPDATE outbox_events SET payload='{}'", 'DELETE FROM activity_events']:
+    try:
+        with e.begin() as c: c.execute(text(statement))
+    except DBAPIError: pass
+    else: raise RuntimeError('Worker privilege boundary failed')
+e.dispose()
+"""
+        run([*compose, "exec", "-T", "worker", "python", "-c", worker_probe])
         runtime_inventory = json.loads(
             run([*compose, "exec", "-T", "api", "python", "check_api_runtime.py"])
         )
@@ -558,6 +598,46 @@ with Session(make_engine(s)) as db, db.begin():
                 )
                 assert changed.status_code == 200 and changed.json()["version"] == version + 1
             assert client.get(account_path + "/team-roles").json()["items"] == []
+            # Real registered JSON consumer, with synchronous writes available
+            # even while the transport is stopped and subsequently lost/recreated.
+            run([*compose, "stop", "redis"])
+            changed = client.post(
+                account_path + "/activation",
+                json={"active": False},
+                headers={"Idempotency-Key": uuid4().hex, "If-Match": '"8"'},
+            )
+            assert changed.status_code == 200 and changed.json()["version"] == 9
+            assert client.get("/api/v1/health/ready").status_code == 200
+            run(
+                [
+                    *compose,
+                    "up",
+                    "-d",
+                    "--no-deps",
+                    "--no-build",
+                    "--force-recreate",
+                    "--wait",
+                    "redis",
+                ]
+            )
+            for _ in range(60):
+                activity = client.get("/api/v1/identity-activity?limit=100")
+                assert activity.status_code == 200
+                if any(
+                    row["resource_id"] == account_response.json()["id"]
+                    and row["aggregate_version"] == 9
+                    for row in activity.json()["items"]
+                ):
+                    break
+                time.sleep(0.5)
+            else:
+                raise RuntimeError("Durable worker did not recover after Redis loss")
+            changed = client.post(
+                account_path + "/activation",
+                json={"active": True},
+                headers={"Idempotency-Key": uuid4().hex, "If-Match": '"9"'},
+            )
+            assert changed.status_code == 200 and changed.json()["version"] == 10
             assert (
                 client.patch(
                     path,
@@ -580,7 +660,7 @@ with Session(make_engine(s)) as db, db.begin():
             run([*compose, "up", "-d", "--no-deps", "--force-recreate", "postgres"])
             await_ready(client)
             assert client.get(path).json()["name"] == "Visible"
-            assert client.get(account_path).json()["version"] == 8
+            assert client.get(account_path).json()["version"] == 10
             assert client.get("/api/v1/auth/me").status_code == 200
             run([*compose, "stop", "postgres"])
             assert client.get("/api/v1/health/ready").status_code == 503
@@ -614,6 +694,8 @@ with Session(make_engine(Settings())) as db,db.begin():
             timeout=240,
         )
         run([*compose, "run", "--rm", "migrate"])
+        run([*compose, "stop", "-t", "30", "worker"])
+        assert container("worker")["State"]["ExitCode"] == 0
         run([*compose, "stop", "-t", "30", "web"])
         # Next16.4.5 closes the HTTP server/Next resources, then explicitly exits
         # 143 for SIGTERM (dist/server/lib/start-server.js). Do not normalize it.
@@ -622,9 +704,18 @@ with Session(make_engine(Settings())) as db,db.begin():
         run([*compose, "stop", "-t", "30", "api"])
         assert container("api")["State"]["ExitCode"] == 0
         logs = run([*compose, "logs", "--no-color"])
-        assert all(value not in logs for value in [password, owner_password, runtime_password])
+        assert all(
+            value not in logs
+            for value in [
+                password,
+                owner_password,
+                runtime_password,
+                worker_password,
+                redis_password,
+            ]
+        )
         print(
-            "Container TLS/ACL/accounts/replay/persistence/readiness/"
+            "Container TLS/ACL/accounts/worker/Redis/replay/persistence/readiness/"
             "non-root/secret/SIGTERM proof passed."
         )
     finally:

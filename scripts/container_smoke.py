@@ -137,6 +137,7 @@ def main():
                 args.engine,
                 "run",
                 "--rm",
+                "-i",
                 "--read-only",
                 "--network=none",
                 "--cap-drop=ALL",

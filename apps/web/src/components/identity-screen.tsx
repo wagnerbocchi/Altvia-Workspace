@@ -20,6 +20,7 @@ function Account() {
     </dl>
     {user.capabilities.includes("identity.manage") && <div className="account-admin-link">
       <Button variant="outline" asChild><Link href="/admin/teams">Administrar equipes</Link></Button>
+      <Button variant="outline" asChild><Link href="/admin/users">Administrar contas</Link></Button>
     </div>}
     <div className="session-actions">
       {mutation.isError && <p className="error-message" role="alert">Não foi possível sair. Sua sessão pode continuar ativa. Tente novamente.</p>}

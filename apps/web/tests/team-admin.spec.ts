@@ -394,7 +394,10 @@ test("@teams bounded team and roster pages expose inactive accounts without sele
   await expect(roster.getByRole("listitem")).toHaveCount(10);
   const inactive = page.getByRole("radio", { name: /browser-roster-13@example.invalid/ });
   await expect(page.getByRole("group", { name: "Conta para adicionar" })).toBeVisible();
-  if (!(await inactive.count())) await page.getByRole("button", { name: "Próximas contas" }).click();
+  for (let attempt = 0; attempt < 4 && !(await inactive.count()); attempt++) {
+    await page.getByRole("button", { name: "Próximas contas" }).click();
+    await expect(page.getByRole("group", { name: "Conta para adicionar" })).toBeVisible();
+  }
   await expect(inactive).toBeDisabled();
   await page.getByRole("link", { name: "Voltar às equipes" }).click();
   const teams = page.getByRole("list", { name: "Equipes cadastradas" });
@@ -412,7 +415,10 @@ test("@teams account-inactive conflict refreshes the existing-account selection"
   await createTeam(page, `Conta alterada ${crypto.randomUUID().slice(0, 8)}`);
   const choice = page.getByRole("radio", { name: /browser-roster-12@example.invalid/ });
   await expect(page.getByRole("group", { name: "Conta para adicionar" })).toBeVisible();
-  if (!(await choice.count())) await page.getByRole("button", { name: "Próximas contas" }).click();
+  for (let attempt = 0; attempt < 4 && !(await choice.count()); attempt++) {
+    await page.getByRole("button", { name: "Próximas contas" }).click();
+    await expect(page.getByRole("group", { name: "Conta para adicionar" })).toBeVisible();
+  }
   await choice.check();
   execFileSync(process.platform === "win32" ? "uv.exe" : "uv", ["run", "python", "scripts/browser_fixture.py"], {
     cwd: root, env: { ...process.env, ALTVIA_E2E_DISABLE_ROSTER: "1" }, stdio: "pipe",

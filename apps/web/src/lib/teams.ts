@@ -1,40 +1,14 @@
 import type { components } from "./api.generated";
-import { ApiError, apiRequest } from "./http";
+import { createAdminTransport, pageQuery, versionHeader } from "./admin-http";
+export { PAGE_SIZE } from "./admin-http";
 
 export type Team = components["schemas"]["TeamOutput"];
 export type TeamPage = components["schemas"]["TeamPage"];
 export type UserPage = components["schemas"]["UserPage"];
 export type MemberPage = components["schemas"]["MemberPage"];
 export type Roster = { page: MemberPage; version: number };
-export const PAGE_SIZE = 10;
-
-function pageQuery(cursor: string | null) {
-  const query = new URLSearchParams({ limit: String(PAGE_SIZE) });
-  if (cursor) query.set("cursor", cursor);
-  return `?${query}`;
-}
-
-function versionHeader(version: number) {
-  if (!Number.isInteger(version) || version < 1 || version > 2147483647) throw Error("Invalid resource version");
-  return `"${version}"`;
-}
-
 export function createTeamApi(csrf: string, onAuthError: (error: unknown) => void) {
-  async function request(path: string, init?: RequestInit) {
-    try { return await apiRequest(path, init); }
-    catch (error) {
-      if (error instanceof ApiError && [401, 403].includes(error.status)) onAuthError(error);
-      throw error;
-    }
-  }
-  function write(method: string, body?: object, version?: number, key?: string): RequestInit {
-    return { method, headers: {
-      "X-CSRF-Token": csrf,
-      ...(body ? { "Content-Type": "application/json" } : {}),
-      ...(version === undefined ? {} : { "If-Match": versionHeader(version) }),
-      ...(key ? { "Idempotency-Key": key } : {}),
-    }, ...(body ? { body: JSON.stringify(body) } : {}) };
-  }
+  const { request, write } = createAdminTransport(csrf, onAuthError);
   const teamPath = (id: string) => `/teams/${encodeURIComponent(id)}`;
   return {
     async list(cursor: string | null, signal?: AbortSignal): Promise<TeamPage> {

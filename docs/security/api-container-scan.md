@@ -56,3 +56,63 @@ is retained under ignored .superpowers/container-tests/api-runtime-scan-20261109
 binary build archives are disposable. Do not commit archives or runtime secrets.
 Functional CI, non-root/read-only controls and absence of a current attack path
 never substitute for vulnerability triage or actual x86-64-v1 guest validation.
+
+## Phase 1C-e remediation: remove the unused SQLite capability
+
+Observed 2026-11-09; ADR-0012. The API has always required PostgreSQL. The final
+API image now removes CPython's optional sqlite3/_sqlite3 modules and purges
+libsqlite3-0 without fetching packages, forced dependencies, apt autoremove,
+private SQLite compilation or a base/lockfile change. The general-purpose builder
+and developer Python are unchanged. This is capability removal, not an upgraded
+SQLite version or a risk exception.
+
+Compared actual Docker-format artifacts with Trivy 0.75.0 using the scanner image
+above. The first scan refreshed one private cache; the second used --skip-db-update
+against the same DB. No ignore file, severity filter or unfixed filter was used.
+
+| Artifact | Image ID | Raw report SHA256 |
+| --- | --- | --- |
+| Published baseline | 769c5489fd0d88348ecc3b7b9af996b978220c5e8eb5017ef4d290be64055ed7 | 55306809134dbb817bd2e774f0c6777890b1d7aae7896cc5438bd63c7e7acad1 |
+| SQLite-free runtime | acba1ed82e79aaa7e335dcde023c0935b0c7d741f930ab8fc793345a32b4226f | 6ac3804f4b5303ef9f4cffb5de04892ce610c1183bfa606af6bba62e737d271c |
+
+Vulnerability DB schema 2, UpdatedAt 2026-11-09T06:57:06.372182267Z,
+SHA256 3f021611ab6c0b94ca9f4fb630fb583c200663e8cae430446f89ded1b99fdb29.
+Debian inventory changed from 105 to 104 packages: only
+libsqlite3-0:amd64 3.40.1-2+deb12u2 was removed; no other package/version delta.
+Both images have the same 27 Python distribution entries, inventory SHA256
+3a203a6cb87c98a8130bd72d901ee388b6c6042bd9c4cc9efd0c85c30eed9e76.
+
+| Raw package occurrences | Baseline | Remediated runtime | Removed |
+| --- | ---: | ---: | ---: |
+| Critical | 2 | 1 | 1 |
+| High | 40 | 35 | 5 |
+| Medium | 122 | 113 | 9 |
+| Low | 109 | 105 | 4 |
+
+All 19 removed finding identities belonged to libsqlite3-0; zero new identities
+appeared. Exact eliminated CVEs:
+
+```text
+CVE-2021-45346 CVE-2025-29088 CVE-2025-70873 CVE-2025-7458 CVE-2025-7709
+CVE-2026-11822 CVE-2026-11824 CVE-2026-119371 CVE-2026-119372
+CVE-2026-119373 CVE-2026-119374 CVE-2026-119375 CVE-2026-119376
+CVE-2026-119377 CVE-2026-119378 CVE-2026-119379 CVE-2026-119591
+CVE-2026-50812 CVE-2026-50813
+```
+
+SQLite findings are remediated for this installed runtime by removal. Positive
+guard/import/Argon2 proof passed non-root/read-only; the unchanged builder is
+rejected. A separate negative probe mounted the original shared library through
+LD_LIBRARY_PATH without installing its package: the guard still rejected the
+loadable library. That temporary helper was removed. Scanner/package absence
+alone was not accepted as proof of native capability absence.
+
+The remaining raw critical is CVE-2023-45853. Rechecking the new image found no
+zipOpenNewFileInZip4_64 symbol; the unchanged vendor applicability evidence above
+still applies. The 35 high occurrences and all other native-image release triage
+remain open. No production risk is accepted and no blanket clean-image claim is
+made. Raw comparison reports are retained under ignored
+.superpowers/container-tests/sqlite-removal-{baseline,trimmed}-20261109.json.
+Actual guest x86-64-v1, other service images, SAST/SCA coverage and release gates
+remain separate. Reintroducing SQLite requires a revised corrected capability
+contract and a fresh scan/retest, not disabling the guard.

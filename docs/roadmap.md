@@ -55,7 +55,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-11 | Infrastructure/security: storage/scanner/proxy selection and CPU-approved builds | Local private storage adapter, quarantine fail-closed | Production attachment/proxy acceptance |
 | Q-12 | Infrastructure admin: hypervisor ownership and CPU-model change possibility | x86-64-v1 remains mandatory | None: CPU upgrade is not assumed |
 | Q-13 | Product owner: approved logo/brand and visual preferences | Provisional restrained Portuguese interface, system fonts, no invented assets or claims; review after return | Final visual approval only |
-| Q-14 | Engineering/security: corrected baseline-compatible base/SQLite artifact and disposition of the40 high image findings | Development candidate only; preserve scan/vendor evidence and no risk acceptance; see docs/security/api-container-scan.md | Production image security gate |
+| Q-14 | Engineering/security: disposition of the35 remaining high image findings and complete service-image triage | SQLite removed from API runtime under ADR-0012; preserve raw/vendor evidence and no risk acceptance; see docs/security/api-container-scan.md | Production image security gate |
 
 ## Backlog after core
 
@@ -100,6 +100,12 @@ native mobile and local AI remain outside MVP. No speculative code for backlog.
   See ADR-0011, docs/runbooks/api-containers.md and exact CI evidence in the Phase1C
   report. Q-14/image security and Q-01/actual CPU, recovery/load, worker/Redis/web
   ingress and remaining Phase1 gates stay open. No production/phase exit claim.
+- Phase 1C-e in progress: unused SQLite package/module removal with automatic
+  native-capability guard, preserving Python/bookworm and lockfiles. Same-DB
+  scans removed 19 SQLite findings (1 critical/5 high/9 medium/4 low), added none;
+  35 high occurrences remain open. Native checker/import/Argon2 and focused
+  configuration proof passed. Full hosted runtime/review evidence follows when
+  observed. No production/phase exit or target-CPU claim.
 - Future implementation entries must include commit, exact commands/results,
   target artifact/host when relevant and outstanding gates. Do not mark a phase
   done merely because the documentation or a subset of tests is complete.

@@ -136,3 +136,33 @@ resource capacity is claimed from the provisional Compose memory/CPU bounds.
 The API uses one worker, preserves the secure session policy and treats the proxy
 as the direct login source until a reviewed trusted-ingress configuration exists.
 Actual guest/native-ISA, SCA/image, load and recovery release gates remain open.
+
+## PostgreSQL-only runtime capability
+
+ADR-0012 removes unused SQLite from the final API image: the native Debian
+libsqlite3-0 package and CPython's optional sqlite3/_sqlite3 modules are absent.
+The general-purpose builder and developer Python still support their original
+capabilities. This is not a general-purpose Python/SQLite container; alternative
+SQLite database URLs were already rejected by the application configuration.
+
+The image build runs a standard-library capability/import checker as its final
+non-root user. The Compose smoke verifies rejection on the unchanged actual
+builder stage and success inside the running API. The same diagnostic is available
+without credentials or schema changes:
+
+```bash
+docker compose -f infra/compose.yaml exec api python check_api_runtime.py
+```
+
+It must report sqlite=absent and api_imports=passed. It checks modules, package
+status, shared-object presence and loader discovery, plus required API/CLI,
+migration, TLS and compression imports. Do not reinstall SQLite, override its
+library search path or bypass the check to accommodate an unsupported script.
+A real future requirement needs a reviewed corrected library/capability contract.
+
+Measured same-DB image scans removed all 19 SQLite findings, including the
+applicable installed critical, while keeping all 27 Python dependency entries
+unchanged. Remaining image findings and exact hashes are in
+docs/security/api-container-scan.md. Production image security is still gated.
+Rollback to an earlier SQLite-containing image reintroduces this component and
+needs security review; no schema downgrade or data-volume reset is involved.

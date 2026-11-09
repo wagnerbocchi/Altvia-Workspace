@@ -44,11 +44,28 @@ def _insert_user(db: Session, user: User) -> None:
     db.flush()
 
 
-def create_user(db: Session, email: str, display_name: str, password: str) -> None:
+def create_user(
+    db: Session,
+    email: str,
+    display_name: str,
+    password: str,
+    *,
+    actor_id: UUID | None = None,
+    correlation_id: str | None = None,
+) -> User:
     user = _new_user(email, display_name, password)
     lock_identity_writes(db)
     _insert_user(db, user)
-    record_event(db, None, user.id, "identity.user_created", user.created_at, uuid4().hex, 1)
+    record_event(
+        db,
+        actor_id,
+        user.id,
+        "identity.user_created",
+        user.created_at,
+        correlation_id or uuid4().hex,
+        1,
+    )
+    return user
 
 
 def bootstrap_admin(db: Session, email: str, display_name: str, password: str) -> None:
@@ -76,6 +93,8 @@ def _locked_user(db: Session, email: str) -> User:
 
 
 def _invalidate_sessions(db: Session, user: User, now: datetime) -> None:
+    if user.auth_version >= 2147483647:
+        raise IdentityError(409, "version_exhausted")
     user.auth_version += 1
     db.execute(
         update(SessionRecord)
@@ -84,13 +103,28 @@ def _invalidate_sessions(db: Session, user: User, now: datetime) -> None:
     )
 
 
-def reset_password(db: Session, email: str, password: str) -> None:
+def reset_password(
+    db: Session,
+    email: str,
+    password: str,
+    *,
+    actor_id: UUID | None = None,
+    correlation_id: str | None = None,
+) -> None:
     lock_identity_writes(db)
     user = _locked_user(db, email)
     user.password_hash = hash_new_password(password)
     now = datetime.now(UTC)
     _invalidate_sessions(db, user, now)
-    record_event(db, None, user.id, "identity.password_reset", now, uuid4().hex, user.auth_version)
+    record_event(
+        db,
+        actor_id,
+        user.id,
+        "identity.password_reset",
+        now,
+        correlation_id or uuid4().hex,
+        user.auth_version,
+    )
 
 
 def _is_admin(db: Session, user: User) -> bool:
@@ -122,7 +156,14 @@ def _require_another_admin(db: Session, user: User) -> None:
         raise IdentityError(409, "last_active_admin")
 
 
-def set_account_active(db: Session, email: str, active: bool) -> bool:
+def set_account_active(
+    db: Session,
+    email: str,
+    active: bool,
+    *,
+    actor_id: UUID | None = None,
+    correlation_id: str | None = None,
+) -> bool:
     lock_identity_writes(db)
     user = _locked_user(db, email)
     if user.active == active:
@@ -133,11 +174,20 @@ def set_account_active(db: Session, email: str, active: bool) -> bool:
     now = datetime.now(UTC)
     _invalidate_sessions(db, user, now)
     action = "identity.user_enabled" if active else "identity.user_disabled"
-    record_event(db, None, user.id, action, now, uuid4().hex, user.auth_version)
+    record_event(
+        db, actor_id, user.id, action, now, correlation_id or uuid4().hex, user.auth_version
+    )
     return True
 
 
-def set_platform_admin(db: Session, email: str, enabled: bool) -> bool:
+def set_platform_admin(
+    db: Session,
+    email: str,
+    enabled: bool,
+    *,
+    actor_id: UUID | None = None,
+    correlation_id: str | None = None,
+) -> bool:
     lock_identity_writes(db)
     user = _locked_user(db, email)
     if enabled and not user.active:
@@ -160,11 +210,22 @@ def set_platform_admin(db: Session, email: str, enabled: bool) -> bool:
     now = datetime.now(UTC)
     _invalidate_sessions(db, user, now)
     action = "identity.admin_granted" if enabled else "identity.admin_revoked"
-    record_event(db, None, user.id, action, now, uuid4().hex, user.auth_version)
+    record_event(
+        db, actor_id, user.id, action, now, correlation_id or uuid4().hex, user.auth_version
+    )
     return True
 
 
-def set_team_role(db: Session, email: str, team_id: UUID, role: str, enabled: bool) -> bool:
+def set_team_role(
+    db: Session,
+    email: str,
+    team_id: UUID,
+    role: str,
+    enabled: bool,
+    *,
+    actor_id: UUID | None = None,
+    correlation_id: str | None = None,
+) -> bool:
     if role not in TEAM_READ_ROLES:
         raise IdentityError(422, "invalid_team_role")
     lock_identity_writes(db)
@@ -197,11 +258,11 @@ def set_team_role(db: Session, email: str, team_id: UUID, role: str, enabled: bo
     action = "identity.team_role_granted" if enabled else "identity.team_role_revoked"
     record_event(
         db,
-        None,
+        actor_id,
         user.id,
         action,
         now,
-        uuid4().hex,
+        correlation_id or uuid4().hex,
         user.auth_version,
         details={"team_id": str(team_id), "role_name": role},
     )

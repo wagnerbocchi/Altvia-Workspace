@@ -66,7 +66,10 @@ class RequestBoundary:
             await send(message)
 
         small_json = (scope["path"] == "/api/v1/auth/sessions" and scope["method"] == "POST") or (
-            (scope["path"] == "/api/v1/teams" or scope["path"].startswith("/api/v1/teams/"))
+            (
+                scope["path"] in {"/api/v1/teams", "/api/v1/users"}
+                or scope["path"].startswith(("/api/v1/teams/", "/api/v1/users/"))
+            )
             and scope["method"] in {"POST", "PATCH"}
         )
         if small_json:

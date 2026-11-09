@@ -1,10 +1,6 @@
 """Identity metadata administration; team membership never grants content scope."""
 
-import base64
-import hashlib
-import json
-import re
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
 
@@ -23,10 +19,20 @@ from sqlalchemy import Engine, Select, select
 from sqlalchemy.orm import Session
 
 from altvia import identity
+from altvia.admin_http import (
+    IDEMPOTENCY_KEY,
+    IF_MATCH,
+    _collection_query,
+    _cursor,
+    _etag,
+    _expected_version,
+    _next_cursor,
+    _operation,
+    _remember,
+    require_admin,
+)
 from altvia.config import Settings
-from altvia.http import require_csrf, require_origin
-from altvia.management import lock_identity_writes
-from altvia.models import IdempotencyRecord, RoleBinding, Team, TeamMember, User
+from altvia.models import RoleBinding, Team, TeamMember, User
 from altvia.policy import TEAM_READ_ROLES
 
 
@@ -111,58 +117,6 @@ class MemberPage(BaseModel):
     next_cursor: str | None
 
 
-IF_MATCH = {
-    "name": "If-Match",
-    "in": "header",
-    "required": True,
-    "schema": {"type": "string", "pattern": '^"[1-9][0-9]{0,9}"$'},
-}
-IDEMPOTENCY_KEY = {
-    "name": "Idempotency-Key",
-    "in": "header",
-    "required": True,
-    "schema": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$"},
-}
-
-
-def _cursor(value: str | None, scope: str) -> UUID | None:
-    if value is None:
-        return None
-    try:
-        decoded = base64.b64decode(value + "=" * (-len(value) % 4), altchars=b"-_", validate=True)
-        version, bound_scope, last_id = decoded.decode("ascii").split("|")
-        if version != "v1" or bound_scope != scope:
-            raise ValueError("Cursor does not match this collection")
-        return UUID(last_id)
-    except (ValueError, UnicodeError):
-        raise identity.IdentityError(422, "invalid_cursor") from None
-
-
-def _collection_query(request: Request) -> None:
-    if not set(request.query_params).issubset({"limit", "cursor"}):
-        raise identity.IdentityError(422, "unsupported_query")
-
-
-def _next_cursor(scope: str, last_id: UUID) -> str:
-    return base64.urlsafe_b64encode(f"v1|{scope}|{last_id}".encode()).decode().rstrip("=")
-
-
-def _etag(response: Response, version: int) -> None:
-    response.headers["ETag"] = f'"{version}"'
-
-
-def _expected_version(request: Request) -> int:
-    value = request.headers.get("if-match")
-    if value is None:
-        raise identity.IdentityError(428, "version_required")
-    if not re.fullmatch(r'"[1-9][0-9]{0,9}"', value):
-        raise identity.IdentityError(422, "invalid_version")
-    version = int(value[1:-1])
-    if version > 2147483647:
-        raise identity.IdentityError(422, "invalid_version")
-    return version
-
-
 def _team(
     db: Session,
     team_id: UUID,
@@ -179,53 +133,6 @@ def _team(
     if expected is not None and team.version != expected:
         raise identity.IdentityError(409, "version_conflict")
     return team
-
-
-def _operation(
-    db: Session,
-    actor: User,
-    request: Request,
-    route: str,
-    body: dict[str, object],
-) -> tuple[str, str, IdempotencyRecord | None]:
-    # The router holds the identity write lock before this lookup, including
-    # before authentication. Never reuse this protocol without serialization.
-    key = request.headers.get("idempotency-key")
-    if key is None:
-        raise identity.IdentityError(428, "idempotency_key_required")
-    if not re.fullmatch(r"[A-Za-z0-9._:-]{1,128}", key):
-        raise identity.IdentityError(422, "invalid_idempotency_key")
-    request_hash = hashlib.sha256(
-        json.dumps(body, sort_keys=True, separators=(",", ":")).encode()
-    ).hexdigest()
-    saved = db.get(IdempotencyRecord, (actor.id, route, key))
-    if saved is not None and saved.request_hash != request_hash:
-        raise identity.IdentityError(409, "idempotency_conflict")
-    return key, request_hash, saved
-
-
-def _remember(
-    db: Session,
-    actor: User,
-    route: str,
-    key: str,
-    request_hash: str,
-    result: TeamOutput | MemberChange,
-    status: int,
-) -> None:
-    now = datetime.now(UTC)
-    db.add(
-        IdempotencyRecord(
-            actor_id=actor.id,
-            route=route,
-            key=key,
-            request_hash=request_hash,
-            status_code=status,
-            result=result.model_dump(mode="json"),
-            created_at=now,
-            expires_at=now + timedelta(days=7),
-        )
-    )
 
 
 def _advance(team: Team) -> None:
@@ -258,15 +165,7 @@ def create_team_router(engine: Engine, settings: Settings) -> APIRouter:
     router = APIRouter(prefix="/api/v1", tags=["Identity administration"])
 
     def admin(db: Session, request: Request, *, write: bool = False) -> User:
-        if write:
-            require_origin(request, settings.public_origin)
-            lock_identity_writes(db)
-        user, session = identity.authenticate(db, request.cookies.get(identity.COOKIE_NAME))
-        if write:
-            require_csrf(request, session)
-        if "identity.manage" not in identity.capabilities(db, user):
-            raise identity.IdentityError(403, "forbidden")
-        return user
+        return require_admin(db, request, settings, write=write)
 
     def readable_teams(db: Session, request: Request) -> Select[tuple[Team]]:
         user, _ = identity.authenticate(db, request.cookies.get(identity.COOKIE_NAME))

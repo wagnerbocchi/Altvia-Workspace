@@ -34,6 +34,9 @@ no public registration or self-service password reset yet.
 
 Phase 1A implements login, current identity and logout with persistent sessions.
 Phase 1B adds the real browser flow. Domain modules remain future deliveries.
+Phase 1C adds persisted team and participant administration for identity.manage
+operators. Account/password/status/role mutations remain restricted CLI operations;
+team membership never grants client or project content access.
 HTTPS, secure HttpOnly cookies, Origin/CSRF checks and no browser auth-token
 storage are required. Keyboard access, visible focus, responsive layout and
 dark/light themes are required. All mandatory runtime dependencies must support

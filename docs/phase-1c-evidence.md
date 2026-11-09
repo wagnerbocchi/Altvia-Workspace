@@ -664,3 +664,98 @@ The original residual10 findings are now absent; web packaging adds no reported
 finding. This is Foundation development acceptance only. Q-01/actual x86-64-v1,
 capacity/load, production backups, identity administration UX and a real worker
 consumer remain open. No production deployment or phase exit is claimed.
+
+## Phase1C-i: browser team and roster administration
+
+2026-11-09. Contract e9cfe74/ADR-0015 preceded implementation 960cd7d.
+Identity.manage operators can create, rename, archive/restore teams and add/remove
+existing accounts through the real persisted APIs. Directory, roster and account
+selection use bounded cursor pages. Membership remains distinct from content
+authorization. No backend/schema, production dependency or lockfile change.
+
+Shared identity framing owns a separate private query client per authenticated
+subject/session/capabilities. Replacement closes the old subtree and fences late
+callbacks. Transient identity read failures hide and inert the existing subtree
+until explicit recovery, preserving unsaved forms and protected POST intents.
+Confirmed authentication denial closes private content. There is no private
+browser storage, API redirect following or authenticated identity in server HTML.
+
+An uncertain create/add keeps its original immutable payload, key and If-Match.
+Explicit verification replays that exact intent. Independent read recovery cannot
+discard an unacknowledged protected POST. PATCH/DELETE uncertainty or a conflict
+requires explicit snapshot reload/review. Successful receipts trigger current
+detail/roster reads before further writes; they never install historical versions.
+
+Local validation on Windows and fresh task-only PostgreSQL:
+
+- pnpm web:check and pnpm web:build passed; generated OpenAPI/TypeScript exports
+  matched committed contracts. pnpm audit --audit-level=moderate reported no known
+  vulnerabilities. Ruff lint/format and git diff --check passed.
+- The full real Chromium suite passed 21 tests: seven existing identity tests and
+  fourteen team tests, including the added Unicode boundary case. The guarded
+  browser-test.mjs harness uses the
+  real API/database and HTTPS development gateway. Local execution used a fresh
+  tmpfs database and one task-owned local Podman-VM SSH TCP forwarding connection;
+  no service Compose limits, SSH server setting or existing data was changed.
+- Coverage includes persisted lifecycle, account/roster/team pagination, inactive
+  selection and deactivation race, lost create/add replies, original-version
+  replay after concurrent rename and failed read recovery, conflict/transport
+  review, focus/form preservation, initial read retry, unknown records, escaped
+  HTML-like text and 150/151 Unicode code-point boundaries. Late creation replies
+  cannot navigate either a different subject or a replacement same-subject session.
+- Source review found recovery/concurrency issues, corrected and regression-tested
+  before publication; final narrow follow-up reported no remaining actionable
+  finding. Impeccable's fresh finish review returned ship at the established
+  Operate scope after ten valid full-page captures. Desktop/mobile directory and
+  detail in light/dark passed axe and overflow checks; conflict and uncertain-create
+  states were inspected. The documenter confirmed incumbent tokens/system files
+  remain appropriate. Pre-existing sidecar narrative.rules drift was left alone.
+- Actual multistage Linux web image built and passed its native/runtime guard.
+  The final same-database local scan rebuilt all four actual images and reported
+  zero vulnerabilities of every severity without ignores or risk acceptance.
+  Raw reports/manifest are retained in managed artifacts/teams-browser/local/.
+  The local scanner used the existing frozen DB; hosted fresh-DB results are a
+  separate proof and must use their own image identities.
+
+The packaged browser gate now exercises team creation, persisted roster addition,
+archive/restore/removal and return navigation through the actual nginx/TLS image,
+alongside the existing identity/recreation/ACL/recovery proof.
+
+### Team browser publication evidence
+
+960cd7d passed hosted API, container and image-security gates. Its initial browser
+run passed 19 of 21 tests: asynchronous focus reads made the simulated read error
+disappear before recovery, and a same-subject session test incorrectly prohibited
+fresh authorized reads of a persisted team. Test-only correction ba8c937 waits for
+both failed reads and retains the meaningful replacement-form/no-late-navigation
+assertions. Independent review confirmed the correction; product code is unchanged.
+
+All four hosted Linux workflows passed on ba8c937:
+
+- [API checks 42652572935](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42652572935):
+  244 tests passed (62.75s), lint/format/mypy, migration/drift and package build.
+- [Browser checks 42652573096](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42652573096):
+  all 21 tests passed (30.3s), build/types/lint, generated contracts, native guard
+  and dependency audit. Login throttling was not weakened for the expanded suite;
+  team tests reuse one real session in otherwise isolated browser contexts.
+- [Container checks 42652573144](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42652573144):
+  actual four-image Docker/Compose/TLS stack passed persisted team/roster browser
+  lifecycle, existing login/logout/recreation, ACL, secrets/privileges/isolation,
+  resource limits, logical restore/Unicode/FTS/constraints and native SIGTERM proof.
+- [Service image security 42652573102](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42652573102):
+  all four actual images reported zero vulnerabilities at every severity, without
+  ignores. Fresh downloaded DB updated 2026-11-09T13:58:27Z, SHA256
+  df53926a9cc6a579932e4163f52e8a9441d09b0e7d7aab06e09c7dc7a0c72723.
+  Actual image IDs, report hashes and raw JSON are retained through managed
+  artifacts/teams-browser/hosted-ba8c937/. Earlier 960cd7d reports remain separate.
+
+Six valid packaged screenshots from the unchanged product code on 960cd7d were
+inspected: login desktop/mobile light/dark, administrator account and archived team
+with a persisted member. Controls, focus, wrapping and themes are intact. They are
+retained in managed artifacts/teams-browser/packaged-screenshots-960cd7d/ and the
+corresponding hosted packaged-browser artifact. No real customer data or secrets.
+
+This delivery completes the team/roster browser slice only. Account creation,
+status/password/role administration remains the restricted CLI. Q-01 target-VM
+x86-64-v1 execution, capacity/load, production backup validation and a real durable
+worker consumer remain open. No Phase2 advancement or production deployment.

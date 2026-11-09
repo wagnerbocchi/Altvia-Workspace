@@ -55,11 +55,13 @@ currently covers this GitHub repository's main only, not production services.
 | Q-11 | Infrastructure/security: storage/scanner/proxy selection and CPU-approved builds | Local private storage adapter, quarantine fail-closed | Production attachment/proxy acceptance |
 | Q-12 | Infrastructure admin: hypervisor ownership and CPU-model change possibility | x86-64-v1 remains mandatory | None: CPU upgrade is not assumed |
 | Q-13 | Product owner: approved logo/brand and visual preferences | Provisional restrained Portuguese interface, system fonts, no invented assets or claims; review after return | Final visual approval only |
-| Q-14 | Engineering/security: ongoing service-image security | Residual-finding candidates have zero reported vulnerabilities in all three actual images; blocking HIGH/CRITICAL CI and retained unfiltered reports; no risk acceptance or guest homologation | Remaining production security/readiness gates |
+| Q-14 | Engineering/security: ongoing service-image security | All four actual images have zero reported vulnerabilities in recorded scans; blocking HIGH/CRITICAL CI and retained unfiltered reports; no risk acceptance or guest homologation | Remaining production security/readiness gates |
 
 ## Backlog after core
 
-Current Foundation priorities: remaining identity administration UX, and a
+Current Foundation priorities: account/status/password/role administration UX,
+building on the existing CLI invariants and the completed team/roster browser
+slice (960cd7d, ADR-0015), and a
 worker/Redis slice only when it has a real durable consumer, alongside Q-01 and
 operational readiness. Preserve Q-01 as the Phase1 exit gate; do not substitute
 modern CI execution for the unavailable VM or begin Phase2 prematurely.
@@ -74,6 +76,18 @@ portal/knowledge base. Billing/subscriptions, marketplace, advanced ITIL/CMDB,
 native mobile and local AI remain outside MVP. No speculative code for backlog.
 
 ## Evidence ledger
+
+- Phase 1C-i: contracted team/roster browser UX e9cfe74, implementation 960cd7d.
+  Real persisted list/create/rename/archive/restore and bounded account/roster
+  selection; session-owned private caches, original-intent protected POST recovery
+  and reviewed-version writes. Local full browser suite passed 21 tests;
+  build/types/lint/contracts/audit and four-image
+  unfiltered scan passed. Fresh source review fixes are regression-tested;
+  Impeccable finish disposition ship and incumbent-system documentation completed.
+  Test-only CI correction ba8c937 passed all four hosted gates: 244 API tests,
+  21 browser tests, actual packaged Compose/TLS/recovery and zero reported image
+  findings. See docs/phase-1c-evidence.md for exact results. Account/role mutations remain
+  CLI-only, and Q-01 still blocks Phase 1 exit. No production deployment.
 
 - Phase1C-g/h: 683e34d closes the10 residual findings via vendor zlib, complete
   runtime pip/ensurepip exclusion and pinned corrected gosu modules. 465a85b

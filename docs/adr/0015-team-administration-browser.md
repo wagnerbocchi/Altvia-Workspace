@@ -1,6 +1,7 @@
 # ADR-0015: Team administration in the browser
 
-Date: 2026-11-09. Status: contracted before implementation; Foundation slice.
+Date: 2026-11-09. Status: implemented in 960cd7d after contract e9cfe74;
+Foundation slice. Validation evidence: docs/phase-1c-evidence.md, Phase1C-i.
 Builds on ADR-0008/0009/0010. No backend or schema change.
 
 ## Scope and approach
@@ -39,6 +40,9 @@ Confirmed resource401/403 gates private content and rechecks /auth/me; automatic
 rechecks do not remount a repeatedly rejected resource in a loop. A user may
 explicitly verify access again. An ordinary successful focus refresh with the
 same session preserves forms and keyboard focus. Only theme persists locally.
+Transient identity-read failures hide and inert the existing session subtree;
+explicit retry preserves its forms and uncertain POST until a confirmed session
+change or denial requires disposal. Initial identity failure still shows recovery.
 An ordinary user sees no administrative link, data query or mutation control;
 the API remains authoritative for every request even if browser state is altered.
 
@@ -64,6 +68,9 @@ Check detail ETag against its typed body version and roster ETag against the
 detail snapshot. A mismatch blocks normal writes pending reload. User-facing
 messages describe changed data and recovery, never raw headers/keys/versions.
 Mutation receipts do not optimistically replace lists or cached versions.
+Normal writes also remain disabled while current detail/roster refetches settle.
+Independent read recovery refreshes account summaries and cannot discard an
+uncertain protected add POST; its original verification remains available.
 
 ## Acceptance and limits
 

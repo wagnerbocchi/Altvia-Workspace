@@ -1,6 +1,9 @@
 # ADR-0012: PostgreSQL-only API image capabilities
 
-Date: 2026-11-09. Status: selected for Phase 1C-e; executable proof pending.
+Date: 2026-11-09. Status: implemented and development-validated for Phase 1C-e.
+Actual Docker/Linux proof and the same-DB scan comparison are recorded in
+docs/phase-1c-evidence.md and docs/security/api-container-scan.md. Remaining image
+security and actual target-VM gates are open; this is not production approval.
 
 The API configuration already requires PostgreSQL/psycopg. No application or
 migration source uses SQLite. The inherited general-purpose Python image contains

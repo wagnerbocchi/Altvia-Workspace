@@ -14,6 +14,8 @@ POST replay. Team membership grants no implicit client-content permission.
 Phase 1C-c persists explicit team read scopes and restricted grant/revoke CLI.
 Phase 1C-d packages the API with separate runtime DB privileges and API-only HTTPS
 containers; acceptance evidence and remaining gates are in the Phase 1C report.
+Phase 1C-e removes unused vulnerable SQLite from the API runtime and enforces that
+capability boundary during image build and real container validation.
 
 ## Project references
 

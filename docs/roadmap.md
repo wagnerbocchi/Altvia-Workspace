@@ -100,12 +100,13 @@ native mobile and local AI remain outside MVP. No speculative code for backlog.
   See ADR-0011, docs/runbooks/api-containers.md and exact CI evidence in the Phase1C
   report. Q-14/image security and Q-01/actual CPU, recovery/load, worker/Redis/web
   ingress and remaining Phase1 gates stay open. No production/phase exit claim.
-- Phase 1C-e in progress: unused SQLite package/module removal with automatic
-  native-capability guard, preserving Python/bookworm and lockfiles. Same-DB
-  scans removed 19 SQLite findings (1 critical/5 high/9 medium/4 low), added none;
-  35 high occurrences remain open. Native checker/import/Argon2 and focused
-  configuration proof passed. Full hosted runtime/review evidence follows when
-  observed. No production/phase exit or target-CPU claim.
+- Phase 1C-e: unused SQLite package/module removal 1d8ed76 with automatic native
+  capability guard, preserving Python/bookworm and lockfiles. Same-DB scans removed
+  19 SQLite findings (1 critical/5 high/9 medium/4 low), added none; 35 high
+  occurrences remain open. Fresh review had no findings. All three hosted gates
+  passed on 3b96e2f: 236 API tests, 7 browser E2E and actual pruned-image Compose
+  behavior including builder rejection/runtime guard. See ADR-0012 and the exact
+  evidence/scan reports. No production/phase exit or target-CPU claim.
 - Future implementation entries must include commit, exact commands/results,
   target artifact/host when relevant and outstanding gates. Do not mark a phase
   done merely because the documentation or a subset of tests is complete.

@@ -52,13 +52,13 @@ is missing. Checker produces a safe JSON result or fails closed without secrets.
 Consumes: Task1 actual image and checker. Produces: measured old/new scan delta,
 actual Docker/Linux proof, reviewed evidence and published main with all CIs green.
 
-- [ ] Scan baseline and new Docker archives with the same immutable Trivy image
+- [x] Scan baseline and new Docker archives with the same immutable Trivy image
   and DB snapshot; compare package inventory and all reported finding identities.
-- [ ] Record exact image IDs, scanner/DB/report hashes, eliminated SQLite findings,
+- [x] Record exact image IDs, scanner/DB/report hashes, eliminated SQLite findings,
   remaining CVEs and safe rollback/capability limitations before claiming success.
-- [ ] Obtain one fresh read-only review; fix material findings with regression
+- [x] Obtain one fresh read-only review; fix material findings with regression
   evidence. Reuse passing unchanged API/UI proof, execute affected container gate.
-- [ ] Update ADR/runbook/roadmap/evidence and CI integration; commit/push main and
+- [x] Update ADR/runbook/roadmap/evidence and CI integration; commit/push main and
   observe API, browser and container workflows. Stop only task-owned helpers;
   preserve data volumes and private test configuration.
 

@@ -413,6 +413,29 @@ operation occurred. Remaining35 high findings, other service images, actual
 x86-64-v1 guest, capacity/recovery and all production gates stay open. No risk
 acceptance or complete clean-image claim is made.
 
+### SQLite removal publication evidence
+
+Code 1d8ed76, measurement evidence 95c0fdb, probe correction 1b8ac9a and reviewed
+evidence 3b96e2f were published directly to main under standing authorization.
+All three hosted Linux workflows passed on 3b96e2f:
+
+- [API checks 42623615363](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42623615363):
+  **236 passed** (66.86s), Ruff/format/mypy, fresh migration/drift and package build.
+- [Browser checks 42623615304](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42623615304):
+  **7 passed** (9.0s), frontend check/build, Sharp exclusion, dependency audit and
+  generated-contract stability. No UI implementation changed.
+- [Container checks 42623615225](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42623615225):
+  actual pruned-image build, rejection on unchanged builder, runtime capability
+  guard, production imports and real TLS/ACL/persistence/readiness/secret/SIGTERM
+  flow passed. The API's PostgreSQL behavior survived the capability removal.
+
+Only task-owned ephemeral helpers were started locally; no PostgreSQL service,
+data volume or forwarding process was changed in this increment. The black-box
+helper stopped only its random test stack and did not delete volumes. Raw scan
+comparison and its DB snapshot are retained under ignored .superpowers/container-tests
+for audit/reproduction; the DB folder is sqlite-removal-vulndb-20261109.
+Remaining 35 high findings and all actual-guest/production gates stay open.
+
 Candidate amd64 platform artifacts, resolved2026-11-09:
 
 | Component | Source/version observed | Immutable manifest |

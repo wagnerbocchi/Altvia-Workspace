@@ -31,5 +31,5 @@ def test_activity_migration_preserves_old_events_and_refuses_projected_data_loss
         command.downgrade(config, "b46087000004")
     with db_engine.connect() as connection:
         assert connection.scalar(text("SELECT count(*) FROM activity_events")) == 1
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "b46087000005"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "b46087000006"
     command.check(config)

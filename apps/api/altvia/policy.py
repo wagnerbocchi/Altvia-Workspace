@@ -72,7 +72,9 @@ def can(principal: Principal, action: str, resource: Resource) -> bool:
         if not matches:
             continue
         if binding.role == "operations_manager" and binding.scope_kind in {"client", "team"}:
-            if action in work_actions | ticket_actions | read_actions:
+            if action in work_actions | ticket_actions | read_actions | (
+                {"client.manage"} if binding.scope_kind == "client" else set()
+            ):
                 return True
         if binding.role == "project_manager" and binding.scope_kind == "project":
             if action in work_actions | {"project.read", "project.manage"}:

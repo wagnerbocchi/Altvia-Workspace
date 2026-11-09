@@ -24,6 +24,8 @@ CRUD_TABLES = (
     "team_members",
     "idempotency_records",
     "login_buckets",
+    "clients",
+    "client_access_grants",
 )
 
 

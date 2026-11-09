@@ -55,8 +55,11 @@ class RoleBinding(Base):
     __tablename__ = "role_bindings"
     __table_args__ = (
         CheckConstraint(
-            "(scope_kind = 'global' AND team_id IS NULL AND role_name = 'platform_admin') OR "
-            "(scope_kind = 'team' AND team_id IS NOT NULL "
+            "(scope_kind = 'global' AND team_id IS NULL AND client_id IS NULL "
+            "AND role_name = 'platform_admin') OR "
+            "(scope_kind = 'team' AND team_id IS NOT NULL AND client_id IS NULL "
+            "AND role_name IN ('viewer','operations_manager')) OR "
+            "(scope_kind = 'client' AND client_id IS NOT NULL AND team_id IS NULL "
             "AND role_name IN ('viewer','operations_manager'))",
             name="ck_role_binding_scope",
         ),
@@ -75,6 +78,13 @@ class RoleBinding(Base):
             unique=True,
             postgresql_where=text("scope_kind = 'team'"),
         ),
+        Index(
+            "uq_role_bindings_client",
+            "user_id",
+            "client_id",
+            unique=True,
+            postgresql_where=text("scope_kind = 'client'"),
+        ),
     )
     id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid4, server_default=func.gen_random_uuid()
@@ -83,6 +93,7 @@ class RoleBinding(Base):
     role_name: Mapped[str] = mapped_column(ForeignKey("roles.name"))
     scope_kind: Mapped[str] = mapped_column(String(20), default="global")
     team_id: Mapped[UUID | None] = mapped_column(ForeignKey("teams.id"))
+    client_id: Mapped[UUID | None] = mapped_column(ForeignKey("clients.id"))
 
 
 class AuditLog(Base):
@@ -151,6 +162,28 @@ class TeamMember(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class Client(Base):
+    __tablename__ = "clients"
+    __table_args__ = (
+        CheckConstraint("char_length(btrim(name)) > 0", name="ck_client_name"),
+        CheckConstraint("version > 0", name="ck_client_version"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    name: Mapped[str] = mapped_column(String(150))
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    version: Mapped[int] = mapped_column(default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ClientAccessGrant(Base):
+    __tablename__ = "client_access_grants"
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    client_id: Mapped[UUID] = mapped_column(ForeignKey("clients.id"), primary_key=True)
+    granted_by: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class IdempotencyRecord(Base):
     __tablename__ = "idempotency_records"
     __table_args__ = (
@@ -181,7 +214,9 @@ class ActivityEvent(Base):
     __tablename__ = "activity_events"
     __table_args__ = (
         CheckConstraint("aggregate_version > 0", name="ck_activity_version"),
-        CheckConstraint("resource_type IN ('identity','team')", name="ck_activity_resource"),
+        CheckConstraint(
+            "resource_type IN ('identity','team','client')", name="ck_activity_resource"
+        ),
         CheckConstraint("actor_kind IN ('user','management_command')", name="ck_activity_actor"),
         Index("ix_activity_order", "occurred_at", "event_id"),
     )

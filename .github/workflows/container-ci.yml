@@ -31,7 +31,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: uv run ruff check scripts
       - run: uv run ruff format --check scripts
-      - run: shellcheck -s sh infra/start-ingress.sh
+      - run: shellcheck -s sh infra/start-ingress.sh infra/start-postgres.sh infra/postgres-runtime-marker.sh
       - run: uv run python scripts/container_smoke.py
 
 # Real Docker/Linux image, HTTPS and recovery proof; not target-VM homologation.

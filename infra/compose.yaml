@@ -1,6 +1,9 @@
 services:
   postgres:
-    image: docker.io/library/postgres@sha256:73bedc9eaa0121b92b9b26bb52e5141b3f6f37479c7ef913c0160455763ca80a
+    image: ${ALTVIA_POSTGRES_IMAGE:-altvia-postgres:local}
+    build:
+      context: ..
+      dockerfile: infra/postgres.Dockerfile
     environment:
       POSTGRES_USER: altvia_owner
       POSTGRES_DB: ${ALTVIA_DATABASE_NAME:-altvia_workspace}
@@ -67,7 +70,10 @@ services:
     restart: unless-stopped
     stop_grace_period: 30s
   ingress:
-    image: docker.io/nginxinc/nginx-unprivileged@sha256:10bf30f80ce9af183b2db50a91ea59cea5eb5e4106820656bac8cd369ed14904
+    image: ${ALTVIA_INGRESS_IMAGE:-altvia-ingress:local}
+    build:
+      context: ..
+      dockerfile: infra/ingress.Dockerfile
     environment:
       ALTVIA_PUBLIC_ORIGIN: ${ALTVIA_PUBLIC_ORIGIN:?Set exact HTTPS origin}
     entrypoint: [/bin/sh, /etc/nginx/start-ingress.sh]

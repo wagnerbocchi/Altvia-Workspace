@@ -20,3 +20,7 @@ apps/api/migrations/versions/**
 !scripts/
 scripts/**
 !scripts/check_api_runtime.py
+!infra/
+infra/**
+!infra/start-postgres.sh
+!infra/postgres-runtime-marker.sh

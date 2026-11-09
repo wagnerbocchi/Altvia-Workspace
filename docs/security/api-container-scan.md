@@ -1,5 +1,12 @@
 # API runtime candidate image scan
 
+Current candidate status (2026-11-09): ADR-0013 replaces these Bookworm images.
+Actual API/PostgreSQL/ingress scans now contain zero HIGH/CRITICAL findings.
+The following historical observations remain for traceability; see the Phase1C-f
+entry in docs/phase-1c-evidence.md for current image identities, residual lower
+severities, retained raw evidence and runtime acceptance. No risk waiver or
+target-VM homologation is implied by the corrected scan results.
+
 Observed2026-11-09. Development candidate only; no production risk acceptance.
 Asset: local API image sha256:fba4a5bc974f4a45c7ed048dc7dfead94f56d996134325bb2c4f209b5f460d47.
 Python3.12.16/bookworm manifest0f086103b026048cc50cb5da25ec435c023c5241a83fc44daea593377abc61c4,

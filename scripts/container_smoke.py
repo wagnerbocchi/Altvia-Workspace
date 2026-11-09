@@ -15,6 +15,33 @@ import httpx
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def check_legacy_volume_refusal(engine, image):
+    inspect = subprocess.run(
+        [engine, "image", "inspect", image], check=True, capture_output=True, text=True
+    )
+    entrypoint = json.loads(inspect.stdout)[0]["Config"]["Entrypoint"]
+    command = [engine, "run", "--rm", "--read-only", "--network=none", "--tmpfs=/tmp"]
+    if engine == "podman":
+        command.append("--cgroups=disabled")
+    result = subprocess.run(
+        [
+            *command,
+            "--entrypoint=sh",
+            image,
+            "-ec",
+            "mkdir -p /tmp/legacy; printf 17 > /tmp/legacy/PG_VERSION; "
+            'export PGDATA=/tmp/legacy; exec "$@" postgres',
+            "guard-probe",
+            *entrypoint,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    if result.returncode != 1 or "Refusing unmarked PostgreSQL data" not in result.stderr:
+        raise RuntimeError("Legacy PostgreSQL volume refusal proof failed")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--engine", choices=["docker", "podman"], default="docker")
@@ -58,6 +85,8 @@ def main():
         "ALTVIA_HTTPS_PORT": str(port),
         "ALTVIA_DATABASE_NAME": "altvia_test",
         "ALTVIA_API_IMAGE": project + ":test",
+        "ALTVIA_POSTGRES_IMAGE": project + ":postgres",
+        "ALTVIA_INGRESS_IMAGE": project + ":ingress",
     }
     # Never inherit a host DB credential into the test stack.
     env.pop("ALTVIA_DATABASE_URL", None)
@@ -65,7 +94,14 @@ def main():
 
     def run(command, *, data=None, timeout=240):
         result = subprocess.run(
-            command, input=data, text=True, capture_output=True, cwd=ROOT, env=env, timeout=timeout
+            command,
+            input=data,
+            text=True,
+            encoding="utf-8",
+            capture_output=True,
+            cwd=ROOT,
+            env=env,
+            timeout=timeout,
         )
         if result.returncode:
             # Exact output stays private; exceptions never echo SQL, URLs or secrets.
@@ -115,6 +151,20 @@ def main():
             # OCI output discards Docker HEALTHCHECK metadata in Podman builds.
             build.insert(2, "--format=docker")
         run(build, timeout=600)
+        for service in ("postgres", "ingress"):
+            service_build = [
+                args.engine,
+                "build",
+                "-f",
+                f"infra/{service}.Dockerfile",
+                "-t",
+                env[f"ALTVIA_{service.upper()}_IMAGE"],
+                ".",
+            ]
+            if args.engine == "podman":
+                service_build.insert(2, "--format=docker")
+            run(service_build, timeout=600)
+        check_legacy_volume_refusal(args.engine, env["ALTVIA_POSTGRES_IMAGE"])
         # The builder remains general-purpose. Check rejection on that actual
         # untrimmed stage so a disabled/broken capability checker cannot pass.
         builder_probe = project + ":builder-probe"
@@ -172,6 +222,155 @@ def main():
         )
         assert runtime_inventory["sqlite"] == "absent"
         assert runtime_inventory["api_imports"] == "passed"
+        # Cross-libc recovery uses logical SQL and a fresh database, never an old
+        # data directory. The disconnected legacy source has synthetic data only.
+        legacy = project + "-legacy"
+        legacy_started = False
+        try:
+            run(
+                [
+                    args.engine,
+                    "run",
+                    "-d",
+                    "--name",
+                    legacy,
+                    "--network=none",
+                    "--memory=512m",
+                    "--cpus=1",
+                    "--pids-limit=128",
+                    "--security-opt=no-new-privileges:true",
+                    "--mount",
+                    f"type=volume,source={legacy}-data,target=/var/lib/postgresql/data",
+                    "-e",
+                    "POSTGRES_USER=altvia_owner",
+                    "-e",
+                    "POSTGRES_DB=altvia_test",
+                    "-e",
+                    "POSTGRES_HOST_AUTH_METHOD=trust",
+                    "docker.io/library/postgres@sha256:"
+                    "73bedc9eaa0121b92b9b26bb52e5141b3f6f37479c7ef913c0160455763ca80a",
+                ]
+            )
+            legacy_started = True
+            for _attempt in range(60):
+                ready = subprocess.run(
+                    [args.engine, "exec", legacy, "pg_isready", "-U", "altvia_owner"],
+                    capture_output=True,
+                    timeout=10,
+                )
+                if ready.returncode == 0:
+                    # Wait for the permanent TCP server, not initdb's temporary socket server.
+                    tcp = subprocess.run(
+                        [
+                            args.engine,
+                            "exec",
+                            legacy,
+                            "pg_isready",
+                            "-h",
+                            "127.0.0.1",
+                            "-U",
+                            "altvia_owner",
+                        ],
+                        capture_output=True,
+                        timeout=10,
+                    )
+                    if tcp.returncode == 0:
+                        break
+                time.sleep(1)
+            else:
+                raise RuntimeError("Synthetic legacy database not ready")
+            legacy_sql = [
+                args.engine,
+                "exec",
+                "-i",
+                legacy,
+                "psql",
+                "-X",
+                "-v",
+                "ON_ERROR_STOP=1",
+                "-U",
+                "altvia_owner",
+                "-d",
+                "altvia_test",
+            ]
+            run(
+                legacy_sql,
+                data="""
+CREATE TABLE compatibility_probe (label text PRIMARY KEY, body text NOT NULL,
+    CHECK(length(label)>0));
+INSERT INTO compatibility_probe VALUES ('acao', 'Ação de recuperação'),
+    ('cafe', 'Café e atendimento'), ('unicode', '中文 teste');
+CREATE INDEX compatibility_probe_fts ON compatibility_probe USING gin
+    (to_tsvector('portuguese', body));
+""",
+            )
+            dump = run(
+                [
+                    args.engine,
+                    "exec",
+                    legacy,
+                    "pg_dump",
+                    "-U",
+                    "altvia_owner",
+                    "-d",
+                    "altvia_test",
+                    "--no-owner",
+                    "--no-acl",
+                ]
+            )
+            run(
+                [
+                    *compose,
+                    "exec",
+                    "-T",
+                    "postgres",
+                    "createdb",
+                    "-U",
+                    "altvia_owner",
+                    "altvia_restore_test",
+                ]
+            )
+            restored_sql = [
+                *compose,
+                "exec",
+                "-T",
+                "postgres",
+                "psql",
+                "-X",
+                "-v",
+                "ON_ERROR_STOP=1",
+                "-U",
+                "altvia_owner",
+                "-d",
+                "altvia_restore_test",
+            ]
+            run(restored_sql, data=dump)
+            query = (
+                "SELECT md5(string_agg(label || body, ',' ORDER BY label COLLATE \"C\")) "
+                "FROM compatibility_probe;"
+            )
+            source_hash = run([*legacy_sql, "-At", "-c", query]).strip()
+            destination_hash = run([*restored_sql, "-At", "-c", query]).strip()
+            assert source_hash == destination_hash and len(source_hash) == 32
+            run(
+                restored_sql,
+                data="""
+DO $$ BEGIN
+    IF (SELECT count(*) FROM compatibility_probe) <> 3 OR
+       (SELECT count(*) FROM compatibility_probe
+        WHERE to_tsvector('portuguese', body) @@ plainto_tsquery('portuguese', 'recuperação')) <> 1
+    THEN RAISE EXCEPTION 'Restored Unicode/FTS data mismatch'; END IF;
+    BEGIN
+        INSERT INTO compatibility_probe VALUES ('acao', 'duplicate');
+        RAISE EXCEPTION 'Restored primary key missing';
+    EXCEPTION WHEN unique_violation THEN NULL; END;
+END $$;
+""",
+            )
+            print("Bookworm-to-Alpine logical restore/Unicode/FTS/constraint proof passed.")
+        finally:
+            if legacy_started:
+                run([args.engine, "rm", "-f", legacy])  # Synthetic source volume is preserved.
         exec_api(
             "from pathlib import Path; import importlib.util; "
             "assert not Path('/run/secrets/ALTVIA_RUNTIME_DATABASE_URL').exists(); "

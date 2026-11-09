@@ -48,7 +48,7 @@ export ALTVIA_PUBLIC_ORIGIN=https://workspace.example.invalid:3444
 export ALTVIA_API_IMAGE=altvia-api:reviewed-build
 export ALTVIA_DATABASE_NAME=altvia_workspace
 docker compose -f infra/compose.yaml config --quiet
-docker compose -f infra/compose.yaml build migrate
+docker compose -f infra/compose.yaml build migrate postgres ingress
 docker compose -f infra/compose.yaml up -d --wait --wait-timeout 150
 docker compose -f infra/compose.yaml ps -a
 curl --fail --cacert "$ALTVIA_SECRET_DIR/tls_cert" "$ALTVIA_PUBLIC_ORIGIN/api/v1/health/ready"
@@ -118,6 +118,41 @@ containers, operational databases and source workbooks are never selected.
 
 ## Restart, rollback and limits
 
+### Mandatory image-family transition (ADR-0013)
+
+The current images use Alpine/musl; previous deliveries used Bookworm/glibc.
+Do not run the normal restart sequence below against a Bookworm data volume with
+the new PostgreSQL image. The new entrypoint refuses any initialized PGDATA
+without its exact Alpine runtime-family marker. Only fresh initdb writes it.
+Never add that marker to old data to bypass the check. A stock Alpine cluster
+without the marker is also refused: its provenance must not be guessed.
+
+Before any authorized real transition, take and verify an approved encrypted
+logical backup with the matching old image/Compose definition. Keep that original
+project and volume untouched. Create a different destination Compose project
+(therefore a fresh postgres_data volume), with a distinct test ingress port and
+matching restricted secrets. Start only its postgres service first. Restore the
+logical schema/data into its empty application database with pg_restore's
+--no-owner --no-acl --exit-on-error options, using the destination altvia_owner.
+Do not restore old cluster roles or copy physical PGDATA. Re-run the normal
+migrate/provision job afterwards to establish the destination's explicit runtime
+grants, then start API/ingress. Existing Alembic history is restored with the data.
+
+Verify row counts/checksums, constraints/indexes, chosen locale/collation policy,
+Portuguese FTS, ownership/runtime grants, login/session/negative ACL behavior and
+restart recovery before any separately authorized cutover. Logical restore
+rebuilds indexes under the destination libc; it does not guarantee identical
+locale sorting. Rollback selects the old image and original untouched volume,
+never the destination volume under a different libc. No automatic downgrade or
+volume deletion. Backup recipients, retention and real cutover remain operator
+decisions (Q-09); this document does not authorize production operations.
+
+The guarded container test exercises a synthetic Bookworm dump into a separate
+fresh Alpine database, Unicode/checksum/primary-key/FTS preservation, and explicit
+unmarked-volume refusal. It is not a real data migration or backup RPO/RTO claim.
+
+### Restart within an already validated image family
+
 ```bash
 docker compose -f infra/compose.yaml stop
 docker compose -f infra/compose.yaml up -d --wait --wait-timeout 150
@@ -139,8 +174,9 @@ Actual guest/native-ISA, SCA/image, load and recovery release gates remain open.
 
 ## PostgreSQL-only runtime capability
 
-ADR-0012 removes unused SQLite from the final API image: the native Debian
-libsqlite3-0 package and CPython's optional sqlite3/_sqlite3 modules are absent.
+ADR-0012 removes unused SQLite from the final API image. ADR-0013 preserves that
+contract on Alpine: sqlite-libs and CPython's optional sqlite3/_sqlite3 modules
+are absent. The original Debian implementation removed libsqlite3-0.
 The general-purpose builder and developer Python still support their original
 capabilities. This is not a general-purpose Python/SQLite container; alternative
 SQLite database URLs were already rejected by the application configuration.

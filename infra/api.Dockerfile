@@ -1,20 +1,23 @@
 FROM ghcr.io/astral-sh/uv@sha256:c7db1d63057f268a8b6da8af9077850a60461f98d23db23c676a82089a050c91 AS uv
-FROM python@sha256:0f086103b026048cc50cb5da25ec435c023c5241a83fc44daea593377abc61c4 AS dependencies
+FROM python@sha256:a61cbd76a882645de7f91423329fe43a67eed60d7da24f9e5331414bb3618b20 AS dependencies
 COPY --from=uv /uv /usr/local/bin/uv
 ENV UV_PYTHON_DOWNLOADS=never UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1
 WORKDIR /opt/altvia
 COPY pyproject.toml uv.lock ./
-RUN uv sync --locked --no-dev --no-install-project
+RUN uv sync --locked --no-dev --no-install-project --no-build
 
-FROM python@sha256:0f086103b026048cc50cb5da25ec435c023c5241a83fc44daea593377abc61c4 AS runtime
+FROM python@sha256:a61cbd76a882645de7f91423329fe43a67eed60d7da24f9e5331414bb3618b20 AS runtime
 ENV PATH="/opt/altvia/.venv/bin:$PATH" PYTHONPATH=/opt/altvia/apps/api \
     PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 WORKDIR /opt/altvia
-RUN groupadd --gid 10001 altvia && useradd --uid 10001 --gid 10001 --no-create-home altvia
+RUN addgroup -g 10001 altvia && adduser -D -H -u 10001 -G altvia altvia
 # PostgreSQL is the only supported API database. Drop unused SQLite capability
 # from the runtime, retaining the general-purpose builder and other stdlib modules.
 RUN python -c "import pathlib,shutil,sysconfig; p=pathlib.Path(sysconfig.get_path('stdlib')); shutil.rmtree(p/'sqlite3'); [f.unlink() for f in (p/'lib-dynload').glob('_sqlite3*.so')]" \
-    && dpkg --purge libsqlite3-0
+    && rundeps="$(apk info --depends .python-rundeps | sed -n '/^so:/p' | grep -v '^so:libsqlite3.so.0$')" \
+    && test -n "$rundeps" \
+    && apk add --no-network --virtual .altvia-python-rundeps $rundeps \
+    && apk del --no-network .python-rundeps sqlite-libs
 COPY --from=dependencies /opt/altvia/.venv /opt/altvia/.venv
 COPY apps/api/altvia apps/api/altvia
 COPY apps/api/migrations apps/api/migrations

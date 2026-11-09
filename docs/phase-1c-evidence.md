@@ -450,3 +450,71 @@ Nginx reports Debian gcc12.2.0, -O2/stack protector/fortify/PIC and no -march=na
 in its configure options; that is not proof of every linked library's ISA.
 Q-01, actual guest tests, image/security triage, backup/restore and load remain
 open. Worker/Redis/web ingress and the rest of Phase1 are still unfinished.
+
+## Phase 1C-f: vendor-patched images, security enforcement and logical recovery
+
+2026-11-09. ADR-0013 defines the compatibility and data contract before code.
+Bookworm vendor fixes were unavailable for Essential/native packages. The API,
+PostgreSQL17 and unprivileged nginx now use official Alpine inputs; proxy fixes
+come from signed vendor packages. Gosu1.19 source/checksum/module sums are verified
+and its embedded runtime is rebuilt with Go1.27.3 and GOAMD64=v1. No forced package
+removal, private libc/zlib fork, ignore file or blanket unfixed suppression.
+The API retains locked production packages and removes only unsupported SQLite.
+
+Local actual candidate image IDs (sha256):
+
+| Service | Image ID | Critical/high | Other package occurrences |
+| --- | --- | --- | --- |
+| API | 509114cfc40b5e82e1b236c81b86551e2553f163df7411f6e982d870051c077d | 0/0 | 6 medium, 1 low |
+| PostgreSQL | 479c5673fde6fdf5adfaaa2e187f63ae7c2760edcdf3d6e424cd839b1c410433 | 0/0 | 2 medium, 1 unknown |
+| Ingress | ceceb02516f57252873b4ec55a65cf1ee6f87a4408bd0ed53bfaa21e9743797b | 0/0 | none reported |
+
+Python3.12.16, PostgreSQL17.11, nginx1.30.6. Immutable input manifests are in the
+three Dockerfiles. Scanner Trivy0.75.0 digest af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa;
+DB updated2026-11-09T12:54:37Z, SHA256 e67b76d3c9fdab89365ccaec6e03aa2060dede721b346fe9e7aeb4f59d7f71c1.
+No Python production dependency version changed. The musllinux artifacts differ
+from previous manylinux wheels; actual native behavior was revalidated.
+
+Raw evidence is retained through Codex Security managed persistent storage for
+this repository, collection artifacts-8bf4d992d29be3151dd575511ea4b51a7c874bf1601dd402bb42743b50abce49,
+under artifacts/service-image-remediation/. Manifest SHA256
+dd8106b6619f70a4871b5bbd914cffc221b8ebe7cde6a3af73ad552394edbc9d.
+It binds image IDs, report hashes, complete lower-severity counts and the DB hash.
+Files api.json/postgres.json/ingress.json contain actual scanner bytes. The prior
+Bookworm API/PostgreSQL/ingress reports and linux-api-suite.log are also retained.
+The same-DB Bookworm API still reports35 high and1 raw critical (the previously
+documented MiniZip non-applicability); PostgreSQL reports75 high/4 critical and
+ingress135 high/11 critical. All three corrected installed images report0/0,
+without relying on that applicability exception or filtering unfixed findings.
+Hosted CI publishes portable reports/image identities on every run and weekly.
+
+Local commands and evidence:
+
+- podman build --format=docker for all three Dockerfiles: passed. API wheel-only
+  synchronization installed all27 production entries without a compiler.
+- uv run ruff check scripts apps/api; format checks; uv run mypy; uv build;
+  git diff --check: passed. Image-gate regression tests: 8 failed before enforcement,
+  then8 passed, covering non-OS HIGH/CRITICAL and incomplete/unrecognized evidence.
+- Actual final non-root/read-only API checker: passed; actual untrimmed builder
+  rejection: expected status1 with unsupported SQLite capability.
+- Full244 API tests, fresh Alembic upgrade and drift check: passed inside Linux
+  Python/Alpine against the actual patched PostgreSQL on a dedicated task network.
+  Test-only locked pytest/httpx wheels were downloaded/hashed on the host because
+  this Podman task network timed out reaching PyPI. One httpx-to-httpx2 deprecation
+  warning arose in that deliberately minimal dev harness; production packages
+  were unchanged. No test was skipped. Task containers/network were removed.
+- uv run python scripts/scan_service_images.py --engine podman with managed
+  --output-dir, shared --cache-dir and --skip-db-update: passed all three images.
+  No service Compose resource/security bound was changed for local scanning.
+- Fresh independent candidate review identified legacy PGDATA reuse. Reproduced
+  refusal-test failure, then added an entrypoint guard and fresh-init-only marker;
+  the actual image refusal test passed. The runbook requires separate destination
+  project/volume and logical restore, preserving the old volume for rollback.
+
+The continued Foundation delivery adds a blocking all-service image-security
+workflow and guarded synthetic Bookworm-to-Alpine logical recovery tests. Full
+Docker/Linux Compose/TLS/ACL/recreation/readiness/SIGTERM/recovery acceptance and
+hosted API/browser/security results are pending publication below. No schema,
+account grants, API contracts or UI changed; no real migration/deployment occurred.
+Actual target-VM/x86-64-v1, lower-severity follow-up, worker/Redis/web ingress,
+capacity and production backup/load acceptance remain open. Phase1 is not closed.

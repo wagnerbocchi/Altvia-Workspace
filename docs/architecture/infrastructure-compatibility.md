@@ -138,6 +138,17 @@ was removed. Trivy findings/dispositions are in docs/security/api-container-scan
 production image-security acceptance remains blocked. These observations do not
 change any actual guest gate above or approve a different ISA baseline.
 
+ADR-0013 replaces the Bookworm runtime family with official pinned Alpine Python
+3.12/PostgreSQL17/unprivileged nginx candidates and signed vendor fixes. Gosu1.19
+is rebuilt with Go1.27.3, CGO_ENABLED=0 and GOAMD64=v1; production Python packages
+use only locked musllinux/pure wheels. No -march=native or mandatory higher ISA.
+All244 API tests passed on Linux/Alpine against the candidate PostgreSQL; imports,
+Argon2/TLS paths and no-SQLite guard passed. Three same-DB image scans have zero
+HIGH/CRITICAL findings. This replaces the earlier image-security observation,
+not the actual guest gates. Source defaults and modern workstation/CI execution
+remain insufficient to homologate the unavailable x86-64-v1 VM. PostgreSQL libc
+changes require a fresh-volume logical restore; the image refuses unmarked data.
+
 Phase 1 can develop and test locally while access is missing. Its VM gate
 remains open. No production compatibility, performance or availability claim
 is permitted until these checks produce real evidence.

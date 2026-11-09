@@ -1,0 +1,36 @@
+name: Service image security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '23 7 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  installed-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          python-version: '3.12'
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run pytest -q apps/api/tests/test_image_scan.py
+      - run: uv run python scripts/scan_service_images.py --output-dir "$RUNNER_TEMP/altvia-image-scan"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: service-image-security-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/altvia-image-scan/*.json
+          if-no-files-found: error
+          retention-days: 30
+
+# Scan every installed OS/Python/Go target. No ignores, no unfixed filter.
+# All three images use one DB. Reports include lower severities and image IDs.

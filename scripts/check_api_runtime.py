@@ -15,7 +15,7 @@ def check_runtime() -> dict[str, str]:
         if importlib.util.find_spec(module) is not None:
             raise RuntimeError("Unsupported SQLite Python capability is installed")
     package = subprocess.run(
-        ["/usr/bin/dpkg-query", "--show", "libsqlite3-0"],
+        ["/sbin/apk", "info", "--exists", "sqlite-libs"],
         text=True,
         capture_output=True,
         check=False,

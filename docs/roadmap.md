@@ -55,7 +55,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-11 | Infrastructure/security: storage/scanner/proxy selection and CPU-approved builds | Local private storage adapter, quarantine fail-closed | Production attachment/proxy acceptance |
 | Q-12 | Infrastructure admin: hypervisor ownership and CPU-model change possibility | x86-64-v1 remains mandatory | None: CPU upgrade is not assumed |
 | Q-13 | Product owner: approved logo/brand and visual preferences | Provisional restrained Portuguese interface, system fonts, no invented assets or claims; review after return | Final visual approval only |
-| Q-14 | Engineering/security: disposition of the35 remaining high image findings and complete service-image triage | SQLite removed from API runtime under ADR-0012; preserve raw/vendor evidence and no risk acceptance; see docs/security/api-container-scan.md | Production image security gate |
+| Q-14 | Engineering/security: lower-severity follow-up and ongoing service-image security | ADR-0013 candidates have zero HIGH/CRITICAL in all three actual images; blocking CI and retained raw reports; no risk acceptance or guest homologation | Remaining production security/readiness gates |
 
 ## Backlog after core
 

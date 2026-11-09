@@ -50,7 +50,11 @@ try {
       path: incoming.url, method: incoming.method, headers: incoming.headers }, response => {
       outgoing.writeHead(response.statusCode, response.headers); response.pipe(outgoing);
     });
-    upstream.on("error", () => { outgoing.writeHead(502); outgoing.end(); });
+    upstream.on("error", () => {
+      if (outgoing.destroyed) return;
+      if (outgoing.headersSent) outgoing.destroy();
+      else { outgoing.writeHead(502); outgoing.end(); }
+    });
     incoming.on("aborted", () => upstream.destroy());
     incoming.pipe(upstream);
   });
@@ -63,7 +67,7 @@ try {
     }
     if (!ready) throw Error("Test service did not become ready");
   }
-  await result(run(process.execPath, [require.resolve("@playwright/test/cli"), "test"], web));
+  await result(run(process.execPath, [require.resolve("@playwright/test/cli"), "test", ...process.argv.slice(2)], web));
 } finally {
   gateway?.closeAllConnections(); gateway?.close();
   for (const child of children.reverse()) if (child.exitCode === null) {

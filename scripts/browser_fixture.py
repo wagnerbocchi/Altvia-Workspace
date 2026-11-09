@@ -7,7 +7,7 @@ from pathlib import Path
 
 from altvia.config import Settings
 from altvia.database import make_engine
-from altvia.management import hash_new_password
+from altvia.management import bootstrap_admin, hash_new_password, set_account_active
 from altvia.models import SessionRecord, User
 from sqlalchemy import update
 from sqlalchemy.engine import make_url
@@ -32,6 +32,8 @@ with Session(engine) as db, db.begin():
             .where(SessionRecord.user_id == user_id)
             .values(expires_at=datetime.now(UTC) - timedelta(seconds=1))
         )
+    elif os.environ.get("ALTVIA_E2E_DISABLE_ROSTER") == "1":
+        set_account_active(db, "browser-roster-12@example.invalid", False)
     else:
         email = f"browser-{secrets.token_hex(8)}@example.invalid"
         password = secrets.token_urlsafe(30)
@@ -45,8 +47,25 @@ with Session(engine) as db, db.begin():
                 created_at=datetime.now(UTC),
             )
         )
+        admin_email = f"browser-admin-{secrets.token_hex(8)}@example.invalid"
+        admin_password = secrets.token_urlsafe(30)
+        bootstrap_admin(db, admin_email, "Administrador - Validacao", admin_password)
+        roster_hash = hash_new_password(secrets.token_urlsafe(30))
+        for index in range(14):
+            db.add(
+                User(
+                    email_normalized=f"browser-roster-{index:02d}@example.invalid",
+                    display_name=f"Pessoa de validacao {index:02d}",
+                    password_hash=roster_hash,
+                    active=index != 13,
+                    auth_version=1,
+                    created_at=datetime.now(UTC),
+                )
+            )
         # Credentials never go to stdout, source control or browser traces.
         Path(".env.browser-session").write_text(
-            f"ALTVIA_E2E_EMAIL={email}\nALTVIA_E2E_PASSWORD={password}\n", encoding="utf-8"
+            f"ALTVIA_E2E_EMAIL={email}\nALTVIA_E2E_PASSWORD={password}\n"
+            f"ALTVIA_E2E_ADMIN_EMAIL={admin_email}\nALTVIA_E2E_ADMIN_PASSWORD={admin_password}\n",
+            encoding="utf-8",
         )
 engine.dispose()

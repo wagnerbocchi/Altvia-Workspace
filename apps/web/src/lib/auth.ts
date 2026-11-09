@@ -1,25 +1,13 @@
 import type { components } from "./api.generated";
+import { ApiError, apiRequest } from "./http";
+export { ApiError } from "./http";
 
 export type CurrentUser = components["schemas"]["UserOutput"];
 export type Credentials = components["schemas"]["LoginInput"];
 type LoginResult = components["schemas"]["LoginOutput"];
 
-export class ApiError extends Error {
-  constructor(readonly status: number, readonly retryAfter?: number) {
-    super("Request could not be completed");
-  }
-}
-
 async function request(path: string, init?: RequestInit) {
-  const response = await fetch(`/api/v1/auth/${path}`, {
-    ...init, cache: "no-store", credentials: "same-origin", redirect: "error",
-  });
-  if (!response.ok) {
-    const seconds = Number(response.headers.get("Retry-After"));
-    throw new ApiError(response.status, Number.isFinite(seconds) && seconds > 0
-      ? Math.min(Math.ceil(seconds), 3600) : undefined);
-  }
-  return response;
+  return apiRequest(`/auth/${path}`, init);
 }
 
 export async function currentUser(signal?: AbortSignal): Promise<CurrentUser | null> {

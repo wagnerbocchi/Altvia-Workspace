@@ -1,6 +1,8 @@
 # ADR-0014: Same-origin immutable frontend runtime
 
-Date: 2026-11-09. Status: contracted before implementation; acceptance pending.
+Date: 2026-11-09. Status: implemented and development-validated on465a85b.
+Actual Docker/browser/security acceptance passed; see docs/phase-1c-evidence.md.
+Real target-VM homologation and production readiness remain open.
 Extends ADR-0008/0011/0013 within Foundation. No Phase2 advancement.
 
 ## Intent and ownership

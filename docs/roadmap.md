@@ -59,15 +59,14 @@ currently covers this GitHub repository's main only, not production services.
 
 ## Backlog after core
 
-Current Foundation priority after the verified image/recovery slice: web ingress,
-remaining identity administration UX, and a worker/Redis slice only when it has a
-real durable consumer. Preserve Q-01 as the Phase1 exit gate; do not substitute
+Current Foundation priorities: remaining identity administration UX, and a
+worker/Redis slice only when it has a real durable consumer, alongside Q-01 and
+operational readiness. Preserve Q-01 as the Phase1 exit gate; do not substitute
 modern CI execution for the unavailable VM or begin Phase2 prematurely.
 
-Current increment: residual findings fixed on683e34d with all four hosted gates
-passing; packaged same-origin frontend under ADR-0014 is now under acceptance.
-After it passes, remaining Foundation priorities are identity administration UX
-and a real durable worker consumer, alongside Q-01 and operational readiness.
+Residual findings were fixed on683e34d; packaged same-origin web ingress passed
+acceptance on465a85b. Both revisions passed all four hosted gates. The four actual
+service images now report zero findings, without suppression or risk acceptance.
 
 FR-013 preferences/mentions/notifications, FR-014 time tracking, FR-015 authorized
 CSV/XLSX export, FR-016 advanced calendar/Gantt/dependencies, FR-017 external
@@ -75,6 +74,17 @@ portal/knowledge base. Billing/subscriptions, marketplace, advanced ITIL/CMDB,
 native mobile and local AI remain outside MVP. No speculative code for backlog.
 
 ## Evidence ledger
+
+- Phase1C-g/h: 683e34d closes the10 residual findings via vendor zlib, complete
+  runtime pip/ensurepip exclusion and pinned corrected gosu modules. 465a85b
+  packages the existing frontend under ADR-0014 with real same-origin HTTPS,
+  credential/network isolation, pt-BR native locale support and no Sharp/build
+  tools in runtime. Windows/Linux builds,244 API tests,7 existing E2E, actual
+  packaged browser/Compose/recovery, theme/axe/visual review and all-service image
+  scanning passed. All four actual images report zero findings. The review's
+  browser DNS/TLS transport finding was reproduced and corrected before publish.
+  Exact workflow links/artifacts and remaining guest/production gates are in
+  docs/phase-1c-evidence.md. Identity admin UX/real worker consumer remain pending.
 
 - Phase1C-f: 27b0bcb fixes installed API/PostgreSQL/ingress high/critical image
   findings with vendor-patched Alpine artifacts and baseline gosu rebuild.

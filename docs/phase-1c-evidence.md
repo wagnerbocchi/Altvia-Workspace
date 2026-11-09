@@ -622,5 +622,45 @@ not inherit Chromium's reserved-host DNS mapping or SPKI pin. Independent DNS an
 self-signed-certificate reproductions confirmed failure. Same-origin probes now
 use actual browser fetch/cookies, while the existing strict-CA Python probe owns
 forged-Origin denial. No other important source-backed review finding. Full
-hosted packaged-browser/Compose/API/security acceptance remains pending below.
+hosted packaged-browser/Compose/API/security acceptance passed as recorded below.
 No real deployment, user provisioning or data/volume migration. Phase1 stays open.
+
+### Packaged frontend publication evidence
+
+Code465a85b was pushed directly to main under standing authorization. All four
+hosted Linux workflows passed on that exact revision:
+
+- [API checks42638221644](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42638221644):
+  244 tests passed (53.23s), lint/format/mypy, migration/drift and package build.
+- [Browser checks42638221886](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42638221886):
+  7 existing E2E passed (9.3s), standalone-enabled frontend build/check, generated
+  contracts, native exclusion and dependency audit. No visible UI implementation
+  or production package version changed.
+- [Container checks42638222067](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42638222067):
+  actual four-image Docker/Compose stack passed API/DB TLS/ACL/recovery, native
+  guards, secret canaries in final API and web builder, isolation, no credential
+  mounts/env in web, and graceful stop (API0, native Next143 without OOM).
+  Real packaged Chromium login/focus/cookie/reload/logout, session after web
+  recreation, no identity in SSR, missing-CSRF rejection, disabled image optimizer,
+  desktop/mobile light/dark/axe and zero page errors passed through the real proxy.
+  Forged-Origin rejection and CA/domain-SAN validation passed in the independent
+  HTTP control. The synthetic logical Unicode/checksum/PK/FTS restore also passed.
+- [Service image security42638221676](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42638221676):
+  all four actual Docker-built images reported zero vulnerabilities of every
+  severity. Fresh hosted DB updated2026-11-09T13:58:27Z, SHA256
+  df53926a9cc6a579932e4163f52e8a9441d09b0e7d7aab06e09c7dc7a0c72723.
+  The local and hosted scans used different DB snapshots; each run used exactly
+  one DB for all of its images, and both reported zero findings.
+
+The service-image-security artifact binds that run's actual image IDs and report
+hashes; do not substitute local build IDs. Its raw bytes are also retained in
+managed artifacts/web-ingress/hosted-465a85b/. Five synthetic PNG screenshots are
+in the packaged-browser artifact and managed artifacts/web-ingress/screenshots/.
+All five were visually inspected together: styles/assets, focus, wrapping,
+controls and themes preserve the incumbent desktop/mobile world, without clipping
+or horizontal overflow. No real customer data, cookies or passwords are captured.
+
+The original residual10 findings are now absent; web packaging adds no reported
+finding. This is Foundation development acceptance only. Q-01/actual x86-64-v1,
+capacity/load, production backups, identity administration UX and a real worker
+consumer remain open. No production deployment or phase exit is claimed.

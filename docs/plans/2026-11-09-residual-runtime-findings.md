@@ -31,3 +31,8 @@ and preserves the called API. Do not omit or patch around the failing tests.
 Stop this slice when all10 residual findings are absent and legitimate paths
 pass. No schema, credentials, public API or production migration. The actual
 target-VM gate remains open. Continue web ingress as a separate contracted slice.
+
+Execution complete on683e34d: tasks1-4 passed. Fresh independent candidate review
+found no surviving bypass/regression. All four hosted gates passed:244 API tests,
+7 E2E, actual Compose/recovery and zero-finding scans. Exact links and managed
+artifact references are in docs/phase-1c-evidence.md. No actual VM/production claim.

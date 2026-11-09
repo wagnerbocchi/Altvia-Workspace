@@ -23,3 +23,12 @@ ADR-0014; incumbent PRODUCT.md/DESIGN.md and browser behavior in ADR-0008.
 Stop when real frontend/API identity works through the actual packaged HTTPS
 stack and all image/runtime tests pass. No domain features, idle worker or Redis
 without a consumer. Actual VM/CPU, load/production backups and rollout remain open.
+
+Execution complete on465a85b: tasks1-4 passed, including actual hosted packaged
+browser/Compose and all four security scans. Review found Node-owned request
+transport did not share Chromium DNS/TLS; independent RED reproductions confirmed
+it. Browser-owned fetch corrected the probes, and the actual full gate passed.
+The native locale test failed before full ICU and passed afterwards. Next's
+source-backed graceful143 exit was preserved, with local cleanup completion and
+hosted non-OOM stop proof. Five synthetic screenshots were visually checked.
+No deferred review finding. Exact evidence is in docs/phase-1c-evidence.md.

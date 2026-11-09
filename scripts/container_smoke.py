@@ -48,6 +48,8 @@ def main():
     args = parser.parse_args()
     if os.environ.get("ALTVIA_ALLOW_CONTAINER_TEST") != "1":
         raise SystemExit("Explicit ALTVIA_ALLOW_CONTAINER_TEST=1 required")
+    # Exercise secret generation under the restrictive umask used on operators' hosts.
+    os.umask(0o077)
     assert (ROOT / "infra/api.Dockerfile").is_file(), "API container artifact missing"
     project = "altvia-test-" + uuid4().hex[:10]
     work = ROOT / ".superpowers/container-tests" / project

@@ -1,6 +1,6 @@
 // Synthetic test certificates only. Production TLS material is supplied externally.
 import { createRequire } from "node:module";
-import { writeFile } from "node:fs/promises";
+import { chmod, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const require = createRequire(new URL("../apps/web/package.json", import.meta.url));
@@ -15,3 +15,7 @@ const certificate = await selfsigned.generate([{ name: "commonName", value: "wor
 });
 await writeFile(resolve(directory, "tls_cert"), certificate.cert, { mode: 0o444 });
 await writeFile(resolve(directory, "tls_key"), certificate.private, { mode: 0o444 });
+// File creation modes are masked by umask; non-root secret mounts need the
+// explicit read-only mode inside the caller's private parent directory.
+await chmod(resolve(directory, "tls_cert"), 0o444);
+await chmod(resolve(directory, "tls_key"), 0o444);

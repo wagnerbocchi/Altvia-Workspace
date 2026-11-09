@@ -71,11 +71,11 @@ update docs/runbooks/development.md and docs/phase-1-evidence.md.
 Consumes: Task 1 signatures. Produces CLI commands create-user, disable-user,
 enable-user, grant-admin, revoke-admin, retaining bootstrap-admin/reset-password.
 
-- [ ] Write failing CLI tests using real DB/services: create-user then HTTP login,
+- [x] Write failing CLI tests using real DB/services: create-user then HTTP login,
   state/role command effects, exact email confirmation, terminal/password-argument
   rejection, invalid arguments before prompts, safe errors and no secret output.
-- [ ] Run the new tests and observe unsupported-command/behavior failures.
-- [ ] Extend the parser. Password commands require hidden double entry; account/
+- [x] Run the new tests and observe unsupported-command/behavior failures.
+- [x] Extend the parser. Password commands require hidden double entry; account/
   privilege commands require typed target-email confirmation. All commands require
   an interactive terminal. No password parameter or generic arbitrary role setter.
 - [ ] Run all API tests, lint/format/mypy/build; obtain fresh read-only review,
@@ -91,3 +91,7 @@ enable-user, grant-admin, revoke-admin, retaining bootstrap-admin/reset-password
   invite/reset delivery flow. Cost: operations still need trusted host access.
 - Pre-flight: Task 2 consumes exactly Task 1's three signatures; no conflict.
 - Phase 1 remains open for HTTP/scoped identity, worker/Compose/security and VM.
+- Task 1 GREEN: c8e3920; 63 real tests, Ruff, mypy and wheel/source build passed.
+- Task 2 GREEN: 20 CLI tests, then full 83-test API suite passed; Ruff/format,
+  mypy, wheel/source build and Alembic drift check passed. Fresh independent
+  review found no material defects within the restricted host/DB CLI boundary.

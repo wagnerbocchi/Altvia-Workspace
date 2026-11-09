@@ -72,6 +72,12 @@ effects. A failed rolled-back validation does not consume the key.
 Bootstrap administrator and password reset use a one-time restricted management
 command, not public signup. No default user/password fixture in production.
 Password update/reset revokes all sessions and increments auth_version.
+Phase 1C-a also provides restricted CLI create-user, enable-user, disable-user,
+grant-admin and revoke-admin. These are host/DB management operations, not the
+planned HTTP administration routes above. State/privilege changes are atomic,
+revoke prior sessions and preserve at least one active platform administrator.
+No-op requests create no repeated audit/outbox effect. Platform administration
+does not confer customer-content access. See the development runbook for commands.
 
 ## Domain resource schemas
 

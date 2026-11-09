@@ -1,6 +1,6 @@
 # Development roadmap and decision register
 
-Updated 2026-11-08. User authorized incremental development after contracts,
+Updated 2026-11-09. User authorized incremental development after contracts,
 direct pushes to main and no PR. Continue safe independent work while questions
 await answers. This does not authorize production deployment or real data import.
 
@@ -9,7 +9,7 @@ await answers. This does not authorize production deployment or real data import
 | Phase | Ordered vertical deliveries | Dependencies | Exit evidence |
 | --- | --- | --- | --- |
 | 0 Discovery/design | Source inspection, PRD, ERD/dictionary, RBAC, ADRs, API/events, CPU plan and roadmap | Master spec + XLSX | Reviewable contracts, divergences and unknowns recorded; no product implementation in Phase 0 commit |
-| 1 Foundation/identity | 1A backend auth/session/policy kernel and migrations; 1B real login UI with impeccable; 1C worker/outbox/Compose/CI/runtime validation | Phase 0 contracts; selected supported artifacts | Real login/logout/expiry/revocation; resource ACL negative tests; DB persistence/migrations; build/lint/typecheck/tests; actual VM CPU gate |
+| 1 Foundation/identity | 1A backend auth/session/policy kernel and migrations; 1B real login UI with impeccable; 1C account administration, worker/outbox/Compose/CI/runtime validation | Phase 0 contracts; selected supported artifacts | Real login/logout/expiry/revocation; resource ACL negative tests; DB persistence/migrations; build/lint/typecheck/tests; actual VM CPU gate |
 | 2 Clients/projects/work | Client/area + project/member slice; task/subtask/owner/participants/history; Kanban/list/search/My Work tasks | Phase 1 gate | Operate one real project end to end, graph/version race tests, no mock counts |
 | 3 Native Service Desk | Queue/ticket/history; public/internal conversation + quarantine/private attachments; native IMAP/SMTP/reopen | Phase 2 + mailbox/provider data | Real request received/responded/reopened/closed; spoof/ACL/MIME/delivery tests and restart persistence |
 | 4 Unified work/automation | N:N authorization; structured rules and durable consumer/DLQ; unified projection | Phase 3 | Assignment/retry/race/reassign/reopen singular logical effect; pagination and partial-ACL consolidation |
@@ -74,6 +74,10 @@ native mobile and local AI remain outside MVP. No speculative code for backlog.
   recovery, published in `88d945c` with both Linux workflows green. Sharp
   excluded to avoid its Linux x64 SSE4.2 requirement. Phase 1C
   administration/processes/ingress/security and target-VM gates remain open.
+- Phase 1C-a: restricted CLI ordinary-user provisioning, active-state changes and
+  platform-role administration with atomic session revocation, audit/outbox and
+  concurrent last-active-admin protection. Full 83-test API suite passed locally;
+  independent review clear. See `docs/phase-1c-evidence.md` for publication/gates.
 - Future implementation entries must include commit, exact commands/results,
   target artifact/host when relevant and outstanding gates. Do not mark a phase
   done merely because the documentation or a subset of tests is complete.

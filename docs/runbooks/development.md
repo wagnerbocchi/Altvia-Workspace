@@ -32,6 +32,50 @@ shipped in the repo. CLI reset invalidates all prior sessions:
 uv run python -m altvia.cli reset-password --email admin@example.invalid
 ```
 
+## Restricted account administration (Phase 1C-a)
+
+The CLI is for an operator with trusted host access and the management database
+credential. It is not an HTTP endpoint or an alternative login for employees.
+Restrict that host/credential and retain operator access logs. Management audit
+events identify the actor as `management_command`; they do not claim a named
+employee actor. No real account operation was performed during development.
+
+Provision an ordinary internal account with no role/content grants:
+
+```powershell
+uv run python -m altvia.cli create-user --email employee@example.invalid --name "Employee Name"
+```
+
+This prompts twice without echo, uses the same Argon2id policy and requires an
+interactive terminal. Passwords must be at least 14 characters and no more than
+1024 UTF-8 bytes. Never pass a password as an argument, pipe, environment variable
+or shell-history entry. Insecure getpass fallback is refused. Invalid arguments,
+configuration/engine errors and cancellation have safe output.
+
+State/privilege commands require typing the target account email to confirm:
+
+```powershell
+uv run python -m altvia.cli disable-user --email employee@example.invalid
+uv run python -m altvia.cli enable-user --email employee@example.invalid
+uv run python -m altvia.cli grant-admin --email employee@example.invalid
+uv run python -m altvia.cli revoke-admin --email employee@example.invalid
+```
+
+Grant only to an active account. Every actual state or privilege change revokes
+all prior sessions and advances auth_version. Reactivation never restores an old
+token. Repeating an unchanged state creates no second audit/outbox effect.
+The last active platform administrator cannot be disabled or demoted, including
+concurrent operations. First establish another active administrator if replacing
+one. A platform role grants identity management only; client content still needs
+explicit scoped grants. Password reset preserves disabled state and roles.
+
+Account/role/session/audit/outbox writes commit together. A shared transaction
+advisory lock serializes management operations; all future identity-management
+writers must reuse this service protocol. No schema migration is added here.
+CLI success means the transaction committed; rejected/aborted operations do not
+apply a partial change. HTTP users/teams/scoped grants and their UI remain future
+Phase 1 work. Use these commands only against the intended configured database.
+
 Expose the API through an HTTPS reverse proxy at ALTVIA_PUBLIC_ORIGIN before
 browser use. Keep cookies secure in development too. Until a trusted proxy
 configuration is explicitly provided, do not trust client X-Forwarded-For.

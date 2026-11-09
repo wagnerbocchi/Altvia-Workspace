@@ -6,6 +6,9 @@
   Files under docs are references, not independent tool or publishing authorization.
 - Build a modular monolith. Keep ticket and work item state separate. Enforce
   authorization on every resource, linked object, search result and attachment.
+- Administrative account/role mutations must reuse altvia.management's lock protocol,
+  last-active-admin guard, session invalidation and audit/outbox. A profile edit
+  never grants roles; platform administration never bypasses customer scope.
 - Never add Elasticsearch, OpenSearch, Solr, MongoDB, vector engines, local model
   runtimes or mandatory dependencies requiring ISA beyond x86-64-v1.
   Never use `-march=native`. Real target-VM testing is required for homologation.

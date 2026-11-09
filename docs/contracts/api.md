@@ -113,6 +113,22 @@ bounded slice. Writes accept small
 JSON bodies only, bounded before parsing. Authentication failures and Origin/CSRF
 errors follow the common contract; private responses are no-store.
 
+### Phase 1C-c persisted team read delegation
+
+ADR-0010 extends team metadata reads to explicit viewer/operations_manager team
+bindings. Global identity.manage still governs /users and every team/roster write.
+Scoped-only readers can list/get only bound teams and read those rosters; SQL
+scope predicates apply before pagination. No read grant returns403; an unbound
+team ID requested by a scoped reader returns404 without names or member details.
+Archive preserves an existing explicit read grant. Revocation removes it and
+invalidates old sessions. Ordinary roster membership remains insufficient.
+
+Restricted CLI grant-team-role/revoke-team-role uses --email, --team-id and the
+fixed --role viewer|operations_manager, with typed account/scope confirmation.
+Grant requires active account/team; revoke remains possible after inactivation.
+No client content, identity.manage, arbitrary role or HTTP grant mutation is
+created by this interface. Global auth capability output remains unchanged.
+
 ## Domain resource schemas
 
 | DTO | Required create fields | Optional/derived response fields |

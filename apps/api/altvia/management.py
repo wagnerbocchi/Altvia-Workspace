@@ -1,12 +1,13 @@
 from datetime import UTC, datetime
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from sqlalchemy import delete, select, text, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from altvia.identity import PASSWORDS, IdentityError, normalize_email, record_event
-from altvia.models import Role, RoleBinding, SessionRecord, User
+from altvia.models import Role, RoleBinding, SessionRecord, Team, User
+from altvia.policy import TEAM_READ_ROLES
 
 
 def hash_new_password(password: str) -> str:
@@ -160,4 +161,48 @@ def set_platform_admin(db: Session, email: str, enabled: bool) -> bool:
     _invalidate_sessions(db, user, now)
     action = "identity.admin_granted" if enabled else "identity.admin_revoked"
     record_event(db, None, user.id, action, now, uuid4().hex, user.auth_version)
+    return True
+
+
+def set_team_role(db: Session, email: str, team_id: UUID, role: str, enabled: bool) -> bool:
+    if role not in TEAM_READ_ROLES:
+        raise IdentityError(422, "invalid_team_role")
+    lock_identity_writes(db)
+    user = _locked_user(db, email)
+    team = db.scalar(select(Team).where(Team.id == team_id).with_for_update(key_share=True))
+    if team is None:
+        raise IdentityError(404, "team_not_found")
+    if enabled and not user.active:
+        raise IdentityError(409, "account_inactive")
+    if enabled and not team.active:
+        raise IdentityError(409, "team_inactive")
+    binding = db.scalar(
+        select(RoleBinding).where(
+            RoleBinding.user_id == user.id,
+            RoleBinding.role_name == role,
+            RoleBinding.scope_kind == "team",
+            RoleBinding.team_id == team_id,
+        )
+    )
+    if (binding is not None) == enabled:
+        return False
+    if enabled:
+        db.execute(insert(Role).values(name=role).on_conflict_do_nothing())
+        db.add(RoleBinding(user_id=user.id, role_name=role, scope_kind="team", team_id=team_id))
+    else:
+        assert binding is not None
+        db.delete(binding)
+    now = datetime.now(UTC)
+    _invalidate_sessions(db, user, now)
+    action = "identity.team_role_granted" if enabled else "identity.team_role_revoked"
+    record_event(
+        db,
+        None,
+        user.id,
+        action,
+        now,
+        uuid4().hex,
+        user.auth_version,
+        details={"team_id": str(team_id), "role_name": role},
+    )
     return True

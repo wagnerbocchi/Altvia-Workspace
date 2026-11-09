@@ -7,9 +7,11 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    Index,
     String,
     Text,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
@@ -51,10 +53,36 @@ class Role(Base):
 
 class RoleBinding(Base):
     __tablename__ = "role_bindings"
-    __table_args__ = (CheckConstraint("scope_kind = 'global'", name="ck_initial_global_scope"),)
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
-    role_name: Mapped[str] = mapped_column(ForeignKey("roles.name"), primary_key=True)
+    __table_args__ = (
+        CheckConstraint(
+            "(scope_kind = 'global' AND team_id IS NULL AND role_name = 'platform_admin') OR "
+            "(scope_kind = 'team' AND team_id IS NOT NULL "
+            "AND role_name IN ('viewer','operations_manager'))",
+            name="ck_role_binding_scope",
+        ),
+        Index(
+            "uq_role_bindings_global",
+            "user_id",
+            "role_name",
+            unique=True,
+            postgresql_where=text("scope_kind = 'global'"),
+        ),
+        Index(
+            "uq_role_bindings_team",
+            "user_id",
+            "role_name",
+            "team_id",
+            unique=True,
+            postgresql_where=text("scope_kind = 'team'"),
+        ),
+    )
+    id: Mapped[UUID] = mapped_column(
+        primary_key=True, default=uuid4, server_default=func.gen_random_uuid()
+    )
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    role_name: Mapped[str] = mapped_column(ForeignKey("roles.name"))
     scope_kind: Mapped[str] = mapped_column(String(20), default="global")
+    team_id: Mapped[UUID | None] = mapped_column(ForeignKey("teams.id"))
 
 
 class AuditLog(Base):

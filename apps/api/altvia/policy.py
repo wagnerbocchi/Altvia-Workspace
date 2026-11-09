@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+TEAM_READ_ROLES = frozenset({"viewer", "operations_manager"})
+
 
 @dataclass(frozen=True)
 class Binding:

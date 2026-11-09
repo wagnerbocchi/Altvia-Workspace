@@ -699,7 +699,12 @@ with Session(make_engine(WorkerSettings())) as db:
                 run([*compose, "unpause", "redis"])
             # Unpause restores sockets before the next healthcheck updates state.
             # Wait for that real dependency recovery before restarting the worker.
-            run([*compose, "up", "-d", "--no-deps", "--no-build", "--wait", "redis"])
+            for _ in range(30):
+                if container("redis")["State"]["Health"]["Status"] == "healthy":
+                    break
+                time.sleep(0.5)
+            else:
+                raise RuntimeError("Redis health did not recover after the broker blackhole")
             run([*compose, "start", "worker"])
             for _ in range(120):
                 if batch_count(True) == 27:

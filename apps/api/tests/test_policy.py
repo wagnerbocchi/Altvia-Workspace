@@ -48,3 +48,25 @@ def test_agent_cannot_edit_someone_elses_task():
     )
     resource = Resource(C, P, T, owner_id=OTHER)
     assert not can(principal, "work.update", resource)
+
+
+@pytest.mark.parametrize(
+    "role,scope,scope_id,allowed",
+    [
+        ("viewer", "team", T, True),
+        ("operations_manager", "team", T, True),
+        ("platform_admin", "global", None, True),
+        ("platform_admin", "global", T, False),
+        ("viewer", "team", OTHER, False),
+        ("viewer", "global", None, False),
+        ("agent", "team", T, False),
+        ("viewer", "project", T, False),
+    ],
+)
+def test_team_read_policy_is_explicit_metadata_only(role, scope, scope_id, allowed):
+    principal = Principal(U, True, (Binding(role, scope, scope_id),), frozenset({C}))
+    assert can(principal, "team.read", Resource(None, team_id=T)) is allowed
+    assert not can(principal, "team.read", Resource(C, team_id=T))
+    assert not can(principal, "team.read", Resource(None))
+    assert not can(Principal(U, False, principal.bindings), "team.read", Resource(None, team_id=T))
+    assert not can(principal, "identity.manage", Resource(None, team_id=T))

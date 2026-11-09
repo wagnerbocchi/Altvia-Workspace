@@ -1,6 +1,6 @@
 # Team identity administration API
 
-Scope: Phase 1C-b, ADR-0009. Team metadata and rosters are available through the
+Scope: Phase 1C-b/1C-c, ADR-0009/0010. Team metadata and rosters are available through the
 real API; the browser currently provides login/account/logout only. Account
 provisioning, passwords and platform-role mutation retain the restricted CLI.
 No real team or workbook row is seeded by application startup.
@@ -8,8 +8,17 @@ No real team or workbook row is seeded by application startup.
 Authenticate through the existing HTTPS session flow. Requests use the same
 configured origin and cookie; never put a session or CSRF token in a URL or
 browser storage. Writes include the exact Origin and X-CSRF-Token from the
-current authenticated /api/v1/auth/me response. Only identity.manage is allowed
-in this slice; ordinary roster membership grants no administration/content role.
+current authenticated /api/v1/auth/me response. Writes and GET /users require
+identity.manage. Explicit viewer/operations_manager team bindings allow GET
+/teams, team detail and roster for the bound teams only. Ordinary roster
+membership grants no administration/content role.
+
+Scoped readers receive403 when they have no recognized binding, and404 for an
+unbound team while another binding exists. SQL filtering precedes pagination;
+each page re-evaluates current access. Multiple roles on one team do not duplicate
+results. Archived bound teams remain readable until revocation. The global
+capabilities array stays empty for scoped-only users; it is not a list of their
+resource scopes. Account emails remain restricted to identity.manage lookup.
 
 ## Supported routes
 
@@ -81,3 +90,10 @@ teams/rosters/idempotency history. Downgrade/upgrade proof used only the explici
 enabled disposable altvia_test database. Production rollback requires reviewed
 schema compatibility and backup. No deployment or target-VM homologation occurs
 in this slice. See docs/phase-1c-evidence.md for actual acceptance evidence.
+
+Migration b46087000004 preserves existing global platform grants and gives each
+binding a UUID. It refuses unsupported legacy global roles before mutation.
+Downgrade refuses any remaining scoped binding; it never deletes or flattens a
+grant. The old application supports global reads only and cannot administer the
+new bindings. Any operational rollback requires review of binary/schema/access
+compatibility; do not invoke downgrade just to revert application code.

@@ -57,6 +57,15 @@ entities. Dotted operational domains are not implied shared authorization.
 | client_access_grants | PK(user_id,client_id), granted_by, created_at; explicit ceiling on access to that client's content |
 | idempotency_records | actor_id, route, key, request_hash, resource/status/result, expires_at; UNIQUE(actor_id,route,key); no sensitive response body unless encrypted/restricted |
 
+Applied Phase 1C-c role_bindings is deliberately narrower than the complete-product
+table above: UUID id, user_id/role_name FKs, scope_kind, nullable team_id FK.
+CHECK permits only global/platform_admin without team or team/viewer and
+team/operations_manager with team. Partial UNIQUE(user_id,role_name) for global
+and UNIQUE(user_id,role_name,team_id) for team plus a user lookup index preserve
+global semantics and allow repeated role names on distinct teams. Client/project/
+queue scope and client_access_grants remain unimplemented; no polymorphic scope
+ID or placeholder operational entities were introduced. ADR-0010 owns this slice.
+
 Contact and internal-user identities are distinct. OIDC subject/issuer mapping
 is deferred until IdP is known; never join accounts by unverified email alone.
 `client_access_grants` is an intentional addition to make the client's ceiling

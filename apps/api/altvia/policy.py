@@ -33,6 +33,22 @@ class Principal:
 def can(principal: Principal, action: str, resource: Resource) -> bool:
     if not principal.active:
         return False
+    if action == "team.read":
+        if resource.client_id is not None or resource.team_id is None:
+            return False
+        return any(
+            (
+                binding.role == "platform_admin"
+                and binding.scope_kind == "global"
+                and binding.scope_id is None
+            )
+            or (
+                binding.role in TEAM_READ_ROLES
+                and binding.scope_kind == "team"
+                and binding.scope_id == resource.team_id
+            )
+            for binding in principal.bindings
+        )
     if resource.client_id is not None and resource.client_id not in principal.client_ids:
         return False
     work_actions = {"work.read", "work.create", "work.update", "work.transition", "work.comment"}

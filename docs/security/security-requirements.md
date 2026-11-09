@@ -35,7 +35,7 @@ approved and audited emergency grant. Never implement blanket `is_admin` bypass.
 | --- | --- | --- | --- | --- | --- |
 | Identity/system/mailbox secrets reference | manage | deny | deny | deny | deny |
 | Customer/project/work/ticket content read | explicit content grant | allowed team/client | allowed projects | allowed membership/queue | explicit read scope |
-| Team identity metadata/roster | manage identity only | explicit delegation, later slice | deny | deny | deny |
+| Team identity metadata/roster | global identity manage | read explicitly bound teams only | deny | deny | read explicitly bound teams only |
 | Client/project/operational team content | explicit content role | delegated scope | project/member scope only | deny | deny |
 | Work create/assign/update/transition | explicit content role | permitted scope | permitted project | assigned/member scope, no grant administration | deny |
 | Ticket create/assign/transition/reply | explicit content role | permitted queue/client | only additional queue role | permitted queue/client | deny |
@@ -52,6 +52,16 @@ verified participants of that ticket/client; no arbitrary Reply-To passthrough.
 Revalidate permission on writes, workers, linked previews, FTS, counts,
 notifications, exports and file streaming. Role/membership revocation takes
 effect on subsequent requests, not only next login.
+
+Phase 1C-c persists viewer/operations_manager grants only at explicit team scope.
+They authorize identity metadata/roster reads, with SQL filtering before pagination
+and parent authorization before roster access. /users and every metadata write or
+saved POST replay require global identity.manage. Grant/revoke is restricted to
+the host CLI, requires email and team UUID confirmation, and uses the shared
+identity lock, session invalidation and atomic audit/outbox. Schema constraints
+reject arbitrary roles/scopes. Membership never supplies a binding. Existing team
+read scope survives archive until revoked. Client/resource ceilings and later
+operational role rules remain separate; no persisted client grant is added here.
 
 ## Trust boundaries and controls
 

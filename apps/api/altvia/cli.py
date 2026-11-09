@@ -2,6 +2,7 @@ import argparse
 import getpass
 import sys
 import warnings
+from uuid import UUID
 
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
@@ -16,11 +17,14 @@ from altvia.management import (
     reset_password,
     set_account_active,
     set_platform_admin,
+    set_team_role,
 )
+from altvia.policy import TEAM_READ_ROLES
 
 
 def main() -> int:
     password_commands = {"bootstrap-admin", "create-user", "reset-password"}
+    team_commands = {"grant-team-role", "revoke-team-role"}
     parser = argparse.ArgumentParser(
         description="Restricted Altvia identity management", exit_on_error=False, allow_abbrev=False
     )
@@ -34,10 +38,14 @@ def main() -> int:
             "enable-user",
             "grant-admin",
             "revoke-admin",
+            "grant-team-role",
+            "revoke-team-role",
         ],
     )
     parser.add_argument("--email", required=True)
     parser.add_argument("--name")
+    parser.add_argument("--team-id", type=UUID)
+    parser.add_argument("--role", choices=sorted(TEAM_READ_ROLES))
     # argparse's default errors echo unknown arguments and invalid values. An
     # accidentally supplied credential must not be copied into logs or stderr.
     try:
@@ -46,6 +54,11 @@ def main() -> int:
         parser.error("Invalid command arguments; use --help for supported options")
     if unknown:
         parser.error("Unsupported arguments; passwords are accepted only through hidden prompts")
+    if args.command in team_commands:
+        if args.team_id is None or args.role is None:
+            parser.error("--team-id and --role are required for team role changes")
+    elif args.team_id is not None or args.role is not None:
+        parser.error("--team-id and --role are only valid for team role changes")
     needs_name = args.command in {"bootstrap-admin", "create-user"}
     if needs_name and not args.name:
         parser.error("--name is required for account creation")
@@ -79,6 +92,15 @@ def main() -> int:
             if not confirmed:
                 print("Confirmation did not match; no change made.", file=sys.stderr)
                 return 1
+            if args.command in team_commands:
+                entered_team = input("Type the target team UUID to confirm: ")
+                try:
+                    confirmed_team = UUID(entered_team.strip()) == args.team_id
+                except ValueError:
+                    confirmed_team = False
+                if not confirmed_team:
+                    print("Confirmation did not match; no change made.", file=sys.stderr)
+                    return 1
     except (EOFError, getpass.GetPassWarning):
         print("Secure input unavailable or cancelled; no change made.", file=sys.stderr)
         return 1
@@ -98,6 +120,9 @@ def main() -> int:
                 reset_password(db, email, password)
             elif args.command in {"disable-user", "enable-user"}:
                 set_account_active(db, email, args.command == "enable-user")
+            elif args.command in team_commands:
+                assert args.team_id is not None and args.role is not None
+                set_team_role(db, email, args.team_id, args.role, args.command == "grant-team-role")
             else:
                 set_platform_admin(db, email, args.command == "grant-admin")
     except ValidationError:

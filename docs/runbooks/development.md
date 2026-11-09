@@ -73,8 +73,28 @@ Account/role/session/audit/outbox writes commit together. A shared transaction
 advisory lock serializes management operations; all future identity-management
 writers must reuse this service protocol. No schema migration is added here.
 CLI success means the transaction committed; rejected/aborted operations do not
-apply a partial change. HTTP users/teams/scoped grants and their UI remain future
-Phase 1 work. Use these commands only against the intended configured database.
+apply a partial change. The team metadata API is documented in team-api.md.
+HTTP account/role mutation and administrative UI remain future Phase 1 work.
+Use these commands only against the intended configured database.
+
+Delegate read access to one existing team's metadata and roster:
+
+```powershell
+uv run python -m altvia.cli grant-team-role --email employee@example.invalid --team-id TEAM_UUID --role viewer
+uv run python -m altvia.cli revoke-team-role --email employee@example.invalid --team-id TEAM_UUID --role viewer
+```
+
+Replace TEAM_UUID with the exact existing team ID. Both commands require typing
+the target email and team UUID before opening a database connection. Only viewer
+and operations_manager are accepted; both provide the same metadata read scope
+in the current API. These flags are rejected on other commands. No password is
+requested. New grants require active user/team; revocation works after disable
+or archive. Existing grants remain readable after archive. Same role on multiple
+teams is supported; revoke affects only the exact user/team/role combination.
+Actual changes revoke all target sessions and atomically advance auth_version,
+audit and outbox. No-op repeats have no second effect. Team roles cannot write
+teams/rosters, enumerate /users, replay administrative writes or grant client
+content access. Team membership alone grants nothing. No real grant was provisioned.
 
 Expose the API through an HTTPS reverse proxy at ALTVIA_PUBLIC_ORIGIN before
 browser use. Keep cookies secure in development too. Until a trusted proxy

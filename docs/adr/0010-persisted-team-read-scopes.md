@@ -1,6 +1,7 @@
 # ADR-0010: Persisted team read scopes
 
-Date: 2026-11-09. Status: selected for Phase 1C-c; proof pending.
+Date: 2026-11-09. Status: implemented for Phase 1C-c; local proof recorded in
+docs/phase-1c-evidence.md. Target-VM homologation remains pending.
 
 Context: team metadata currently requires global identity.manage, and role
 bindings permit only global scope. Foundation needs persisted explicit scope

@@ -19,14 +19,15 @@ from pydantic import (
     model_validator,
 )
 from pydantic.json_schema import SkipJsonSchema
-from sqlalchemy import Engine, select
+from sqlalchemy import Engine, Select, select
 from sqlalchemy.orm import Session
 
 from altvia import identity
 from altvia.config import Settings
 from altvia.http import require_csrf, require_origin
 from altvia.management import lock_identity_writes
-from altvia.models import IdempotencyRecord, Team, TeamMember, User
+from altvia.models import IdempotencyRecord, RoleBinding, Team, TeamMember, User
+from altvia.policy import TEAM_READ_ROLES
 
 
 def _trim_name(value: object) -> object:
@@ -162,8 +163,14 @@ def _expected_version(request: Request) -> int:
     return version
 
 
-def _team(db: Session, team_id: UUID, expected: int | None = None) -> Team:
-    query = select(Team).where(Team.id == team_id)
+def _team(
+    db: Session,
+    team_id: UUID,
+    expected: int | None = None,
+    *,
+    visible: Select[tuple[Team]] | None = None,
+) -> Team:
+    query = (select(Team) if visible is None else visible).where(Team.id == team_id)
     if expected is not None:
         query = query.with_for_update(key_share=True)
     team = db.scalar(query)
@@ -261,6 +268,21 @@ def create_team_router(engine: Engine, settings: Settings) -> APIRouter:
             raise identity.IdentityError(403, "forbidden")
         return user
 
+    def readable_teams(db: Session, request: Request) -> Select[tuple[Team]]:
+        user, _ = identity.authenticate(db, request.cookies.get(identity.COOKIE_NAME))
+        if "identity.manage" in identity.capabilities(db, user):
+            return select(Team)
+        scopes = select(RoleBinding.team_id).where(
+            RoleBinding.user_id == user.id,
+            RoleBinding.scope_kind == "team",
+            RoleBinding.role_name.in_(TEAM_READ_ROLES),
+        )
+        if db.scalar(select(scopes.exists())) is not True:
+            raise identity.IdentityError(403, "forbidden")
+        # Keep authorization inside the query before cursor/order/limit. Never
+        # materialize all grants or filter a page after fetching its rows.
+        return select(Team).where(Team.id.in_(scopes))
+
     @router.get("/users", response_model=UserPage)
     def list_users(
         request: Request,
@@ -289,10 +311,10 @@ def create_team_router(engine: Engine, settings: Settings) -> APIRouter:
         cursor: Annotated[str | None, Query(max_length=200)] = None,
     ) -> TeamPage:
         with Session(engine) as db, db.begin():
-            admin(db, request)
+            visible = readable_teams(db, request)
             _collection_query(request)
             last = _cursor(cursor, "teams")
-            query = select(Team).order_by(Team.id).limit(limit + 1)
+            query = visible.order_by(Team.id).limit(limit + 1)
             if last is not None:
                 query = query.where(Team.id > last)
             rows = list(db.scalars(query))
@@ -332,8 +354,7 @@ def create_team_router(engine: Engine, settings: Settings) -> APIRouter:
     @router.get("/teams/{team_id}", response_model=TeamOutput)
     def get_team(team_id: UUID, request: Request, response: Response) -> TeamOutput:
         with Session(engine) as db, db.begin():
-            admin(db, request)
-            team = _team(db, team_id)
+            team = _team(db, team_id, visible=readable_teams(db, request))
             _etag(response, team.version)
             return TeamOutput.model_validate(team)
 
@@ -375,9 +396,9 @@ def create_team_router(engine: Engine, settings: Settings) -> APIRouter:
         cursor: Annotated[str | None, Query(max_length=200)] = None,
     ) -> MemberPage:
         with Session(engine) as db, db.begin():
-            admin(db, request)
+            visible = readable_teams(db, request)
             _collection_query(request)
-            team = _team(db, team_id)
+            team = _team(db, team_id, visible=visible)
             scope = f"members:{team_id}"
             last = _cursor(cursor, scope)
             query = (

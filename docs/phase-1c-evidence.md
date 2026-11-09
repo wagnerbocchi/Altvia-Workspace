@@ -174,3 +174,52 @@ main without PR, under standing authorization. Both hosted Linux workflows passe
 Worker/outbox delivery, Redis/Compose/ingress/non-root images, persisted scoped
 role/client grants, HTTP account mutation/admin UI, full security/image gates and
 actual target-CPU/recovery/load evidence remain open. Phase 1 is not complete.
+
+## Phase 1C-c: persisted team read scopes
+
+2026-11-09. ADR-0010 and the API contract preceded implementation. Storage/service
+commit fd92682 adds UUID role bindings, constrained viewer/operations_manager team
+scope and restricted transactional grant/revoke. Global platform_admin keeps its
+meaning. No role is inferred from roster membership; no real grant was provisioned.
+
+The host CLI now accepts grant-team-role/revoke-team-role with fixed role names,
+existing team UUID and account email, requiring both interactive confirmations
+before a DB connection. Actual changes atomically revoke all target sessions,
+advance auth_version and append audit/outbox. Duplicate/no-op grants add no effect.
+Inactive users/teams reject grants; revocation still works after disable/archive.
+
+Team reads use a role-binding SQL subquery before cursor/order/limit. A scoped
+reader sees only bound team metadata/rosters, including archived teams. Unbound
+IDs return404; no recognized grant returns403. Writes, /users and even previously
+saved administrative replay remain identity.manage only. Global capabilities
+remain unchanged; scoped-only users receive an empty capabilities array.
+
+### Executed local evidence
+
+- Task 1 RED: 23 missing schema/service failures; GREEN: 183 full API tests.
+- Added guarded migration proof: preserve global grants through schema3/4,
+  refuse unsupported legacy grants atomically, refuse downgrade with team grants,
+  preserve row/version after refusal, explicitly revoke synthetic scope and prove
+  roundtrip/drift. Storage/service/migration subset: 24 passed (22.64s).
+- Task 2 RED: 16 expected global-only authorization/parser/policy failures and
+  27 existing/negative cases passed. Initial focused GREEN: 43 passed (22.38s).
+  Added same-actor former-admin replay and duplicate-role pagination coverage.
+- Final `uv run --env-file .env.e2e pytest -q --tb=short`: **213 passed**
+  (227.50s). Real ASGI/PostgreSQL tests cover both roles, explicit binding without
+  membership, membership without binding, interleaved unauthorized IDs before
+  pagination, own/other rosters, all write/user-directory denial, former-admin
+  replay, session invalidation, targeted revocation, disable/archive, constraints,
+  concurrent duplicate grant, atomic rollback and last-global-admin preservation.
+- Ruff/check/format, strict mypy (11 source files), `uv build`, Alembic drift and
+  `git diff --check` passed. Initial formatting/typing/lint findings were fixed.
+- OpenAPI export and TypeScript regeneration produced no contract diff.
+  `pnpm web:check`, `pnpm web:build` and `node scripts/check_web_native.mjs` passed.
+  No UI implementation or dependency changed; no new native artifact introduced.
+
+Only the explicitly guarded disposable altvia_test DB and synthetic identities
+were used. Production downgrade or role provisioning was not performed. Independent
+review and publication evidence follow after their actual completion.
+
+Phase 1 remains open: worker/outbox delivery, Redis/Compose/ingress/non-root images,
+client/operational grants, HTTP account mutation/admin UI, complete security/image
+gates and actual target-VM CPU/recovery/load acceptance are still pending.

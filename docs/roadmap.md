@@ -83,6 +83,12 @@ native mobile and local AI remain outside MVP. No speculative code for backlog.
   authorization, versioning, atomic audit/outbox and protected POST replay.
   Published in 030a3f2/a5ce79a; 160 API tests and both Linux workflows passed.
   Review finding on PATCH schema resolved. Remaining gates are in the Phase 1C report.
+- Phase 1C-c: persisted constrained team read scopes, transactional restricted
+  grant/revoke CLI and SQL-filtered team/roster reads. Storage/service fd92682;
+  local full API suite 213 passed, guarded migration preservation/refusal/roundtrip,
+  API/web build/types/lint and unchanged generated contracts passed. Fresh review
+  and publication evidence are recorded in docs/phase-1c-evidence.md when observed.
+  Client grants, admin UI and remaining Phase 1/runtime gates are still open.
 - Future implementation entries must include commit, exact commands/results,
   target artifact/host when relevant and outstanding gates. Do not mark a phase
   done merely because the documentation or a subset of tests is complete.

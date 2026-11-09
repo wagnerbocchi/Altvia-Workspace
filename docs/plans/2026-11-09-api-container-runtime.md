@@ -56,12 +56,12 @@ TLS ingress, guarded smoke with persistence/negative ACL/credential/privilege pr
 - [x] Define black-box checks before stack code; observe absent artifact failure.
 - [x] Implement digest-pinned multi-stage image and Compose with file secrets,
   separate roles, health, bounded resources, volumes and no API/DB host ports.
-- [ ] Build/run actual images; prove TLS login/team ACL/CSRF, DB permission matrix,
+- [x] Build/run actual images; prove TLS login/team ACL/CSRF, DB permission matrix,
   migration rerun, container recreation and session/data survival, readiness503,
   non-root/read-only runtime, SIGTERM and absence of build-context secrets.
-- [ ] Add hosted Docker Compose gate, verify generated contracts unchanged,
+- [x] Add hosted Docker Compose gate, verify generated contracts unchanged,
   obtain fresh read-only review; correct material findings with regression proof.
-- [ ] Document commands/artifacts/results/limits, commit/push main, observe all CIs;
+- [x] Document commands/artifacts/results/limits, commit/push main, observe all CIs;
   stop only task-owned services, preserve volumes and record remaining Phase1 gates.
 
 ## Rulings and pre-flight

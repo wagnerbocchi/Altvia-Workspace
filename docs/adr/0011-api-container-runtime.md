@@ -1,6 +1,8 @@
 # ADR-0011: Reproducible API container runtime
 
-Date: 2026-11-09. Status: selected for Phase 1C-d; executable evidence pending.
+Date: 2026-11-09. Status: implemented and development-tested for Phase 1C-d.
+Actual Docker/Linux evidence is in docs/phase-1c-evidence.md. Production image
+security and target-VM homologation remain open; this is not deployment approval.
 
 Intent: run the existing persisted identity/team API through a real HTTPS proxy,
 without granting its long-lived database connection schema or audit modification

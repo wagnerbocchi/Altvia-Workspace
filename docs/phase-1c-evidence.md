@@ -332,6 +332,35 @@ passed canary, source-cache and test exclusion plus production imports. The smok
 also checks absent source __pycache__. Only synthetic test material was used;
 no image was published to a registry. Hosted acceptance requires a fresh green run.
 
+### Hosted runtime acceptance
+
+On7df1ebc the corrected actual Docker/Linux stack passed
+[Container checks42618799256](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42618799256).
+The black-box helper confirmed dirty-context/cache/test exclusion, mounted secrets,
+non-root/read-only applications, no DB/API host ports, actual TLS identity for a
+domain-only certificate, real persisted identity/team API and scoped ACL, Origin/
+CSRF denial, API/Postgres recreation with session/data survival, readiness503 with
+liveness200 during DB outage, recovery, owner-job rerun, graceful API SIGTERM and
+absence of generated credential values in stack logs. The helper stopped only
+its random test project and never requested volume deletion.
+
+[API checks42618799279](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42618799279)
+also passed:234 tests (61.16s), fresh migrations/drift, Ruff/format/mypy and build.
+[Browser checks42618799430](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42618799430)
+passed too: all7 real HTTPS/PostgreSQL E2E tests, frontend check/build, dependency
+audit, Sharp exclusion and generated-contract drift guard. No UI code changed.
+Code commits63d1fa9/ee70bea/7b0a933/7df1ebc were published directly to main under
+standing authorization. All three hosted gates passed on7df1ebc; the failed first
+container run remains recorded above rather than counted as successful evidence.
+
+Local task PostgreSQL and its single SSH forward were stopped; pre-existing
+containers and all volumes were preserved. The local Podman resource limitation
+is an environmental blocker to running this checked-in Compose on that machine,
+not a waived or disabled resource limit. Hosted success accepts the bounded API
+runtime development increment; it does not approve production, image risk,
+x86-64-v1 on the actual guest, backups/restore, capacity or the unfinished worker,
+Redis/web ingress and remaining Phase1 functionality.
+
 Candidate amd64 platform artifacts, resolved2026-11-09:
 
 | Component | Source/version observed | Immutable manifest |

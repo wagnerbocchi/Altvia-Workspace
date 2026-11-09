@@ -92,11 +92,14 @@ native mobile and local AI remain outside MVP. No speculative code for backlog.
   both hosted Linux workflows passed (213 API tests, 7 browser E2E). Exact links
   and publication evidence are recorded in docs/phase-1c-evidence.md.
   Client grants, admin UI and remaining Phase 1/runtime gates are still open.
-- Phase 1C-d in progress: runtime DB privileges and file-secret support63d1fa9;
-  full227 API tests passed. API image builds and runs non-root/read-only locally.
-  Docker Compose/TLS/recreation acceptance is delegated to hosted Linux CI because
-  local Podman lacks cgroup memory controls. Resource limits remain enabled.
-  See ADR-0011 and docs/runbooks/api-containers.md; no target/production claim.
+- Phase 1C-d: runtime DB privileges/file secrets63d1fa9, image/Compose ee70bea,
+  review fixes7b0a933 and build-context correction7df1ebc. Final234 API tests passed
+  locally and in hosted Linux; all7 browser E2E and actual Docker Compose/TLS/
+  recreation/ACL/readiness/SIGTERM proof passed. Local Podman lacks cgroup memory
+  controls; resource limits were preserved and validated through hosted Docker.
+  See ADR-0011, docs/runbooks/api-containers.md and exact CI evidence in the Phase1C
+  report. Q-14/image security and Q-01/actual CPU, recovery/load, worker/Redis/web
+  ingress and remaining Phase1 gates stay open. No production/phase exit claim.
 - Future implementation entries must include commit, exact commands/results,
   target artifact/host when relevant and outstanding gates. Do not mark a phase
   done merely because the documentation or a subset of tests is complete.

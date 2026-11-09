@@ -1,0 +1,108 @@
+services:
+  postgres:
+    image: docker.io/library/postgres@sha256:73bedc9eaa0121b92b9b26bb52e5141b3f6f37479c7ef913c0160455763ca80a
+    environment:
+      POSTGRES_USER: altvia_owner
+      POSTGRES_DB: ${ALTVIA_DATABASE_NAME:-altvia_workspace}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets: [postgres_password]
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    networks: [database]
+    read_only: true
+    tmpfs: [/tmp, /var/run/postgresql]
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U altvia_owner -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  migrate:
+    image: ${ALTVIA_API_IMAGE:-altvia-api:local}
+    build:
+      context: ..
+      dockerfile: infra/api.Dockerfile
+    command: [python, -m, altvia.provision]
+    environment:
+      ALTVIA_PUBLIC_ORIGIN: ${ALTVIA_PUBLIC_ORIGIN:?Set exact HTTPS origin}
+    secrets:
+      - source: owner_database_url
+        target: ALTVIA_DATABASE_URL
+      - source: runtime_database_url
+        target: ALTVIA_RUNTIME_DATABASE_URL
+    networks: [database]
+    depends_on:
+      postgres: {condition: service_healthy}
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 1.0
+    pids_limit: 64
+    restart: 'no'
+    healthcheck: {disable: true}
+  api:
+    image: ${ALTVIA_API_IMAGE:-altvia-api:local}
+    environment:
+      ALTVIA_PUBLIC_ORIGIN: ${ALTVIA_PUBLIC_ORIGIN:?Set exact HTTPS origin}
+    secrets:
+      - source: runtime_database_url
+        target: ALTVIA_DATABASE_URL
+    networks: [database, ingress]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
+    restart: unless-stopped
+    stop_grace_period: 30s
+  ingress:
+    image: docker.io/nginxinc/nginx-unprivileged@sha256:10bf30f80ce9af183b2db50a91ea59cea5eb5e4106820656bac8cd369ed14904
+    entrypoint: [/bin/sh, /etc/nginx/start-ingress.sh]
+    volumes:
+      - ./nginx.conf:/etc/nginx/altvia.conf.template:ro
+      - ./start-ingress.sh:/etc/nginx/start-ingress.sh:ro
+    secrets: [tls_cert, tls_key]
+    ports: ['127.0.0.1:${ALTVIA_HTTPS_PORT:-3444}:8443']
+    networks: [ingress]
+    depends_on:
+      api: {condition: service_healthy}
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 64m
+    cpus: 0.5
+    pids_limit: 64
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, curl, --fail, --silent, --max-time, '3', --cacert, /run/secrets/tls_cert, 'https://127.0.0.1:8443/api/v1/health/ready']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+networks:
+  database: {internal: true}
+  ingress: {}
+volumes:
+  postgres_data: {}
+secrets:
+  postgres_password:
+    file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/postgres_password
+  owner_database_url:
+    file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/owner_database_url
+  runtime_database_url:
+    file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/runtime_database_url
+  tls_cert:
+    file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/tls_cert
+  tls_key:
+    file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/tls_key

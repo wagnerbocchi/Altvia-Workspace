@@ -11,6 +11,9 @@ Phase 1C-a extends restricted host administration for ordinary accounts and
 platform privileges, with session revocation and last-active-admin protection.
 Phase 1C-b adds the team identity/roster API, optimistic concurrency and protected
 POST replay. Team membership grants no implicit client-content permission.
+Phase 1C-c persists explicit team read scopes and restricted grant/revoke CLI.
+Phase 1C-d packages the API with separate runtime DB privileges and API-only HTTPS
+containers; acceptance evidence and remaining gates are in the Phase 1C report.
 
 ## Project references
 
@@ -27,6 +30,7 @@ POST replay. Team membership grants no implicit client-content permission.
 - [Development setup and checks](docs/runbooks/development.md)
 - [Browser setup and HTTPS integration checks](docs/runbooks/browser-development.md)
 - [Team identity API and concurrency/retry protocol](docs/runbooks/team-api.md)
+- [API containers, file secrets and runtime privilege boundary](docs/runbooks/api-containers.md)
 - [Phase 1 implementation evidence](docs/phase-1-evidence.md)
 - [Phase 1C administration evidence](docs/phase-1c-evidence.md)
 

@@ -1,0 +1,14 @@
+# Allowlist: secrets, workbook sources, Git, tests and host dependencies stay out.
+**
+!pyproject.toml
+!uv.lock
+!apps/
+!apps/api/
+!apps/api/alembic.ini
+!apps/api/altvia/
+!apps/api/altvia/*.py
+!apps/api/migrations/
+!apps/api/migrations/env.py
+!apps/api/migrations/script.py.mako
+!apps/api/migrations/versions/
+!apps/api/migrations/versions/*.py

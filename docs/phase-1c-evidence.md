@@ -247,3 +247,57 @@ preserved. This is development/hosted CI evidence, not target-CPU homologation.
 Phase 1 remains open: worker/outbox delivery, Redis/Compose/ingress/non-root images,
 client/operational grants, HTTP account mutation/admin UI, complete security/image
 gates and actual target-VM CPU/recovery/load acceptance are still pending.
+
+## Phase 1C-d: API container runtime candidate
+
+2026-11-09. ADR-0011 and its plan preceded implementation. Commit63d1fa9 adds
+native file-secret discovery and a restricted one-off owner-side provisioner.
+No schema migration or HTTP capability changed. The fixed runtime login has CRUD
+on current identity/team tables and INSERT only on audit/outbox. DDL, role
+management, audit reads/modification and Alembic reads are denied. Existing
+ownership, inherited roles and elevated attributes are refused, not normalized.
+
+Task1 evidence: missing provision module RED; native Pydantic file source already
+existed and was reused. Focused16 passed; final full suite **227 passed** (235.86s),
+including real runtime-credential login/logout and administrative team write,
+permission denials, quoted-password handling, duplicate provisioning, same-target
+checks and elevated/membership/ownership refusal. Ruff/format, strict mypy12 source
+files and wheel/source build passed. All mutation used guarded altvia_test.
+
+The runtime candidate includes a multi-stage API image, separated migrate service,
+persisted PostgreSQL and unprivileged API-only TLS ingress. File-secret mounts,
+private DB networking, loopback-only published HTTPS, health/dependency gates,
+resource bounds, read-only applications and dropped capabilities are explicit.
+No startup seed, browser UI change, idle worker or fake event acknowledgement.
+
+Task2 RED: black-box smoke failed with "API container artifact missing" before
+the stack was implemented. Image build then passed locally; imageID
+sha256:fba4a5bc974f4a45c7ed048dc7dfead94f56d996134325bb2c4f209b5f460d47,
+199315443 bytes. A direct read-only/cap-drop/no-new-privileges container confirmed
+UID10001, production imports, absent pytest/tests and no copied uv.lock/build tool.
+Shell syntax/ShellCheck, Python scripts/API Ruff/format, strict mypy, API package
+build, JS syntax and unchanged OpenAPI all passed.
+
+Local Compose created only its random altvia-test-* project, but startup failed
+with crun "open memory.max for writing: No such file or directory". The existing
+Windows Podman VM lacks the cgroup controller. The checked-in resource controls
+were preserved; no VM/security setting was changed. Finally removed only that
+test project's containers/networks and retained its volume/private synthetic
+configuration. Local HTTPS/recreation acceptance is therefore not claimed.
+The new hosted Linux Docker Compose gate must supply that proof before this
+runtime slice is accepted. Review, scan and hosted results follow when observed.
+
+Candidate amd64 platform artifacts, resolved2026-11-09:
+
+| Component | Source/version observed | Immutable manifest |
+| --- | --- | --- |
+| API base | python:3.12-slim-bookworm; Python3.12.16 | sha256:0f086103b026048cc50cb5da25ec435c023c5241a83fc44daea593377abc61c4 |
+| Build-only dependency tool | ghcr.io/astral-sh/uv; uv0.13.7 | sha256:c7db1d63057f268a8b6da8af9077850a60461f98d23db23c676a82089a050c91 |
+| Database | postgres:17-bookworm; PostgreSQL17.11 | sha256:73bedc9eaa0121b92b9b26bb52e5141b3f6f37479c7ef913c0160455763ca80a |
+| API ingress | nginxinc/nginx-unprivileged:stable-bookworm; nginx1.28.0 | sha256:10bf30f80ce9af183b2db50a91ea59cea5eb5e4106820656bac8cd369ed14904 |
+
+These are locally executable candidates, not approved production/CPU artifacts.
+Nginx reports Debian gcc12.2.0, -O2/stack protector/fortify/PIC and no -march=native
+in its configure options; that is not proof of every linked library's ISA.
+Q-01, actual guest tests, image/security triage, backup/restore and load remain
+open. Worker/Redis/web ingress and the rest of Phase1 are still unfinished.

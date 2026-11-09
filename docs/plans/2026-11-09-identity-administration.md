@@ -78,7 +78,7 @@ enable-user, grant-admin, revoke-admin, retaining bootstrap-admin/reset-password
 - [x] Extend the parser. Password commands require hidden double entry; account/
   privilege commands require typed target-email confirmation. All commands require
   an interactive terminal. No password parameter or generic arbitrary role setter.
-- [ ] Run all API tests, lint/format/mypy/build; obtain fresh read-only review,
+- [x] Run all API tests, lint/format/mypy/build; obtain fresh read-only review,
   resolve material findings with regression proof, document commands/limits and
   publish completed changes directly to main. Observe API and browser CI.
 
@@ -95,3 +95,5 @@ enable-user, grant-admin, revoke-admin, retaining bootstrap-admin/reset-password
 - Task 2 GREEN: 20 CLI tests, then full 83-test API suite passed; Ruff/format,
   mypy, wheel/source build and Alembic drift check passed. Fresh independent
   review found no material defects within the restricted host/DB CLI boundary.
+- Task 2: complete in 2f3298a. API CI 42598033063 and browser CI 42598033094
+  passed on Linux. Phase 1C-a is complete at this bounded CLI scope only.

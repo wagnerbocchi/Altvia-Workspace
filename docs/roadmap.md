@@ -76,8 +76,9 @@ native mobile and local AI remain outside MVP. No speculative code for backlog.
   administration/processes/ingress/security and target-VM gates remain open.
 - Phase 1C-a: restricted CLI ordinary-user provisioning, active-state changes and
   platform-role administration with atomic session revocation, audit/outbox and
-  concurrent last-active-admin protection. Full 83-test API suite passed locally;
-  independent review clear. See `docs/phase-1c-evidence.md` for publication/gates.
+  concurrent last-active-admin protection, published in c8e3920/2f3298a. Full
+  83-test API suite passed; both Linux workflows green, independent review clear.
+  See `docs/phase-1c-evidence.md` for publication/gates.
 - Future implementation entries must include commit, exact commands/results,
   target artifact/host when relevant and outstanding gates. Do not mark a phase
   done merely because the documentation or a subset of tests is complete.

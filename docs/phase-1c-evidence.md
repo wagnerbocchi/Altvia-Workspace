@@ -67,8 +67,19 @@ this local connection path and the restricted account commands.
 
 ## Publication and remaining gates
 
-Publication evidence follows after pushing the completed increment and observing
-the API/browser Linux workflows. Direct main publishing is already authorized.
+Commits `c8e3920` (service) and `2f3298a` (CLI/runbooks) were pushed directly to
+main, without PR, under existing authorization. Both Linux workflows passed:
+
+- [API checks 42598033063](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42598033063):
+  full API suite, lint/format/mypy, migrations/drift and source/wheel build.
+- [Browser checks 42598033094](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42598033094):
+  clean locked install, Sharp exclusion, generated-contract drift guard, web
+  lint/types/production build, dependency audit and all 7 HTTPS/PostgreSQL E2E tests.
+
+The browser run retained an existing tooling annotation: pnpm/action-setup v4
+declares Node 20 and GitHub forces it to Node 24. The action and all required
+steps succeeded; updating its declared runtime belongs to CI maintenance. This
+does not establish the application runtime's target-VM CPU compatibility.
 
 HTTP administration and scoped teams/client grants, durable worker/outbox
 delivery, Redis, Compose/ingress/non-root images, full security/image scanning,

@@ -28,6 +28,21 @@ losing business events. A private local filesystem storage adapter is acceptable
 for early development; a production S3-compatible implementation must pass the
 CPU/security gate. No storage product is assumed preinstalled.
 
+## Applied Foundation worker
+
+ADR-0017 selects Dramatiq 2.2.1 and redis-py 8.1.0 without native extras, plus
+Redis 7.4.12 built with x86-64-v1 flags. One worker process reuses the API image
+and domain code, with a dispatcher and two consumer threads. It projects existing
+identity/team events into durable administrative history; no mail, storage or
+ticket automation worker is implied. PostgreSQL still owns rate controls and
+authoritative events; Redis is transport only. Scoped worker grants are distinct
+from API credentials, and the browser has no database or Redis secret.
+
+Actual applied schema, operational recovery and acceptance are recorded in
+data-model.md, ADR-0017 and docs/phase-1-closure-evidence.md. The full-product diagram
+above remains a phased design contract rather than an assertion that future
+components already exist.
+
 ## Module boundaries
 
 | Owner | Responsibilities and permitted collaboration |

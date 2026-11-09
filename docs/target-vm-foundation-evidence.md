@@ -1,5 +1,11 @@
 # Target VM qualification: current Foundation stack
 
+Current status: Phase 1's final five-image/six-service stack and migration job
+passed on the supplied x86-64-v1 guest. See [Phase 1 closure evidence](phase-1-closure-evidence.md)
+for final source 2f6ba60, exact image IDs, five clean image reports, worker/Redis
+blackhole shutdown/recovery, resource/native checks and all five hosted gates.
+The earlier qualification below remains evidence of its own distinct artifacts.
+
 2026-11-09. The owner explicitly authorized Docker/Compose installation and
 isolated qualification, with application listeners restricted to loopback.
 The current four-image Foundation stack passed on the supplied VM. This does not

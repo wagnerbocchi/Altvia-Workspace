@@ -1,5 +1,8 @@
 # Phase 1C execution evidence
 
+Phase 1 is now closed: [final Foundation acceptance](phase-1-closure-evidence.md).
+The following records preserve the earlier slices and their historical limits.
+
 Date: 2026-11-09. Phase 1C-a delivers restricted identity administration.
 Phase 1 is not complete. No production operation, migration or new dependency.
 

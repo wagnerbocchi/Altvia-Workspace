@@ -1,7 +1,7 @@
 # Data model and planned migrations
 
 Design contract for the complete product. Applied development schema is limited
-to the identity and team/idempotency Alembic migrations; other tables below
+to identity, team/idempotency and ADR-0017 activity migrations; other tables below
 remain planned. Execution evidence is in the Phase 1/1C reports, not this ERD.
 UUID primary keys unless stated. Timestamps
 are TIMESTAMPTZ in UTC; business calendars name an IANA timezone. Mutable
@@ -44,6 +44,23 @@ erDiagram
 
 Diagram shows core cardinalities. Table definitions below also cover supporting
 entities. Dotted operational domains are not implied shared authorization.
+
+## Applied Foundation activity projection
+
+Migration b46087000005 adds activity_events and processed_events, plus the safe
+outbox last_error_code. This is the first real consumer of existing identity/team
+events; ticket automation remains Phase 4. processed_events has composite primary
+key (consumer,event_id) and an outbox foreign key. activity_events uses event_id
+as its primary/foreign key, bounded typed resource/actor metadata, aggregate
+version, UTC occurrence, correlation ID and allowlisted JSON details. Its
+(occurred_at,event_id) index owns descending cursor ordering. Projection,
+deduplication and delivered status commit together under the locked outbox row.
+
+Neither table is an editable audit replacement. API can read activity only;
+separate worker credentials own the insert/deduplication and processing columns.
+No data purge is introduced. Downgrade refuses populated new tables instead of
+erasing durable history. ADR-0017 and docs/phase-1-closure-evidence.md contain
+implementation decisions, preservation proof and exact acceptance evidence.
 
 ## Identity and scope
 

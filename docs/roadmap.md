@@ -4,6 +4,12 @@ Updated 2026-11-09. User authorized incremental development after contracts,
 direct pushes to main and no PR. Continue safe independent work while questions
 await answers. This does not authorize production deployment or real data import.
 
+Phase 1 is closed on 2026-11-09. Final source 2f6ba60 passed all five hosted gates,
+290 API and 31 browser tests, and the full five-image/six-service stack passed on
+the actual x86-64-v1 VM. Exact tested images have zero reported vulnerabilities.
+Worker shutdown during broker loss and all 27 recovered events are proven.
+See docs/phase-1-closure-evidence.md. Stop here: Phase 2 has not started.
+
 ## Milestones and gates
 
 | Phase | Ordered vertical deliveries | Dependencies | Exit evidence |
@@ -21,9 +27,9 @@ advancement from UI appearance alone. Reuse unchanged passing evidence; test
 affected behavior after each change. No release date/velocity estimate without
 environment/volume data. Do not replace Zammad until formal operational acceptance.
 
-The supplied VM now qualifies the current four-image Foundation stack; future
-mandatory native artifacts must repeat that gate. Phase 1's remaining work and
-production readiness remain open. If all independent work is exhausted, report
+The supplied VM now qualifies the current five-image Foundation stack; future
+mandatory native artifacts must repeat that gate. Production readiness remains
+open. If all independent work is exhausted, report
 the exact blocker rather than silently weakening acceptance.
 
 ## Definition of ready and done per slice
@@ -43,7 +49,7 @@ currently covers this GitHub repository's main only, not production services.
 
 | ID | Needed answer / owner | Safe action while pending | Gate blocked |
 | --- | --- | --- | --- |
-| Q-01 | Current four-image Foundation stack qualified on the supplied VM, 2026-11-09; native build/runtime/HTTPS/ACL/restore/browser/cgroup/image-scan proof retained | Reuse exact tested image evidence; repeat qualification for changed mandatory native artifacts and future components | Satisfied for current stack; future artifact qualification remains required |
+| Q-01 | Final five-image Foundation stack qualified on the supplied VM, 2026-11-09; native build/runtime/HTTPS/ACL/restore/browser/cgroup/image-scan and worker/Redis recovery proof retained | Reuse exact tested image evidence; repeat qualification for changed mandatory native artifacts and future components | Satisfied for current stack; future artifact qualification remains required |
 | Q-02 | Infrastructure admin: IOPS, workload/users/mail per day and production volume/backup policy; observed 8 vCPUs, 31.3 GiB RAM and 500 GiB disk | Conservative bounded defaults; inventory alone establishes no capacity or performance promise | Capacity/prod readiness |
 | Q-03 | Support owner: mailboxes, TLS/auth/forwarding/trusted MTA and SMTP limits | Adapter contracts and controlled test SMTP/IMAP only | Real Phase 3 email acceptance |
 | Q-04 | Operations: actual client/team/project/queue membership matrix | Deny by default; test explicit grants with synthetic test data only | Provisioning/pilot |
@@ -56,7 +62,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-11 | Infrastructure/security: storage/scanner/proxy selection and CPU-approved builds | Local private storage adapter, quarantine fail-closed | Production attachment/proxy acceptance |
 | Q-12 | Infrastructure admin: hypervisor ownership and CPU-model change possibility | x86-64-v1 remains mandatory | None: CPU upgrade is not assumed |
 | Q-13 | Product owner: approved logo/brand and visual preferences | Provisional restrained Portuguese interface, system fonts, no invented assets or claims; review after return | Final visual approval only |
-| Q-14 | Engineering/security: ongoing service-image security | All four actual target-tested images have zero reported vulnerabilities; blocking HIGH/CRITICAL CI and retained unfiltered reports; no risk acceptance | Remaining production security/readiness gates |
+| Q-14 | Engineering/security: ongoing service-image security | All five actual target-tested images have zero reported vulnerabilities; blocking HIGH/CRITICAL CI, SAST medium+ and every detected secret; retained complete severity metadata, no risk acceptance | Remaining production security/readiness gates |
 
 ## Backlog after core
 
@@ -67,10 +73,11 @@ source review had no findings; Impeccable's spacing fix was scored resolved and
 the incumbent system preserved. Updated actual target images passed packaged
 account/TLS/ACL/recovery/cgroup proof and have zero reported image findings.
 Exact evidence: docs/account-administration-evidence.md.
-Current Foundation priorities include a worker/Redis slice only when it has a real
-durable consumer, alongside operational readiness. Q-01 is satisfied for the updated
-stack, with repeated target execution
-required for future native artifacts. Remaining Foundation gates still precede Phase2.
+The final Foundation increment now delivers the actual durable identity activity
+consumer, restricted browser history, private Redis, safe logs and source-security
+gates under ADR-0017. All Foundation gates passed on 2f6ba60; Phase 2 awaits the
+user's next instruction. Production capacity/retention/provider decisions remain
+the later gates listed above, not unimplemented Foundation requirements.
 
 Residual findings were fixed on683e34d; packaged same-origin web ingress passed
 acceptance on465a85b. Both revisions passed all four hosted gates. The four actual
@@ -82,6 +89,16 @@ portal/knowledge base. Billing/subscriptions, marketplace, advanced ITIL/CMDB,
 native mobile and local AI remain outside MVP. No speculative code for backlog.
 
 ## Evidence ledger
+
+- Phase 1 closure: contracts 3fba9a0, worker c9dfb26, history 410abe2, runtime 6e655f5,
+  source-review fixes c4252eb, runtime-test corrections 2a80c60/7851794/29f1e4e and
+  vendor zlib correction 2f6ba60. 290 API/31 browser tests and all five hosted gates
+  passed. Actual target five-image stack passed full packaged/native/cgroup proof;
+  exact image IDs have zero reported vulnerabilities. Blackholed Redis shutdown
+  exit 0 in 7.742 seconds, all 27 events recovered. Independent source findings addressed;
+  Impeccable full extension review ship, incumbent system preserved. Evidence in
+  docs/phase-1-closure-evidence.md. Task stopped, volumes retained, SSH closed.
+  Phase 2 not started; no production deployment or real-data import.
 
 - Phase1C-k: account/security API 207c203, browser 30c577d, packaged proof515f9f1
   and reviewed spacing fix 7e0e66b. Full 270 API/30 browser and all four hosted gates

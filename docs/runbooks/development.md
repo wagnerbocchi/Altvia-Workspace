@@ -117,6 +117,14 @@ uv run mypy
 uv build
 ```
 
+Worker integration also requires ALTVIA_REDIS_URL in the ignored .env.test:
+an authenticated redis:// URL targeting database 0 on a dedicated disposable
+Redis instance. The fixture deliberately flushes that instance between tests;
+never point it at shared or operational Redis. The runtime-hardened Redis image
+disables FLUSHDB and is tested separately through the packaged Compose proof.
+Linux CI starts its authenticated disposable service with scripts/ci_redis.sh,
+using ALTVIA_CI_REDIS_PASSWORD supplied through the environment, never argv.
+
 Integration tests truncate fixture tables. Only use a dedicated disposable
 database named **altvia_test**, with explicit `ALTVIA_ALLOW_TEST_DB=1`.
 Never point tests at operational data or reuse a production credential.

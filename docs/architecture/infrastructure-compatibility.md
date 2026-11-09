@@ -1,8 +1,12 @@
 # Infrastructure and x86-64-v1 compatibility
 
-Status: current four-image Foundation stack **qualified on the supplied VM**;
+Status: current five-image Foundation stack **qualified on the supplied VM**;
 future native components and production capacity/readiness gates remain open.
 See [actual target evidence](../target-vm-foundation-evidence.md).
+Final Phase 1 worker/Redis qualification, corrected zlib, exact five image IDs,
+zero reported vulnerabilities, cgroup/isolation and unavailable-broker shutdown
+are in [the closure evidence](../phase-1-closure-evidence.md). Earlier four-image
+results below remain historical evidence for their distinct artifacts.
 Source: master specification section 11; no SSH/guest/container test was run
 in Phase 0. Local Windows tooling cannot establish Ubuntu compatibility.
 

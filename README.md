@@ -6,9 +6,16 @@ The [master specification](ALTVIA_WORKSPACE_SPEC_CODEX.md) defines the product.
 The initial repository was empty. Phase 0 establishes contracts and decisions.
 Phase 1A adds a tested PostgreSQL identity API; Phase 1B adds its real browser
 login, account and logout flow with dark/light themes. The full workspace is not yet
-implemented or production-validated. The current four-image Foundation stack has
+implemented or production-validated. The earlier four-image Foundation stack
 passed qualification on the supplied x86-64-v1 guest; future native artifacts must
 repeat target validation.
+Phase 1 is now complete, including persisted account/team administration, a real
+durable identity worker and private Redis, administrative history and security CI.
+The final five-image stack passed actual x86-64-v1 VM qualification, with zero
+reported image vulnerabilities. All five hosted gates passed (290 API and 31
+browser tests). See [Foundation closure](docs/phase-1-closure-evidence.md) for exact
+source/image identities, migrations, recovery and operational limits. Phase 2
+has not started; production deployment and real-data import remain separate.
 Phase 1C-a extends restricted host administration for ordinary accounts and
 platform privileges, with session revocation and last-active-admin protection.
 Phase 1C-b adds the team identity/roster API, optimistic concurrency and protected
@@ -40,6 +47,7 @@ browser, with explicit concurrency/recovery and isolated private session data.
 - [Team identity API and concurrency/retry protocol](docs/runbooks/team-api.md)
 - [API containers, file secrets and runtime privilege boundary](docs/runbooks/api-containers.md)
 - [Phase 1 implementation evidence](docs/phase-1-evidence.md)
+- [Phase 1 closure and final acceptance matrix](docs/phase-1-closure-evidence.md)
 - [Phase 1C administration evidence](docs/phase-1c-evidence.md)
 
 The original XLSX is retained locally under `data/sources/`, ignored by Git.

@@ -1,8 +1,9 @@
 # API container runtime
 
-Scope: Foundation, ADR-0011/0013/0014. This packages the existing identity/team API,
-PostgreSQL, standalone web frontend and same-origin HTTPS ingress. Worker/Redis,
-production ingress trust, backups/load gates and target-VM homologation remain separate.
+Scope: Foundation, ADR-0011/0013/0014/0017. This packages the identity/team API,
+PostgreSQL, standalone web frontend, same-origin HTTPS ingress and identity
+activity worker with private Redis transport. Production ingress trust and
+production backup/load policies remain separate.
 No real account, production role or deployment is created by this repository.
 
 ## Requirements and secrets
@@ -12,9 +13,10 @@ dependencies and resource limits. Candidate images use immutable amd64 digests.
 The Windows Podman machine used during development lacks cgroup memory/pids
 controllers: its Compose startup fails at memory.max. Do not remove the checked-in
 resource bounds or change that machine to hide the failure. Hosted Linux Docker
-is also a functional Compose acceptance environment. The current four-image stack
+is also a functional Compose acceptance environment. The current five-image stack
 has now passed on the supplied target VM; exact qualified image IDs and remaining
-gates are in [the target report](../target-vm-foundation-evidence.md).
+gates are in [the target report](../target-vm-foundation-evidence.md) and
+[Phase 1 closure](../phase-1-closure-evidence.md).
 
 Supply an external restricted directory, never a committed env file, with:
 
@@ -23,6 +25,9 @@ Supply an external restricted directory, never a committed env file, with:
 | postgres_password | Password for the dedicated cluster's altvia_owner login |
 | owner_database_url | postgresql+psycopg URL for altvia_owner, host postgres, selected DB |
 | runtime_database_url | Same target URL for fixed altvia_app, distinct strong password |
+| worker_database_url | Same target URL for fixed altvia_worker, another distinct strong password |
+| redis_password | Random URL-safe ASCII password, 32..128 characters |
+| redis_url | redis://:password@redis:6379/0, matching redis_password |
 | tls_cert / tls_key | Certificate chain and matching key for the exact HTTPS origin |
 
 Percent-encode URL credentials. Do not pass passwords through shell arguments,
@@ -34,8 +39,9 @@ parent directory. Restrict directory traversal, do not publish secret contents.
 The guarded smoke test uses umask 077. Its synthetic TLS generator explicitly
 applies mode 0444 after writing, so creation-time masking cannot block the non-root
 proxy. The private parent stays 0700; do not make that directory public.
-API receives only runtime URL; migrate receives owner and runtime URLs; ingress
-receives only TLS files. Owner password is mounted only into PostgreSQL.
+API receives only runtime URL; migrate receives owner/runtime/worker URLs; worker
+receives only worker/Redis URLs; Redis receives only its password; ingress receives
+only TLS files. Owner password is mounted only into PostgreSQL. Web receives none.
 
 Settings uses Pydantic's file-secret source at /run/secrets when present. Explicit
 constructor values and environment still take precedence for existing development
@@ -53,7 +59,7 @@ export ALTVIA_PUBLIC_ORIGIN=https://workspace.example.invalid:3444
 export ALTVIA_API_IMAGE=altvia-api:reviewed-build
 export ALTVIA_DATABASE_NAME=altvia_workspace
 docker compose -f infra/compose.yaml config --quiet
-docker compose -f infra/compose.yaml build migrate postgres ingress web
+docker compose -f infra/compose.yaml build migrate postgres ingress web redis
 docker compose -f infra/compose.yaml up -d --wait --wait-timeout 150
 docker compose -f infra/compose.yaml ps -a
 curl --fail --cacert "$ALTVIA_SECRET_DIR/tls_cert" "$ALTVIA_PUBLIC_ORIGIN/api/v1/health/ready"
@@ -83,7 +89,12 @@ Provisioning serializes, resets this role's direct public-schema table grants an
 allows CRUD only on the current identity/team tables. Audit/outbox are INSERT
 only, Alembic metadata is not readable, and persistent DDL/role management are
 denied. Public schema creation and public database privileges are revoked. Future
-tables need explicit reviewed grants; worker privileges are not pre-granted.
+tables need explicit reviewed grants. API may SELECT the activity projection,
+but may not read audit/outbox. The separate worker role can SELECT outbox and
+UPDATE only its processing columns; it can SELECT/INSERT processed/activity rows
+and INSERT audit for confirmed replay. It cannot alter users/roles/sessions,
+payloads, existing history or schema. Both fixed roles receive the same strict
+pre-existing ownership, membership, privilege and column-grant refusal checks.
 
 Initial account provisioning still requires authorized host access and hidden
 interactive input, using the runtime connection and existing management protocol:
@@ -135,6 +146,55 @@ containers, operational databases and source workbooks are never selected.
 
 ## Restart, rollback and limits
 
+### Identity worker and transport recovery
+
+PostgreSQL is durable truth. Redis stores only registered JSON messages containing
+event UUIDs, has no persistence requirement and exposes no host port. Its internal
+queue network is shared only with the worker. The API commits synchronously during
+Redis outage; activity catches up when transport recovers. Redis uses 64 MiB
+maxmemory/noeviction under a 128 MiB container bound, and disables runtime config,
+ACL/module administration and database flush commands. Do not add arbitrary tasks
+or treat queue acknowledgements as evidence of a committed projection.
+
+```bash
+docker compose -f infra/compose.yaml exec worker python -m altvia.worker health
+docker compose -f infra/compose.yaml exec worker python -m altvia.worker status
+docker compose -f infra/compose.yaml logs --since 10m worker
+docker compose -f infra/compose.yaml stop -t 30 worker
+docker compose -f infra/compose.yaml start worker
+```
+
+The dispatcher claims at most 25 events with 30-second leases. Delivery and
+processed-event deduplication commit together. Failures retry from PostgreSQL
+with exponential backoff/jitter, at most eight attempts, then remain dead with
+a fixed error code. Logs contain safe structured metadata, never payload dumps,
+credentials or raw exception text. There is no automatic purge.
+
+SIGTERM stops further sends between events, leaves unpublished leases recoverable,
+and drains two consumer threads. Redis connections have one-second connect and
+two-second operation timeouts with zero implicit connection retries; each of
+Dramatiq's two thread-join phases has a five-second budget. The packaged test
+blackholes Redis while a real batch is claimed, proves exit 0 before the 30-second
+grace, restarts the consumer and verifies all 27 interrupted test events project.
+
+Inspect a dead event under authorized database operations before replay. Replay
+is an interactive recovery command requiring the exact typed UUID confirmation:
+
+```bash
+docker compose -f infra/compose.yaml exec worker python -m altvia.worker replay --event-id EVENT_UUID
+```
+
+Replace EVENT_UUID with the reviewed event UUID. A confirmed replay atomically
+resets the dead event and appends an audit record; it neither edits historical
+payloads nor creates arbitrary executable work. Unknown/invalid schemas remain
+dead until the responsible implementation is corrected. Never reset attempts
+with ad hoc SQL or delete deduplication rows to force an effect.
+
+Migration b46087000005 expands outbox metadata and adds projection/deduplication
+tables. Existing events survive. A downgrade refuses when durable new rows exist;
+rollback selects the previous compatible application image while preserving the
+expanded database. Do not delete history, downgrade automatically or erase volumes.
+
 ### Mandatory image-family transition (ADR-0013)
 
 The current images use Alpine/musl; previous deliveries used Bookworm/glibc.
@@ -183,11 +243,13 @@ any actual rotation separately. Owner credentials never belong in runtime.
 Before upgrades, identify the real volume, back up and validate schema/image
 compatibility. Rollback selects the previous immutable API image only while its
 schema/privilege contract is compatible; never automatically run downgrade.
-This slice does not change schema. No backup/restore acceptance or operational
-resource capacity is claimed from the provisional Compose memory/CPU bounds.
+ADR-0017's expand-only migration and populated-downgrade refusal apply to the
+activity increment described above. No operational backup policy or resource
+capacity is claimed from the provisional Compose memory/CPU bounds.
 The API uses one worker, preserves the secure session policy and treats the proxy
 as the direct login source until a reviewed trusted-ingress configuration exists.
-Actual guest/native-ISA, SCA/image, load and recovery release gates remain open.
+Foundation guest/native-ISA, image scans and isolated recovery passed in the
+linked closure report. Production load, backup policy and release gates remain open.
 
 ## PostgreSQL-only runtime capability
 

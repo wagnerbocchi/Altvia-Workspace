@@ -1,5 +1,8 @@
 # Phase 1 execution evidence
 
+Phase 1 is now closed: [final Foundation acceptance](phase-1-closure-evidence.md).
+The following records preserve the earlier slices and their historical limits.
+
 Phase 0 published as `996aeb3`. Phase 1A delivers the identity API according to
 `docs/plans/2026-11-08-foundation-identity.md`. Not a completed Phase 1.
 

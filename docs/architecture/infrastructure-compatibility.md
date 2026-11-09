@@ -60,6 +60,20 @@ uses the tested immutable image, never a newly resolved mutable tag.
 No `-march=native` in portable builds. Optional acceleration is allowed only
 when the baseline execution path is demonstrated without unsupported ISA.
 
+### Phase 1B native dependency decision
+
+Next.js 16.4.5 lists Sharp as optional. Its Linux x64 prebuilt artifacts require
+SSE4.2 according to [Sharp installation prerequisites](https://sharp.pixelplumbing.com/install/).
+The workspace explicitly excludes optional `sharp` installation and sets
+`images.unoptimized=true`. No image optimizer is required or used by this slice;
+the browser integration checks that `/_next/image` is unavailable. Do not remove
+this exclusion without a separately proven baseline-compatible replacement.
+
+Node 24.21.0, Next SWC/Turbopack, Tailwind Oxide and remaining native dependencies
+are development-tested only. Their exact Linux artifacts, glibc requirements,
+baseline execution paths and real guest behavior remain Phase 1C acceptance
+gates. Windows success and npm's `cpu: x64` metadata do not prove baseline ISA.
+
 ## Original preliminary commands
 
 Run on actual target, first replacing selection with reviewed artifact versions

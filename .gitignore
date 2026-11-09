@@ -21,3 +21,6 @@ dist/
 *.tsbuildinfo
 .requirements.test.txt
 .superpowers/
+.impeccable/review/
+.impeccable/questions/
+.impeccable/hook.cache.json

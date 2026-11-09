@@ -54,6 +54,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-10 | Support/management: desired Zammad migration/cutover/rollback | Keep current helpdesk; no API/database dependency | Optional future migration |
 | Q-11 | Infrastructure/security: storage/scanner/proxy selection and CPU-approved builds | Local private storage adapter, quarantine fail-closed | Production attachment/proxy acceptance |
 | Q-12 | Infrastructure admin: hypervisor ownership and CPU-model change possibility | x86-64-v1 remains mandatory | None: CPU upgrade is not assumed |
+| Q-13 | Product owner: approved logo/brand and visual preferences | Provisional restrained Portuguese interface, system fonts, no invented assets or claims; review after return | Final visual approval only |
 
 ## Backlog after core
 
@@ -67,7 +68,11 @@ native mobile and local AI remain outside MVP. No speculative code for backlog.
 - Phase 0: `docs/phase-0-report.md` and workbook reconciliation.
 - Phase 1A: identity API implementation, 44 real automated checks, migrations,
   build/lint/types and evidence in `docs/phase-1-evidence.md`. Phase 1 remains
-  open for frontend/administration/process/runtime/security/target-VM gates.
+  open for administration/process/runtime/security/target-VM gates.
+- Phase 1B: real browser login/account/logout, generated API types, 7 real
+  HTTPS/PostgreSQL browser tests, theme/responsive/axe checks and reviewed focus
+  recovery. Sharp excluded to avoid its Linux x64 SSE4.2 requirement. Phase 1C
+  administration/processes/ingress/security and target-VM gates remain open.
 - Future implementation entries must include commit, exact commands/results,
   target artifact/host when relevant and outstanding gates. Do not mark a phase
   done merely because the documentation or a subset of tests is complete.

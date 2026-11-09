@@ -1,0 +1,58 @@
+name: Browser checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-identity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-bookworm@sha256:73bedc9eaa0121b92b9b26bb52e5141b3f6f37479c7ef913c0160455763ca80a
+        env:
+          POSTGRES_USER: altvia_test
+          POSTGRES_DB: altvia_test
+          POSTGRES_PASSWORD: test-${{ github.run_id }}-${{ github.run_attempt }}
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U altvia_test -d altvia_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      ALTVIA_DATABASE_URL: postgresql+psycopg://altvia_test:test-${{ github.run_id }}-${{ github.run_attempt }}@127.0.0.1:5432/altvia_test
+      ALTVIA_PUBLIC_ORIGIN: https://127.0.0.1:3443
+      ALTVIA_ALLOW_TEST_DB: "1"
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: "11.25.0"
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24.21.0"
+          cache: pnpm
+      - run: uv sync --locked
+      - run: pnpm install --frozen-lockfile
+      - run: node scripts/check_web_native.mjs
+      - run: uv run ruff check scripts
+      - run: uv run ruff format --check scripts
+      - run: uv run python scripts/export_openapi.py
+      - run: pnpm --filter @altvia/web generate:api
+      - run: git diff --exit-code -- docs/contracts/openapi.json apps/web/src/lib/api.generated.ts
+      - run: pnpm web:check
+      - run: pnpm web:build
+      - run: pnpm audit --audit-level=moderate
+      - run: pnpm --filter @altvia/web exec playwright install --with-deps chromium
+      - run: uv run node apps/web/scripts/browser-test.mjs
+
+# Real HTTPS browser/API/PostgreSQL integration; not target-VM homologation.

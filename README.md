@@ -4,7 +4,8 @@ Internal self-hosted workspace for projects, work items and native service desk.
 
 The [master specification](ALTVIA_WORKSPACE_SPEC_CODEX.md) defines the product.
 The initial repository was empty. Phase 0 establishes contracts and decisions.
-Phase 1A adds a tested PostgreSQL identity API. The full workspace is not yet
+Phase 1A adds a tested PostgreSQL identity API; Phase 1B adds its real browser
+login, account and logout flow with dark/light themes. The full workspace is not yet
 implemented or production-validated. No target CPU homologation is claimed.
 
 ## Project references
@@ -20,6 +21,7 @@ implemented or production-validated. No target CPU homologation is claimed.
 - [Roadmap, questions and gates](docs/roadmap.md)
 - [Phase 0 evidence](docs/phase-0-report.md)
 - [Development setup and checks](docs/runbooks/development.md)
+- [Browser setup and HTTPS integration checks](docs/runbooks/browser-development.md)
 - [Phase 1 implementation evidence](docs/phase-1-evidence.md)
 
 The original XLSX is retained locally under `data/sources/`, ignored by Git.

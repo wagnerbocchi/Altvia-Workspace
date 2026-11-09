@@ -1,0 +1,11 @@
+{
+  "name": "altvia-workspace",
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "web:dev": "pnpm --filter @altvia/web dev",
+    "web:build": "pnpm --filter @altvia/web build",
+    "web:check": "pnpm --filter @altvia/web check",
+    "web:test": "pnpm --filter @altvia/web test:e2e"
+  }
+}

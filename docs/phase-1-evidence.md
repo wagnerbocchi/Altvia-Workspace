@@ -44,8 +44,7 @@ The platform capability is identity.manage only, with no customer-content bypass
 - Linux private test runner: `pytest -q --tb=short`, **44 passed**, no warnings,
   covering real Postgres persistence, cookie/CSRF/origin, lifecycle, rate limit,
   private errors, management commands, audit/outbox atomicity and policy rules.
-- `uv run mypy`: no issues in 10 source files before final configuration fix;
-  final full checks are rerun before publication.
+- `uv run mypy`: no issues in 10 source files, rerun after the configuration fix.
 - `uv run ruff check apps/api --output-format concise`: passed. Formatter also
   checked. Initial formatting/typing findings were corrected, not suppressed.
 - `uv build`: source distribution and wheel built successfully.
@@ -56,8 +55,11 @@ The platform capability is identity.manage only, with no customer-content bypass
   warnings were ignored by the audit tool, not security findings. Local Altvia
   package is not on PyPI and was not audited as a third-party distribution.
 - SHA-pinned API CI workflow added for main pushes: lint/format/typecheck,
-  PostgreSQL migrations/drift/tests and build. Hosted outcome is verified after
-  publication; this is not full SAST/secret/container scanning yet.
+  PostgreSQL migrations/drift/tests and build. Hosted run
+  [42553136561](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42553136561)
+  passed all steps for implementation commit `57f94c2`. This is not full
+  SAST/secret/container scanning yet. GitHub's separate uv dependency-graph
+  update run also succeeded.
 
 ## Independent review and fix
 

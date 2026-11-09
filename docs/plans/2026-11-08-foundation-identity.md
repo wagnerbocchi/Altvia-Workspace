@@ -59,7 +59,7 @@ database rollback, generic auth failures and concurrent failed logins.
   persistence across app recreation, migration downgrade/upgrade on disposable DB.
 - [x] Document exact commands/results, dependency versions, development-only
   container digest, pending target CPU/UI/Compose/worker/CI gates.
-- [ ] Independent final code review, address material findings and rerun affected
+- [x] Independent final code review, address material findings and rerun affected
   suite. Commit intended files only and push main without PR.
 
 Ledger: record executed steps/results in `docs/phase-1-evidence.md`. Phase 1B

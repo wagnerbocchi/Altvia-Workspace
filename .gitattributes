@@ -1,0 +1,4 @@
+* text=auto eol=lf
+# Preserve the supplied master file byte-for-byte, including Markdown hard breaks.
+ALTVIA_WORKSPACE_SPEC_CODEX.md -text whitespace=-blank-at-eol
+*.xlsx binary

@@ -1,0 +1,90 @@
+from datetime import datetime
+from uuid import UUID, uuid4
+
+from sqlalchemy import BigInteger, Boolean, CheckConstraint, DateTime, ForeignKey, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column
+
+from altvia.database import Base
+
+
+class User(Base):
+    __tablename__ = "users"
+    __table_args__ = (CheckConstraint("auth_version > 0", name="ck_user_auth_version"),)
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    email_normalized: Mapped[str] = mapped_column(String(254), unique=True)
+    display_name: Mapped[str] = mapped_column(String(150))
+    password_hash: Mapped[str] = mapped_column(Text)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    auth_version: Mapped[int] = mapped_column(default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SessionRecord(Base):
+    __tablename__ = "sessions"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    csrf_hash: Mapped[str] = mapped_column(String(64))
+    auth_version: Mapped[int]
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class Role(Base):
+    __tablename__ = "roles"
+    name: Mapped[str] = mapped_column(String(50), primary_key=True)
+
+
+class RoleBinding(Base):
+    __tablename__ = "role_bindings"
+    __table_args__ = (CheckConstraint("scope_kind = 'global'", name="ck_initial_global_scope"),)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    role_name: Mapped[str] = mapped_column(ForeignKey("roles.name"), primary_key=True)
+    scope_kind: Mapped[str] = mapped_column(String(20), default="global")
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    actor_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"))
+    action: Mapped[str] = mapped_column(String(80))
+    resource_id: Mapped[UUID | None]
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    correlation_id: Mapped[str] = mapped_column(String(64))
+    details: Mapped[dict[str, str]] = mapped_column(JSONB, default=dict)
+
+
+class OutboxEvent(Base):
+    __tablename__ = "outbox_events"
+    __table_args__ = (
+        CheckConstraint("attempts >= 0", name="ck_outbox_attempts"),
+        CheckConstraint(
+            "status IN ('pending','processing','delivered','dead')", name="ck_outbox_status"
+        ),
+    )
+    event_id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    aggregate_type: Mapped[str] = mapped_column(String(50))
+    aggregate_id: Mapped[UUID]
+    aggregate_version: Mapped[int]
+    event_type: Mapped[str] = mapped_column(String(80))
+    schema_version: Mapped[int] = mapped_column(default=1)
+    payload: Mapped[dict[str, str | None]] = mapped_column(JSONB)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    correlation_id: Mapped[str] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
+    attempts: Mapped[int] = mapped_column(default=0)
+    next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class LoginBucket(Base):
+    __tablename__ = "login_buckets"
+    __table_args__ = (CheckConstraint("attempts > 0", name="ck_login_attempts"),)
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    window: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    attempts: Mapped[int]

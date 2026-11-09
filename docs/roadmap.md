@@ -65,6 +65,9 @@ native mobile and local AI remain outside MVP. No speculative code for backlog.
 ## Evidence ledger
 
 - Phase 0: `docs/phase-0-report.md` and workbook reconciliation.
+- Phase 1A: identity API implementation, 44 real automated checks, migrations,
+  build/lint/types and evidence in `docs/phase-1-evidence.md`. Phase 1 remains
+  open for frontend/administration/process/runtime/security/target-VM gates.
 - Future implementation entries must include commit, exact commands/results,
   target artifact/host when relevant and outstanding gates. Do not mark a phase
   done merely because the documentation or a subset of tests is complete.

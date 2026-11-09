@@ -12,7 +12,9 @@ dependencies and resource limits. Candidate images use immutable amd64 digests.
 The Windows Podman machine used during development lacks cgroup memory/pids
 controllers: its Compose startup fails at memory.max. Do not remove the checked-in
 resource bounds or change that machine to hide the failure. Hosted Linux Docker
-is the functional Compose acceptance environment; real target proof stays pending.
+is also a functional Compose acceptance environment. The current four-image stack
+has now passed on the supplied target VM; exact qualified image IDs and remaining
+gates are in [the target report](../target-vm-foundation-evidence.md).
 
 Supply an external restricted directory, never a committed env file, with:
 
@@ -29,6 +31,9 @@ build args or Compose environment. Restrict the parent directory to its operator
 mounts; Compose cannot reliably remap their UID/mode. Files must be readable by
 their non-root container users, for example mode0444 inside that inaccessible
 parent directory. Restrict directory traversal, do not publish secret contents.
+The guarded smoke test uses umask 077. Its synthetic TLS generator explicitly
+applies mode 0444 after writing, so creation-time masking cannot block the non-root
+proxy. The private parent stays 0700; do not make that directory public.
 API receives only runtime URL; migrate receives owner and runtime URLs; ingress
 receives only TLS files. Owner password is mounted only into PostgreSQL.
 

@@ -40,7 +40,9 @@ team membership never grants client or project content access.
 HTTPS, secure HttpOnly cookies, Origin/CSRF checks and no browser auth-token
 storage are required. Keyboard access, visible focus, responsive layout and
 dark/light themes are required. All mandatory runtime dependencies must support
-x86-64-v1; actual target-VM validation is pending. No Elasticsearch/OpenSearch.
+x86-64-v1. The current four-image Foundation stack passed on the supplied target
+VM; changed or future mandatory native artifacts require repeated qualification.
+Representative capacity and production readiness remain open. No Elasticsearch/OpenSearch.
 
 ## Brand Commitments
 

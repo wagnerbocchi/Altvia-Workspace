@@ -1,6 +1,8 @@
 # Infrastructure and x86-64-v1 compatibility
 
-Status: requirement and executable validation plan, **not homologated**.
+Status: current four-image Foundation stack **qualified on the supplied VM**;
+future native components and production capacity/readiness gates remain open.
+See [actual target evidence](../target-vm-foundation-evidence.md).
 Source: master specification section 11; no SSH/guest/container test was run
 in Phase 0. Local Windows tooling cannot establish Ubuntu compatibility.
 
@@ -39,7 +41,7 @@ If multiple SSH commands are needed, use a task-scoped verified ControlMaster,
 ControlPath and ControlPersist, reuse channels and close the master at completion.
 Do not change sshd/hypervisor settings as a throughput workaround.
 
-## Candidate manifest, all unapproved
+## Original Phase 0 candidate manifest, superseded by runtime ADRs
 
 | Component | Starting reference only | Digest | Required exercise |
 | --- | --- | --- | --- |
@@ -122,13 +124,13 @@ persistent test volumes on the guest:
 
 | Gate | Current evidence |
 | --- | --- |
-| Raw guest flags/OS resources captured | pending access |
-| Supported artifacts and immutable digests approved | pending build/selection |
-| All images/native paths start without SIGILL | not executed |
-| Functional DB/Redis/API/web/worker/storage/FTS | not executed on guest |
-| Negative authorization/E2E on production images | not executed |
-| Load and recovery measured | not executed |
-| No prohibited dependency or native ISA | architecture prohibits; artifact proof pending |
+| Raw guest flags/OS resources captured | captured on supplied VM, 2026-11-09 |
+| Supported artifacts and immutable digests approved | current four tested image IDs recorded; production deployment remains separate |
+| All images/native paths start without SIGILL | current four-image build/runtime paths passed on target; future artifacts require revalidation |
+| Functional DB/Redis/API/web/worker/storage/FTS | PostgreSQL/API/web/ingress/FTS passed; future worker/Redis/storage/scanner remain unimplemented |
+| Negative authorization/E2E on production images | current packaged identity/team slice passed on target; no production deployment |
+| Load and recovery measured | synthetic logical restore/restart passed; representative load and operational RPO/RTO remain pending |
+| No prohibited dependency or native ISA | selected artifacts passed target build/runtime and unfiltered image scans; repeat for changed native artifacts |
 
 Phase1C-d records actual bookworm amd64 API/PostgreSQL/ingress candidates in
 docs/phase-1c-evidence.md. Non-root/read-only imports, Argon2id and a domain-name
@@ -188,3 +190,20 @@ require host-change authorization; that next action is pending. Check repository
 package candidates and simulate dependencies before installing, and retain exact
 versions and command outcomes. Keep application test listeners on loopback and
 preserve all existing VM data. Do not substitute OS metadata for execution proof.
+
+### Authorized installation and native qualification completed
+
+After the inventory, the owner authorized Docker/Compose installation and isolated
+qualification. Docker 29.1.3, Compose 2.40.3 and Buildx 0.30.1 were installed from
+the existing signed Ubuntu repositories after simulation. The four current images
+then built and passed real runtime, TLS, resource ACL, persistence/restart, logical
+restore, FTS and packaged browser tests on this guest. Kernel cgroup files confirmed
+the declared memory/CPU/PID limits; only the proxy bound a loopback application port.
+The exact tested image IDs have zero reported vulnerabilities in one fresh-DB scan.
+
+Q-01 is satisfied for those artifacts and exercised native paths. Earlier pending
+statements above describe the historical observations of their respective slices;
+the current acceptance and precise limits are in the linked target evidence.
+Test containers were stopped and volumes preserved; SSH control session was closed.
+No remaining product feature, future native artifact or production capacity/readiness
+gate is implicitly completed by this result.

@@ -21,8 +21,9 @@ advancement from UI appearance alone. Reuse unchanged passing evidence; test
 affected behavior after each change. No release date/velocity estimate without
 environment/volume data. Do not replace Zammad until formal operational acceptance.
 
-Phase 1 can progress locally while VM access is absent, but cannot claim its
-exit gate or proceed to production. If all independent work is exhausted, report
+The supplied VM now qualifies the current four-image Foundation stack; future
+mandatory native artifacts must repeat that gate. Phase 1's remaining work and
+production readiness remain open. If all independent work is exhausted, report
 the exact blocker rather than silently weakening acceptance.
 
 ## Definition of ready and done per slice
@@ -42,7 +43,7 @@ currently covers this GitHub repository's main only, not production services.
 
 | ID | Needed answer / owner | Safe action while pending | Gate blocked |
 | --- | --- | --- | --- |
-| Q-01 | Target SSH access and raw CPU/OS inventory obtained on 2026-11-09; Docker/Compose absent, host installation authorization pending | Retain read-only evidence; prepare isolated runtime validation; no SSH setting changes | Phase 1 CPU/runtime homologation |
+| Q-01 | Current four-image Foundation stack qualified on the supplied VM, 2026-11-09; native build/runtime/HTTPS/ACL/restore/browser/cgroup/image-scan proof retained | Reuse exact tested image evidence; repeat qualification for changed mandatory native artifacts and future components | Satisfied for current stack; future artifact qualification remains required |
 | Q-02 | Infrastructure admin: IOPS, workload/users/mail per day and production volume/backup policy; observed 8 vCPUs, 31.3 GiB RAM and 500 GiB disk | Conservative bounded defaults; inventory alone establishes no capacity or performance promise | Capacity/prod readiness |
 | Q-03 | Support owner: mailboxes, TLS/auth/forwarding/trusted MTA and SMTP limits | Adapter contracts and controlled test SMTP/IMAP only | Real Phase 3 email acceptance |
 | Q-04 | Operations: actual client/team/project/queue membership matrix | Deny by default; test explicit grants with synthetic test data only | Provisioning/pilot |
@@ -55,16 +56,16 @@ currently covers this GitHub repository's main only, not production services.
 | Q-11 | Infrastructure/security: storage/scanner/proxy selection and CPU-approved builds | Local private storage adapter, quarantine fail-closed | Production attachment/proxy acceptance |
 | Q-12 | Infrastructure admin: hypervisor ownership and CPU-model change possibility | x86-64-v1 remains mandatory | None: CPU upgrade is not assumed |
 | Q-13 | Product owner: approved logo/brand and visual preferences | Provisional restrained Portuguese interface, system fonts, no invented assets or claims; review after return | Final visual approval only |
-| Q-14 | Engineering/security: ongoing service-image security | All four actual images have zero reported vulnerabilities in recorded scans; blocking HIGH/CRITICAL CI and retained unfiltered reports; no risk acceptance or guest homologation | Remaining production security/readiness gates |
+| Q-14 | Engineering/security: ongoing service-image security | All four actual target-tested images have zero reported vulnerabilities; blocking HIGH/CRITICAL CI and retained unfiltered reports; no risk acceptance | Remaining production security/readiness gates |
 
 ## Backlog after core
 
 Current Foundation priorities: account/status/password/role administration UX,
 building on the existing CLI invariants and the completed team/roster browser
 slice (960cd7d, ADR-0015), and a
-worker/Redis slice only when it has a real durable consumer, alongside Q-01 and
-operational readiness. Preserve Q-01 as the Phase1 exit gate; do not substitute
-modern CI execution for actual target runtime validation or begin Phase2 prematurely.
+worker/Redis slice only when it has a real durable consumer, alongside operational
+readiness. Q-01 is satisfied for the current stack, with repeated target execution
+required for future native artifacts. Remaining Foundation gates still precede Phase2.
 
 Residual findings were fixed on683e34d; packaged same-origin web ingress passed
 acceptance on465a85b. Both revisions passed all four hosted gates. The four actual
@@ -76,6 +77,16 @@ portal/knowledge base. Billing/subscriptions, marketplace, advanced ITIL/CMDB,
 native mobile and local AI remain outside MVP. No speculative code for backlog.
 
 ## Evidence ledger
+
+- Phase 1C-j: authorized Docker/Compose installation and actual target qualification.
+  Four images built and passed the packaged identity/team/roster/TLS/ACL/recovery
+  workflow on the supplied baseline CPU. Actual cgroup memory/CPU/PID and isolation
+  checks passed; exact same image IDs have zero reported vulnerabilities. Test TLS
+  umask correction 358e027 passed review and all four hosted gates (244 API tests,
+  21 browser tests). See docs/target-vm-foundation-evidence.md for exact versions,
+  image identities, commands, setup failures/corrections and retained raw evidence.
+  Task containers stopped, volumes preserved, SSH master closed. No public deployment,
+  representative capacity claim or completion of remaining Foundation work.
 
 - Phase 1C-i: contracted team/roster browser UX e9cfe74, implementation 960cd7d.
   Real persisted list/create/rename/archive/restore and bounded account/roster

@@ -6,7 +6,9 @@ The [master specification](ALTVIA_WORKSPACE_SPEC_CODEX.md) defines the product.
 The initial repository was empty. Phase 0 establishes contracts and decisions.
 Phase 1A adds a tested PostgreSQL identity API; Phase 1B adds its real browser
 login, account and logout flow with dark/light themes. The full workspace is not yet
-implemented or production-validated. No target CPU homologation is claimed.
+implemented or production-validated. The current four-image Foundation stack has
+passed qualification on the supplied x86-64-v1 guest; future native artifacts must
+repeat target validation.
 Phase 1C-a extends restricted host administration for ordinary accounts and
 platform privileges, with session revocation and last-active-admin protection.
 Phase 1C-b adds the team identity/roster API, optimistic concurrency and protected
@@ -29,6 +31,7 @@ browser, with explicit concurrency/recovery and isolated private session data.
 - [API and event contracts](docs/contracts/api.md)
 - [Security and RBAC](docs/security/security-requirements.md)
 - [x86-64-v1 compatibility gate](docs/architecture/infrastructure-compatibility.md)
+- [Actual target VM qualification](docs/target-vm-foundation-evidence.md)
 - [ADRs](docs/adr/0001-modular-monolith.md)
 - [Roadmap, questions and gates](docs/roadmap.md)
 - [Phase 0 evidence](docs/phase-0-report.md)

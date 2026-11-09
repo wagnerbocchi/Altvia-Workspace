@@ -759,3 +759,23 @@ This delivery completes the team/roster browser slice only. Account creation,
 status/password/role administration remains the restricted CLI. Q-01 target-VM
 x86-64-v1 execution, capacity/load, production backup validation and a real durable
 worker consumer remain open. No Phase2 advancement or production deployment.
+
+## Phase1C-j: actual target VM qualification
+
+The owner supplied access and then explicitly authorized Docker/Compose installation
+and isolated qualification. On 2026-11-09 the current four-image Foundation stack
+passed native builds, packaged browser/API/DB/HTTPS/ACL/persistence/recovery/restore
+and actual cgroup checks on the supplied QEMU/KVM baseline guest. The exact tested
+image IDs were scanned without rebuilding: zero reported vulnerabilities in all
+four images. Task containers stopped, synthetic volumes preserved and SSH master
+closed. Docker/containerd remain installed, active and enabled for boot.
+
+An initial transfer permission issue was corrected in task-owned source staging.
+A separate synthetic TLS umask issue was fixed in 358e027, with review, local
+lint/syntax checks, the full target regression and all four hosted gates passing
+(244 API tests, 21 browser tests). No application/runtime/lockfile change was needed.
+The full [target qualification report](target-vm-foundation-evidence.md) records
+exact versions, immutable identities, commands, correction evidence and limitations.
+Q-01 is satisfied for the currently selected artifacts. Future native components,
+representative capacity, production backup/retention/readiness and remaining
+Foundation features remain separate work. No public or production deployment.

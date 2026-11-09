@@ -157,8 +157,19 @@ missing required schema without requiring audit-table data-read permissions.
 
 All data and DDL failure-injection/roundtrip tests used only guarded altvia_test
 and synthetic identities. The tests above exercise real handlers and PostgreSQL
-through ASGI; they are not target-VM or production TLS/load proof. Hosted API and
-browser publication evidence follows after the completed increment is pushed.
+through ASGI; they are not target-VM or production TLS/load proof.
+
+### Team API publication evidence
+
+Schema commit `030a3f2` and completed API commit `a5ce79a` were pushed directly to
+main without PR, under standing authorization. Both hosted Linux workflows passed:
+
+- [API checks 42606303304](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42606303304):
+  all 160 tests, Ruff/format/mypy, fresh migrations/drift and wheel/source build.
+- [Browser checks 42606303427](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/42606303427):
+  locked clean installation, Sharp exclusion, OpenAPI/TS drift guard, frontend
+  checks/production build, dependency audit and all 7 real HTTPS/PostgreSQL E2E
+  tests. No UI code changed or new native dependency was introduced.
 
 Worker/outbox delivery, Redis/Compose/ingress/non-root images, persisted scoped
 role/client grants, HTTP account mutation/admin UI, full security/image gates and

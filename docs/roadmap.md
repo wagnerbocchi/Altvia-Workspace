@@ -81,8 +81,8 @@ native mobile and local AI remain outside MVP. No speculative code for backlog.
   See `docs/phase-1c-evidence.md` for publication/gates.
 - Phase 1C-b: persisted team/roster API and safe account lookup with identity-only
   authorization, versioning, atomic audit/outbox and protected POST replay.
-  Full 160-test suite passed locally; review finding on PATCH schema resolved.
-  Publication evidence and remaining gates are in the Phase 1C report.
+  Published in 030a3f2/a5ce79a; 160 API tests and both Linux workflows passed.
+  Review finding on PATCH schema resolved. Remaining gates are in the Phase 1C report.
 - Future implementation entries must include commit, exact commands/results,
   target artifact/host when relevant and outstanding gates. Do not mark a phase
   done merely because the documentation or a subset of tests is complete.

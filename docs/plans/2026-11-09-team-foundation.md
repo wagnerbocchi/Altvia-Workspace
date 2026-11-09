@@ -65,7 +65,7 @@ Produces GET /users, GET/POST /teams, GET/PATCH /teams/{id}, GET/POST
   All write transactions acquire the identity lock before session authentication.
 - [x] Run all API tests, lint/format/mypy/build, migration checks, export OpenAPI
   and generate/verify TS contracts; obtain fresh review and fix material defects.
-- [ ] Record exact evidence/limits, commit/push main and observe both Linux CIs.
+- [x] Record exact evidence/limits, commit/push main and observe both Linux CIs.
 
 ## Rulings and ledger
 
@@ -79,3 +79,5 @@ Produces GET /users, GET/POST /teams, GET/PATCH /teams/{id}, GET/POST
 - Final local proof: 160 tests passed; strict checks, build, migration roundtrip/
   drift and generated contracts passed. Independent review P2 schema finding
   resolved; see Phase 1C evidence for precise scope and commands.
+- Task 2 complete: a5ce79a, published with schema commit030a3f2. Hosted API
+  42606303304 and browser42606303427 passed. No phase-completion/VM claim.

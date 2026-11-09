@@ -1,6 +1,7 @@
 # ADR-0009: Team identity metadata and membership administration
 
-Date: 2026-11-09. Status: selected for Phase 1C-b; implementation proof pending.
+Date: 2026-11-09. Status: implemented and development/CI-tested in Phase 1C-b;
+target-VM acceptance remains pending.
 
 Context: foundation needs real teams and employee rosters before projects. The
 existing identity contract permits identity.manage for teams, while the security

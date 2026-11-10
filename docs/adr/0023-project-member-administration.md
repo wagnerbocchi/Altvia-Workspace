@@ -50,7 +50,10 @@ Roles are viewer, agent, project_manager. Email uses existing identity strip/
 casefold normalization, bounded to 254 characters and its existing syntax policy.
 Unknown, inactive or customer-ineligible add targets return the same 422
 invalid_project_member; inactive project/client return 409. No email is returned
-or persisted in event payloads/receipts. Existing member reads stay unchanged.
+or persisted in event payloads/receipts. Member pages add project_version, verified
+unchanged before and after the roster query; a concurrent change returns409. The
+browser uses this reviewed version for writes, and disables changes while parent
+and page versions disagree. Read snapshots never take project locks after auth.
 
 Authorize and parse a syntactically valid If-Match before consulting a saved POST
 receipt. A committed replay returns only the original IDs, even after role change,

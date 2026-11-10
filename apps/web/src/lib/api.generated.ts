@@ -310,11 +310,30 @@ export interface paths {
         /** Members */
         get: operations["members_api_v1_projects__project_id__members_get"];
         put?: never;
-        post?: never;
+        /** Add Member */
+        post: operations["add_member_api_v1_projects__project_id__members_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Member */
+        delete: operations["remove_member_api_v1_projects__project_id__members__user_id__delete"];
+        options?: never;
+        head?: never;
+        /** Change Member */
+        patch: operations["change_member_api_v1_projects__project_id__members__user_id__patch"];
         trace?: never;
     };
     "/api/v1/projects/{project_id}/work-candidates": {
@@ -1097,6 +1116,16 @@ export interface components {
              */
             project_id: string;
         };
+        /** ProjectMemberAdd */
+        ProjectMemberAdd: {
+            /** Email */
+            email: string;
+            /**
+             * Role Name
+             * @enum {string}
+             */
+            role_name: "viewer" | "agent" | "project_manager";
+        };
         /** ProjectMemberOutput */
         ProjectMemberOutput: {
             /** Active */
@@ -1117,6 +1146,29 @@ export interface components {
             items: components["schemas"]["ProjectMemberOutput"][];
             /** Next Cursor */
             next_cursor: string | null;
+            /** Project Version */
+            project_version: number;
+        };
+        /** ProjectMemberReceipt */
+        ProjectMemberReceipt: {
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /** ProjectMemberRole */
+        ProjectMemberRole: {
+            /**
+             * Role Name
+             * @enum {string}
+             */
+            role_name: "viewer" | "agent" | "project_manager";
         };
         /** ProjectOutput */
         ProjectOutput: {
@@ -2395,6 +2447,121 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ProjectMemberPage"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_member_api_v1_projects__project_id__members_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectMemberAdd"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectMemberReceipt"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectMemberReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_member_api_v1_projects__project_id__members__user_id__delete: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+            };
+            path: {
+                project_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_member_api_v1_projects__project_id__members__user_id__patch: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+            };
+            path: {
+                project_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectMemberRole"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

@@ -270,18 +270,47 @@ def set_project_access(db: Session, email: str, project_id: UUID, role: str | No
     project = db.scalar(select(Project).where(Project.id == project_id).with_for_update(of=Project))
     if project is None:
         raise identity.IdentityError(404, "not_found")
+    return change_project_access(db, user, project, role, None, uuid4().hex)
+
+
+def change_project_access(
+    db: Session,
+    user: User,
+    project: Project,
+    role: str | None,
+    actor_id: UUID | None,
+    correlation_id: str,
+) -> bool:
+    """Caller holds identity write/project locks; CLI and HTTP share every effect."""
+    if role is not None and role not in PROJECT_ROLES:
+        raise identity.IdentityError(422, "invalid_project_role")
     if not _change_access(db, user, project, role):
         return False
     advance(project)
     identity.record_event(
         db,
-        None,
+        actor_id,
         project.id,
         "project.access_changed",
         datetime.now(UTC),
-        uuid4().hex,
+        correlation_id,
         project.version,
         aggregate_type="project",
         details={"member_user_id": str(user.id), "role_name": role or "none"},
     )
     return True
+
+
+def project_access_user(db: Session, project: Project, user_id: UUID) -> User | None:
+    """Resolve only an existing access pair or its broken half, never a global UUID."""
+    member = db.get(ProjectMember, (project.id, user_id))
+    binding = db.scalar(
+        select(RoleBinding.id).where(
+            RoleBinding.user_id == user_id,
+            RoleBinding.scope_kind == "project",
+            RoleBinding.project_id == project.id,
+        )
+    )
+    if member is None and binding is None:
+        return None
+    return db.scalar(select(User).where(User.id == user_id).with_for_update(key_share=True))

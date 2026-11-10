@@ -132,6 +132,37 @@ class ProjectMemberOutput(BaseModel):
 class ProjectMemberPage(BaseModel):
     items: list[ProjectMemberOutput]
     next_cursor: str | None
+    project_version: int
+
+
+class ProjectMemberRole(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    role_name: Literal["viewer", "agent", "project_manager"]
+
+
+class ProjectMemberAdd(ProjectMemberRole):
+    email: str = Field(min_length=3, max_length=254)
+
+    @field_validator("email")
+    @classmethod
+    def normalized_email(cls, value: str) -> str:
+        return identity.normalize_email(value)
+
+
+class ProjectMemberReceipt(BaseModel):
+    project_id: UUID
+    user_id: UUID
+
+
+def _member_change(
+    db: Session, actor: User, project: Project, target: User, role: str, correlation_id: str
+) -> None:
+    try:
+        registry.change_project_access(db, target, project, role, actor.id, correlation_id)
+    except identity.IdentityError as error:
+        if error.code in {"account_inactive", "client_access_required"}:
+            raise identity.IdentityError(422, "invalid_project_member") from None
+        raise
 
 
 def _output(project: Project, manage: bool) -> ProjectOutput:
@@ -369,7 +400,7 @@ def create_project_router(engine: Engine, settings: Settings) -> APIRouter:
     ) -> ProjectMemberPage:
         with Session(engine) as db, db.begin():
             actor = authenticate_request(db, request, settings)
-            registry.scoped_project(db, actor.id, project_id)
+            project, _ = registry.scoped_project(db, actor.id, project_id)
             _collection_query(request)
             scope = f"project-members:{project_id}"
             last = _cursor(cursor, scope)
@@ -392,7 +423,15 @@ def create_project_router(engine: Engine, settings: Settings) -> APIRouter:
             if last is not None:
                 query = query.where(User.id > last)
             rows = list(db.execute(query))
+            # A monotone version checked around the roster read pairs the rows
+            # with a reviewed Project version without taking locks after auth.
+            if (
+                db.scalar(select(Project.version).where(Project.id == project_id))
+                != project.version
+            ):
+                raise identity.IdentityError(409, "version_conflict")
             return ProjectMemberPage(
+                project_version=project.version,
                 items=[
                     ProjectMemberOutput(
                         id=user.id,
@@ -406,6 +445,80 @@ def create_project_router(engine: Engine, settings: Settings) -> APIRouter:
                 if len(rows) > limit
                 else None,
             )
+
+    @router.post(
+        "/projects/{project_id}/members",
+        response_model=ProjectMemberReceipt,
+        status_code=201,
+        responses={200: {"model": ProjectMemberReceipt}},
+        openapi_extra={"parameters": [IF_MATCH, IDEMPOTENCY_KEY]},
+    )
+    def add_member(
+        project_id: UUID, body: ProjectMemberAdd, request: Request, response: Response
+    ) -> ProjectMemberReceipt:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings, write=True)
+            project, _ = registry.scoped_project(db, actor.id, project_id, write=True)
+            version = _expected_version(request)
+            route = f"/api/v1/projects/{project_id}/members"
+            key, digest, saved = _operation(db, actor, request, route, body.model_dump(mode="json"))
+            if saved is not None:
+                response.status_code = 200
+                return ProjectMemberReceipt.model_validate(saved.result)
+            if project.version != version:
+                raise identity.IdentityError(409, "version_conflict")
+            target = db.scalar(
+                select(User)
+                .where(User.email_normalized == body.email)
+                .with_for_update(key_share=True)
+            )
+            if target is None:
+                raise identity.IdentityError(422, "invalid_project_member")
+            _member_change(db, actor, project, target, body.role_name, request.state.correlation_id)
+            result = ProjectMemberReceipt(project_id=project.id, user_id=target.id)
+            _remember(db, actor, route, key, digest, result, 201)
+            return result
+
+    @router.patch(
+        "/projects/{project_id}/members/{user_id}",
+        status_code=204,
+        openapi_extra={"parameters": [IF_MATCH]},
+    )
+    def change_member(
+        project_id: UUID, user_id: UUID, body: ProjectMemberRole, request: Request
+    ) -> Response:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings, write=True)
+            project, _ = registry.scoped_project(db, actor.id, project_id, write=True)
+            if project.version != _expected_version(request):
+                raise identity.IdentityError(409, "version_conflict")
+            target = registry.project_access_user(db, project, user_id)
+            if target is None:
+                raise identity.IdentityError(404, "not_found")
+            _member_change(db, actor, project, target, body.role_name, request.state.correlation_id)
+            response = Response(status_code=204)
+            _etag(response, project.version)
+            return response
+
+    @router.delete(
+        "/projects/{project_id}/members/{user_id}",
+        status_code=204,
+        openapi_extra={"parameters": [IF_MATCH]},
+    )
+    def remove_member(project_id: UUID, user_id: UUID, request: Request) -> Response:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings, write=True)
+            project, _ = registry.scoped_project(db, actor.id, project_id, write=True)
+            if project.version != _expected_version(request):
+                raise identity.IdentityError(409, "version_conflict")
+            target = registry.project_access_user(db, project, user_id)
+            if target is not None:
+                registry.change_project_access(
+                    db, target, project, None, actor.id, request.state.correlation_id
+                )
+            response = Response(status_code=204)
+            _etag(response, project.version)
+            return response
 
     @router.get("/projects/{project_id}/activity", response_model=ActivityPage)
     def history(

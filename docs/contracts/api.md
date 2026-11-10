@@ -221,8 +221,35 @@ projects additionally require a customer ceiling, then inherited client viewer/
 operations_manager or explicit project membership/binding. Client operations_manager
 and project_manager can change project metadata; viewer/agent cannot. Team roles
 and platform administration never confer project reads. Further project grants
-use the interactive CLI in docs/runbooks/project-registry.md. No browser member
-write, task, milestone, board, default ticket project or scope-changing API yet.
+remain available through the interactive CLI in docs/runbooks/project-registry.md.
+ADR-0023 extends that same access mutation with the member routes below; tasks,
+boards and default-project configuration are separately specified in ADR-0020-22.
+Milestones and scope changes are not implemented by these registry routes.
+
+### Project member administration extension (ADR-0023)
+
+Contracts selected before implementation. POST /projects/{id}/members accepts
+strict {email,role_name}, Project If-Match and Idempotency-Key. Normalize email
+using identity policy; resolve only inside the authorized mutation. Return minimal
+{project_id,user_id}, 201/new intent or 200/committed replay. No account discovery
+endpoint or global account listing is granted. Every replay rechecks current
+project management and parses If-Match before returning the original IDs; it never
+regrants or supplies current member state. Fresh POST compares Project version.
+
+PATCH /projects/{id}/members/{user_id} accepts strict {role_name} and Project
+If-Match; DELETE at the same path requires Project If-Match. Both return204 and
+current Project ETag. PATCH requires an existing membership/binding half; DELETE
+of an absent pair is a no-op without global account resolution. Roles are
+viewer|agent|project_manager. Actual changes atomically update both records,
+invalidate target sessions, advance Project and emit project.access_changed.
+No-ops preserve versions/sessions/events even with inactive references. Actual
+grants require active account/project/client and an existing customer ceiling.
+Unknown/inactive/customer-ineligible add targets share422 invalid_project_member.
+Self-removal/demotion ends the current session; inherited client authority remains
+independent. The existing CLI remains available for last-manager recovery.
+Member pages additionally return project_version, checked unchanged around the
+roster query; concurrent changes return409. This pairs the reviewed membership
+state with its write precondition without locking projects after authentication.
 
 ### Implemented contacts and default-project extension (ADR-0022)
 

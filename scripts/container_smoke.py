@@ -1096,6 +1096,7 @@ with Session(make_engine(Settings())) as db,db.begin():
                 "/api/v1/auth/sessions", json={"email": "reader@example.test", "password": password}
             )
             assert login.status_code == 201 and login.json()["user"]["capabilities"] == []
+            client.headers["X-CSRF-Token"] = login.json()["csrf_token"]
             assert [row["id"] for row in client.get("/api/v1/teams").json()["items"]] == [teams[0]]
             assert client.get(f"/api/v1/teams/{teams[1]}").status_code == 404
             persisted_queue = client.get(queue_paths[0]).json()
@@ -1104,12 +1105,11 @@ with Session(make_engine(Settings())) as db,db.begin():
             assert persisted_category["name"] == "Packaged category"
             assert persisted_category["version"] == 2 and not persisted_category["active"]
             assert client.get(queue_paths[1]).status_code == 404
-            assert (
-                client.patch(
-                    queue_paths[0], json={"name": "Denied"}, headers={"If-Match": '"3"'}
-                ).status_code
-                == 403
+            denied_queue_write = client.patch(
+                queue_paths[0], json={"name": "Denied"}, headers={"If-Match": '"3"'}
             )
+            assert denied_queue_write.status_code == 403
+            assert denied_queue_write.json()["code"] == "forbidden"
             print("Packaged queue/category scope and restart persistence proof passed.")
             assert client.get("/api/v1/users").status_code == 403
             assert client.get(f"{path}/members").status_code == 200

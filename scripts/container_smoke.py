@@ -765,7 +765,9 @@ with Session(make_engine(WorkerSettings())) as db:
             run([*compose, "up", "-d", "--no-deps", "--force-recreate", "postgres"])
             await_ready(client)
             assert client.get(path).json()["name"] == "Visible"
-            assert client.get(account_path).json()["version"] == 10
+            # Initial client delegation invalidates the manager's sessions and
+            # advances its account version once, from 10 to 11.
+            assert client.get(account_path).json()["version"] == 11
             assert client.get("/api/v1/auth/me").status_code == 200
             run([*compose, "stop", "postgres"])
             assert client.get("/api/v1/health/ready").status_code == 503

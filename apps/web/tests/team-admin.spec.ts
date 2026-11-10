@@ -335,6 +335,13 @@ test("@teams uncertain PATCH requires review and focus refresh preserves the uns
 for (const replacement of ["subject", "same-subject-session"] as const) {
 test(`@teams late creation response cannot navigate a replacement ${replacement}`, async ({ page }) => {
   await signIn(page);
+  // A fresh subject owns its login bucket; earlier suites may exhaust the shared fixture.
+  const replacementEmail = `team-session-${crypto.randomUUID()}@example.invalid`;
+  if (replacement === "subject") {
+    expect((await page.request.post("/api/v1/users", { data: {
+      email: replacementEmail, display_name: "Outra conta da validacao de sessao", password,
+    }, headers: { ...await headers(page), "Idempotency-Key": crypto.randomUUID() } })).status()).toBe(201);
+  }
   await page.goto("/admin/teams");
   let release!: () => void;
   const gate = new Promise<void>(resolve => { release = resolve; });
@@ -350,7 +357,7 @@ test(`@teams late creation response cannot navigate a replacement ${replacement}
   await page.getByLabel("Nome da nova equipe").fill("Resposta da sessao anterior");
   await page.getByRole("button", { name: "Criar equipe", exact: true }).click();
   await saved;
-  expect((await page.request.post("/api/v1/auth/sessions", { data: replacement === "subject" ? { email, password }
+  expect((await page.request.post("/api/v1/auth/sessions", { data: replacement === "subject" ? { email: replacementEmail, password }
     : { email: adminEmail, password: adminPassword },
     headers: { Origin: origin } })).status()).toBe(201);
   const refreshed = page.waitForResponse("**/api/v1/auth/me");

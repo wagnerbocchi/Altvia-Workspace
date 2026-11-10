@@ -60,6 +60,12 @@ entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
+Phase 2G selected before code on 2026-11-10: basic persisted project milestones
+under ADR-0024 and docs/plans/2026-11-10-project-milestones.md. Reuse project ACL,
+versions/protected replay/activity and existing date/instant deadline semantics.
+No task synchronization, fabricated progress or advanced scheduling. Local/CI
+development acceptance is separate from deferred final target qualification.
+
 Phase 2E selected before code: ADR-0022 and
 docs/plans/2026-11-10-client-contacts.md define scoped external contacts and an
 explicit same-client default project. Contact identity never grants account,

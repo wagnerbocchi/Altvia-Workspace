@@ -35,6 +35,19 @@ Title = Annotated[
     BeforeValidator(lambda v: v.strip() if isinstance(v, str) else v),
     Field(min_length=1, max_length=300),
 ]
+ExternalLabel = Annotated[
+    str,
+    BeforeValidator(lambda v: v.strip() if isinstance(v, str) else v),
+    Field(min_length=1, max_length=150),
+]
+
+
+def external_labels(values: list[str]) -> list[str]:
+    if len(values) != len(set(values)) or any(
+        any(character in value for character in "\x00\r\n") for value in values
+    ):
+        raise ValueError("Duplicate or invalid external participant")
+    return values
 
 
 class StrictModel(BaseModel):
@@ -50,6 +63,7 @@ class WorkCreate(StrictModel):
     parent_id: UUID | None = None
     owner_id: UUID | None = None
     assignee_ids: list[UUID] = Field(default_factory=list, max_length=50)
+    external_participants: list[ExternalLabel] = Field(default_factory=list, max_length=50)
     due: Due | None = None
     estimated_minutes: Annotated[StrictInt, Field(ge=0, le=2147483647)] | None = None
 
@@ -60,6 +74,8 @@ class WorkCreate(StrictModel):
             raise ValueError("Duplicate participant")
         return value
 
+    _external_labels = field_validator("external_participants")(external_labels)
+
 
 class WorkPatch(StrictModel):
     title: Title | None = None
@@ -68,6 +84,7 @@ class WorkPatch(StrictModel):
     parent_id: UUID | None = None
     owner_id: UUID | None = None
     assignee_ids: list[UUID] | None = Field(default=None, max_length=50)
+    external_participants: list[ExternalLabel] | None = Field(default=None, max_length=50)
     due: Due | None = None
     estimated_minutes: Annotated[StrictInt, Field(ge=0, le=2147483647)] | None = None
 
@@ -75,11 +92,19 @@ class WorkPatch(StrictModel):
     def valid_patch(self) -> "WorkPatch":
         if not self.model_fields_set:
             raise ValueError("At least one field is required")
-        for key in {"title", "description", "priority", "assignee_ids"} & self.model_fields_set:
+        for key in {
+            "title",
+            "description",
+            "priority",
+            "assignee_ids",
+            "external_participants",
+        } & self.model_fields_set:
             if getattr(self, key) is None:
                 raise ValueError("A non-null value is required")
         if self.assignee_ids is not None:
             WorkCreate.unique_assignees(self.assignee_ids)
+        if self.external_participants is not None:
+            external_labels(self.external_participants)
         return self
 
 
@@ -110,6 +135,7 @@ class WorkOutput(StrictModel):
     owner_name: str | None
     assignees: list["Candidate"]
     assignee_ids: list[UUID]
+    external_participants: list[str] = Field(default_factory=list)
     title: str
     description: str
     priority: Priority

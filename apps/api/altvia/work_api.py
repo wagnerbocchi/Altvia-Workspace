@@ -31,6 +31,7 @@ from altvia.models import (
     User,
     WorkAssignee,
     WorkComment,
+    WorkExternalParticipant,
     WorkItem,
     WorkStatusHistory,
 )
@@ -126,7 +127,11 @@ def create_work_router(engine: Engine, settings: Settings) -> APIRouter:
                 .where(work_queries.involved(actor.id))
                 # Summary needs no account/assignment directory or per-project
                 # permission lookups. Detail rechecks all write capabilities.
-                .options(noload(WorkItem.owner), noload(WorkItem.assignees))
+                .options(
+                    noload(WorkItem.owner),
+                    noload(WorkItem.assignees),
+                    noload(WorkItem.external_participants),
+                )
             )
             for field in ("project_id", "client_id", "team_id"):
                 value = getattr(filters, field)
@@ -176,13 +181,18 @@ def create_work_router(engine: Engine, settings: Settings) -> APIRouter:
             actor = authenticate_request(db, request, settings, write=True)
             permission = work.access(db, actor.id, body.project_id, write=True)
             if not permission.manage and (
-                body.owner_id != actor.id or body.assignee_ids or body.parent_id
+                body.owner_id != actor.id
+                or body.assignee_ids
+                or body.parent_id
+                or body.external_participants
             ):
                 raise identity.IdentityError(403, "forbidden")
             route = "work-create:" + str(body.project_id)
-            key, fingerprint, saved = _operation(
-                db, actor, request, route, body.model_dump(mode="json")
-            )
+            canonical = body.model_dump(mode="json")
+            if not body.external_participants:
+                # Preserve request hashes from before this optional field existed.
+                canonical.pop("external_participants")
+            key, fingerprint, saved = _operation(db, actor, request, route, canonical)
             if saved:
                 response.status_code = 200
                 return WorkReceipt.model_validate(saved.result)
@@ -211,6 +221,10 @@ def create_work_router(engine: Engine, settings: Settings) -> APIRouter:
             work.set_due(db, item, body.due)
             item.assignees = [
                 WorkAssignee(user_id=user, user=contributors[user]) for user in body.assignee_ids
+            ]
+            item.external_participants = [
+                WorkExternalParticipant(unresolved_label=label)
+                for label in body.external_participants
             ]
             db.add(item)
             db.flush()
@@ -252,6 +266,7 @@ def create_work_router(engine: Engine, settings: Settings) -> APIRouter:
                 "parent_id",
                 "owner_id",
                 "assignee_ids",
+                "external_participants",
             }:
                 raise identity.IdentityError(403, "forbidden")
             work.require_active(db, permission)
@@ -265,7 +280,11 @@ def create_work_router(engine: Engine, settings: Settings) -> APIRouter:
                     db, permission, body.owner_id if owner_changed else None, list(added)
                 )
             with db.no_autoflush:
-                for field in body.model_fields_set - {"due", "assignee_ids"}:
+                for field in body.model_fields_set - {
+                    "due",
+                    "assignee_ids",
+                    "external_participants",
+                }:
                     setattr(item, field, getattr(body, field))
                 if owner_changed:
                     item.owner = contributors.get(body.owner_id) if body.owner_id else None
@@ -276,6 +295,14 @@ def create_work_router(engine: Engine, settings: Settings) -> APIRouter:
                     item.assignees = [
                         existing.get(user) or WorkAssignee(user_id=user, user=contributors[user])
                         for user in body.assignee_ids
+                    ]
+                if body.external_participants is not None:
+                    current_labels = {
+                        row.unresolved_label: row for row in item.external_participants
+                    }
+                    item.external_participants = [
+                        current_labels.get(label) or WorkExternalParticipant(unresolved_label=label)
+                        for label in body.external_participants
                     ]
                 work.validate_parent(db, item)
                 after = work.output(item, permission, actor.id).model_dump()

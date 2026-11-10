@@ -95,6 +95,7 @@ class WorkEventPayload(BaseModel):
                     "parent_id",
                     "owner_id",
                     "assignee_ids",
+                    "external_participants",
                     "due",
                     "estimated_minutes",
                 }

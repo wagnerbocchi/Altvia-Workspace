@@ -255,10 +255,20 @@ def test_discovery_index_rollback_preserves_tasks_and_history(admin_client, seed
     command.downgrade(config, "b46087000008")
     try:
         assert ids(admin_client.get("/api/v1/my-work")) == [identifier]
-        history = admin_client.get("/api/v1/work-items/" + identifier + "/status-history")
-        assert len(history.json()["items"]) == 1
+        # Inspect preserved v8 data directly: later metadata tables were dropped,
+        # so the current expanded application is not supported on this schema.
+        with db_engine.connect() as connection:
+            assert (
+                connection.scalar(
+                    text("SELECT count(*) FROM work_item_status_history WHERE work_item_id=:id"),
+                    {"id": UUID(identifier)},
+                )
+                == 1
+            )
     finally:
         command.upgrade(config, "head")
+    history = admin_client.get("/api/v1/work-items/" + identifier + "/status-history")
+    assert history.status_code == 200 and len(history.json()["items"]) == 1
     command.check(config)
 
 

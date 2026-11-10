@@ -380,6 +380,28 @@ class WorkItem(Base):
     assignees: Mapped[list["WorkAssignee"]] = relationship(
         lazy="selectin", cascade="all, delete-orphan"
     )
+    external_participants: Mapped[list["WorkExternalParticipant"]] = relationship(
+        lazy="selectin", cascade="all, delete-orphan"
+    )
+
+
+class WorkExternalParticipant(Base):
+    __tablename__ = "work_item_external_participants"
+    __table_args__ = (
+        CheckConstraint(
+            "char_length(unresolved_label) BETWEEN 1 AND 150 "
+            "AND unresolved_label=btrim(unresolved_label)",
+            name="ck_work_external_label",
+        ),
+        CheckConstraint(
+            "position(chr(10) in unresolved_label)=0 AND position(chr(13) in unresolved_label)=0",
+            name="ck_work_external_line",
+        ),
+    )
+    work_item_id: Mapped[UUID] = mapped_column(
+        ForeignKey("work_items.id", ondelete="RESTRICT"), primary_key=True
+    )
+    unresolved_label: Mapped[str] = mapped_column(String(150), primary_key=True)
 
 
 class WorkAssignee(Base):

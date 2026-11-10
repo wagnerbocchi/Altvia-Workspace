@@ -2260,6 +2260,16 @@
             ],
             "title": "Estimated Minutes"
           },
+          "external_participants": {
+            "items": {
+              "maxLength": 150,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "External Participants",
+            "type": "array"
+          },
           "owner_id": {
             "anyOf": [
               {
@@ -2432,6 +2442,13 @@
               }
             ],
             "title": "Estimated Minutes"
+          },
+          "external_participants": {
+            "items": {
+              "type": "string"
+            },
+            "title": "External Participants",
+            "type": "array"
           },
           "id": {
             "format": "uuid",
@@ -2679,6 +2696,23 @@
               }
             ],
             "title": "Estimated Minutes"
+          },
+          "external_participants": {
+            "anyOf": [
+              {
+                "items": {
+                  "maxLength": 150,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Participants"
           },
           "owner_id": {
             "anyOf": [

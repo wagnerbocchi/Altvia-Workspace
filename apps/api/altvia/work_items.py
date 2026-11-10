@@ -185,6 +185,7 @@ def output(item: WorkItem, permission: Access, user_id: UUID) -> WorkOutput:
                 "assignee_ids",
                 "owner_name",
                 "assignees",
+                "external_participants",
                 "can_update",
                 "can_manage",
                 "can_comment",
@@ -199,6 +200,7 @@ def output(item: WorkItem, permission: Access, user_id: UUID) -> WorkOutput:
             for row in sorted(item.assignees, key=lambda row: str(row.user_id))
         ],
         assignee_ids=sorted((row.user_id for row in item.assignees), key=str),
+        external_participants=sorted(row.unresolved_label for row in item.external_participants),
         can_update=can_update(item, permission, user_id),
         can_manage=permission.manage,
         can_comment=permission.contribute,

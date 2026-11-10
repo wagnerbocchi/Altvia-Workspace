@@ -1577,6 +1577,8 @@ export interface components {
             due?: (components["schemas"]["DateDue"] | components["schemas"]["InstantDue"]) | null;
             /** Estimated Minutes */
             estimated_minutes?: number | null;
+            /** External Participants */
+            external_participants?: string[];
             /** Owner Id */
             owner_id?: string | null;
             /** Parent Id */
@@ -1628,6 +1630,8 @@ export interface components {
             due_at: string | null;
             /** Estimated Minutes */
             estimated_minutes: number | null;
+            /** External Participants */
+            external_participants?: string[];
             /**
              * Id
              * Format: uuid
@@ -1696,6 +1700,8 @@ export interface components {
             due?: (components["schemas"]["DateDue"] | components["schemas"]["InstantDue"]) | null;
             /** Estimated Minutes */
             estimated_minutes?: number | null;
+            /** External Participants */
+            external_participants?: string[] | null;
             /** Owner Id */
             owner_id?: string | null;
             /** Parent Id */

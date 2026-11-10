@@ -743,6 +743,35 @@ with Session(make_engine(WorkerSettings())) as db:
                 customer_ids.append(created_client.json()["client_id"])
             assert client.get("/api/v1/clients").json()["items"] == []
             assert client.get(f"/api/v1/clients/{customer_ids[0]}").status_code == 404
+            classification = client.post(
+                "/api/v1/operational-areas",
+                json={"name": "Packaged operations"},
+                headers={"Idempotency-Key": uuid4().hex},
+            )
+            assert classification.status_code == 201
+            area_id = classification.json()["id"]
+            project_ids = []
+            for name, customer, manager in [
+                ("Visible project", customer_ids[0], reader_id),
+                ("Private project", customer_ids[1], other_id),
+                ("Internal project", None, reader_id),
+            ]:
+                created_project = client.post(
+                    "/api/v1/projects",
+                    json={
+                        "name": name,
+                        "scope_kind": "client" if customer else "internal",
+                        "client_id": customer,
+                        "team_id": teams[0],
+                        "operational_area_id": area_id,
+                        "manager_user_id": manager,
+                    },
+                    headers={"Idempotency-Key": uuid4().hex},
+                )
+                assert created_project.status_code == 201
+                project_ids.append(created_project.json()["project_id"])
+            assert client.get("/api/v1/projects").json()["items"] == []
+            assert client.get(f"/api/v1/projects/{project_ids[0]}").status_code == 404
             assert (
                 client.patch(
                     path,
@@ -765,9 +794,9 @@ with Session(make_engine(WorkerSettings())) as db:
             run([*compose, "up", "-d", "--no-deps", "--force-recreate", "postgres"])
             await_ready(client)
             assert client.get(path).json()["name"] == "Visible"
-            # Initial client delegation invalidates the manager's sessions and
-            # advances its account version once, from 10 to 11.
-            assert client.get(account_path).json()["version"] == 11
+            # Explicit client and project delegations each advance the manager's
+            # account version once, from 10 to 12.
+            assert client.get(account_path).json()["version"] == 12
             assert client.get("/api/v1/auth/me").status_code == 200
             run([*compose, "stop", "postgres"])
             assert client.get("/api/v1/health/ready").status_code == 503
@@ -809,6 +838,25 @@ with Session(make_engine(Settings())) as db,db.begin():
                 time.sleep(0.5)
             else:
                 raise RuntimeError("Scoped client activity did not project on the packaged stack")
+            projects = client.get("/api/v1/projects").json()["items"]
+            assert {row["id"] for row in projects} == {project_ids[0], project_ids[2]}
+            assert all(row["operational_area_name"] == "Packaged operations" for row in projects)
+            for suffix in ["", "/members", "/activity"]:
+                assert client.get(f"/api/v1/projects/{project_ids[1]}{suffix}").status_code == 404
+            assert (
+                client.get(f"/api/v1/projects/{project_ids[0]}/members").json()["items"][0]["id"]
+                == reader_id
+            )
+            assert client.get("/api/v1/operational-areas").json()["items"][0]["id"] == area_id
+            for _ in range(60):
+                projected = client.get(f"/api/v1/projects/{project_ids[0]}/activity").json()[
+                    "items"
+                ]
+                if any(row["event_type"] == "project.created" for row in projected):
+                    break
+                time.sleep(0.5)
+            else:
+                raise RuntimeError("Scoped project activity did not project on the packaged stack")
         run(
             ["node", "scripts/container_browser.mjs", args.engine, project, str(work)],
             data=json.dumps(
@@ -838,7 +886,8 @@ with Session(make_engine(Settings())) as db,db.begin():
             ]
         )
         print(
-            "Container TLS/ACL/accounts/clients/worker/Redis/replay/persistence/readiness/"
+            "Container TLS/ACL/accounts/clients/projects/areas/worker/Redis/"
+            "replay/persistence/readiness/"
             "non-root/secret/SIGTERM proof passed."
         )
     finally:

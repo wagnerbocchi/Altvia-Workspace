@@ -177,6 +177,44 @@ try {
   assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations, []);
   await page.getByRole("link", { name: "Voltar aos clientes", exact: true }).click();
   await page.getByRole("link", { name: "Voltar à minha conta" }).click();
+  await page.getByRole("link", { name: "Projetos", exact: true }).click();
+  await page.getByRole("link", { name: "Áreas operacionais", exact: true }).click();
+  const areaName = `Area ${project}`;
+  await page.getByLabel("Nome da nova área", { exact: true }).fill(areaName);
+  await page.getByRole("button", { name: "Cadastrar área", exact: true }).click();
+  await expect(page.getByRole("heading", { name: areaName, exact: true })).toBeVisible();
+  await page.screenshot({ path: resolve(screenshots, "areas-mobile.png"), fullPage: true });
+  assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations, []);
+  await page.getByRole("link", { name: "Voltar aos projetos", exact: true }).click();
+  const projectName = `Projeto ${project}`;
+  await page.getByLabel("Nome do projeto", { exact: true }).fill(projectName);
+  await page.getByLabel("Equipe responsável", { exact: true }).selectOption({ label: teamName });
+  await page.getByLabel("Área do projeto", { exact: true }).selectOption({ label: areaName });
+  await page.getByLabel("Gestor inicial", { exact: true }).selectOption(ownId);
+  await page.getByRole("button", { name: "Cadastrar projeto", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Acesse seu workspace" })).toBeVisible();
+  await page.getByLabel("E-mail", { exact: true }).fill(email);
+  await page.getByLabel("Senha", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Entrar", exact: true }).click();
+  await page.getByRole("link", { name: projectName, exact: true }).click();
+  await expect(page.getByText(`Área: ${areaName}`, { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Arquivar projeto", exact: true }).click();
+  await page.getByRole("button", { name: "Confirmar arquivamento", exact: true }).click();
+  await expect(page.getByText("Projeto arquivado", { exact: true })).toBeVisible();
+  await page.reload();
+  await page.getByRole("button", { name: "Restaurar projeto", exact: true }).click();
+  await expect(page.getByText("Projeto ativo", { exact: true })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Participantes do projeto" })).toContainText("Container Admin");
+  for (let attempt = 0; attempt < 60; attempt++) {
+    await page.getByRole("button", { name: "Atualizar histórico", exact: true }).click();
+    if (await page.getByText("Projeto cadastrado", { exact: true }).count()) break;
+    await delay(250);
+  }
+  await expect(page.getByText("Projeto cadastrado", { exact: true })).toBeVisible();
+  await page.screenshot({ path: resolve(screenshots, "project-mobile.png"), fullPage: true });
+  assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations, []);
+  await page.getByRole("link", { name: "Voltar aos projetos", exact: true }).click();
+  await page.getByRole("link", { name: "Voltar à minha conta" }).click();
   await page.getByRole("button", { name: "Sair da conta" }).click();
   await expect(page.getByRole("status")).toHaveText("Você saiu da conta com segurança.");
   await expect(page.getByRole("heading", { name: "Acesse seu workspace" })).toBeFocused();
@@ -184,7 +222,7 @@ try {
   assert.equal((await context.cookies()).some(item => item.name === "__Host-altvia_session"), false);
   assert.deepEqual(errors, []);
   await context.close();
-  console.log("Packaged browser login/HTTPS/CSP/CSRF/recreation/teams/roster/accounts/clients/logout/themes/axe proof passed.");
+  console.log("Packaged browser login/HTTPS/CSP/CSRF/recreation/teams/roster/accounts/clients/projects/areas/logout/themes/axe proof passed.");
 } catch (error) {
   // Playwright locator diagnostics can include fill arguments. Never publish them.
   console.error(String(error).replaceAll(password, "[REDACTED]"));

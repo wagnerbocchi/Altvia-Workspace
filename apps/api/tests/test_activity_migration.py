@@ -1,6 +1,7 @@
 import pytest
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from altvia import management
 from conftest import TEST_PASSWORD
 from sqlalchemy import text
@@ -31,5 +32,8 @@ def test_activity_migration_preserves_old_events_and_refuses_projected_data_loss
         command.downgrade(config, "b46087000004")
     with db_engine.connect() as connection:
         assert connection.scalar(text("SELECT count(*) FROM activity_events")) == 1
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "b46087000006"
+        assert (
+            connection.scalar(text("SELECT version_num FROM alembic_version"))
+            == ScriptDirectory.from_config(config).get_current_head()
+        )
     command.check(config)

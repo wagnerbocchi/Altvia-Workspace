@@ -30,11 +30,10 @@ from altvia.admin_http import (
     _next_cursor,
     _operation,
     _remember,
+    authenticate_request,
     require_admin,
 )
 from altvia.config import Settings
-from altvia.http import require_csrf, require_origin
-from altvia.management import lock_identity_writes
 from altvia.models import ActivityEvent, Client, User
 
 
@@ -106,13 +105,7 @@ def create_client_router(engine: Engine, settings: Settings) -> APIRouter:
     router = APIRouter(prefix="/api/v1", tags=["Clients"])
 
     def authenticate(db: Session, request: Request, *, write: bool = False) -> User:
-        if write:
-            require_origin(request, settings.public_origin)
-            lock_identity_writes(db)
-        user, session = identity.authenticate(db, request.cookies.get(identity.COOKIE_NAME))
-        if write:
-            require_csrf(request, session)
-        return user
+        return authenticate_request(db, request, settings, write=write)
 
     @router.get("/clients", response_model=ClientPage)
     def list_clients(

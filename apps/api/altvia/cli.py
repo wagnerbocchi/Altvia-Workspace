@@ -21,12 +21,14 @@ from altvia.management import (
     set_team_role,
 )
 from altvia.policy import TEAM_READ_ROLES
+from altvia.project_registry import PROJECT_ROLES, set_project_access
 
 
 def main() -> int:
     password_commands = {"bootstrap-admin", "create-user", "reset-password"}
     team_commands = {"grant-team-role", "revoke-team-role"}
     client_commands = {"grant-client-access", "revoke-client-access"}
+    project_commands = {"grant-project-access", "revoke-project-access"}
     parser = argparse.ArgumentParser(
         description="Restricted Altvia identity management", exit_on_error=False, allow_abbrev=False
     )
@@ -44,13 +46,16 @@ def main() -> int:
             "revoke-team-role",
             "grant-client-access",
             "revoke-client-access",
+            "grant-project-access",
+            "revoke-project-access",
         ],
     )
     parser.add_argument("--email", required=True)
     parser.add_argument("--name")
     parser.add_argument("--team-id", type=UUID)
     parser.add_argument("--client-id", type=UUID)
-    parser.add_argument("--role", choices=sorted(TEAM_READ_ROLES))
+    parser.add_argument("--project-id", type=UUID)
+    parser.add_argument("--role", choices=sorted(TEAM_READ_ROLES | PROJECT_ROLES))
     # argparse's default errors echo unknown arguments and invalid values. An
     # accidentally supplied credential must not be copied into logs or stderr.
     try:
@@ -59,15 +64,26 @@ def main() -> int:
         parser.error("Invalid command arguments; use --help for supported options")
     if unknown:
         parser.error("Unsupported arguments; passwords are accepted only through hidden prompts")
-    if args.command in client_commands:
+    if args.command in project_commands:
+        if args.project_id is None or args.team_id is not None or args.client_id is not None:
+            parser.error("--project-id is required without team/client scope")
+        if (args.role is not None) != (args.command == "grant-project-access"):
+            parser.error("--role is required only for granting project access")
+        if args.role is not None and args.role not in PROJECT_ROLES:
+            parser.error("Invalid project role")
+    elif args.project_id is not None:
+        parser.error("--project-id is only valid for project access changes")
+    elif args.command in client_commands:
         if args.client_id is None or args.team_id is not None:
             parser.error("--client-id is required and --team-id is not allowed")
         if (args.role is not None) != (args.command == "grant-client-access"):
             parser.error("--role is required only for granting client access")
+        if args.role is not None and args.role not in TEAM_READ_ROLES:
+            parser.error("Invalid client role")
     elif args.client_id is not None:
         parser.error("--client-id is only valid for client access changes")
     elif args.command in team_commands:
-        if args.team_id is None or args.role is None:
+        if args.team_id is None or args.role not in TEAM_READ_ROLES:
             parser.error("--team-id and --role are required for team role changes")
     elif args.team_id is not None or args.role is not None:
         parser.error("--team-id and --role are only valid for team role changes")
@@ -104,9 +120,17 @@ def main() -> int:
             if not confirmed:
                 print("Confirmation did not match; no change made.", file=sys.stderr)
                 return 1
-            if args.command in team_commands | client_commands:
-                target_kind = "client" if args.command in client_commands else "team"
-                target_id = args.client_id if args.command in client_commands else args.team_id
+            if args.command in team_commands | client_commands | project_commands:
+                target_kind = (
+                    "project"
+                    if args.command in project_commands
+                    else ("client" if args.command in client_commands else "team")
+                )
+                target_id = (
+                    args.project_id
+                    if args.command in project_commands
+                    else (args.client_id if args.command in client_commands else args.team_id)
+                )
                 entered_team = input(f"Type the target {target_kind} UUID to confirm: ")
                 try:
                     confirmed_team = UUID(entered_team.strip()) == target_id
@@ -141,6 +165,10 @@ def main() -> int:
                 if args.client_id is None:
                     raise ValueError("Client identifier required")
                 set_client_access(db, email, args.client_id, args.role)
+            elif args.command in project_commands:
+                if args.project_id is None:
+                    raise ValueError("Project identifier required")
+                set_project_access(db, email, args.project_id, args.role)
             else:
                 set_platform_admin(db, email, args.command == "grant-admin")
     except ValidationError:

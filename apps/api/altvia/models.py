@@ -14,7 +14,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from altvia.database import Base
 
@@ -56,11 +56,13 @@ class RoleBinding(Base):
     __table_args__ = (
         CheckConstraint(
             "(scope_kind = 'global' AND team_id IS NULL AND client_id IS NULL "
-            "AND role_name = 'platform_admin') OR "
+            "AND project_id IS NULL AND role_name = 'platform_admin') OR "
             "(scope_kind = 'team' AND team_id IS NOT NULL AND client_id IS NULL "
-            "AND role_name IN ('viewer','operations_manager')) OR "
+            "AND project_id IS NULL AND role_name IN ('viewer','operations_manager')) OR "
             "(scope_kind = 'client' AND client_id IS NOT NULL AND team_id IS NULL "
-            "AND role_name IN ('viewer','operations_manager'))",
+            "AND project_id IS NULL AND role_name IN ('viewer','operations_manager')) OR "
+            "(scope_kind = 'project' AND project_id IS NOT NULL AND team_id IS NULL "
+            "AND client_id IS NULL AND role_name IN ('viewer','agent','project_manager'))",
             name="ck_role_binding_scope",
         ),
         Index(
@@ -85,6 +87,13 @@ class RoleBinding(Base):
             unique=True,
             postgresql_where=text("scope_kind = 'client'"),
         ),
+        Index(
+            "uq_role_bindings_project",
+            "user_id",
+            "project_id",
+            unique=True,
+            postgresql_where=text("scope_kind = 'project'"),
+        ),
     )
     id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid4, server_default=func.gen_random_uuid()
@@ -94,6 +103,7 @@ class RoleBinding(Base):
     scope_kind: Mapped[str] = mapped_column(String(20), default="global")
     team_id: Mapped[UUID | None] = mapped_column(ForeignKey("teams.id"))
     client_id: Mapped[UUID | None] = mapped_column(ForeignKey("clients.id"))
+    project_id: Mapped[UUID | None] = mapped_column(ForeignKey("projects.id"))
 
 
 class AuditLog(Base):
@@ -184,6 +194,51 @@ class ClientAccessGrant(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class OperationalArea(Base):
+    __tablename__ = "operational_areas"
+    __table_args__ = (
+        CheckConstraint("char_length(btrim(name)) > 0", name="ck_area_name"),
+        CheckConstraint("version > 0", name="ck_area_version"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    name: Mapped[str] = mapped_column(String(150), unique=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    version: Mapped[int] = mapped_column(default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class Project(Base):
+    __tablename__ = "projects"
+    __table_args__ = (
+        CheckConstraint("char_length(btrim(name)) > 0", name="ck_project_name"),
+        CheckConstraint("version > 0", name="ck_project_version"),
+        CheckConstraint(
+            "(scope_kind='internal' AND client_id IS NULL) OR "
+            "(scope_kind='client' AND client_id IS NOT NULL)",
+            name="ck_project_scope",
+        ),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    name: Mapped[str] = mapped_column(String(150))
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    version: Mapped[int] = mapped_column(default=1)
+    scope_kind: Mapped[str] = mapped_column(String(20))
+    client_id: Mapped[UUID | None] = mapped_column(ForeignKey("clients.id"), index=True)
+    team_id: Mapped[UUID] = mapped_column(ForeignKey("teams.id"), index=True)
+    operational_area_id: Mapped[UUID | None] = mapped_column(ForeignKey("operational_areas.id"))
+    operational_area: Mapped[OperationalArea | None] = relationship(lazy="joined")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class ProjectMember(Base):
+    __tablename__ = "project_members"
+    project_id: Mapped[UUID] = mapped_column(ForeignKey("projects.id"), primary_key=True)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class IdempotencyRecord(Base):
     __tablename__ = "idempotency_records"
     __table_args__ = (
@@ -215,7 +270,8 @@ class ActivityEvent(Base):
     __table_args__ = (
         CheckConstraint("aggregate_version > 0", name="ck_activity_version"),
         CheckConstraint(
-            "resource_type IN ('identity','team','client')", name="ck_activity_resource"
+            "resource_type IN ('identity','team','client','project','operational_area')",
+            name="ck_activity_resource",
         ),
         CheckConstraint("actor_kind IN ('user','management_command')", name="ck_activity_actor"),
         Index("ix_activity_order", "occurred_at", "event_id"),

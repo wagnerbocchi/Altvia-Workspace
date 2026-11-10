@@ -20,7 +20,7 @@ from altvia.management import lock_identity_writes
 from altvia.models import IdempotencyRecord, User
 
 
-def require_admin(
+def authenticate_request(
     db: Session, request: Request, settings: Settings, *, write: bool = False
 ) -> User:
     if write:
@@ -29,6 +29,13 @@ def require_admin(
     user, session = identity.authenticate(db, request.cookies.get(identity.COOKIE_NAME))
     if write:
         require_csrf(request, session)
+    return user
+
+
+def require_admin(
+    db: Session, request: Request, settings: Settings, *, write: bool = False
+) -> User:
+    user = authenticate_request(db, request, settings, write=write)
     if "identity.manage" not in identity.capabilities(db, user):
         raise identity.IdentityError(403, "forbidden")
     return user

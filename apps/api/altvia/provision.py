@@ -26,6 +26,9 @@ CRUD_TABLES = (
     "login_buckets",
     "clients",
     "client_access_grants",
+    "operational_areas",
+    "projects",
+    "project_members",
 )
 
 

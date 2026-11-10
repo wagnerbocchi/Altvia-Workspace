@@ -41,7 +41,8 @@ def seeded_user(db_engine):
     with db_engine.begin() as connection:
         connection.execute(
             text(
-                "TRUNCATE clients,team_members,teams,idempotency_records,"
+                "TRUNCATE operational_areas,projects,clients,team_members,teams,"
+                "idempotency_records,"
                 "sessions,role_bindings,audit_logs,outbox_events,"
                 "login_buckets,users CASCADE"
             )

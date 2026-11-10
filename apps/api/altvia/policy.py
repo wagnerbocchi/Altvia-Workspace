@@ -51,6 +51,29 @@ def can(principal: Principal, action: str, resource: Resource) -> bool:
         )
     if resource.client_id is not None and resource.client_id not in principal.client_ids:
         return False
+    if action in {"project.read", "project.manage"}:
+        if resource.project_id is None:
+            return False
+        for binding in principal.bindings:
+            if (
+                resource.client_id is not None
+                and binding.scope_kind == "client"
+                and binding.scope_id == resource.client_id
+            ):
+                if binding.role == "operations_manager" or (
+                    binding.role == "viewer" and action == "project.read"
+                ):
+                    return True
+            if (
+                binding.scope_kind == "project"
+                and binding.scope_id == resource.project_id
+                and resource.project_id in principal.project_ids
+            ):
+                if binding.role == "project_manager" or (
+                    binding.role in {"viewer", "agent"} and action == "project.read"
+                ):
+                    return True
+        return False
     work_actions = {"work.read", "work.create", "work.update", "work.transition", "work.comment"}
     ticket_actions = {
         "ticket.read",

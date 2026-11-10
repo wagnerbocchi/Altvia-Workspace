@@ -32,6 +32,8 @@ EVENT_TYPES = {
     "identity.team_member_removed",
 }
 CLIENT_EVENT_TYPES = {"client.created", "client.updated", "client.access_changed"}
+PROJECT_EVENT_TYPES = {"project.created", "project.updated", "project.access_changed"}
+AREA_EVENT_TYPES = {"operational_area.created", "operational_area.updated"}
 
 
 class EventPayload(BaseModel):
@@ -65,6 +67,26 @@ class ClientEventPayload(BaseModel):
 
     @model_validator(mode="after")
     def actor_matches_kind(self) -> "ClientEventPayload":
+        if (self.actor_kind == "user") != (self.actor_id is not None):
+            raise ValueError("Actor kind does not match identifier")
+        return self
+
+
+class RegistryEventPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
+    actor_id: UUID | None
+    actor_kind: Literal["user", "management_command"]
+    manager_user_id: UUID | None = None
+    member_user_id: UUID | None = None
+    role_name: Literal["viewer", "agent", "project_manager", "none"] | None = None
+    changed_fields: str | None = Field(
+        default=None,
+        pattern=r"^(name|active|operational_area_id)(,(name|active|operational_area_id)){0,2}$",
+        max_length=40,
+    )
+
+    @model_validator(mode="after")
+    def actor_matches_kind(self) -> "RegistryEventPayload":
         if (self.actor_kind == "user") != (self.actor_id is not None):
             raise ValueError("Actor kind does not match identifier")
         return self
@@ -135,7 +157,11 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
         if db.get(ProcessedEvent, (CONSUMER, event_id)) is not None:
             event.status, event.lease_until, event.last_error_code = "delivered", None, None
             return False
-        if event.event_type not in EVENT_TYPES | CLIENT_EVENT_TYPES or event.schema_version != 1:
+        if (
+            event.event_type
+            not in EVENT_TYPES | CLIENT_EVENT_TYPES | PROJECT_EVENT_TYPES | AREA_EVENT_TYPES
+            or event.schema_version != 1
+        ):
             event.status, event.last_error_code, event.lease_until = (
                 "dead",
                 "unsupported_event",
@@ -143,8 +169,29 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
             )
             return False
         try:
-            payload: EventPayload | ClientEventPayload
-            if event.event_type in CLIENT_EVENT_TYPES:
+            payload: EventPayload | ClientEventPayload | RegistryEventPayload
+            if event.event_type in PROJECT_EVENT_TYPES | AREA_EVENT_TYPES:
+                payload = RegistryEventPayload.model_validate(event.payload)
+                resource = (
+                    "project" if event.event_type in PROJECT_EVENT_TYPES else "operational_area"
+                )
+                fields = set(payload.model_dump(exclude_none=True)) - {"actor_id", "actor_kind"}
+                expected = {
+                    "project.created": {"manager_user_id"},
+                    "project.updated": {"changed_fields"},
+                    "project.access_changed": {"member_user_id", "role_name"},
+                    "operational_area.created": set(),
+                    "operational_area.updated": {"changed_fields"},
+                }[event.event_type]
+                if event.aggregate_type != resource or fields != expected:
+                    raise ValueError("Invalid registry event fields")
+                if (
+                    resource == "operational_area"
+                    and payload.changed_fields is not None
+                    and "operational_area_id" in payload.changed_fields
+                ):
+                    raise ValueError("Invalid area change")
+            elif event.event_type in CLIENT_EVENT_TYPES:
                 payload = ClientEventPayload.model_validate(event.payload)
                 if event.aggregate_type != "client":
                     raise ValueError("Event resource mismatch")
@@ -159,7 +206,8 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
             else:
                 payload = EventPayload.model_validate(event.payload)
             if (
-                event.aggregate_type not in {"identity", "team", "client"}
+                event.aggregate_type
+                not in {"identity", "team", "client", "project", "operational_area"}
                 or event.aggregate_version < 1
                 or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", event.correlation_id)
             ):
@@ -170,9 +218,18 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                 "identity.team_member_added",
                 "identity.team_member_removed",
             }
-            if (event.aggregate_type == "team") != team_event or (
-                (event.aggregate_type == "client") != (event.event_type in CLIENT_EVENT_TYPES)
-            ):
+            expected_resource = (
+                "project"
+                if event.event_type in PROJECT_EVENT_TYPES
+                else "operational_area"
+                if event.event_type in AREA_EVENT_TYPES
+                else "client"
+                if event.event_type in CLIENT_EVENT_TYPES
+                else "team"
+                if team_event
+                else "identity"
+            )
+            if event.aggregate_type != expected_resource:
                 raise ValueError("Event resource mismatch")
         except (ValueError, ValidationError):
             event.status, event.last_error_code, event.lease_until = "dead", "invalid_event", None

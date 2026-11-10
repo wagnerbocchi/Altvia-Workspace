@@ -37,6 +37,32 @@ def test_assigned_work_does_not_grant_a_role():
     assert not can(Principal(U, True, client_ids=frozenset({C})), "work.update", RESOURCE)
 
 
+@pytest.mark.parametrize(
+    "role,scope,member,read,manage",
+    [
+        ("operations_manager", "client", False, True, True),
+        ("viewer", "client", False, True, False),
+        ("operations_manager", "team", True, False, False),
+        ("viewer", "team", True, False, False),
+        ("project_manager", "project", True, True, True),
+        ("project_manager", "project", False, False, False),
+        ("agent", "project", True, True, False),
+        ("viewer", "project", False, False, False),
+    ],
+)
+def test_project_policy_is_not_team_identity_metadata(role, scope, member, read, manage):
+    identifier = {"client": C, "team": T, "project": P}[scope]
+    principal = Principal(
+        U,
+        True,
+        (Binding(role, scope, identifier),),
+        frozenset({C}),
+        frozenset({P}) if member else frozenset(),
+    )
+    assert can(principal, "project.read", RESOURCE) is read
+    assert can(principal, "project.manage", RESOURCE) is manage
+
+
 def test_inactive_manager_cannot_read():
     principal = Principal(U, False, (Binding("operations_manager", "team", T),), frozenset({C}))
     assert not can(principal, "work.read", RESOURCE)

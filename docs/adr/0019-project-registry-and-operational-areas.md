@@ -80,7 +80,7 @@ filter authorization in SQL before pagination and expose no global counts.
 | PATCH /operational-areas/{id} | identity.manage, Origin/CSRF/If-Match; nonempty strict {name?,active?}, stale409/duplicate-name409 |
 | GET /projects | Scoped project list; optional client_id filter never grants visibility |
 | POST /projects | Creation authority above; strict {name,scope_kind,client_id?,team_id,operational_area_id?,manager_user_id}; receipt201/replay200 |
-| GET /projects/{id} | Scoped fields/IDs/ETag/can_manage; no unauthorized linked names |
+| GET /projects/{id} | Scoped fields/IDs/ETag/can_manage and globally readable operational_area_name; no unauthorized linked names |
 | PATCH /projects/{id} | Scoped manager, Origin/CSRF/If-Match; {name?,active?,operational_area_id?}; explicit null clears area; stale409 |
 | GET /projects/{id}/members | Authorize parent, bounded current members with safe fields |
 | GET /projects/{id}/activity | Authorize parent before project-bound descending activity cursor |

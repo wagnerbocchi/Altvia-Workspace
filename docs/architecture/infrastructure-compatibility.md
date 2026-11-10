@@ -211,3 +211,16 @@ the current acceptance and precise limits are in the linked target evidence.
 Test containers were stopped and volumes preserved; SSH control session was closed.
 No remaining product feature, future native artifact or production capacity/readiness
 gate is implicitly completed by this result.
+
+### Current Phase 2A qualification
+
+The Foundation worker/Redis increment and subsequent client registry supersede
+the historical four-image observations above. Source dc091de built/executed the
+five-image/six-service registry stack and migration job on the same baseline guest,
+with no new native dependency or ISA requirement. Real customer delegation,
+cross-client denial, persistence, scoped activity and packaged browser flows passed.
+Native/cgroup checks passed and the exact same five scanned IDs report zero
+vulnerabilities. The guest still lacks SSE4.2/AVX/AVX2. See
+docs/phase-2a-client-evidence.md for immutable source/image IDs, commands, dates,
+retained reports and limits. Representative load, production readiness and future
+mandatory native artifacts remain separate gates.

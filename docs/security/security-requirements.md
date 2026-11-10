@@ -36,7 +36,7 @@ approved and audited emergency grant. Never implement blanket `is_admin` bypass.
 | Identity/system/mailbox secrets reference | manage | deny | deny | deny | deny |
 | Customer/project/work/ticket content read | explicit content grant | allowed team/client | allowed projects | allowed membership/queue | explicit read scope |
 | Team identity metadata/roster | global identity manage | read explicitly bound teams only | deny | deny | read explicitly bound teams only |
-| Client/project/operational team content | explicit content role | delegated scope | project/member scope only | deny | deny |
+| Client/project/operational team configuration | explicit content role | delegated scope | project/member scope only | deny | deny |
 | Work create/assign/update/transition | explicit content role | permitted scope | permitted project | assigned/member scope, no grant administration | deny |
 | Ticket create/assign/transition/reply | explicit content role | permitted queue/client | only additional queue role | permitted queue/client | deny |
 | Internal notes read/write | separate note permission | scoped note grant | scoped note grant | scoped note grant | deny by default |
@@ -62,6 +62,17 @@ identity lock, session invalidation and atomic audit/outbox. Schema constraints
 reject arbitrary roles/scopes. Membership never supplies a binding. Existing team
 read scope survives archive until revoked. Client/resource ceilings and later
 operational role rules remain separate; no persisted client grant is added here.
+
+Phase 2A (ADR-0018) now persists client ceilings and exclusive client role bindings.
+Every list/detail/activity read requires both, including for platform administrators.
+Client creation is an identity configuration action requiring explicit active-manager
+selection, never implicit creator access. The response/replay is a minimal receipt;
+it cannot bypass customer reads. Delegation/revocation is serialized with identity
+writes, invalidates target sessions and commits audit/outbox atomically. Coherent
+same-state grants are no-ops even after archive/deactivation; actual new grants or
+repairs require active targets. CLI changes require typed email and client UUID.
+Client events contain IDs/allowlisted change names and never enter global identity
+history. Expanded client data/history must survive application rollback.
 
 ## Trust boundaries and controls
 

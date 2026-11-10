@@ -154,6 +154,32 @@ created by this interface. Global auth capability output remains unchanged.
 
 ## Domain resource schemas
 
+### Implemented client registry (ADR-0018)
+
+Phase 2A implements the following narrower registry contract. The complete-product
+tables below describe subsequent slices; default projects and contacts are not
+accepted by the current API. All paths use the existing /api/v1 prefix.
+
+| Method and suffix | Authorization and behavior |
+| --- | --- |
+| GET /clients | Explicit client ceiling plus viewer/operations_manager binding; SQL-filtered UUID cursor, limit 1..100/default 50, no global count |
+| POST /clients | Fresh identity.manage, Origin/CSRF, Idempotency-Key; strict {name,manager_user_id}; 201 receipt {client_id,manager_user_id}, protected replay 200 |
+| GET /clients/{id} | Scoped read; id/name/active/version/UTC timestamps/can_manage and ETag |
+| PATCH /clients/{id} | Scoped operations_manager, Origin/CSRF, If-Match; nonempty strict {name?,active?}, 409 stale version |
+| GET /clients/{id}/activity | Parent scoped read first, descending occurred_at/event_id cursor bound to this client |
+
+Hidden and nonexistent clients both return 404; a readable client with a forbidden
+write returns 403. Archived clients remain readable. Names trim to 1..150 Unicode
+code points and need not be unique. Creation atomically grants the explicitly
+selected active manager both access records and invalidates that account's sessions.
+No implicit creator access exists. The minimal replay receipt never reads current
+client metadata or repeats delegation. Client events are absent from the global
+identity activity feed. Unsupported query/body fields are rejected.
+
+Further client grants use the interactive host CLI documented in
+docs/runbooks/client-registry.md. No browser grant administration, project, area,
+contact, task or default-project API is supplied by this registry slice.
+
 | DTO | Required create fields | Optional/derived response fields |
 | --- | --- | --- |
 | Client | name | active, default_project_id; id/version/timestamps server owned |

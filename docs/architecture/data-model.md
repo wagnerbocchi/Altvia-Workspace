@@ -79,9 +79,23 @@ table above: UUID id, user_id/role_name FKs, scope_kind, nullable team_id FK.
 CHECK permits only global/platform_admin without team or team/viewer and
 team/operations_manager with team. Partial UNIQUE(user_id,role_name) for global
 and UNIQUE(user_id,role_name,team_id) for team plus a user lookup index preserve
-global semantics and allow repeated role names on distinct teams. Client/project/
-queue scope and client_access_grants remain unimplemented; no polymorphic scope
-ID or placeholder operational entities were introduced. ADR-0010 owns this slice.
+global semantics and allow repeated role names on distinct teams. ADR-0010 owns
+that initial slice. Project/queue scopes remain unimplemented.
+
+Applied Phase 2A migration b46087000006 adds clients with UUID/name/active/positive
+version/UTC timestamps and client_access_grants with composite user/client PK,
+restrictive FKs, nullable granted_by and UTC created_at. role_bindings adds client_id;
+its CHECK permits exactly one global/team/client scope. A client scope accepts only
+viewer or operations_manager, with UNIQUE(user_id,client_id). Both a ceiling and
+a binding are required; neither record alone authorizes a read. Existing team/global
+semantics and every earlier row are preserved. No default_project_id, contacts,
+areas or projects are created speculatively.
+
+The activity constraint now accepts resource_type=client. The existing projection,
+deduplication key and worker privileges are reused; identity reads explicitly filter
+identity/team resources. Client reads authorize the parent before applying a
+client-bound cursor. Populated client/history tables refuse downgrade before DDL.
+Rollback preserves the expanded schema/data and a compatible worker (ADR-0018).
 
 Contact and internal-user identities are distinct. OIDC subject/issuer mapping
 is deferred until IdP is known; never join accounts by unverified email alone.

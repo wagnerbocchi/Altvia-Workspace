@@ -52,6 +52,11 @@ automated verification and real UI when applicable. Phase numbers refer to
 | Source import | 5 | All 34 rows accounted for, 19 weekly updates and 8 notes preserved; approved mappings and replay tested |
 | CPU and recovery | 1,6 | Runtime and functional tests on actual guest; consistent database/file restore and rollback |
 
+Delivery status 2026-11-09: Foundation is closed. Phase 2A delivers only the client
+registry portion of FR-002 and its scoped FR-012 activity, qualified on the actual
+baseline VM (docs/phase-2a-client-evidence.md). FR-002 remains open for areas and
+projects; FR-003/FR-004 and the remaining domain phases are not implemented.
+
 Non-goals: SaaS billing/subscriptions, marketplace, local AI/embeddings, external
 search cluster, advanced ITIL/CMDB, advanced Gantt and native mobile applications.
 No speculative scaffolding for these capabilities.

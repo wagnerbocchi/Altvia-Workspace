@@ -27,13 +27,13 @@ Consumes current authentication, identity write lock and admin_http protocols.
 Produces Client/ClientAccessGrant, management access changes, typed client routes
 and strict client event projection without global identity-feed leakage.
 
-- [ ] Write focused real PostgreSQL API/service tests; observe missing routes RED.
-- [ ] Implement schema, exclusive role scope, filtered reads and metadata writes.
-- [ ] Implement explicit initial delegation, restricted CLI and session invalidation.
-- [ ] Extend strict activity validation and scoped feed; prove identity isolation.
-- [ ] Prove ACL/ceiling halves, repeat/revoke/race/version/migration preservation.
-- [ ] Run focused tests, full API, Ruff/format/mypy/build and generated contracts.
-- [ ] Commit the independently tested backend slice.
+- [x] Write focused real PostgreSQL API/service tests; observe missing routes RED.
+- [x] Implement schema, exclusive role scope, filtered reads and metadata writes.
+- [x] Implement explicit initial delegation, restricted CLI and session invalidation.
+- [x] Extend strict activity validation and scoped feed; prove identity isolation.
+- [x] Prove ACL/ceiling halves, repeat/revoke/race/version/migration preservation.
+- [x] Run focused tests, full API, Ruff/format/mypy/build and generated contracts.
+- [x] Commit the independently tested backend slice.
 
 ## Task 2: Real browser client workflow
 
@@ -42,25 +42,29 @@ generated API types and a real client browser test. Reuse session-owned private
 caches, auth transport, form controls, version conflict and safe read recovery.
 Consumes Task 1 routes; produces usable client CRUD/archive and scoped history.
 
-- [ ] Apply Impeccable context/rules; persist a focused incumbent surface brief.
-- [ ] Write a failing browser test and observe RED before interface implementation.
-- [ ] Implement bounded directory, explicit-manager creation and scoped detail.
-- [ ] Prove login after self-grant, independent errors, stale writes and no retry.
-- [ ] Run browser suite/build/check/contracts/audit and theme/mobile/axe captures.
-- [ ] Complete fresh source review and Impeccable finish/documentation handoffs.
-- [ ] Commit reviewed changes and evidence.
+- [x] Apply Impeccable context/rules; persist a focused incumbent surface brief.
+- [x] Write a failing browser test and observe RED before interface implementation.
+- [x] Implement bounded directory, explicit-manager creation and scoped detail.
+- [x] Prove login after self-grant, independent errors, stale writes and no retry.
+- [x] Run browser suite/build/check/contracts/audit and theme/mobile/axe captures.
+- [x] Complete fresh source review and Impeccable finish/documentation handoffs.
+- [x] Commit reviewed changes and evidence.
 
 ## Task 3: Packaged validation and publication
 
 Files: packaged browser/smoke checks, runbooks, evidence and roadmap.
 Consumes actual client workflow; produces reproducible release-slice proof.
 
-- [ ] Extend packaged test to client write, scoped denial, projection and restart.
-- [ ] Run appropriate container/source/image security and all five hosted gates.
-- [ ] Request target SSH authentication asynchronously if required; never store
+- [x] Extend packaged test to client write, scoped denial, projection and restart.
+- [x] Run appropriate container/source/image security and all five hosted gates.
+- [x] Request target SSH authentication asynchronously if required; never store
   a password or bypass a closed master. Continue independent safe work meanwhile.
-- [ ] Record exact executed evidence and any remaining target gate; never claim
+- [x] Record exact executed evidence and any remaining target gate; never claim
   Phase 2 or native qualification from mocks or unexecuted tests.
-- [ ] Push authorized coherent commits directly to main, without PR.
+- [x] Push authorized coherent commits directly to main, without PR.
+
+Qualified application source dc091de; exact local/hosted/VM evidence and known
+limits are in docs/phase-2a-client-evidence.md. Documentation publication follows
+without changing the qualified application artifacts.
 
 Stop at the completed client slice. Projects/areas/tasks remain later Phase 2 work.

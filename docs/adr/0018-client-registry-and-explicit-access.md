@@ -1,6 +1,6 @@
 # ADR-0018: Client registry and explicit customer access
 
-Date: 2026-11-09. Status: selected for Phase 2A implementation.
+Date: 2026-11-09. Status: implemented and qualified for Phase 2A.
 Scope: the first FR-002 vertical slice, before projects and operational areas.
 User authorized continued incremental development after Foundation closure.
 

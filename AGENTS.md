@@ -12,6 +12,10 @@
 - Team identity metadata/roster writes require identity.manage and the same
   identity write lock before session authentication. Team membership is never a
   content grant; use versions and protected POST replay as specified in ADR-0009.
+- Client reads require both an explicit client ceiling and a client role, including
+  for platform administrators. Creation requires explicit initial-manager selection;
+  never grant the creator implicitly. Keep client events out of identity activity.
+  Reuse ADR-0018's lock/session/replay protocol and preserve expanded data on rollback.
 - Never add Elasticsearch, OpenSearch, Solr, MongoDB, vector engines, local model
   runtimes or mandatory dependencies requiring ISA beyond x86-64-v1.
   Never use `-march=native`. Real target-VM testing is required for homologation.

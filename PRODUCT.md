@@ -33,17 +33,24 @@ no public registration or self-service password reset yet.
 ## Capabilities and Constraints
 
 Phase 1A implements login, current identity and logout with persistent sessions.
-Phase 1B adds the real browser flow. Domain modules remain future deliveries.
+Phase 1B adds the real browser flow.
 Phase 1C adds persisted team and participant administration for identity.manage
 operators. Account creation, activation, password reset, platform administration
 and constrained team read grants now also have protected browser administration
 under ADR-0016. Restricted CLI operations remain available. Team membership never
 grants client or project content access.
+Foundation also includes durable worker/Redis processing and restricted identity
+activity. Phase 2A adds a persisted client directory, explicit initial-manager
+selection, scoped rename/archive/restore and client history. Client content always
+requires a separate ceiling and role, including for platform administrators.
+Further customer access changes use the restricted host CLI. Projects, areas,
+contacts, tasks and Service Desk remain future deliveries.
 HTTPS, secure HttpOnly cookies, Origin/CSRF checks and no browser auth-token
 storage are required. Keyboard access, visible focus, responsive layout and
 dark/light themes are required. All mandatory runtime dependencies must support
-x86-64-v1. The current four-image Foundation stack passed on the supplied target
-VM; changed or future mandatory native artifacts require repeated qualification.
+x86-64-v1. The current five-image Foundation stack passed on the supplied target
+VM, including the Phase 2A client increment in docs/phase-2a-client-evidence.md;
+changed or future mandatory native artifacts require repeated qualification.
 Representative capacity and production readiness remain open. No Elasticsearch/OpenSearch.
 
 ## Brand Commitments

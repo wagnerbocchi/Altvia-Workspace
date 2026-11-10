@@ -94,8 +94,16 @@ tests, packaged label persistence/recovery, zero blocking source findings and
 zero reported vulnerabilities in all five scanned images. Phase 2 development
 is complete; see docs/phase-2h-external-participant-evidence.md and
 docs/phase-2-development-closure.md. Final integrated target qualification remains
-pending. Phase 3 Service Desk is next; ticket consolidation remains Phase 4 and
-production acceptance remains separate.
+pending. Phase 3A now delivers persisted team-owned queue/category configuration
+under ADR-0026, with protected creation, versioned lifecycle and scoped history.
+Exact e3a79c2 passed all five hosted gates with 540 API/87 browser tests, packaged
+queue/category persistence and scope proof, zero blocking source findings and
+zero reported vulnerabilities in five scanned image inventories. The reviewed
+parent-version refresh race has a regression-tested correction. Direct SQL
+whitespace-only names remain a documented defense follow-up, with HTTP validation
+enforcing the full strip rule. See docs/phase-3a-queue-evidence.md. Phase 3 remains
+open for ticket content roles/lifecycle, messages, private files and native email.
+Ticket consolidation remains Phase 4 and production acceptance remains separate.
 
 Non-goals: SaaS billing/subscriptions, marketplace, local AI/embeddings, external
 search cluster, advanced ITIL/CMDB, advanced Gantt and native mobile applications.

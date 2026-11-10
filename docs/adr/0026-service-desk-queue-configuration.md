@@ -1,6 +1,10 @@
 # ADR-0026 Service Desk queue and category configuration
 
-Date 2026-11-10. Selected before code for Phase 3A, FR-005 configuration and FR-012.
+Date 2026-11-10. Accepted and implemented for Phase 3A, FR-005 configuration and FR-012.
+Contracts 0f9059d preceded backend 7ef3a7a and browser 30e337e. Test-only e3a79c2
+passed all five hosted gates with 540 API/87 browser and actual packaged scope/
+recreation proof. Phase 3A development is complete. Final target qualification
+follows remaining MVP development. Evidence is in docs/phase-3a-queue-evidence.md.
 The master specification and the user's standing development authorization apply.
 
 ## Decision
@@ -42,6 +46,10 @@ NUL, CR and LF. Enforce nonblank single-line names and positive versions in SQL.
 Exact case-sensitive names are unique within team for queues and within queue
 for categories, including archived records. Use UUID in navigation and receipts.
 FKs use RESTRICT. Queue team and category queue are immutable in HTTP contracts.
+The source review records a deferred raw SQL defense refinement. The current
+nonblank btrim checks ordinary spaces, while HTTP validation uses full Python
+strip semantics. Direct SQL could still insert tab/NBSP-only names. The bounded
+follow-up is recorded in the roadmap and queue runbook.
 
 Reuse authenticate_request(write=True), taking the identity lock before session
 authentication. Then lock the owning team, queue and category in that order.

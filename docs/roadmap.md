@@ -60,6 +60,25 @@ entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
+Phase 3A implements ADR-0026's scoped persisted team-owned queue/category
+configuration. Contracts 0f9059d preceded backend 7ef3a7a and browser 30e337e.
+Test-only e3a79c2 strengthens packaged reader CSRF and authorization proof.
+Local full API 540 and browser 87 passed. A source review's dependent
+version-refresh race has a real RED/GREEN fix. Impeccable returned full-surface
+ship and rechecked all final frames after the correction. All five hosted gates
+passed on e3a79c2 with 540 API/87 browser, actual packaged queue/category restart
+and scope proof, zero blocking source findings and zero reported vulnerabilities
+in five complete scanned image inventories. Phase 3A development is complete.
+See docs/phase-3a-queue-evidence.md. Final integrated target qualification stays
+pending under the user's cadence. Phase 3 remains open.
+Ticket content grants, lifecycle, messages/files and transport follow as bounded
+slices. Mailbox/provider questions remain Q-03/Q-16.
+
+Known Phase 3A follow-up from source review concerns raw SQL whitespace-only
+names. Default PostgreSQL btrim checks ordinary spaces, while HTTP validation
+uses the full Python strip rule. The direct SQL defense refinement is deferred
+to hardening and remains documented in docs/runbooks/ticket-queues.md.
+
 Phase 2H development is complete under ADR-0025 and
 docs/plans/2026-11-10-external-work-participants.md. Contracts 6a03689 preceded
 backend a4c456d and browser f5b4e2a: bounded task-owned external labels,
@@ -176,7 +195,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-14 | Engineering/security: ongoing service-image security | All five actual target-tested images have zero reported vulnerabilities; blocking HIGH/CRITICAL CI, SAST medium+ and every detected secret; retained complete severity metadata, no risk acceptance | Remaining production security/readiness gates |
 | Q-15 | Resolved: owner authorized workstation public-key registration, remote Codex login and project registration; fresh noninteractive Windows SSH and actual Phase 2D qualification passed | Reuse agent-backed key with strict known-host checks; one connection per stage because native Windows multiplexing failed its probe; preserve previous environments and server security | None for current qualification; key removal, agent restart or changed host identity may require user action |
 | Q-16 | Support/security owner: trusted contact verification, international mailbox/IDNA and authenticated sender correlation policy | Contacts remain server-only unverified, bounded ASCII mailboxes; no send, account linking, portal grant or client selection by email alone | Future actual email/verification acceptance; registry work can proceed |
-| Q-17 | Engineering: diagnose Windows full-browser intermittency; one current task lifecycle run timed out with a connection-error screen, and older axe failure has no established cause | Preserve complete failed logs; affected 11, complete hosted 67 and actual packaged target passed; no relaxed caps/timeouts or claimed root-cause fix | Local runner reliability; no open member acceptance failure on the qualified target |
+| Q-17 | Engineering should diagnose browser-run intermittency. Earlier Windows task/axe observations remain unexplained. An initial Phase 3A Linux CI contact test also timed out before a contact POST was logged | Preserve full failed logs. Final local and hosted 87 passed with unchanged contact code. Keep existing caps/timeouts/retries and distinguish observed recovery from a root-cause fix | Runner reliability investigation and final integrated acceptance |
 | Q-18 | Product/security: whether task-owned external labels should later associate with client contacts, and how to preserve their distinct read scopes | Bounded supplied labels only, including internal projects; no contact lookup, matching, account creation or content grant | Future association policy only; Phase 2H can proceed |
 
 ## Backlog after core
@@ -394,4 +413,3 @@ native mobile and local AI remain outside MVP. No speculative code for backlog.
 - Future implementation entries must include commit, exact commands/results,
   target artifact/host when relevant and outstanding gates. Do not mark a phase
   done merely because the documentation or a subset of tests is complete.
-Phase 3A selected before code in ADR-0026 and docs/plans/2026-11-10-service-desk-queues.md. Implement scoped persisted team-owned queue/category configuration first. Ticket content grants, lifecycle, messages/files and transports follow as bounded slices. Current mailbox/provider questions remain Q-03/Q-16.

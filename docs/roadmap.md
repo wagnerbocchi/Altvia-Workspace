@@ -1,6 +1,6 @@
 # Development roadmap and decision register
 
-Updated 2026-11-09. User authorized incremental development after contracts,
+Updated 2026-11-10. User authorized incremental development after contracts,
 direct pushes to main and no PR. Continue safe independent work while questions
 await answers. This does not authorize production deployment or real data import.
 
@@ -17,8 +17,13 @@ Phase 2B now delivers internal/customer projects, shared operational areas,
 explicit project management/membership and scoped history under ADR-0019.
 Source 5faa866 passed 358 API/42 browser tests, all five hosted gates and actual
 baseline-VM packaged/native/cgroup proof; the same five tested images report zero
-vulnerabilities. See docs/phase-2b-project-evidence.md. Phase 2 remains open for
-work items/boards/search/My Work and later client contacts/default-project contracts.
+vulnerabilities. See docs/phase-2b-project-evidence.md. Phase 2C now delivers real
+tasks/subtasks, owners/participants, deadlines, transitions, internal comments and
+attributable scoped history under ADR-0020. Source d5ae972 passed 403 API/48 browser
+tests, all five hosted gates and actual x86-64-v1 packaged/native/cgroup proof.
+The same five tested images report zero vulnerabilities. See
+docs/phase-2c-work-evidence.md. Stop this increment at qualified task core; Phase 2
+remains open for Kanban/filter/search/My Work and later client contacts/default-project contracts.
 
 ## Milestones and gates
 
@@ -37,7 +42,7 @@ advancement from UI appearance alone. Reuse unchanged passing evidence; test
 affected behavior after each change. No release date/velocity estimate without
 environment/volume data. Do not replace Zammad until formal operational acceptance.
 
-The supplied VM now qualifies the current five-image project/area-registry stack; future
+The supplied VM now qualifies the current five-image task-core stack; future
 mandatory native artifacts must repeat that gate. Production readiness remains
 open. If all independent work is exhausted, report
 the exact blocker rather than silently weakening acceptance.
@@ -59,7 +64,7 @@ currently covers this GitHub repository's main only, not production services.
 
 | ID | Needed answer / owner | Safe action while pending | Gate blocked |
 | --- | --- | --- | --- |
-| Q-01 | Final five-image project/area-registry stack 5faa866 qualified on the supplied VM, 2026-11-09; native build/runtime/HTTPS/project ACL/restore/browser/cgroup/image-scan and worker/Redis recovery proof retained | Reuse exact tested image evidence; repeat qualification for changed mandatory native artifacts and future components | Satisfied for current stack; future artifact qualification remains required |
+| Q-01 | Five-image task-core stack d5ae972 qualified on the supplied VM, 2026-11-10; actual task persistence/ACL/browser/native/cgroup/image-scan and worker/Redis recovery proof retained | Reuse exact tested image evidence; repeat qualification for changed mandatory native artifacts and future components | Satisfied for current stack; future artifact qualification remains required |
 | Q-02 | Infrastructure admin: IOPS, workload/users/mail per day and production volume/backup policy; observed 8 vCPUs, 31.3 GiB RAM and 500 GiB disk | Conservative bounded defaults; inventory alone establishes no capacity or performance promise | Capacity/prod readiness |
 | Q-03 | Support owner: mailboxes, TLS/auth/forwarding/trusted MTA and SMTP limits | Adapter contracts and controlled test SMTP/IMAP only | Real Phase 3 email acceptance |
 | Q-04 | Operations: actual client/team/project/queue membership matrix | Deny by default; test explicit grants with synthetic test data only | Provisioning/pilot |
@@ -86,7 +91,9 @@ Exact evidence: docs/account-administration-evidence.md.
 The final Foundation increment delivers the actual durable identity activity
 consumer, restricted browser history, private Redis, safe logs and source-security
 gates under ADR-0017. All Foundation gates passed on 2f6ba60. Phase 2A/2B registries
-are qualified under the user's subsequent instructions. Production capacity/retention/provider decisions remain
+and Phase 2C task core are qualified under the user's subsequent instructions.
+The next slice requires contracts for Kanban/filter/search/My Work before code.
+Production capacity/retention/provider decisions remain
 the later gates listed above, not unimplemented Foundation requirements.
 
 Residual findings were fixed on683e34d; packaged same-origin web ingress passed

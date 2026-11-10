@@ -24,9 +24,15 @@ Phase 2B adds persisted internal/customer projects, explicit project management,
 shared operational areas, members and scoped history. Source 5faa866 passed 358
 API/42 browser tests, all five hosted gates and actual x86-64-v1 qualification;
 the same five tested images report zero vulnerabilities. See
-[Project registry evidence](docs/phase-2b-project-evidence.md). Phase 2 remains open
-for work items/boards/search/My Work and later client contracts. Production
-deployment and real-data import remain separate.
+[Project registry evidence](docs/phase-2b-project-evidence.md).
+Phase 2C adds persisted tasks/subtasks, owners/participants, explicit deadlines,
+transitions, internal comments and attributable history. Source d5ae972 passed 403
+API/48 browser tests, all five hosted gates and actual x86-64-v1 qualification.
+The same five tested images report zero vulnerabilities. See
+[Task-core evidence](docs/phase-2c-work-evidence.md) and the
+[task runbook](docs/runbooks/work-items.md). Phase 2 remains open for Kanban,
+filter/search/My Work and later client contracts. Production deployment and
+real-data import remain separate.
 Phase 1C-a extends restricted host administration for ordinary accounts and
 platform privileges, with session revocation and last-active-admin protection.
 Phase 1C-b adds the team identity/roster API, optimistic concurrency and protected

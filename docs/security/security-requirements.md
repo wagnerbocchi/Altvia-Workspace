@@ -26,6 +26,12 @@ role, ceiling or membership. Viewers read only. Contributor lookup is bounded to
 active project contributors; persisted assignment names are resolved only from
 those task links, including former contributors. Archived references block new
 mutations while permitting authorized reads and already committed receipt replay.
+Current authority is checked before exposing a saved receipt. Retained historical
+owner/participant links do not prevent independent maintenance; only new links
+require active candidates, and former contributors gain no access from history.
+403 API tests, 48 browser tests and actual target task/ACL/native/isolation proof
+passed for d5ae972. Exact same-ID image scans report zero vulnerabilities in the
+recorded snapshot; see docs/phase-2c-work-evidence.md for evidence and limits.
 Ticket policy remains a later domain contract:
 Agent queue bindings authorize reads/replies within the queue and client ceiling;
 ticket updates require assignment. Claiming an unassigned ticket for self needs

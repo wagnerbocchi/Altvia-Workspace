@@ -52,14 +52,19 @@ automated verification and real UI when applicable. Phase numbers refer to
 | Source import | 5 | All 34 rows accounted for, 19 weekly updates and 8 notes preserved; approved mappings and replay tested |
 | CPU and recovery | 1,6 | Runtime and functional tests on actual guest; consistent database/file restore and rollback |
 
-Delivery status 2026-11-09: Foundation is closed. Phase 2A delivers only the client
+Delivery status 2026-11-10: Foundation is closed. Phase 2A delivers only the client
 registry portion of FR-002 and its scoped FR-012 activity, qualified on the actual
 baseline VM (docs/phase-2a-client-evidence.md). Phase 2B adds persisted internal/
 customer projects, explicit managers/members, shared operational areas and scoped
 project activity, qualified on the same baseline VM with 358 API/42 browser tests
 and all five hosted gates (docs/phase-2b-project-evidence.md). Broader FR-002 client
-contacts/default ticket project contracts remain later work. FR-003/FR-004 and the
-remaining domain phases are not implemented; Phase 2 remains open.
+contacts/default ticket project contracts remain later work. Phase 2C now delivers
+the ADR-0020 task core of FR-003 and scoped FR-012: persisted tasks/subtasks,
+owners/participants, deadlines, transitions, internal comments and attributable
+history. Source d5ae972 passed 403 API/48 browser tests, all five hosted gates and
+actual x86-64-v1 qualification; same-ID image reports contain zero vulnerabilities.
+See docs/phase-2c-work-evidence.md. The bounded project task list is implemented;
+FR-004 Kanban/filter/search/My Work and remaining domain phases remain open.
 
 Non-goals: SaaS billing/subscriptions, marketplace, local AI/embeddings, external
 search cluster, advanced ITIL/CMDB, advanced Gantt and native mobile applications.

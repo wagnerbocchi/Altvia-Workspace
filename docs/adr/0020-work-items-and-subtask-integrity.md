@@ -1,8 +1,9 @@
 # ADR-0020: Persisted work items and subtask integrity
 
-Date: 2026-11-09. Status: selected for Phase 2C implementation.
+Date: 2026-11-09. Status: implemented and qualified on 2026-11-10.
 Scope: FR-003 and its scoped FR-012 history; project task list, not Kanban/My Work.
 User authorized continuation, routine decisions and direct main publication.
+Exact source/image evidence: docs/phase-2c-work-evidence.md.
 
 ## Decision and alternatives
 

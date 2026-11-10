@@ -6,7 +6,7 @@
 **Goal:** Operate real tasks/subtasks, owners/participants, dates and internal history.
 **Architecture:** Existing monolith/project ACL/protected HTTP/activity projection;
 DB hierarchy enforcement and identity-then-project write locks. No new service.
-**Tech Stack:** Locked FastAPI/SQLAlchemy/PostgreSQL/Next.js; installed zoneinfo.
+**Tech Stack:** Locked FastAPI/SQLAlchemy/PostgreSQL/Next.js; native PG timezone data.
 **Spec:** ADR-0020, ADR-0006, ADR-0019 and master FR-003/FR-012.
 
 ## Global constraints and review focus
@@ -32,18 +32,18 @@ Produces create_work_router(engine,settings), typed WorkCreate/Patch/Transition/
 Output/Page, scoped task reads and contributor selection. No public task service
 abstraction beyond the actual shared route/domain ownership seam.
 
-- [ ] Write real API tests test_work_lifecycle_and_replay,
+- [x] Write real API tests test_work_lifecycle_and_replay,
   test_subtask_and_assignment_boundaries, test_agent_and_viewer_authority;
   assert201/ETag, original POST replay200, stale409, denied403/404 and persisted state.
-- [ ] Run harness focused tests; observe absent route/schema RED before code.
-- [ ] Add migration/models/domain/API and correct generic work policy to match
+- [x] Run harness focused tests; observe absent route/schema RED before code.
+- [x] Add migration/models/domain/API and correct generic work policy to match
   ADR-0019, with no metadata team grants. Add candidate/deadline/status validation.
-- [ ] Add storage tests for composite FK/self/cycle/concurrent reparent, immutable
+- [x] Add storage tests for composite FK/self/cycle/concurrent reparent, immutable
   history, exact date precision and populated rollback refusal; observe meaningful
   failures before each missing invariant, then implement the responsible layer.
-- [ ] Extend strict worker events and exact family tests; prove replay once and
+- [x] Extend strict worker events and exact family tests; prove replay once and
   feed isolation. Prove same-state no-op and one version winner under races.
-- [ ] Run focused/full API, migration drift/preservation, Ruff/format/mypy/build;
+- [x] Run focused/full API, migration drift/preservation, Ruff/format/mypy/build;
   generate OpenAPI and TS contracts. Expected all pass; commit coherent backend.
 
 Run: uv run python .superpowers/phase1-tests/run.py --api apps/api/tests -q
@@ -56,15 +56,15 @@ tests/work-items.spec.ts; PRODUCT factual update only.
 Consumes Task1 generated schemas, project authority, protected writes and private
 session cache. Produces project task directory and /work-items/{id} detail.
 
-- [ ] Load Impeccable context once for new task surface, inspect incumbent truth
+- [x] Load Impeccable context once for new task surface, inspect incumbent truth
   and retain a narrow Operate brief. Read craft-floor immediately before UI edits.
-- [ ] Write real browser lifecycle/subtask/agent/reader tests, observe absent-route
+- [x] Write real browser lifecycle/subtask/agent/reader tests, observe absent-route
   RED, implement task creation/list/detail/assignment/parent/due/state/comment/history.
-- [ ] Prove pending/error/empty/success, uncertainty and version conflicts without
+- [x] Prove pending/error/empty/success, uncertainty and version conflicts without
   auto-resend or lost intent on pagination; session changes dispose private state.
-- [ ] Inspect desktop/mobile light/dark captures, keyboard/axe and no overflow.
+- [x] Inspect desktop/mobile light/dark captures, keyboard/axe and no overflow.
   Run web check/build/full browser; fresh source review and material fixes with RED/GREEN.
-- [ ] Complete Impeccable review/documentation workflow, preserve incumbent identity;
+- [x] Complete Impeccable review/documentation workflow, preserve incumbent identity;
   commit reviewed frontend. Expected all required checks pass.
 
 Run: uv run python .superpowers/phase1-tests/run.py
@@ -75,12 +75,22 @@ Expected: complete browser suite passes with real HTTPS/API/PostgreSQL.
 Files: packaged smoke/browser/fixtures; evidence/runbook/roadmap/contract/security
 and data-model docs. Consumes Task1/2 exact source/images and existing test helpers.
 
-- [ ] Extend packaged persistence/task ACL/subtask/event/browser proof; run script
+- [x] Extend packaged persistence/task ACL/subtask/event/browser proof; run script
   lint/syntax and all five hosted gates after direct main publication.
-- [ ] Reuse authenticated SSH mux if present; otherwise request terminal login
+- [x] Reuse authenticated SSH mux if present; otherwise request terminal login
   asynchronously while independent checks continue. Qualify exact images on target,
   compare native/cgroup/scanned IDs and inspect actual packaged captures.
-- [ ] Preserve all original raw evidence outside Git. Stop task containers, retain
+- [x] Preserve all original raw evidence outside Git. Stop task containers, retain
   volumes and close task master. No server/SSH policy or production change.
-- [ ] Record exact results/failures/images/rollback/limits; docs checks and coherent
+- [x] Record exact results/failures/images/rollback/limits; docs checks and coherent
   publication. Do not claim closed task acceptance while any required gate fails.
+
+## Executed completion
+
+Qualified application source d5ae972 on 2026-11-10: 403 API/48 browser tests,
+all five hosted gates and actual baseline-VM packaged/native/cgroup/same-image
+security proof passed. Five source findings addressed; Impeccable scored its zone
+fix resolved/disposition ship and documented the retained system. Task containers
+stopped, database volume retained, task SSH master and local keeper closed.
+Exact source/archive/images, observed failures/corrections, evidence hashes and
+limits: docs/phase-2c-work-evidence.md. Phase 2 remains open; stop at this slice.

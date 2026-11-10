@@ -1,7 +1,8 @@
 # Infrastructure and x86-64-v1 compatibility
 
-Status: current five-image Foundation stack **qualified on the supplied VM**;
+Status: current five-image task-core stack **qualified on the supplied VM**;
 future native components and production capacity/readiness gates remain open.
+Current source/image identities: [Phase 2C evidence](../phase-2c-work-evidence.md).
 See [actual target evidence](../target-vm-foundation-evidence.md).
 Final Phase 1 worker/Redis qualification, corrected zlib, exact five image IDs,
 zero reported vulnerabilities, cgroup/isolation and unavailable-broker shutdown
@@ -225,7 +226,7 @@ docs/phase-2a-client-evidence.md for immutable source/image IDs, commands, dates
 retained reports and limits. Representative load, production readiness and future
 mandatory native artifacts remain separate gates.
 
-### Current Phase 2B qualification
+### Phase 2B qualification
 
 Source 5faa866 repeated the actual baseline-guest build/runtime qualification for
 projects and operational areas without adding dependencies or changing native
@@ -238,3 +239,17 @@ exited 0 in 8.784 seconds and recovered 27 events. See
 docs/phase-2b-project-evidence.md for exact identities, retained evidence, capture
 diagnostic and limits. Task containers stopped, volumes retained, SSH master closed.
 Production capacity and future artifacts remain separate gates.
+
+### Current Phase 2C task-core qualification
+
+Source d5ae972 repeated actual baseline-guest build/runtime qualification for the
+persisted task core without a new dependency, service, native version or ISA
+requirement. Task/subtask/assignment/date/state/comment/replay/ACL and recreation
+proof passed. All five hosted gates passed with 403 API/48 browser tests. Actual
+native/cgroup/private-network/loopback checks passed; the same five scanned image
+IDs report zero vulnerabilities in the recorded Trivy/database snapshot. Worker
+exited 0 in 9.485 seconds during blackholed Redis and all 27 events recovered.
+The guest still lacks SSSE3/SSE4.1/SSE4.2/AVX/AVX2. Exact images, timestamps,
+reports, captures and limitations: docs/phase-2c-work-evidence.md. Test containers
+stopped, volumes retained, SSH master and temporary local keeper closed.
+This qualifies exercised task-core paths, not capacity or production readiness.

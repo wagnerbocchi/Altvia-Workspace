@@ -114,6 +114,10 @@ status history are append-only; worker has no task-table access. Comment paging
 uses (work_item_id,created_at,id); state paging uses unique (work_item_id,version).
 Populated work/history refuses destructive downgrade. Current task response names
 join only actual assignment records and use select-in batching for participants.
+Date boundaries use the shared native altvia_work_day_start function in both API
+and trigger, selecting the earliest midnight occurrence and handling forward gaps.
+Retained historical assignments are preserved; only newly added links require a
+current active contributor. This does not grant historical contributors access.
 The complete-product target tables below also describe later, unapplied features.
 
 Applied Phase 2B migration b46087000007 adds operational_areas (unique case-sensitive

@@ -140,7 +140,7 @@ ticket project, milestone, graph table or future membership-write API is precrea
 | Table | Essential columns and invariants |
 | --- | --- |
 | clients | name, active, default_project_id nullable; default must belong to same client via deferred trigger/check service plus DB trigger |
-| client_contacts | client_id, display_name, email_normalized, verification_state; UNIQUE(client_id,email_normalized), never global identity equality |
+| client_contacts | client_id, display_name, email_normalized, verification_state; UNIQUE(client_id,email_normalized), never global identity equality; ADR-0022 selects UUID/active/version/UTC timestamps and server-only unverified state for Phase2E |
 | operational_areas | name UNIQUE, active; project classification, not a security grant |
 | projects | client_id nullable, scope_kind internal/client, team_id, area_id nullable, name, active; CHECK internal has no client and client scope has client_id |
 | project_members | PK(project_id,user_id); membership alone cannot override client ceiling |

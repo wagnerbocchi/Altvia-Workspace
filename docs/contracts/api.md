@@ -224,6 +224,33 @@ and platform administration never confer project reads. Further project grants
 use the interactive CLI in docs/runbooks/project-registry.md. No browser member
 write, task, milestone, board, default ticket project or scope-changing API yet.
 
+### Selected contacts and default-project extension (ADR-0022)
+
+Phase 2E contracts precede implementation. Add GET/POST
+/clients/{client_id}/contacts and GET/PATCH
+/clients/{client_id}/contacts/{contact_id}. Parent authorization requires both
+customer ceiling and client role; operations_manager writes, viewer reads.
+Contact create {display_name,email} returns only {client_id,contact_id}, protected
+201/replay200 after fresh authority. Contact PATCH {display_name?,email?,active?}
+uses its own If-Match, nonempty strict body, no nulls. ContactOutput contains
+id/client_id/display_name/email_normalized/active/verification_state/version/
+created_at/updated_at. verification_state is server-owned unverified; no portal,
+account, identity proof or permission is created. Email is normalized with
+strip/casefold and bounded ASCII dot-atom/dotted DNS syntax; unique per client,
+including archived records. Lists include archived contacts, UUID-page by current
+actor+parent, limit1..100/default50, no counts or unsupported/repeated parameters.
+Real contact changes advance both contact and client versions and emit redacted
+client.contact_created/updated; no-op does neither. Archived client blocks new
+creates/real contact edits but not authorized reads or committed-create replay.
+
+ClientPatch additionally accepts nullable default_project_id; ClientOutput adds
+that ID only. Same-client composite FK enforces integrity. Setting a different
+non-null value requires a currently authorized active same-client project,
+active owning team and active client. Explicit null clears even after archival.
+Retained defaults survive archival; future automation must revalidate and triage.
+No ticket/email API is implemented by this extension. See ADR-0022 for complete
+error, replay, event, migration/rollback and browser acceptance contracts.
+
 ### Implemented client registry (ADR-0018)
 
 Phase 2A implements the following narrower registry contract. The complete-product

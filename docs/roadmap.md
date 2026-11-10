@@ -40,6 +40,12 @@ entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
+Phase 2E selected before code: ADR-0022 and
+docs/plans/2026-11-10-client-contacts.md define scoped external contacts and an
+explicit same-client default project. Contact identity never grants account,
+portal or content access. Use a composite PostgreSQL FK for default scope;
+no email/ticket side effect. Implementation and qualification are not yet complete.
+
 | Phase | Ordered vertical deliveries | Dependencies | Exit evidence |
 | --- | --- | --- | --- |
 | 0 Discovery/design | Source inspection, PRD, ERD/dictionary, RBAC, ADRs, API/events, CPU plan and roadmap | Master spec + XLSX | Reviewable contracts, divergences and unknowns recorded; no product implementation in Phase 0 commit |
@@ -92,6 +98,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-13 | Product owner: approved logo/brand and visual preferences | Provisional restrained Portuguese interface, system fonts, no invented assets or claims; review after return | Final visual approval only |
 | Q-14 | Engineering/security: ongoing service-image security | All five actual target-tested images have zero reported vulnerabilities; blocking HIGH/CRITICAL CI, SAST medium+ and every detected secret; retained complete severity metadata, no risk acceptance | Remaining production security/readiness gates |
 | Q-15 | Resolved: owner authorized workstation public-key registration, remote Codex login and project registration; fresh noninteractive Windows SSH and actual Phase2D qualification passed | Reuse agent-backed key with strict known-host checks; one connection per stage because native Windows multiplexing failed its probe; preserve previous environments and server security | None for current qualification; key removal, agent restart or changed host identity may require user action |
+| Q-16 | Support/security owner: trusted contact verification, international mailbox/IDNA and authenticated sender correlation policy | Contacts remain server-only unverified, bounded ASCII mailboxes; no send, account linking, portal grant or client selection by email alone | Future actual email/verification acceptance; registry work can proceed |
 
 ## Backlog after core
 

@@ -776,6 +776,7 @@ with Session(make_engine(WorkerSettings())) as db:
             # authenticated clients keep the configuration operator out of content.
             work_ids = []
             child_id = None
+            contact_ids = {}
             for index, (email, project_id) in enumerate(
                 [
                     ("reader@example.test", project_ids[0]),
@@ -796,6 +797,58 @@ with Session(make_engine(WorkerSettings())) as db:
                     assert login_work.status_code == 201
                     contributor.headers["X-CSRF-Token"] = login_work.json()["csrf_token"]
                     owner = login_work.json()["user"]["id"]
+                    if index in {0, 2}:
+                        customer = customer_ids[0 if index == 0 else 1]
+                        contact_collection = f"/api/v1/clients/{customer}/contacts"
+                        contact_body = {
+                            "display_name": "Packaged external contact",
+                            "email": "External@Example.TEST",
+                        }
+                        contact_key = {"Idempotency-Key": uuid4().hex}
+                        receipt = contributor.post(
+                            contact_collection, json=contact_body, headers=contact_key
+                        )
+                        assert receipt.status_code == 201
+                        assert set(receipt.json()) == {"client_id", "contact_id"}
+                        contact_id = receipt.json()["contact_id"]
+                        contact_ids[customer] = contact_id
+                        assert (
+                            contributor.post(
+                                contact_collection, json=contact_body, headers=contact_key
+                            ).json()
+                            == receipt.json()
+                        )
+                        contact_path = contact_collection + "/" + contact_id
+                        for version, active in [(1, False), (2, True)]:
+                            changed_contact = contributor.patch(
+                                contact_path,
+                                json={"active": active},
+                                headers={"If-Match": f'"{version}"'},
+                            )
+                            assert changed_contact.status_code == 200
+                        assert (
+                            contributor.post(
+                                contact_collection,
+                                json=contact_body,
+                                headers={"Idempotency-Key": uuid4().hex},
+                            ).status_code
+                            == 409
+                        )
+                        parent_path = f"/api/v1/clients/{customer}"
+                        parent = contributor.get(parent_path).json()
+                        invalid_default = contributor.patch(
+                            parent_path,
+                            json={"default_project_id": project_ids[2]},
+                            headers={"If-Match": f'"{parent["version"]}"'},
+                        )
+                        assert invalid_default.status_code == 422
+                        default = contributor.patch(
+                            parent_path,
+                            json={"default_project_id": project_id},
+                            headers={"If-Match": f'"{parent["version"]}"'},
+                        )
+                        assert default.status_code == 200
+                        assert default.json()["default_project_id"] == project_id
                     work_body = {
                         "project_id": project_id,
                         "title": f"Packaged work {index}",
@@ -885,6 +938,7 @@ with Session(make_engine(WorkerSettings())) as db:
                             == 409
                         )
             assert client.get("/api/v1/work-items/" + work_ids[0]).status_code == 404
+            assert client.get(f"/api/v1/clients/{customer_ids[0]}/contacts").status_code == 404
             assert client.get("/api/v1/my-work").json()["items"] == []
             assert (
                 client.patch(
@@ -945,6 +999,21 @@ with Session(make_engine(Settings())) as db,db.begin():
             )
             assert client.get(f"/api/v1/clients/{customer_ids[1]}").status_code == 404
             assert client.get(f"/api/v1/clients/{customer_ids[1]}/activity").status_code == 404
+            visible_contacts = f"/api/v1/clients/{customer_ids[0]}/contacts"
+            persisted_contact = client.get(
+                visible_contacts + "/" + contact_ids[customer_ids[0]]
+            ).json()
+            assert persisted_contact["email_normalized"] == "external@example.test"
+            assert persisted_contact["verification_state"] == "unverified"
+            assert persisted_contact["version"] == 3 and persisted_contact["active"]
+            assert (
+                client.get(f"/api/v1/clients/{customer_ids[0]}").json()["default_project_id"]
+                == project_ids[0]
+            )
+            assert (
+                client.get(visible_contacts + "/" + contact_ids[customer_ids[1]]).status_code == 404
+            )
+            assert client.get(f"/api/v1/clients/{customer_ids[1]}/contacts").status_code == 404
             for _ in range(60):
                 history = client.get(f"/api/v1/clients/{customer_ids[0]}/activity").json()["items"]
                 if any(row["event_type"] == "client.created" for row in history):

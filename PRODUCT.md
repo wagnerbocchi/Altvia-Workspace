@@ -56,8 +56,17 @@ Protected writes preserve original intents and expose deliberate recovery.
 Task core is qualified in docs/phase-2c-work-evidence.md. Phase 2D implements native
 PostgreSQL task search, deliberate filters, independently paged project Kanban and
 task-only My Work under ADR-0021. Actual x86-64-v1 qualification passed in
-docs/phase-2d-discovery-evidence.md. Contacts, default ticket projects, unified
-ticket assignments and Service Desk remain subsequent deliveries.
+docs/phase-2d-discovery-evidence.md. Phase 2E implements persisted external client
+contacts with a paged directory, create, detail edit/archive/restore and scoped
+client history under ADR-0022. Contacts require the client ceiling and role;
+they remain independent of internal accounts and their email status is always
+server-owned and unverified. Protected creation preserves the original receipt
+through uncertain outcomes; edits use the exact reviewed version. Clients also
+support an explicit nullable same-client default project, with paged active
+choices and deliberate clear. This configuration sends no email and creates no
+ticket, task, account or access grant. Final hosted gates and changed-artifact
+target-VM qualification remain pending for Phase 2E. Unified ticket assignments
+and Service Desk remain subsequent deliveries.
 HTTPS, secure HttpOnly cookies, Origin/CSRF checks and no browser auth-token
 storage are required. Keyboard access, visible focus, responsive layout and
 dark/light themes are required. All mandatory runtime dependencies must support

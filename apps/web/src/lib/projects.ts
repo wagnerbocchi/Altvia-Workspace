@@ -17,6 +17,9 @@ export function createProjectApi(csrf: string, onAuthError: (error: unknown) => 
     async list(cursor: string | null, signal?: AbortSignal): Promise<components["schemas"]["ProjectPage"]> {
       return (await request(`/projects${pageQuery(cursor)}`, { signal })).json();
     },
+    async forClient(clientId: string, cursor: string | null, signal?: AbortSignal): Promise<components["schemas"]["ProjectPage"]> {
+      return (await request(`/projects${pageQuery(cursor)}&client_id=${encodeURIComponent(clientId)}`, { signal })).json();
+    },
     async get(id: string, signal?: AbortSignal) { return record<ProjectRecord>(await request(path(id), { signal })); },
     async create(body: ProjectCreate, key: string): Promise<components["schemas"]["ProjectCreation"]> {
       return (await request("/projects", write("POST", body, undefined, key))).json();

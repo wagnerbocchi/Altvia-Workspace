@@ -11,6 +11,7 @@ import { LoadingRows, ReadError, nameSchema, useTeamWrite, writeError } from "@/
 import { ApiError } from "@/lib/http";
 import type { ClientApi } from "@/lib/clients";
 import { ClientHistory } from "./history";
+import { DefaultProject } from "./default-project";
 
 type Intent = { version: number } & ({ name: string } | { active: boolean });
 
@@ -45,6 +46,7 @@ export function ClientDetail({ id, api, session }: { id: string; api: ClientApi;
     </> : client && <>
       <h1 id="client-heading" tabIndex={-1}>{client.name}</h1>
       <p className="admin-intro">{client.active ? "Cliente ativo" : "Cliente arquivado"}</p>
+      <Link className="text-link" href={`/clients/${id}/contacts`}>Contatos do cliente</Link>
       {notice && <p role="status" className="read-notice">{notice}</p>}
       {write.error && <div className="read-error"><p role="alert">{writeError(write.error)}</p>
         <Button variant="outline" disabled={write.reloading} onClick={() => void write.reconcile(reload)}>Recarregar e descartar edição</Button></div>}
@@ -71,6 +73,7 @@ export function ClientDetail({ id, api, session }: { id: string; api: ClientApi;
               <Button variant="outline" disabled={write.locked} onClick={() => { setConfirmVersion(null); requestAnimationFrame(() => document.getElementById("client-state")?.focus()); }}>Cancelar</Button></div>
           </div>}
         </section>
+        <DefaultProject client={client} api={api} session={session} />
         <ClientHistory id={id} api={api} />
       </div>
     </>}

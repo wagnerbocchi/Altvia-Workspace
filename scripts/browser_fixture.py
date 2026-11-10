@@ -5,6 +5,7 @@ import secrets
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+from altvia.client_registry import create_client, set_client_access
 from altvia.config import Settings
 from altvia.database import make_engine
 from altvia.management import (
@@ -15,7 +16,7 @@ from altvia.management import (
 )
 from altvia.models import Project, SessionRecord, Team, User
 from altvia.project_registry import set_project_access
-from sqlalchemy import update
+from sqlalchemy import select, update
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
@@ -93,6 +94,30 @@ with Session(engine) as db, db.begin():
         ]:
             set_project_access(db, work_accounts[kind][0], work_project.id, role)
         roster_hash = hash_new_password(secrets.token_urlsafe(30))
+        contact_accounts = {}
+        for kind in ["MANAGER", "VIEWER", "HIDDEN"]:
+            contact_email = f"browser-contact-{kind.lower()}-{secrets.token_hex(8)}@example.invalid"
+            contact_password = secrets.token_urlsafe(30)
+            person = create_user(db, contact_email, f"Contato {kind} - Validacao", contact_password)
+            contact_accounts[kind] = (contact_email, contact_password, person.id)
+        admin_actor = db.scalar(select(User).where(User.email_normalized == admin_email))
+        contact_client = create_client(
+            db,
+            "Cliente de contatos - Validacao",
+            contact_accounts["MANAGER"][2],
+            admin_actor,
+            "contact_fixture",
+        )
+        set_client_access(db, contact_accounts["VIEWER"][0], contact_client.id, "viewer")
+        for index in range(12):
+            db.add(
+                Project(
+                    name=f"Projeto de contato {index:02d}",
+                    scope_kind="client",
+                    client_id=contact_client.id,
+                    team_id=work_team.id,
+                )
+            )
         for index in range(14):
             db.add(
                 User(
@@ -115,6 +140,11 @@ with Session(engine) as db, db.begin():
             encoding="utf-8",
         )
         with Path(".env.browser-session").open("a", encoding="utf-8") as target:
+            target.write(f"ALTVIA_E2E_CONTACT_CLIENT_ID={contact_client.id}\n")
+            for kind, (contact_email, contact_password, _) in contact_accounts.items():
+                target.write(
+                    f"ALTVIA_E2E_CONTACT_{kind}_EMAIL={contact_email}\nALTVIA_E2E_CONTACT_{kind}_PASSWORD={contact_password}\n"
+                )
             target.write(f"ALTVIA_E2E_WORK_PROJECT_ID={work_project.id}\n")
             for kind, (work_email, work_password) in work_accounts.items():
                 target.write(

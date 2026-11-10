@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingRows, Paging, ReadError, usePaging } from "@/components/team-admin/common";
 import type { ClientApi } from "@/lib/clients";
 
-const actions: Record<string, string> = { "client.created": "Cliente cadastrado", "client.updated": "Cadastro atualizado", "client.access_changed": "Acesso ao cliente alterado" };
+const actions: Record<string, string> = { "client.created": "Cliente cadastrado", "client.updated": "Cadastro atualizado", "client.access_changed": "Acesso ao cliente alterado", "client.contact_created": "Contato cadastrado", "client.contact_updated": "Contato atualizado" };
 
 export function ClientHistory({ id, api }: { id: string; api: ClientApi }) {
   const paging = usePaging();

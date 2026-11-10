@@ -44,7 +44,12 @@ Phase 2E selected before code: ADR-0022 and
 docs/plans/2026-11-10-client-contacts.md define scoped external contacts and an
 explicit same-client default project. Contact identity never grants account,
 portal or content access. Use a composite PostgreSQL FK for default scope;
-no email/ticket side effect. Implementation and qualification are not yet complete.
+no email/ticket side effect. Backend c67c195 and Unicode guard a3028b5 are tested;
+browser contact/default configuration is implemented with both Impeccable fixes
+scored resolved and documentation completed. Source review's two email-contract
+defects have RED/GREEN fixes. Full local API459, post-grant runtime21, full browser58
+and final affected API39/browser8 passed; exact final hosted/VM qualification
+remains open. See docs/phase-2e-contact-evidence.md.
 
 | Phase | Ordered vertical deliveries | Dependencies | Exit evidence |
 | --- | --- | --- | --- |

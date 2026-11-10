@@ -1,4 +1,4 @@
-import type { components } from "./api.generated";
+import type { components, operations } from "./api.generated";
 import { createAdminTransport, pageQuery, versionHeader } from "./admin-http";
 
 export type WorkRecord = components["schemas"]["WorkOutput"];
@@ -6,6 +6,15 @@ export type WorkCreate = components["schemas"]["WorkCreate"];
 export type WorkPatch = components["schemas"]["WorkPatch"];
 export type WorkTransition = components["schemas"]["Transition"];
 export type WorkDue = WorkCreate["due"];
+export type WorkFilters = Omit<NonNullable<operations["listing_api_v1_work_items_get"]["parameters"]["query"]>, "project_id" | "limit" | "cursor">;
+export type MyWorkFilters = Omit<NonNullable<operations["my_work_api_v1_my_work_get"]["parameters"]["query"]>, "limit" | "cursor">;
+function discoveryQuery(cursor: string | null, filters: MyWorkFilters) {
+  const query = new URLSearchParams(pageQuery(cursor).slice(1));
+  for (const [key, value] of Object.entries(filters)) {
+    if (value !== null && value !== undefined && value !== "") query.set(key, String(value));
+  }
+  return `?${query}`;
+}
 export function createWorkApi(csrf: string, onAuthError: (error: unknown) => void) {
   const { request, write } = createAdminTransport(csrf, onAuthError);
   const path = (id: string) => `/work-items/${encodeURIComponent(id)}`;
@@ -15,8 +24,11 @@ export function createWorkApi(csrf: string, onAuthError: (error: unknown) => voi
     return result;
   }
   return {
-    async list(project: string, cursor: string | null, signal?: AbortSignal): Promise<components["schemas"]["WorkPage"]> {
-      return (await request(`/work-items${pageQuery(cursor)}&project_id=${encodeURIComponent(project)}`, { signal })).json();
+    async list(project: string, cursor: string | null, signal?: AbortSignal, filters: WorkFilters = {}): Promise<components["schemas"]["WorkPage"]> {
+      return (await request(`/work-items${discoveryQuery(cursor, { ...filters, project_id: project })}`, { signal })).json();
+    },
+    async mine(cursor: string | null, signal?: AbortSignal, filters: MyWorkFilters = {}): Promise<components["schemas"]["MyWorkPage"]> {
+      return (await request(`/my-work${discoveryQuery(cursor, filters)}`, { signal })).json();
     },
     async get(id: string, signal?: AbortSignal) { return record(await request(path(id), { signal })); },
     async create(body: WorkCreate, key: string): Promise<components["schemas"]["WorkReceipt"]> {
@@ -46,7 +58,7 @@ export function createWorkApi(csrf: string, onAuthError: (error: unknown) => voi
 export type WorkApi = ReturnType<typeof createWorkApi>;
 export const workStatuses: Record<string, string> = { todo: "A fazer", in_progress: "Em andamento", blocked: "Bloqueada", done: "Concluída", cancelled: "Cancelada" };
 export const workPriorities: Record<string, string> = { low: "Baixa", medium: "Média", high: "Alta", critical: "Crítica" };
-export function dueLabel(row: WorkRecord) {
+export function dueLabel(row: Pick<WorkRecord, "due">) {
   if (!row.due) return "Sem prazo";
   if (row.due.precision === "date") {
     const [year, month, day] = row.due.date.split("-");

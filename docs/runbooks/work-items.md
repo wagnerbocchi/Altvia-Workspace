@@ -1,6 +1,6 @@
 # Project tasks and subtasks
 
-Scope: ADR-0020 task core. Homologation uses synthetic data. Production deployment,
+Scope: ADR-0020 task core and ADR-0021 discovery. Homologation uses synthetic data. Production deployment,
 real imports, ticket integration and membership provisioning require separate scope.
 
 ## Operate tasks
@@ -32,6 +32,33 @@ Comments are internal plain text. The comment, state-history and activity sectio
 show author identifiers and bounded navigation. Activity may appear after worker
 projection; use Atualizar atividade. Safe field names explain edits without
 placing comment, title, description or reason prose in queue payloads.
+
+## Find tasks and operate the board
+
+Project task discovery defaults to a paged list. Search applies to the title and
+description through native PostgreSQL Portuguese full-text search. Use quoted
+phrases, OR and minus-prefixed exclusions as supported by websearch syntax.
+Stopwords alone may produce no matches. Search is word-based, not a substring or
+identifier lookup. Apply filters deliberately; Limpar filtros restores defaults.
+
+Filtros adicionais expands status, priority, work type, personal involvement and
+deadline presence. Each filter change starts a fresh page. Quadro groups matches
+by task state with independent paging, loading, retry and empty feedback. Each
+column is a partial page, not a total count. Open the task detail to change state;
+the board does not implement a separate transition protocol or drag operation.
+Refreshing task results also refreshes creation authority. An authority read error
+locks new creation until recovery without discarding retained intent.
+
+Meu trabalho includes authorized tasks where the current account is owner or
+participant, once per task. It includes all states unless filtered. Each result
+links to its project and existing task detail. Assignment never grants project
+access. Tickets are not included in this increment.
+
+API-only discovery filters also support an explicit owner or involved account,
+unassigned tasks, and inclusive due_from/exclusive due_before aware timestamps.
+Personal queries support project scope. Unknown or repeated query keys are refused.
+Filtered cursors bind actor and normalized criteria; do not reuse them after a
+filter change. Date precision and timezone semantics remain those above.
 
 ## Recover uncertain writes
 
@@ -76,5 +103,11 @@ tables, data and volumes on rollback; use compatible API and worker images.
 Stop an incompatible worker instead of consuming new event families with old
 validation. Do not force downgrade, truncate history or reset volumes.
 
-Task-core qualification and limits: ../phase-2c-work-evidence.md. Kanban, filtering,
-search, My Work, external participants, tickets and imports remain later slices.
+Migration b46087000009 changes indexes only, including a Portuguese GIN expression
+index over title and description. Its downgrade preserves task/history data and
+restores the former owner/participant indexes. Rolling back this increment still
+requires retaining migration8's expanded data and compatible write consumers.
+
+Task-core qualification: ../phase-2c-work-evidence.md. Discovery qualification and
+remaining gates: ../phase-2d-discovery-evidence.md. External participants, tickets
+and imports remain later slices.

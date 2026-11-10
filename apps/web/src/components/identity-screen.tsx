@@ -18,6 +18,7 @@ function Account() {
       <div><dt>Nome</dt><dd>{user.display_name}</dd></div>
       <div><dt>E-mail</dt><dd>{user.email}</dd></div>
     </dl>
+    <div className="account-admin-link"><Button variant="outline" asChild><Link href="/my-work">Meu trabalho</Link></Button></div>
     <div className="account-admin-link"><Button variant="outline" asChild><Link href="/clients">Clientes</Link></Button></div>
     <div className="account-admin-link"><Button variant="outline" asChild><Link href="/projects">Projetos</Link></Button></div>
     {user.capabilities.includes("identity.manage") && <div className="account-admin-link">

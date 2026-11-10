@@ -45,7 +45,18 @@ test("@work-instant unrelated edit preserves exact instant and repeated clock oc
       await expect(page.getByRole("definition").filter({ hasText: "America/New_York" })).toBeVisible();
       if (instant === "2026-11-09T12:34:56.789Z") await captureInstant(page, "instant-detail");
       await page.getByRole("link", { name: "Voltar às tarefas", exact: true }).click();
-      await expect(page.getByRole("list", { name: "Tarefas do projeto", exact: true })).toContainText("America/New_York");
+      const list = page.getByRole("list", { name: "Tarefas do projeto", exact: true });
+      const pages = page.getByRole("navigation", { name: "Páginas de tarefas", exact: true });
+      const ownRow = list.getByRole("listitem").filter({ has: page.locator(`a[href="/work-items/${id}"]`) });
+      await expect(list).toBeVisible();
+      let directoryPage = 1;
+      while (await ownRow.count() === 0) {
+        await expect(pages.getByRole("button", { name: "Próximas tarefas", exact: true })).toBeEnabled();
+        await pages.getByRole("button", { name: "Próximas tarefas", exact: true }).click();
+        await expect(pages).toContainText(`Página ${++directoryPage}`);
+        await expect(list).toBeVisible();
+      }
+      await expect(ownRow).toContainText("America/New_York");
       if (instant === "2026-11-09T12:34:56.789Z") await captureInstant(page, "instant-directory");
       await page.goto(`/work-items/${id}`);
       await page.getByRole("button", { name: "Editar tarefa", exact: true }).click();

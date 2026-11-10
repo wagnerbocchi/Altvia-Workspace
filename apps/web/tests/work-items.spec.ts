@@ -69,6 +69,14 @@ test("@work real task/subtask/deadline/state/comments persist", async ({page})=>
   await capture(page,"detail");
   await page.getByRole("link",{name:"Voltar às tarefas",exact:true}).click();
   await page.getByLabel("Título da nova tarefa",{exact:true}).fill("Subtarefa real");
+  const parentPicker = page.getByLabel("Tarefa principal",{exact:true});
+  const parentPages = page.getByRole("navigation",{name:"Páginas de tarefa principal",exact:true});
+  let parentPage = 1;
+  while (await parentPicker.getByRole("option",{name:"Preparar entrega persistida",exact:true}).count() === 0) {
+    await expect(parentPages.getByRole("button",{name:"Próximas tarefas",exact:true})).toBeEnabled();
+    await parentPages.getByRole("button",{name:"Próximas tarefas",exact:true}).click();
+    await expect(parentPages).toContainText(`Página ${++parentPage}`);
+  }
   await page.getByLabel("Tarefa principal",{exact:true}).selectOption({label:"Preparar entrega persistida"});
   await page.getByRole("button",{name:"Criar tarefa",exact:true}).click();
   await expect(page.getByRole("heading",{name:"Subtarefa real",exact:true})).toBeVisible();

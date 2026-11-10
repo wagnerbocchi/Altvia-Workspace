@@ -75,6 +75,9 @@ member identity; conflicts require explicit reload/review, never automatic rebas
 Warn that access changes end target sessions, direct removal preserves inherited
 client access, and changing one's own access requires login again. Confirm removal
 and self-demotion, preserve history, restore keyboard focus and lock pending writes.
+All known-email grants first freeze and show the exact email, role, version and key
+for explicit confirmation; this covers self-targets under the existing Unicode
+identity normalization without relying on browser casefold matching.
 
 Prove real persistence/ACL, stale/replay/session invalidation, inactive/no-op,
 split-pair repair, concurrent writes, event redaction and no global identity grant.

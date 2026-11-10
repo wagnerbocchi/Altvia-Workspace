@@ -1,6 +1,8 @@
 """Real project access writes: atomic delegation, fresh ACL and immutable receipts."""
 
 from concurrent.futures import ThreadPoolExecutor
+from threading import Event
+from time import monotonic, sleep
 from uuid import UUID, uuid4
 
 import pytest
@@ -9,13 +11,14 @@ from altvia.models import (
     AuditLog,
     ClientAccessGrant,
     OutboxEvent,
+    Project,
     ProjectMember,
     RoleBinding,
     User,
 )
 from conftest import TEST_PASSWORD
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 from test_client_registry import created as create_client
 from test_project_registry import project
@@ -296,3 +299,91 @@ def test_member_page_carries_the_reviewed_project_version(admin_client, seeded_u
     assert add(admin_client, path).status_code == 201
     page = admin_client.get(path + "/members").json()
     assert page["project_version"] == 2 and len(page["items"]) == 2
+
+
+@pytest.mark.parametrize("revocation", ["account", "ceiling"])
+def test_revocation_lock_precedes_member_session_authentication(
+    admin_client, seeded_user, db_engine, monkeypatch, revocation
+):
+    from altvia import identity
+    from altvia.client_registry import set_client_access
+
+    path, target, customer = setup(admin_client, seeded_user, db_engine, customer=True)
+    with TestClient(
+        admin_client.app,
+        base_url=str(admin_client.base_url),
+        headers={"Origin": str(admin_client.base_url).rstrip("/")},
+    ) as writer:
+        sign_in(writer, "employee@example.test")
+        assert dict(writer.cookies) != dict(admin_client.cookies)
+        entered_auth = Event()
+        real_authenticate = identity.authenticate
+
+        def observe_authentication(db, token):
+            entered_auth.set()
+            return real_authenticate(db, token)
+
+        monkeypatch.setattr(identity, "authenticate", observe_authentication)
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            with Session(db_engine) as revoker, revoker.begin():
+                if revocation == "account":
+                    management.set_account_active(revoker, "employee@example.test", False)
+                else:
+                    set_client_access(revoker, "employee@example.test", UUID(customer), None)
+                revoker_pid = revoker.scalar(text("SELECT pg_backend_pid()"))
+                future = pool.submit(add, writer, path)
+                blocked = False
+                deadline = monotonic() + 5
+                while monotonic() < deadline and not entered_auth.is_set():
+                    with db_engine.connect() as monitor:
+                        blocked = bool(
+                            monitor.scalar(
+                                text(
+                                    "SELECT EXISTS (SELECT 1 FROM pg_locks l "
+                                    "WHERE l.locktype='advisory' AND NOT l.granted "
+                                    "AND :revoker = ANY(pg_blocking_pids(l.pid)))"
+                                ),
+                                {"revoker": revoker_pid},
+                            )
+                        )
+                    if blocked:
+                        break
+                    sleep(0.02)
+                assert not entered_auth.is_set(), "Member authentication ran before revocation lock"
+                assert blocked, "Expected a real advisory-lock waiter behind the revoker"
+                assert not future.done()
+            response = future.result(timeout=10)
+        assert entered_auth.is_set()
+        assert response.status_code == 401
+    with Session(db_engine) as db:
+        assert db.get(Project, UUID(path.rsplit("/", 1)[1])).version == 1
+        assert db.get(ProjectMember, (UUID(path.rsplit("/", 1)[1]), target)) is None
+    assert events(db_engine, path) == []
+
+
+def test_member_page_rejects_a_change_between_parent_and_roster_reads(
+    admin_client, seeded_user, db_engine, monkeypatch
+):
+    from altvia import project_registry
+
+    path, _, _ = setup(admin_client, seeded_user, db_engine)
+    original = project_registry.scoped_project
+    changed = False
+
+    def interleave(db, user_id, project_id, **kwargs):
+        nonlocal changed
+        result = original(db, user_id, project_id, **kwargs)
+        if not changed:
+            changed = True
+            with Session(db_engine) as concurrent, concurrent.begin():
+                project_registry.set_project_access(
+                    concurrent, "member@example.test", project_id, "agent"
+                )
+        return result
+
+    monkeypatch.setattr(project_registry, "scoped_project", interleave)
+    response = admin_client.get(path + "/members")
+    assert response.status_code == 409
+    assert response.json()["code"] == "version_conflict"
+    current = admin_client.get(path + "/members").json()
+    assert current["project_version"] == 2 and len(current["items"]) == 2

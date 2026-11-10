@@ -6,6 +6,9 @@ export type ProjectCreate = components["schemas"]["ProjectCreate"];
 export type ProjectPatch = components["schemas"]["ProjectPatch"];
 export type ProjectMember = components["schemas"]["ProjectMemberOutput"];
 export type ProjectMemberRole = components["schemas"]["ProjectMemberRole"]["role_name"];
+export type MilestoneRecord = components["schemas"]["MilestoneOutput"];
+export type MilestoneCreate = components["schemas"]["MilestoneCreate"];
+export type MilestonePatch = components["schemas"]["MilestonePatch"];
 export type AreaRecord = components["schemas"]["AreaOutput"];
 export function createProjectApi(csrf: string, onAuthError: (error: unknown) => void) {
   const { request, write } = createAdminTransport(csrf, onAuthError);
@@ -43,6 +46,18 @@ export function createProjectApi(csrf: string, onAuthError: (error: unknown) => 
     },
     async activity(id: string, cursor: string | null, signal?: AbortSignal): Promise<components["schemas"]["ActivityPage"]> {
       return (await request(`${path(id)}/activity${pageQuery(cursor)}`, { signal })).json();
+    },
+    async milestones(id: string, cursor: string | null, signal?: AbortSignal): Promise<components["schemas"]["MilestonePage"]> {
+      return (await request(`${path(id)}/milestones${pageQuery(cursor)}`, { signal })).json();
+    },
+    async milestone(id: string, milestoneId: string, signal?: AbortSignal) {
+      return record<MilestoneRecord>(await request(`${path(id)}/milestones/${encodeURIComponent(milestoneId)}`, { signal }));
+    },
+    async createMilestone(id: string, body: MilestoneCreate, key: string): Promise<components["schemas"]["MilestoneReceipt"]> {
+      return (await request(`${path(id)}/milestones`, write("POST", body, undefined, key))).json();
+    },
+    async updateMilestone(id: string, milestoneId: string, body: MilestonePatch, version: number) {
+      return record<MilestoneRecord>(await request(`${path(id)}/milestones/${encodeURIComponent(milestoneId)}`, write("PATCH", body, version)));
     },
     async areas(cursor: string | null, signal?: AbortSignal): Promise<components["schemas"]["AreaPage"]> {
       return (await request(`/operational-areas${pageQuery(cursor)}`, { signal })).json();

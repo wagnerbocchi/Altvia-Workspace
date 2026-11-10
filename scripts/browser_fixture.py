@@ -113,6 +113,18 @@ with Session(engine) as db, db.begin():
         ]:
             set_project_access(db, member_accounts[kind][0], member_project.id, role)
         contact_accounts = {}
+        milestone_accounts = {
+            "MANAGER": work_accounts["MANAGER"],
+            "READER": work_accounts["READER"],
+            "HIDDEN": member_accounts["HIDDEN"][:2],
+        }
+        milestone_project = Project(
+            name="Projeto de marcos - Validacao", scope_kind="internal", team_id=work_team.id
+        )
+        db.add(milestone_project)
+        db.flush()
+        for kind, role in [("MANAGER", "project_manager"), ("READER", "viewer")]:
+            set_project_access(db, milestone_accounts[kind][0], milestone_project.id, role)
         for kind in ["MANAGER", "VIEWER", "HIDDEN"]:
             contact_email = f"browser-contact-{kind.lower()}-{secrets.token_hex(8)}@example.invalid"
             contact_password = secrets.token_urlsafe(30)
@@ -159,6 +171,7 @@ with Session(engine) as db, db.begin():
         )
         with Path(".env.browser-session").open("a", encoding="utf-8") as target:
             target.write(f"ALTVIA_E2E_MEMBER_PROJECT_ID={member_project.id}\n")
+            target.write(f"ALTVIA_E2E_MILESTONE_PROJECT_ID={milestone_project.id}\n")
             for kind, (member_email, member_password, member_id) in member_accounts.items():
                 target.write(
                     f"ALTVIA_E2E_MEMBER_{kind}_EMAIL={member_email}\n"
@@ -197,4 +210,15 @@ if not os.environ.get("ALTVIA_E2E_EXPIRE") and not os.environ.get("ALTVIA_E2E_DI
                 )
             target.write(f"ALTVIA_E2E_MEMBER_{kind}_SESSION={token}\n")
     Path(".env.browser-session").chmod(0o600)
+    with Path(".env.browser-session").open("a", encoding="utf-8") as target:
+        for kind, (milestone_email, milestone_password) in milestone_accounts.items():
+            with Session(engine) as db:
+                _, _, token = login(
+                    db,
+                    milestone_email,
+                    milestone_password,
+                    "milestone-fixture",
+                    "milestone_fixture_session",
+                )
+            target.write(f"ALTVIA_E2E_MILESTONE_{kind}_SESSION={token}\n")
 engine.dispose()

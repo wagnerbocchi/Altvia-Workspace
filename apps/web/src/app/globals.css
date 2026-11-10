@@ -141,6 +141,7 @@ dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 .loading-rows > span { display: block; height: 12px; width: 70%; max-width: 440px; margin-top: 20px; background: var(--notice-ground); border-radius: 4px; }
 .access-surface { margin-inline: auto; }
 .workspace-main > div:has(.task-discovery-workspace) { width: 100%; }
+.workspace-main > div:has(.milestone-workspace) { width: 100%; }
 .task-filters { display: grid; gap: 20px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
 .task-filter-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 20px; margin-top: 20px; }
 .task-filter-details summary { cursor: pointer; min-height: 44px; padding-block: 10px; color: var(--primary); font-weight: 600; }

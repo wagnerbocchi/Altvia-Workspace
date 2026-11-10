@@ -17,7 +17,7 @@ export function ProjectMembers({ id, api }: { id: string; api: ProjectApi }) {
 export function ProjectHistory({ id, api }: { id: string; api: ProjectApi }) {
   const paging = usePaging();
   const query = useQuery({ queryKey: ["project-activity", id, paging.cursor], queryFn: ({ signal }) => api.activity(id, paging.cursor, signal) });
-  const labels: Record<string, string> = { "project.created": "Projeto cadastrado", "project.updated": "Projeto atualizado", "project.access_changed": "Acesso ao projeto alterado" };
+  const labels: Record<string, string> = { "project.created": "Projeto cadastrado", "project.updated": "Projeto atualizado", "project.access_changed": "Acesso ao projeto alterado", "project.milestone_created": "Marco cadastrado", "project.milestone_updated": "Marco atualizado" };
   return <section className="admin-section" aria-labelledby="project-history-heading"><h2 id="project-history-heading">Histórico do projeto</h2>
     <p className="field-help">Alterações deste projeto, da mais recente à mais antiga. Os horários seguem o seu dispositivo.</p>
     <Button variant="outline" disabled={query.isFetching} onClick={() => { paging.reset(); void query.refetch(); }}>Atualizar histórico</Button>

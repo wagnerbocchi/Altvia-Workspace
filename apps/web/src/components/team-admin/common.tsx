@@ -35,6 +35,7 @@ export function Paging({ paging, next, label, disabled = false }: {
     contas: ["Contas anteriores", "Próximas contas"], acessos: ["Acessos anteriores", "Próximos acessos"],
     atividades: ["Atividades anteriores", "Próximas atividades"],
     contatos: ["Contatos anteriores", "Próximos contatos"],
+    marcos: ["Marcos anteriores", "Proximos marcos"],
   };
   const [previousLabel, nextLabel] = labels[aliases[label] ?? label] ?? ["Participantes anteriores", "Próximos participantes"];
   return <nav className="paging" aria-label={`Páginas de ${label}`}>

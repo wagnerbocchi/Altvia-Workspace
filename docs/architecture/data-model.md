@@ -147,7 +147,7 @@ ticket project, milestone, graph table or future membership-write API is precrea
 | project_milestones | ADR-0024/Phase 2G: project_id FK, title1..300, planned/done/cancelled, own positive version/UTC timestamps, due_at/precision/local-date/timezone as work deadlines; UUID parent index; no physical delete or task-state coupling |
 | work_items | project_id NOT NULL, parent_id nullable, owner_id nullable, title 1..300, description, status, work_type, priority, due_at, due_date_local nullable DATE, due_precision date/instant, due_timezone, started_at, completed_at, completion_time_known, blocked_reason, estimated_minutes >=0, version |
 | work_item_assignees | PK(work_item_id,user_id), participant_role; owner stored separately, visible involvement total counts distinct users |
-| work_item_external_participants | work_item_id, client_contact_id nullable, unresolved_label; CHECK known contact XOR unresolved label; no automatic login rights |
+| work_item_external_participants | Phase 2H: PK(work_item_id,unresolved_label), label 1..150 Unicode code points, trimmed/no CR/LF; task-owned unverified attribution only, max50 via API; no contact/user association or login rights (ADR-0025) |
 | work_item_dependencies | PK(item_id,depends_on_id), no self-reference or cycle; both ends same project initially |
 | work_item_comments | work_item_id, author_id nullable, body, source/import_row_id nullable, visibility internal; imported authors may be unknown |
 | work_item_status_history | work_item_id, from/to, actor_id nullable, occurred_at nullable, recorded_at, source_precision; immutable |

@@ -341,6 +341,17 @@ No permission field, number, actor, version or audit timestamp is client-writabl
 
 ## Endpoint contracts
 
+### Phase 2H external task involvement
+
+ADR-0025 expands existing WorkCreate/Patch/Output with external_participants:
+string[]. Maximum50 trimmed distinct exact labels, each1..150 Unicode code points,
+no NUL/CR/LF. Create defaults []; PATCH omission preserves, [] clears, null fails422.
+Managers alone may submit the field on PATCH, including no-op values. Agent create
+requires an empty list. Responses sort labels by code point and expose no linked
+contact/account identity. Existing create fingerprints omit an empty field; legacy
+transition output receipts default the new field to []. External-only updates
+remain work_item.updated and redact labels from audit/outbox/activity.
+
 ### Phase 2D selected task discovery contract
 
 ADR-0021 defines the incremental GET /work-items filters and GET /my-work task-only

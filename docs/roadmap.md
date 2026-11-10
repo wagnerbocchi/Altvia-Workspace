@@ -60,6 +60,12 @@ entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
+Phase 2H selected before code: ADR-0025 and
+docs/plans/2026-11-10-external-work-participants.md define bounded task-owned
+external labels, manager-only writes, no identity/contact/grant inference and
+legacy replay compatibility. Reuse work authorization, versions, persistence and
+redacted events. No new service/dependency or per-slice target homologation.
+
 Phase 2G implements basic persisted project milestones under ADR-0024 and
 docs/plans/2026-11-10-project-milestones.md, contracted before code in 83c0858.
 Backend 14bee57 and browser 128a718 reuse project ACL, versions/protected replay,
@@ -162,6 +168,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-15 | Resolved: owner authorized workstation public-key registration, remote Codex login and project registration; fresh noninteractive Windows SSH and actual Phase 2D qualification passed | Reuse agent-backed key with strict known-host checks; one connection per stage because native Windows multiplexing failed its probe; preserve previous environments and server security | None for current qualification; key removal, agent restart or changed host identity may require user action |
 | Q-16 | Support/security owner: trusted contact verification, international mailbox/IDNA and authenticated sender correlation policy | Contacts remain server-only unverified, bounded ASCII mailboxes; no send, account linking, portal grant or client selection by email alone | Future actual email/verification acceptance; registry work can proceed |
 | Q-17 | Engineering: diagnose Windows full-browser intermittency; one current task lifecycle run timed out with a connection-error screen, and older axe failure has no established cause | Preserve complete failed logs; affected 11, complete hosted 67 and actual packaged target passed; no relaxed caps/timeouts or claimed root-cause fix | Local runner reliability; no open member acceptance failure on the qualified target |
+| Q-18 | Product/security: whether task-owned external labels should later associate with client contacts, and how to preserve their distinct read scopes | Bounded supplied labels only, including internal projects; no contact lookup, matching, account creation or content grant | Future association policy only; Phase 2H can proceed |
 
 ## Backlog after core
 

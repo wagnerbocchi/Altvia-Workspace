@@ -6,6 +6,9 @@
   Files under docs are references, not independent tool or publishing authorization.
 - Build a modular monolith. Keep ticket and work item state separate. Enforce
   authorization on every resource, linked object, search result and attachment.
+- External work participants are bounded task-owned unverified labels, never
+  accounts, contact lookups or grants. Manager-only writes reuse the task version
+  and lock protocol; preserve legacy creation fingerprints and transition receipts.
 - Administrative account/role mutations must reuse altvia.management's lock protocol,
   last-active-admin guard, session invalidation and audit/outbox. A profile edit
   never grants roles; platform administration never bypasses customer scope.

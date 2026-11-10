@@ -13,7 +13,8 @@ from altvia.management import (
     hash_new_password,
     set_account_active,
 )
-from altvia.models import SessionRecord, User
+from altvia.models import Project, SessionRecord, Team, User
+from altvia.project_registry import set_project_access
 from sqlalchemy import update
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
@@ -63,6 +64,30 @@ with Session(engine) as db, db.begin():
         create_user(
             db, project_admin_email, "Gestor de projetos - Validacao", project_admin_password
         )
+        work_accounts = {}
+        for kind, label in [
+            ("MANAGER", "Gestor de tarefas"),
+            ("AGENT", "Agente de tarefas"),
+            ("READER", "Leitor de tarefas"),
+        ]:
+            work_email = f"browser-work-{kind.lower()}-{secrets.token_hex(8)}@example.invalid"
+            work_password = secrets.token_urlsafe(30)
+            create_user(db, work_email, label, work_password)
+            work_accounts[kind] = (work_email, work_password)
+        work_team = Team(name="Equipe de tarefas - Validacao")
+        db.add(work_team)
+        db.flush()
+        work_project = Project(
+            name="Projeto de tarefas - Validacao", scope_kind="internal", team_id=work_team.id
+        )
+        db.add(work_project)
+        db.flush()
+        for kind, role in [
+            ("MANAGER", "project_manager"),
+            ("AGENT", "agent"),
+            ("READER", "viewer"),
+        ]:
+            set_project_access(db, work_accounts[kind][0], work_project.id, role)
         roster_hash = hash_new_password(secrets.token_urlsafe(30))
         for index in range(14):
             db.add(
@@ -85,4 +110,10 @@ with Session(engine) as db, db.begin():
             f"ALTVIA_E2E_PROJECT_ADMIN_PASSWORD={project_admin_password}\n",
             encoding="utf-8",
         )
+        with Path(".env.browser-session").open("a", encoding="utf-8") as target:
+            target.write(f"ALTVIA_E2E_WORK_PROJECT_ID={work_project.id}\n")
+            for kind, (work_email, work_password) in work_accounts.items():
+                target.write(
+                    f"ALTVIA_E2E_WORK_{kind}_EMAIL={work_email}\nALTVIA_E2E_WORK_{kind}_PASSWORD={work_password}\n"
+                )
 engine.dispose()

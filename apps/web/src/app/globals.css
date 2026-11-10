@@ -40,10 +40,10 @@ html { min-width: 320px; background: var(--ground); scrollbar-color: var(--line)
 body { margin: 0; color: var(--ink); font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: 16px; line-height: 1.5; }
 ::selection { background: var(--primary); color: var(--surface); }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
-button, input, select { font: inherit; }
+button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: wait; opacity: .65; }
-input { caret-color: var(--primary); }
+input, textarea { caret-color: var(--primary); }
 .app-shell { min-height: 100svh; display: flex; flex-direction: column; }
 .masthead { display: flex; align-items: center; gap: 24px; min-height: 80px; padding: 16px clamp(20px, 5vw, 72px); background: var(--header); color: var(--header-text); }
 .brand { font-size: 24px; font-weight: 700; letter-spacing: -.025em; white-space: nowrap; }
@@ -61,7 +61,20 @@ h1 { margin: 0 0 10px; font-size: 28px; line-height: 1.2; font-weight: 650; lett
 .intro { margin: 0 0 32px; color: var(--muted); }
 .field { margin-bottom: 24px; }
 label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
-input, select { display: block; width: 100%; min-height: 48px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); padding: 10px 12px; }
+input, select, textarea { display: block; width: 100%; min-height: 48px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); padding: 10px 12px; }
+textarea { resize: vertical; }
+.work-fields { border: 0; margin: 0; padding: 0; min-width: 0; }
+.work-description, .work-participants { margin-top: 28px; }
+.work-participants { margin-bottom: 28px; }
+.work-participants > .button, .work-comment-form > .button { margin-top: 16px; }
+.work-comment-form { margin-bottom: 32px; }
+.work-prose { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 75ch; }
+.admin-workspace h3.work-subheading { margin-top: 28px; }
+.work-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 24px; }
+.account-details.work-facts div + div { margin-top: 0; }
+.work-transition-action { margin-top: 20px; }
+.work-checkbox { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
+.work-checkbox input { width: 20px; min-height: 20px; accent-color: var(--primary); }
 input::placeholder { color: var(--muted); opacity: 1; }
 input[aria-invalid="true"] { border-color: var(--error); }
 .password-wrap { position: relative; }

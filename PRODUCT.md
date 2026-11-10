@@ -47,13 +47,19 @@ Further customer access changes use the restricted host CLI. Phase 2B implements
 internal/customer projects, explicit initial managers, scoped metadata lifecycle,
 operational classification, real members and project-only history under ADR-0019.
 Creation controls follow current API creation authority independently of pagination.
-Further project role/membership changes use the restricted host CLI. Contacts,
-tasks, default ticket projects and Service Desk remain future deliveries.
+Further project role/membership changes use the restricted host CLI. Phase 2C
+adds persisted tasks/subtasks, explicit owners/participants, precise deadlines,
+deliberate state transitions, ongoing termination, internal comments and scoped
+history under ADR-0020. Assignment never grants content access. Agents edit only
+owned/participating work; managers assign/reparent; viewers remain read-only.
+Protected writes preserve original intents and expose deliberate recovery.
+Task-core qualification is in progress; Kanban/search/My Work, contacts, default
+ticket projects and Service Desk remain subsequent deliveries.
 HTTPS, secure HttpOnly cookies, Origin/CSRF checks and no browser auth-token
 storage are required. Keyboard access, visible focus, responsive layout and
 dark/light themes are required. All mandatory runtime dependencies must support
 x86-64-v1. The current five-image Foundation stack passed on the supplied target
-VM, including the Phase 2A client increment in docs/phase-2a-client-evidence.md;
+VM, including the Phase 2B project/area increment in docs/phase-2b-project-evidence.md;
 changed or future mandatory native artifacts require repeated qualification.
 Representative capacity and production readiness remain open. No Elasticsearch/OpenSearch.
 

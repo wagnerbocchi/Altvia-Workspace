@@ -25,8 +25,11 @@ export function usePaging() {
 export function Paging({ paging, next, label, disabled = false }: {
   paging: ReturnType<typeof usePaging>; next?: string | null; label: string; disabled?: boolean;
 }) {
-  const aliases: Record<string, string> = { "cliente do projeto": "clientes", "equipe responsável": "equipes", "área do projeto": "áreas", "gestor inicial": "contas" };
+  const aliases: Record<string, string> = { "cliente do projeto": "clientes", "equipe responsável": "equipes", "área do projeto": "áreas", "gestor inicial": "contas", "tarefa principal": "tarefas", "responsável": "colaboradores", "adicionar envolvido": "colaboradores" };
   const labels: Record<string, [string, string]> = {
+    tarefas: ["Tarefas anteriores", "Próximas tarefas"], comentários: ["Comentários anteriores", "Próximos comentários"],
+    colaboradores: ["Colaboradores anteriores", "Próximos colaboradores"],
+    "mudanças de estado": ["Estados anteriores", "Próximos estados"],
     projetos: ["Projetos anteriores", "Próximos projetos"], áreas: ["Áreas anteriores", "Próximas áreas"],
     clientes: ["Clientes anteriores", "Próximos clientes"], equipes: ["Equipes anteriores", "Próximas equipes"],
     contas: ["Contas anteriores", "Próximas contas"], acessos: ["Acessos anteriores", "Próximos acessos"],

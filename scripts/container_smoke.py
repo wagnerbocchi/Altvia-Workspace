@@ -1050,7 +1050,8 @@ with Session(make_engine(WorkerSettings())) as db:
             assert client.get(path).json()["name"] == "Visible"
             # Explicit client and project delegations each advance the manager's
             # account version once, from 10 to 12.
-            assert client.get(account_path).json()["version"] == 12
+            # The member grant, role change and removal then advance 12 to 15.
+            assert client.get(account_path).json()["version"] == 15
             assert client.get("/api/v1/auth/me").status_code == 200
             run([*compose, "stop", "postgres"])
             assert client.get("/api/v1/health/ready").status_code == 503

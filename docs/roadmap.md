@@ -394,3 +394,4 @@ native mobile and local AI remain outside MVP. No speculative code for backlog.
 - Future implementation entries must include commit, exact commands/results,
   target artifact/host when relevant and outstanding gates. Do not mark a phase
   done merely because the documentation or a subset of tests is complete.
+Phase 3A selected before code in ADR-0026 and docs/plans/2026-11-10-service-desk-queues.md. Implement scoped persisted team-owned queue/category configuration first. Ticket content grants, lifecycle, messages/files and transports follow as bounded slices. Current mailbox/provider questions remain Q-03/Q-16.

@@ -16,7 +16,11 @@ MAILBOX = re.compile(rf"{ATOM}(?:\.{ATOM})*@{LABEL}(?:\.{LABEL})+", re.ASCII)
 
 
 def normalize_contact_email(value: object) -> str:
-    if not isinstance(value, str) or any(ord(c) < 32 or ord(c) == 127 for c in value):
+    if (
+        not isinstance(value, str)
+        or not value.isascii()
+        or any(ord(c) < 32 or ord(c) == 127 for c in value)
+    ):
         raise ValueError("Invalid contact email")
     normalized = identity.normalize_email(value)
     if MAILBOX.fullmatch(normalized) is None or len(normalized.split("@")[0]) > 64:

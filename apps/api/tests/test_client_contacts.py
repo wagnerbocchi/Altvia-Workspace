@@ -187,12 +187,35 @@ def test_platform_admin_and_partial_client_grants_never_read_contacts(
         "a@-example.test",
         "a@example..test",
         "á@example.test",
+        "a@straße.test",
+        "K@example.test",
         "a@example.test\x00",
     ],
 )
 def test_contact_email_rejects_non_mailbox_input(admin_client, seeded_user, email):
     identifier = managed(admin_client, seeded_user)
     assert create_contact(admin_client, identifier, email).status_code == 422
+
+
+@pytest.mark.parametrize("email", ["a@straße.test", "K@example.test"])
+def test_contact_patch_rejects_unicode_before_casefold_without_state_changes(
+    admin_client, seeded_user, db_engine, email
+):
+    identifier = managed(admin_client, seeded_user)
+    receipt = create_contact(admin_client, identifier)
+    assert receipt.status_code == 201
+    path = contacts(identifier) + "/" + receipt.json()["contact_id"]
+    before = admin_client.get(path).json()
+    parent = admin_client.get(f"/api/v1/clients/{identifier}").json()
+    with Session(db_engine) as db:
+        events = db.scalar(select(func.count()).select_from(OutboxEvent))
+    assert (
+        admin_client.patch(path, json={"email": email}, headers=preconditions()).status_code == 422
+    )
+    assert admin_client.get(path).json() == before
+    assert admin_client.get(f"/api/v1/clients/{identifier}").json() == parent
+    with Session(db_engine) as db:
+        assert db.scalar(select(func.count()).select_from(OutboxEvent)) == events
 
 
 @pytest.mark.parametrize(

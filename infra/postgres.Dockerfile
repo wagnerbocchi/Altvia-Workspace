@@ -15,7 +15,7 @@ RUN go mod download \
     && go version -m /out/gosu
 
 FROM postgres@sha256:4717f90960a225c2d1c5dac50508c401230f693ff626e06e84e6db0a68ded508
-RUN apk add --no-cache --upgrade zlib=1.4-r0
+RUN apk add --no-cache --upgrade zlib=1.4-r0 krb5-libs=1.22.3-r0 libxslt=1.1.43-r4
 COPY --from=gosu /out/gosu /usr/local/bin/gosu
 COPY infra/start-postgres.sh /usr/local/bin/altvia-postgres-entrypoint.sh
 COPY infra/postgres-runtime-marker.sh /docker-entrypoint-initdb.d/00-altvia-runtime.sh

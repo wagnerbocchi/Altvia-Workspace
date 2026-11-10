@@ -154,6 +154,42 @@ created by this interface. Global auth capability output remains unchanged.
 
 ## Domain resource schemas
 
+### Work item core (ADR-0020)
+
+This slice adds real /api/v1/work-items and project work-candidates, with the
+strict WorkCreate/WorkPatch/Transition schemas in generated OpenAPI. GET collection
+requires project_id, UUID cursor and limit 1..100/default50. All reads reuse the
+actual project scope, never team metadata or global administration. The page's
+can_create/can_manage describe role authority independently of pagination;
+project_writable separately describes current project/customer/team availability.
+
+Creation uses Idempotency-Key and returns only {work_item_id,project_id}.
+PATCH requires If-Match and cannot alter status/work_type/project_id. Transition
+and comment POSTs require both If-Match and Idempotency-Key. Current authority
+is checked before replay; saved effects ignore later version/reference changes
+without repeating the mutation. Transition replay retains its recorded version
+but refreshes authority/availability flags; clients refetch current state.
+New work mutations require active project/customer/team. Candidates are active
+manager/agent contributors with current scope; no account emails are returned.
+Only managers assign/reparent; agents create self-owned work and edit/transition
+only current owned/participating work. Assignment is never a grant.
+
+GET detail returns ETag, plain text, owner_name and linked assignees (IDs/display
+names), precise due data and current capability flags. Names come from actual
+assignment links, including former contributors, not an unrestricted directory.
+GET comments is chronological by created_at/ID and has a scoped timestamp cursor.
+GET status-history is immutable, descending version order with scoped version
+cursor, and includes original transition reasons. GET activity uses existing
+scoped descending timestamp/event-ID pagination. Bodies/reasons never enter the
+worker's safe event payload. Parent and assignment changes are atomic with task
+version/audit/outbox; no parent-child state cascade or ticket state coupling.
+
+Date-only deadlines retain the source date/zone and exclusive next-local-day
+boundary. PostgreSQL validates known zones and rejects skipped dates. Numeric
+epoch coercion is rejected; instant precision requires an aware ISO timestamp.
+No recurrence, dependency graph, Kanban, FTS, My Work or import is supplied by
+this task-core slice. Complete-product routes below remain separate contracts.
+
 ### Implemented projects and operational areas (ADR-0019)
 
 The Phase 2B registry uses the /api/v1 prefix and the existing secure session,

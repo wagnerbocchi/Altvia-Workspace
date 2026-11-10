@@ -10,14 +10,14 @@ RESOURCE = Resource(client_id=C, project_id=P, team_id=T, queue_id=Q, owner_id=U
 @pytest.mark.parametrize(
     ("role", "scope", "scope_id", "action", "clients", "projects", "expected"),
     [
-        ("operations_manager", "team", T, "work.update", {C}, set(), True),
+        ("operations_manager", "team", T, "work.update", {C}, set(), False),
         ("operations_manager", "team", T, "work.read", set(), set(), False),
         ("operations_manager", "team", OTHER, "work.read", {C}, set(), False),
-        ("project_manager", "project", P, "work.update", {C}, set(), True),
+        ("project_manager", "project", P, "work.update", {C}, set(), False),
         ("project_manager", "project", P, "ticket.reply", {C}, set(), False),
         ("agent", "project", P, "work.update", {C}, {P}, True),
         ("agent", "project", P, "work.update", {C}, set(), False),
-        ("viewer", "project", P, "work.read", {C}, set(), True),
+        ("viewer", "project", P, "work.read", {C}, set(), False),
         ("viewer", "project", P, "work.update", {C}, set(), False),
         ("platform_admin", "global", None, "work.read", {C}, {P}, False),
         ("agent", "queue", Q, "ticket.reply", {C}, set(), True),

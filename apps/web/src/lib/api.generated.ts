@@ -264,6 +264,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/projects/{project_id}/work-candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Contributors */
+        get: operations["contributors_api_v1_projects__project_id__work_candidates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/teams": {
         parameters: {
             query?: never;
@@ -439,6 +456,111 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/work-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listing */
+        get: operations["listing_api_v1_work_items_get"];
+        put?: never;
+        /** Create */
+        post: operations["create_api_v1_work_items_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-items/{identifier}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detail */
+        get: operations["detail_api_v1_work_items__identifier__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch */
+        patch: operations["patch_api_v1_work_items__identifier__patch"];
+        trace?: never;
+    };
+    "/api/v1/work-items/{identifier}/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** History */
+        get: operations["history_api_v1_work_items__identifier__activity_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-items/{identifier}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Comments */
+        get: operations["comments_api_v1_work_items__identifier__comments_get"];
+        put?: never;
+        /** Comment */
+        post: operations["comment_api_v1_work_items__identifier__comments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-items/{identifier}/status-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** States */
+        get: operations["states_api_v1_work_items__identifier__status_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-items/{identifier}/transitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Transition */
+        post: operations["transition_api_v1_work_items__identifier__transitions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -532,6 +654,23 @@ export interface components {
             /** Name */
             name?: string;
         };
+        /** Candidate */
+        Candidate: {
+            /** Display Name */
+            display_name: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+        };
+        /** CandidatePage */
+        CandidatePage: {
+            /** Items */
+            items: components["schemas"]["Candidate"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
         /** ClientCreate */
         ClientCreate: {
             /**
@@ -595,10 +734,75 @@ export interface components {
             /** Name */
             name?: string;
         };
+        /** CommentCreate */
+        CommentCreate: {
+            /** Body */
+            body: string;
+        };
+        /** CommentOutput */
+        CommentOutput: {
+            /**
+             * Author Id
+             * Format: uuid
+             */
+            author_id: string;
+            /** Body */
+            body: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Work Item Id
+             * Format: uuid
+             */
+            work_item_id: string;
+        };
+        /** CommentPage */
+        CommentPage: {
+            /** Items */
+            items: components["schemas"]["CommentOutput"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** DateDue */
+        DateDue: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            precision: "date";
+            /** Timezone */
+            timezone: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** InstantDue */
+        InstantDue: {
+            /**
+             * Instant
+             * Format: date-time
+             */
+            instant: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            precision: "instant";
         };
         /** LoginInput */
         LoginInput: {
@@ -788,6 +992,42 @@ export interface components {
             /** Operational Area Id */
             operational_area_id?: string | null;
         };
+        /** StateOutput */
+        StateOutput: {
+            /**
+             * Actor Id
+             * Format: uuid
+             */
+            actor_id: string;
+            /** From Status */
+            from_status: ("todo" | "in_progress" | "blocked" | "done" | "cancelled") | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            /** Reason */
+            reason: string | null;
+            /**
+             * To Status
+             * @enum {string}
+             */
+            to_status: "todo" | "in_progress" | "blocked" | "done" | "cancelled";
+            /** Version */
+            version: number;
+        };
+        /** StatePage */
+        StatePage: {
+            /** Items */
+            items: components["schemas"]["StateOutput"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
         /** TeamCreate */
         TeamCreate: {
             /** Name */
@@ -875,6 +1115,21 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** Transition */
+        Transition: {
+            /**
+             * End Operation
+             * @default false
+             */
+            end_operation: boolean;
+            /** Reason */
+            reason?: string | null;
+            /**
+             * Target Status
+             * @enum {string}
+             */
+            target_status: "todo" | "in_progress" | "blocked" | "done" | "cancelled";
+        };
         /** UserAdminOutput */
         UserAdminOutput: {
             /** Active */
@@ -959,6 +1214,160 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** WorkCreate */
+        WorkCreate: {
+            /** Assignee Ids */
+            assignee_ids?: string[];
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /** Due */
+            due?: (components["schemas"]["DateDue"] | components["schemas"]["InstantDue"]) | null;
+            /** Estimated Minutes */
+            estimated_minutes?: number | null;
+            /** Owner Id */
+            owner_id?: string | null;
+            /** Parent Id */
+            parent_id?: string | null;
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "low" | "medium" | "high" | "critical";
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Title */
+            title: string;
+            /**
+             * Work Type
+             * @enum {string}
+             */
+            work_type: "one_off" | "ongoing";
+        };
+        /** WorkOutput */
+        WorkOutput: {
+            /** Assignee Ids */
+            assignee_ids: string[];
+            /** Assignees */
+            assignees: components["schemas"]["Candidate"][];
+            /** Blocked Reason */
+            blocked_reason: string | null;
+            /** Can Comment */
+            can_comment: boolean;
+            /** Can Manage */
+            can_manage: boolean;
+            /** Can Update */
+            can_update: boolean;
+            /** Completed At */
+            completed_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Description */
+            description: string;
+            /** Due */
+            due: (components["schemas"]["DateDue"] | components["schemas"]["InstantDue"]) | null;
+            /** Due At */
+            due_at: string | null;
+            /** Estimated Minutes */
+            estimated_minutes: number | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Owner Id */
+            owner_id: string | null;
+            /** Owner Name */
+            owner_name: string | null;
+            /** Parent Id */
+            parent_id: string | null;
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "low" | "medium" | "high" | "critical";
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Project Writable */
+            project_writable: boolean;
+            /** Started At */
+            started_at: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "todo" | "in_progress" | "blocked" | "done" | "cancelled";
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+            /**
+             * Work Type
+             * @enum {string}
+             */
+            work_type: "one_off" | "ongoing";
+        };
+        /** WorkPage */
+        WorkPage: {
+            /** Can Create */
+            can_create: boolean;
+            /** Can Manage */
+            can_manage: boolean;
+            /** Items */
+            items: components["schemas"]["WorkOutput"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Project Writable */
+            project_writable: boolean;
+        };
+        /** WorkPatch */
+        WorkPatch: {
+            /** Assignee Ids */
+            assignee_ids?: string[] | null;
+            /** Description */
+            description?: string | null;
+            /** Due */
+            due?: (components["schemas"]["DateDue"] | components["schemas"]["InstantDue"]) | null;
+            /** Estimated Minutes */
+            estimated_minutes?: number | null;
+            /** Owner Id */
+            owner_id?: string | null;
+            /** Parent Id */
+            parent_id?: string | null;
+            /** Priority */
+            priority?: ("low" | "medium" | "high" | "critical") | null;
+            /** Title */
+            title?: string | null;
+        };
+        /** WorkReceipt */
+        WorkReceipt: {
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Work Item Id
+             * Format: uuid
+             */
+            work_item_id: string;
         };
     };
     responses: never;
@@ -1620,6 +2029,40 @@ export interface operations {
             };
         };
     };
+    contributors_api_v1_projects__project_id__work_candidates_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandidatePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_teams_api_v1_teams_get: {
         parameters: {
             query?: {
@@ -2148,6 +2591,320 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserAdminOutput"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listing_api_v1_work_items_get: {
+        parameters: {
+            query: {
+                project_id: string;
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_api_v1_work_items_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detail_api_v1_work_items__identifier__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOutput"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_api_v1_work_items__identifier__patch: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+            };
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOutput"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    history_api_v1_work_items__identifier__activity_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    comments_api_v1_work_items__identifier__comments_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommentPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    comment_api_v1_work_items__identifier__comments_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommentOutput"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    states_api_v1_work_items__identifier__status_history_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    transition_api_v1_work_items__identifier__transitions_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Transition"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkOutput"];
                 };
             };
             /** @description Validation Error */

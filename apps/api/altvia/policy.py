@@ -75,6 +75,24 @@ def can(principal: Principal, action: str, resource: Resource) -> bool:
                     return True
         return False
     work_actions = {"work.read", "work.create", "work.update", "work.transition", "work.comment"}
+    if action in work_actions:
+        if not can(principal, "project.read", resource):
+            return False
+        if action == "work.read" or can(principal, "project.manage", resource):
+            return True
+        agent = any(
+            binding.scope_kind == "project"
+            and binding.scope_id == resource.project_id
+            and binding.role == "agent"
+            and resource.project_id in principal.project_ids
+            for binding in principal.bindings
+        )
+        return agent and (
+            action in {"work.create", "work.comment"}
+            or (
+                principal.user_id == resource.owner_id or principal.user_id in resource.assignee_ids
+            )
+        )
     ticket_actions = {
         "ticket.read",
         "ticket.create",

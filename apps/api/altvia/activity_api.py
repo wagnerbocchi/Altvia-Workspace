@@ -1,7 +1,6 @@
 """Restricted administrative identity activity; no queue payload or audit-table access."""
 
-import base64
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
@@ -10,8 +9,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy import Engine, Select, select, tuple_
 from sqlalchemy.orm import Session
 
-from altvia import identity
-from altvia.admin_http import _collection_query, require_admin
+from altvia.admin_http import _collection_query, _next_time_cursor, _time_cursor, require_admin
 from altvia.config import Settings
 from altvia.models import ActivityEvent
 
@@ -45,27 +43,14 @@ def activity_page(
     query = query.order_by(ActivityEvent.occurred_at.desc(), ActivityEvent.event_id.desc()).limit(
         limit + 1
     )
-    if cursor is not None:
-        try:
-            raw = base64.b64decode(
-                cursor + "=" * (-len(cursor) % 4), altchars=b"-_", validate=True
-            ).decode("ascii")
-            bound_scope, instant, identifier = raw.split("|")
-            stamp, event_id = datetime.fromisoformat(instant), UUID(identifier)
-            if bound_scope != scope or stamp.tzinfo is None:
-                raise ValueError("Invalid cursor")
-            query = query.where(
-                tuple_(ActivityEvent.occurred_at, ActivityEvent.event_id) < (stamp, event_id)
-            )
-        except (ValueError, UnicodeError):
-            raise identity.IdentityError(422, "invalid_cursor") from None
+    bound = _time_cursor(cursor, scope)
+    if bound:
+        query = query.where(tuple_(ActivityEvent.occurred_at, ActivityEvent.event_id) < bound)
     rows = list(db.scalars(query))
     next_cursor = None
     if len(rows) > limit:
         last = rows[limit - 1]
-        instant = last.occurred_at.astimezone(UTC).isoformat()
-        raw = f"{scope}|{instant}|{last.event_id}"
-        next_cursor = base64.urlsafe_b64encode(raw.encode()).decode().rstrip("=")
+        next_cursor = _next_time_cursor(scope, last.occurred_at, last.event_id)
     return ActivityPage(
         items=[ActivityOutput.model_validate(row) for row in rows[:limit]], next_cursor=next_cursor
     )

@@ -11,6 +11,7 @@ from sqlalchemy import Engine, and_, or_, select
 from sqlalchemy.orm import Session
 
 from altvia.models import ActivityEvent, AuditLog, OutboxEvent, ProcessedEvent
+from altvia.work_schemas import WORK_TRANSITIONS
 
 CONSUMER = "identity_activity_v1"
 MAX_ATTEMPTS = 8
@@ -34,6 +35,47 @@ EVENT_TYPES = {
 CLIENT_EVENT_TYPES = {"client.created", "client.updated", "client.access_changed"}
 PROJECT_EVENT_TYPES = {"project.created", "project.updated", "project.access_changed"}
 AREA_EVENT_TYPES = {"operational_area.created", "operational_area.updated"}
+WORK_EVENT_TYPES = {
+    "work_item.created",
+    "work_item.updated",
+    "work_item.assigned",
+    "work_item.blocked",
+    "work_item.completed",
+    "work_item.status_changed",
+    "work_item.commented",
+}
+
+
+class WorkEventPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
+    actor_id: UUID | None
+    actor_kind: Literal["user", "management_command"]
+    project_id: UUID
+    changed_fields: str | None = Field(default=None, max_length=150)
+    from_status: Literal["todo", "in_progress", "blocked", "done", "cancelled"] | None = None
+    to_status: Literal["todo", "in_progress", "blocked", "done", "cancelled"] | None = None
+    comment_id: UUID | None = None
+
+    @model_validator(mode="after")
+    def valid_fields(self) -> "WorkEventPayload":
+        if (self.actor_kind == "user") != (self.actor_id is not None):
+            raise ValueError("Invalid actor")
+        if self.changed_fields is not None:
+            fields = self.changed_fields.split(",")
+            if len(fields) != len(set(fields)) or not set(fields).issubset(
+                {
+                    "title",
+                    "description",
+                    "priority",
+                    "parent_id",
+                    "owner_id",
+                    "assignee_ids",
+                    "due",
+                    "estimated_minutes",
+                }
+            ):
+                raise ValueError("Invalid changed fields")
+        return self
 
 
 class EventPayload(BaseModel):
@@ -159,7 +201,11 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
             return False
         if (
             event.event_type
-            not in EVENT_TYPES | CLIENT_EVENT_TYPES | PROJECT_EVENT_TYPES | AREA_EVENT_TYPES
+            not in EVENT_TYPES
+            | CLIENT_EVENT_TYPES
+            | PROJECT_EVENT_TYPES
+            | AREA_EVENT_TYPES
+            | WORK_EVENT_TYPES
             or event.schema_version != 1
         ):
             event.status, event.last_error_code, event.lease_until = (
@@ -169,8 +215,49 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
             )
             return False
         try:
-            payload: EventPayload | ClientEventPayload | RegistryEventPayload
-            if event.event_type in PROJECT_EVENT_TYPES | AREA_EVENT_TYPES:
+            payload: EventPayload | ClientEventPayload | RegistryEventPayload | WorkEventPayload
+            if event.event_type in WORK_EVENT_TYPES:
+                payload = WorkEventPayload.model_validate(event.payload)
+                fields = set(payload.model_dump(exclude_none=True)) - {
+                    "actor_id",
+                    "actor_kind",
+                    "project_id",
+                }
+                expected_work_fields = (
+                    {"changed_fields"}
+                    if event.event_type in {"work_item.updated", "work_item.assigned"}
+                    else {"comment_id"}
+                    if event.event_type == "work_item.commented"
+                    else set()
+                    if event.event_type == "work_item.created"
+                    else {"from_status", "to_status"}
+                )
+                if (
+                    fields != expected_work_fields
+                    or (event.event_type == "work_item.blocked" and payload.to_status != "blocked")
+                    or (event.event_type == "work_item.completed" and payload.to_status != "done")
+                ):
+                    raise ValueError("Invalid work event")
+                if payload.changed_fields is not None:
+                    assigned = bool(
+                        set(payload.changed_fields.split(",")) & {"owner_id", "assignee_ids"}
+                    )
+                    if assigned != (event.event_type == "work_item.assigned"):
+                        raise ValueError("Mismatched assignment event")
+                if payload.from_status is not None:
+                    expected_work_event = (
+                        "work_item.completed"
+                        if payload.to_status == "done"
+                        else "work_item.blocked"
+                        if payload.to_status == "blocked"
+                        else "work_item.status_changed"
+                    )
+                    if (
+                        payload.to_status not in WORK_TRANSITIONS[payload.from_status]
+                        or event.event_type != expected_work_event
+                    ):
+                        raise ValueError("Invalid transition event")
+            elif event.event_type in PROJECT_EVENT_TYPES | AREA_EVENT_TYPES:
                 payload = RegistryEventPayload.model_validate(event.payload)
                 resource = (
                     "project" if event.event_type in PROJECT_EVENT_TYPES else "operational_area"
@@ -207,7 +294,7 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                 payload = EventPayload.model_validate(event.payload)
             if (
                 event.aggregate_type
-                not in {"identity", "team", "client", "project", "operational_area"}
+                not in {"identity", "team", "client", "project", "operational_area", "work_item"}
                 or event.aggregate_version < 1
                 or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", event.correlation_id)
             ):
@@ -219,7 +306,9 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                 "identity.team_member_removed",
             }
             expected_resource = (
-                "project"
+                "work_item"
+                if event.event_type in WORK_EVENT_TYPES
+                else "project"
                 if event.event_type in PROJECT_EVENT_TYPES
                 else "operational_area"
                 if event.event_type in AREA_EVENT_TYPES

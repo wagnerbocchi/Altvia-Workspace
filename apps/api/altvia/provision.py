@@ -29,6 +29,8 @@ CRUD_TABLES = (
     "operational_areas",
     "projects",
     "project_members",
+    "work_items",
+    "work_item_assignees",
 )
 
 
@@ -38,6 +40,8 @@ ROLE_PRIVILEGES = {
         "audit_logs": {"INSERT"},
         "outbox_events": {"INSERT"},
         "activity_events": {"SELECT"},
+        "work_item_comments": {"SELECT", "INSERT"},
+        "work_item_status_history": {"SELECT", "INSERT"},
     },
     "altvia_worker": {
         "outbox_events": {"SELECT"},

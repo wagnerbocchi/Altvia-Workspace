@@ -23,6 +23,7 @@ from altvia.observability import configure_logging
 from altvia.project_api import create_project_router
 from altvia.team_api import create_team_router
 from altvia.user_api import create_user_router
+from altvia.work_api import create_work_router
 
 
 class LoginInput(BaseModel):
@@ -188,4 +189,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(create_activity_router(engine, config))
     app.include_router(create_client_router(engine, config))
     app.include_router(create_project_router(engine, config))
+    app.include_router(create_work_router(engine, config))
     return app

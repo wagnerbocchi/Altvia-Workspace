@@ -104,6 +104,18 @@ explicit and prevent team/project grants from revealing another client.
 
 ## Projects and work
 
+Phase 2C migration b46087000008 adds work_items, work_item_assignees,
+work_item_comments and work_item_status_history under ADR-0020. Parent scope uses
+a composite FK and self CHECK; a DB trigger serializes hierarchy changes through
+the project advisory lock and rejects cycles/immutable project changes. API takes
+identity then project then task locks. Enum/title/version/state/date constraints
+and native timezone boundary validation guard persisted task shape. Comments and
+status history are append-only; worker has no task-table access. Comment paging
+uses (work_item_id,created_at,id); state paging uses unique (work_item_id,version).
+Populated work/history refuses destructive downgrade. Current task response names
+join only actual assignment records and use select-in batching for participants.
+The complete-product target tables below also describe later, unapplied features.
+
 Applied Phase 2B migration b46087000007 adds operational_areas (unique case-sensitive
 name/active/version/UTC timestamps), projects (internal/client CHECK, required owning
 team, optional customer/area, name/active/version/UTC timestamps) and project_members

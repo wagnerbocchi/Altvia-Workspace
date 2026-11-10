@@ -1,15 +1,18 @@
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
     BigInteger,
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Index,
     String,
     Text,
+    UniqueConstraint,
     func,
     text,
 )
@@ -239,6 +242,112 @@ class ProjectMember(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class WorkItem(Base):
+    __tablename__ = "work_items"
+    __table_args__ = (
+        UniqueConstraint("id", "project_id", name="uq_work_project"),
+        ForeignKeyConstraint(
+            ["parent_id", "project_id"],
+            ["work_items.id", "work_items.project_id"],
+            name="fk_work_parent_project",
+        ),
+        CheckConstraint("parent_id IS NULL OR parent_id <> id", name="ck_work_parent"),
+        CheckConstraint("char_length(btrim(title)) BETWEEN 1 AND 300", name="ck_work_title"),
+        CheckConstraint("char_length(description) <= 20000", name="ck_work_description"),
+        CheckConstraint(
+            "status IN ('todo','in_progress','blocked','done','cancelled')", name="ck_work_status"
+        ),
+        CheckConstraint("work_type IN ('one_off','ongoing')", name="ck_work_type"),
+        CheckConstraint("priority IN ('low','medium','high','critical')", name="ck_work_priority"),
+        CheckConstraint("version > 0", name="ck_work_version"),
+        CheckConstraint(
+            "estimated_minutes IS NULL OR estimated_minutes >= 0", name="ck_work_estimate"
+        ),
+        CheckConstraint(
+            "(status='blocked' AND blocked_reason IS NOT NULL "
+            "AND char_length(btrim(blocked_reason)) BETWEEN 1 AND 2000) "
+            "OR (status<>'blocked' AND blocked_reason IS NULL)",
+            name="ck_work_block",
+        ),
+        CheckConstraint(
+            "(status='done' AND completed_at IS NOT NULL) "
+            "OR (status<>'done' AND completed_at IS NULL)",
+            name="ck_work_completion",
+        ),
+        CheckConstraint(
+            "(due_at IS NULL AND due_precision IS NULL "
+            "AND due_date_local IS NULL AND due_timezone IS NULL) "
+            "OR (due_at IS NOT NULL AND due_precision IS NOT NULL AND due_precision='date' "
+            "AND due_date_local IS NOT NULL AND due_timezone IS NOT NULL) "
+            "OR (due_at IS NOT NULL AND due_precision IS NOT NULL AND due_precision='instant' "
+            "AND due_date_local IS NULL AND due_timezone IS NULL)",
+            name="ck_work_due",
+        ),
+        Index("ix_work_project_id", "project_id", "id"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    project_id: Mapped[UUID] = mapped_column(ForeignKey("projects.id"))
+    parent_id: Mapped[UUID | None] = mapped_column()
+    owner_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    owner: Mapped[User | None] = relationship(lazy="joined", foreign_keys=[owner_id])
+    title: Mapped[str] = mapped_column(String(300))
+    description: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(20), default="todo")
+    work_type: Mapped[str] = mapped_column(String(20), default="one_off")
+    priority: Mapped[str] = mapped_column(String(20), default="medium")
+    blocked_reason: Mapped[str | None] = mapped_column(String(2000))
+    due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    due_precision: Mapped[str | None] = mapped_column(String(10))
+    due_date_local: Mapped[date | None] = mapped_column(Date)
+    due_timezone: Mapped[str | None] = mapped_column(String(100))
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    estimated_minutes: Mapped[int | None] = mapped_column()
+    version: Mapped[int] = mapped_column(default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    assignees: Mapped[list["WorkAssignee"]] = relationship(
+        lazy="selectin", cascade="all, delete-orphan"
+    )
+
+
+class WorkAssignee(Base):
+    __tablename__ = "work_item_assignees"
+    work_item_id: Mapped[UUID] = mapped_column(ForeignKey("work_items.id"), primary_key=True)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True, index=True)
+    user: Mapped[User] = relationship(lazy="joined")
+
+
+class WorkComment(Base):
+    __tablename__ = "work_item_comments"
+    __table_args__ = (
+        CheckConstraint(
+            "char_length(btrim(body)) BETWEEN 1 AND 10000", name="ck_work_comment_body"
+        ),
+        Index("ix_work_comment_page", "work_item_id", "created_at", "id"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    work_item_id: Mapped[UUID] = mapped_column(ForeignKey("work_items.id"))
+    author_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class WorkStatusHistory(Base):
+    __tablename__ = "work_item_status_history"
+    __table_args__ = (UniqueConstraint("work_item_id", "version", name="uq_work_status_version"),)
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    work_item_id: Mapped[UUID] = mapped_column(ForeignKey("work_items.id"))
+    actor_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    from_status: Mapped[str | None] = mapped_column(String(20))
+    to_status: Mapped[str] = mapped_column(String(20))
+    reason: Mapped[str | None] = mapped_column(String(2000))
+    version: Mapped[int] = mapped_column()
+    occurred_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
 class IdempotencyRecord(Base):
     __tablename__ = "idempotency_records"
     __table_args__ = (
@@ -270,7 +379,8 @@ class ActivityEvent(Base):
     __table_args__ = (
         CheckConstraint("aggregate_version > 0", name="ck_activity_version"),
         CheckConstraint(
-            "resource_type IN ('identity','team','client','project','operational_area')",
+            "resource_type IN "
+            "('identity','team','client','project','operational_area','work_item')",
             name="ck_activity_resource",
         ),
         CheckConstraint("actor_kind IN ('user','management_command')", name="ck_activity_actor"),

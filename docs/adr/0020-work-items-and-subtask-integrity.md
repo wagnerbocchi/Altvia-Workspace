@@ -56,8 +56,9 @@ Due is null, {precision:date,date,timezone} or {precision:instant,instant}. Date
 precision retains the date/zone and exclusive next-local-midnight UTC boundary
 under ADR-0006; timezone must be a known IANA zone and skipped local dates are
 rejected. Instant requires a timezone-aware ISO timestamp. No inferred deadlines
-or stored days_remaining. Use installed zoneinfo/tzdata/OS zone database; add no
-native dependency. New live completions have known timestamps; import precision
+or stored days_remaining. PostgreSQL owns IANA-zone validation and conversion
+using its existing timezone database; API images need no new zone package.
+New live completions have known timestamps; import precision
 remains a later contract. estimated_minutes is nullable/nonnegative.
 
 ### HTTP and persistence
@@ -75,6 +76,10 @@ remains a later contract. estimated_minutes is nullable/nonnegative.
 - GET/POST /work-items/{id}/comments: internal plain text <=10000, bounded cursor;
   POST protected by If-Match and Idempotency-Key, advances task version.
 - GET /work-items/{id}/activity authorizes the parent before scoped history.
+- GET /work-items/{id}/status-history returns immutable scoped transitions/reasons,
+  in descending version order. Comments use chronological timestamp/ID pagination.
+- Task owner/participant display names come only from persisted assignment links,
+  including former contributors; no account-directory authority is implied.
 - GET /projects/{id}/work-candidates requires work.create; bounded contributor IDs.
 
 Migration b46087000008 adds work_items, assignees, comments and immutable status

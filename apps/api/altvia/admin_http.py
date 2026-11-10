@@ -77,6 +77,27 @@ def _next_cursor(scope: str, last_id: UUID) -> str:
     return base64.urlsafe_b64encode(f"v1|{scope}|{last_id}".encode()).decode().rstrip("=")
 
 
+def _time_cursor(value: str | None, scope: str) -> tuple[datetime, UUID] | None:
+    if value is None:
+        return None
+    try:
+        raw = base64.b64decode(
+            value + "=" * (-len(value) % 4), altchars=b"-_", validate=True
+        ).decode("ascii")
+        bound_scope, instant, identifier = raw.split("|")
+        stamp, row_id = datetime.fromisoformat(instant), UUID(identifier)
+        if bound_scope != scope or stamp.tzinfo is None:
+            raise ValueError("Invalid cursor")
+        return stamp, row_id
+    except (ValueError, UnicodeError):
+        raise identity.IdentityError(422, "invalid_cursor") from None
+
+
+def _next_time_cursor(scope: str, instant: datetime, row_id: UUID) -> str:
+    raw = f"{scope}|{instant.astimezone(UTC).isoformat()}|{row_id}"
+    return base64.urlsafe_b64encode(raw.encode()).decode().rstrip("=")
+
+
 def _etag(response: Response, version: int) -> None:
     response.headers["ETag"] = f'"{version}"'
 

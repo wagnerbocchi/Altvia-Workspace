@@ -9,18 +9,24 @@ Deny by default. Evaluate active identity + action permission + resource scope.
 For client resources, an explicit client_access_grant is a ceiling. Then a
 role_binding for that resource's project/team/queue/client must authorize the
 action. Membership/assignment narrows applicable work access; it never grants
-cross-client access by itself. Internal projects require explicit project/team
-membership and have no fictitious client. A client manager binding can delegate
+cross-client access by itself. Internal projects require explicit project scope
+and membership and have no fictitious client. A client manager binding can delegate
 only within that approved client. A team spanning clients never bypasses ceilings.
 
-Exact precedence for implementation: the client ceiling is always required for
-client content. An operations_manager team binding authorizes its allowed actions
-across projects/queues owned by that team, without an additional per-project
-membership. A project_manager project binding directly authorizes that project's
-actions, without an additional member row. Viewer bindings authorize reads at
-their explicit scope without assignment requirements. Agent project access
-requires both an agent role binding and project membership; membership permits
-reads/comments, while task updates/transitions require owner/assignee identity.
+Exact precedence for the implemented project/work domains (ADR-0019/0020): the
+client ceiling is always required for customer content. Team metadata roles and
+rosters never authorize project/work content. Direct project bindings require a
+matching project membership for every role. Inherited client viewer/operations_manager
+reads customer projects within the ceiling; operations_manager manages their work.
+An explicit project_manager/member pair manages that project's work. Explicit
+agent members read/comment/create; task updates/transitions additionally require
+owner/assignee identity. Only managers change parent/owner/participants; agent
+creation is self-owned and cannot delegate participants. Assignment never supplies
+role, ceiling or membership. Viewers read only. Contributor lookup is bounded to
+active project contributors; persisted assignment names are resolved only from
+those task links, including former contributors. Archived references block new
+mutations while permitting authorized reads and already committed receipt replay.
+Ticket policy remains a later domain contract:
 Agent queue bindings authorize reads/replies within the queue and client ceiling;
 ticket updates require assignment. Claiming an unassigned ticket for self needs
 ticket.claim; assigning another agent needs ticket.assign. Assignment never
@@ -34,7 +40,7 @@ approved and audited emergency grant. Never implement blanket `is_admin` bypass.
 | Action | Platform admin | Operations manager | Project manager | Agent | Viewer |
 | --- | --- | --- | --- | --- | --- |
 | Identity/system/mailbox secrets reference | manage | deny | deny | deny | deny |
-| Customer/project/work/ticket content read | explicit content grant | allowed team/client | allowed projects | allowed membership/queue | explicit read scope |
+| Customer/project/work/ticket content read | explicit content grant | allowed client/project/queue | allowed projects | allowed membership/queue | explicit read scope |
 | Team identity metadata/roster | global identity manage | read explicitly bound teams only | deny | deny | read explicitly bound teams only |
 | Client/project/operational team configuration | explicit content role | delegated scope | project/member scope only | deny | deny |
 | Work create/assign/update/transition | explicit content role | permitted scope | permitted project | assigned/member scope, no grant administration | deny |

@@ -58,6 +58,17 @@ under ADR-0006; timezone must be a known IANA zone and skipped local dates are
 rejected. Instant requires a timezone-aware ISO timestamp. No inferred deadlines
 or stored days_remaining. PostgreSQL owns IANA-zone validation and conversion
 using its existing timezone database; API images need no new zone package.
+The shared SQL function altvia_work_day_start resolves an ambiguous midnight to
+its first occurrence. It observes native zone offsets within two days, selects
+the earliest exact midnight, or bisects the offset-bracketed forward gap to one
+microsecond. This covers midnight gaps and skipped days without a second tzdb.
+Both API and trigger use it; a skipped source date is refused. This costs native
+timezone calculations on date writes and avoids inconsistent application rules.
+Browser instants display the actual device zone. Independent edits preserve the
+original instant including submillisecond precision and a repeated-clock occurrence.
+Intentional changes accept milliseconds; repeated local clocks require explicit
+UTC entry. Retained historical assignments do not block independent maintenance;
+only new owner/participant links must satisfy active candidate validation.
 New live completions have known timestamps; import precision
 remains a later contract. estimated_minutes is nullable/nonnegative.
 

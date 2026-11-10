@@ -128,6 +128,35 @@ def upgrade() -> None:
 )"""
     )
 
+    # PostgreSQL is the single owner of business-date boundaries. In a repeated
+    # midnight, AT TIME ZONE alone selects the later occurrence. In a midnight
+    # gap, find the actual first instant rather than normalizing the clock time.
+    op.execute("""CREATE FUNCTION altvia_work_day_start(day date, zone text)
+    RETURNS timestamptz LANGUAGE plpgsql STABLE STRICT AS $$
+    DECLARE anchor timestamptz; exact_start timestamptz;
+            lower_bound timestamptz; upper_bound timestamptz; middle timestamptz;
+    BEGIN
+        anchor := day::timestamp AT TIME ZONE zone;
+        WITH offsets AS (
+            SELECT DISTINCT (point AT TIME ZONE zone) - (point AT TIME ZONE 'UTC') AS delta
+            FROM generate_series(anchor - interval '2 days', anchor + interval '2 days',
+                                 interval '1 hour') AS point
+        ), candidates AS (
+            SELECT (day::timestamp - delta) AT TIME ZONE 'UTC' AS instant FROM offsets
+        )
+        SELECT min(instant) FILTER (WHERE (instant AT TIME ZONE zone) = day::timestamp),
+               min(instant), max(instant)
+        INTO exact_start, lower_bound, upper_bound FROM candidates;
+        IF exact_start IS NOT NULL THEN RETURN exact_start; END IF;
+        -- Candidate offsets bracket a forward gap. Timestamp resolution is one
+        -- microsecond; this also returns the next valid date after a skipped day.
+        WHILE upper_bound - lower_bound > interval '1 microsecond' LOOP
+            middle := lower_bound + (upper_bound - lower_bound) / 2;
+            IF (middle AT TIME ZONE zone)::date >= day THEN upper_bound := middle;
+            ELSE lower_bound := middle; END IF;
+        END LOOP;
+        RETURN upper_bound;
+    END $$""")
     op.execute("""CREATE FUNCTION altvia_guard_work() RETURNS trigger
     LANGUAGE plpgsql AS $$ BEGIN
         IF TG_OP='UPDATE'
@@ -148,9 +177,9 @@ def upgrade() -> None:
                 RAISE EXCEPTION 'Invalid due timezone' USING ERRCODE='23514';
             END IF;
             IF NEW.due_at IS DISTINCT FROM
-                ((NEW.due_date_local+1)::timestamp AT TIME ZONE NEW.due_timezone)
+                altvia_work_day_start(NEW.due_date_local+1, NEW.due_timezone)
 
-            OR ((NEW.due_date_local::timestamp AT TIME ZONE NEW.due_timezone)
+            OR (altvia_work_day_start(NEW.due_date_local, NEW.due_timezone)
                 AT TIME ZONE NEW.due_timezone)::date
                 IS DISTINCT FROM NEW.due_date_local THEN
                 RAISE EXCEPTION 'Invalid due boundary' USING ERRCODE='23514';
@@ -199,3 +228,4 @@ def downgrade() -> None:
     ]:
         op.drop_table(table)
     op.execute("DROP FUNCTION altvia_guard_work()")
+    op.execute("DROP FUNCTION altvia_work_day_start(date,text)")

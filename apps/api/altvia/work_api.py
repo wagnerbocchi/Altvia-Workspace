@@ -202,18 +202,17 @@ def create_work_router(engine: Engine, settings: Settings) -> APIRouter:
             work.require_active(db, permission)
             _version(item, request)
             before = work.output(item, permission, actor.id).model_dump()
+            owner_changed = "owner_id" in body.model_fields_set and body.owner_id != item.owner_id
             if body.model_fields_set & {"owner_id", "assignee_ids"}:
-                owner = body.owner_id if "owner_id" in body.model_fields_set else item.owner_id
-                people = (
-                    body.assignee_ids
-                    if body.assignee_ids is not None
-                    else [row.user_id for row in item.assignees]
+                previous = {row.user_id for row in item.assignees}
+                added = set(body.assignee_ids or []) - previous
+                contributors = work.validate_assignments(
+                    db, permission, body.owner_id if owner_changed else None, list(added)
                 )
-                contributors = work.validate_assignments(db, permission, owner, people)
             with db.no_autoflush:
                 for field in body.model_fields_set - {"due", "assignee_ids"}:
                     setattr(item, field, getattr(body, field))
-                if "owner_id" in body.model_fields_set:
+                if owner_changed:
                     item.owner = contributors.get(body.owner_id) if body.owner_id else None
                 if "due" in body.model_fields_set:
                     work.set_due(db, item, body.due)

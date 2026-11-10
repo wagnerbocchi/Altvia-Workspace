@@ -274,6 +274,36 @@ def test_task_scope_needs_both_halves_despite_assignment(
     assert create_work(admin_client, project_id).status_code == 404
 
 
+@pytest.mark.parametrize(
+    "day,zone,expected",
+    [
+        ("2025-11-01", "America/Havana", "2025-11-02T04:00:00Z"),
+        ("2026-10-31", "America/Havana", "2026-11-01T04:00:00Z"),
+        ("2026-03-07", "America/Havana", "2026-03-08T05:00:00Z"),
+        ("2026-11-10", "America/Sao_Paulo", "2026-11-11T03:00:00Z"),
+        ("2011-12-29", "Pacific/Apia", "2011-12-30T10:00:00Z"),
+        ("2018-11-03", "America/Sao_Paulo", "2018-11-04T03:00:00Z"),
+    ],
+)
+def test_ambiguous_next_midnight_uses_first_boundary(
+    admin_client, seeded_user, db_engine, day, zone, expected
+):
+    project_id = setup_project(admin_client, seeded_user)
+    response = create_work(
+        admin_client, project_id, due={"precision": "date", "date": day, "timezone": zone}
+    )
+    assert response.status_code == 201
+    row = admin_client.get("/api/v1/work-items/" + response.json()["work_item_id"]).json()
+    assert row["due_at"] == expected
+    from sqlalchemy import text
+    from sqlalchemy.exc import DBAPIError
+
+    # Raw writers must use the same exact boundary as the typed API.
+    with pytest.raises(DBAPIError) as caught, db_engine.begin() as connection:
+        connection.execute(text("UPDATE work_items SET due_at=due_at+interval '1 microsecond'"))
+    assert caught.value.orig.sqlstate == "23514"
+
+
 def test_cross_customer_task_ceiling_is_fresh(admin_client, seeded_user, db_engine):
     from altvia.models import ClientAccessGrant
     from test_client_registry import created as create_client

@@ -188,8 +188,8 @@ def set_due(db: Session, item: WorkItem, due: Due | None) -> None:
             raise identity.IdentityError(422, "invalid_due")
         result = db.execute(
             text("""SELECT
-            (CAST(:day AS date)+1)::timestamp AT TIME ZONE :zone AS boundary,
-            ((CAST(:day AS date)::timestamp AT TIME ZONE :zone)
+            altvia_work_day_start(CAST(:day AS date)+1, :zone) AS boundary,
+            (altvia_work_day_start(CAST(:day AS date), :zone)
                 AT TIME ZONE :zone)::date AS roundtrip"""),
             {"day": due.date, "zone": due.timezone},
         ).one()

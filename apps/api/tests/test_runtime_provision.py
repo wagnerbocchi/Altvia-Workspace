@@ -114,6 +114,88 @@ def test_runtime_password_uses_driver_quoting(db_engine, seeded_user):
         engine.dispose()
 
 
+def test_runtime_work_writes_and_history_permissions(db_engine, seeded_user, settings):
+    from test_team_api import preconditions
+    from test_work_items import create_work, setup_project
+
+    app_url = runtime_url(db_engine)
+    worker_url = runtime_url(db_engine).set(username="altvia_worker")
+    provision.provision_runtime(
+        db_engine,
+        app_url.render_as_string(hide_password=False),
+        worker_url.render_as_string(hide_password=False),
+    )
+    with Session(db_engine) as db, db.begin():
+        management.bootstrap_admin(db, "admin@example.test", "Runtime admin", TEST_PASSWORD)
+    runtime_settings = settings.model_copy(
+        update={
+            "database_url": settings.database_url.__class__(
+                app_url.render_as_string(hide_password=False)
+            )
+        }
+    )
+    with TestClient(
+        create_app(runtime_settings),
+        base_url=settings.public_origin,
+        headers={"Origin": settings.public_origin},
+    ) as client:
+        sign_in(client, "admin@example.test")
+        project_id = setup_project(client, seeded_user)
+        created = create_work(
+            client, project_id, owner_id=str(seeded_user), assignee_ids=[str(seeded_user)]
+        )
+        assert created.status_code == 201
+        path = "/api/v1/work-items/" + created.json()["work_item_id"]
+        assert (
+            client.post(
+                path + "/comments", json={"body": "Runtime"}, headers=preconditions()
+            ).status_code
+            == 201
+        )
+        assert (
+            client.post(
+                path + "/transitions",
+                json={"target_status": "in_progress"},
+                headers=preconditions(2),
+            ).status_code
+            == 200
+        )
+        assert len(client.get(path + "/comments").json()["items"]) == 1
+        assert len(client.get(path + "/status-history").json()["items"]) == 2
+    for url in (app_url, worker_url):
+        engine = create_engine(url, hide_parameters=True)
+        try:
+            statements = [
+                f"{verb} {table}"
+                for table in ("work_item_comments", "work_item_status_history")
+                for verb in ("DELETE FROM", "UPDATE")
+            ]
+            statements = [
+                value + " SET id=id" if value.startswith("UPDATE") else value
+                for value in statements
+            ]
+            if url.username == "altvia_worker":
+                statements += [
+                    f"SELECT * FROM {table}"
+                    for table in (
+                        "work_items",
+                        "work_item_assignees",
+                        "work_item_comments",
+                        "work_item_status_history",
+                    )
+                ]
+                statements += [
+                    "UPDATE work_items SET title='Denied'",
+                    "DELETE FROM work_item_assignees",
+                ]
+            for statement in statements:
+                with engine.begin() as connection, pytest.raises(DBAPIError) as caught:
+                    connection.execute(text(statement))
+                assert caught.value.orig.sqlstate == "42501"
+        finally:
+            engine.dispose()
+
+
 def test_provision_failure_does_not_echo_secrets(monkeypatch, capsys):
     secret = "postgresql+psycopg://owner:private-password@postgres/altvia_test"
 

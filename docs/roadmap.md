@@ -22,12 +22,19 @@ tasks/subtasks, owners/participants, deadlines, transitions, internal comments a
 attributable scoped history under ADR-0020. Source d5ae972 passed 403 API/48 browser
 tests, all five hosted gates and actual x86-64-v1 packaged/native/cgroup proof.
 The same five tested images report zero vulnerabilities. See
-docs/phase-2c-work-evidence.md. Stop this increment at qualified task core; Phase 2
-remains open for Kanban/filter/search/My Work and later client contacts/default-project contracts.
-Phase 2D task discovery is now selected in ADR-0021 and
-docs/plans/2026-11-10-work-discovery.md. Contracts precede code. Implementation,
-review, hosted gates and changed-artifact target qualification remain pending;
-do not reuse Phase2C evidence as proof of new behavior.
+docs/phase-2c-work-evidence.md. Phase 2 remains open for discovery qualification
+and later client contacts/default-project contracts.
+Phase 2D task discovery implements ADR-0021 and
+docs/plans/2026-11-10-work-discovery.md after contracts in 215eb31. Backend 4d56e97
+passed 424 API tests; browser search/filters, independent board paging and task-only
+My Work are implemented. Source review's authority-recovery defect is fixed;
+Impeccable scored both visual fixes resolved and preserved the incumbent system.
+Final acceptance source 1c20f48 passed all five hosted gates: 424 API and 52 browser
+tests, packaged Docker/HTTPS/native GIN/recovery, source security and five images
+with zero reported vulnerabilities. Changed-artifact target qualification remains
+pending. See docs/phase-2d-discovery-evidence.md; Phase2C evidence does not prove new
+behavior. Task SSH authentication is pending; the immutable archive is prepared.
+Do not change server security or expose credentials to bypass this gate.
 
 ## Milestones and gates
 
@@ -82,6 +89,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-12 | Infrastructure admin: hypervisor ownership and CPU-model change possibility | x86-64-v1 remains mandatory | None: CPU upgrade is not assumed |
 | Q-13 | Product owner: approved logo/brand and visual preferences | Provisional restrained Portuguese interface, system fonts, no invented assets or claims; review after return | Final visual approval only |
 | Q-14 | Engineering/security: ongoing service-image security | All five actual target-tested images have zero reported vulnerabilities; blocking HIGH/CRITICAL CI, SAST medium+ and every detected secret; retained complete severity metadata, no risk acceptance | Remaining production security/readiness gates |
+| Q-15 | Infrastructure admin: authenticate the current task-scoped SSH master in the interactive terminal for Phase2D changed-artifact proof | Complete local/hosted checks and preserve the previous target environment; no password in chat or SSH/server configuration change | Phase2D actual x86-64-v1 qualification |
 
 ## Backlog after core
 
@@ -96,7 +104,8 @@ The final Foundation increment delivers the actual durable identity activity
 consumer, restricted browser history, private Redis, safe logs and source-security
 gates under ADR-0017. All Foundation gates passed on 2f6ba60. Phase 2A/2B registries
 and Phase 2C task core are qualified under the user's subsequent instructions.
-The next slice requires contracts for Kanban/filter/search/My Work before code.
+Phase2D contracts preceded Kanban/filter/search/My Work implementation; its
+qualification remains open. Complete that bounded increment before a later slice.
 Production capacity/retention/provider decisions remain
 the later gates listed above, not unimplemented Foundation requirements.
 

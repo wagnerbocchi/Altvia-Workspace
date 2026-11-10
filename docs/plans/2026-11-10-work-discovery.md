@@ -39,16 +39,16 @@ Consumes visible_projects(user_id), work.access/output and existing UUID cursors
 Produces WorkFilters, MyWorkFilters and MyWorkPage; GET /my-work and expanded
 GET /work-items per ADR-0021. No change to write DTOs or state behavior.
 
-- [ ] Write real PostgreSQL/API tests for exact ADR filters/search, scoped cursor
+- [x] Write real PostgreSQL/API tests for exact ADR filters/search, scoped cursor
   reuse, personal owner/participant overlap and revoked/partial access.
-- [ ] Run `uv run python .superpowers/phase1-tests/run.py --api apps/api/tests/test_work_discovery.py -q --tb=short`; expect missing behavior failures.
-- [ ] Implement typed query/filter ownership, authorized personal SQL join and
+- [x] Run `uv run python .superpowers/phase1-tests/run.py --api apps/api/tests/test_work_discovery.py -q --tb=short`; expect missing behavior failures.
+- [x] Implement typed query/filter ownership, authorized personal SQL join and
   index-only migration, preserving unfiltered list compatibility.
-- [ ] Extend tests for no per-result query growth, search index/edit freshness,
+- [x] Extend tests for no per-result query growth, search index/edit freshness,
   migration downgrade preserving data, strict/repeated input and deadline bounds.
-- [ ] Run the focused command; expect all passing. Run `uv run ruff check apps/api`,
+- [x] Run the focused command; expect all passing. Run `uv run ruff check apps/api`,
   `uv run ruff format --check apps/api`, `uv run mypy`; expect exit0.
-- [ ] Regenerate OpenAPI/types, run web check and full API suite, then commit.
+- [x] Regenerate OpenAPI/types, run web check and full API suite, then commit.
 
 ## Task 2: Real list/board and personal queue
 
@@ -57,28 +57,42 @@ app/my-work/page.tsx, account navigation, globals.css and browser tests.
 Consumes Task1 DTOs/API and existing WorkDetail mutations. Produces filterable
 project list/board and task-only My Work under the existing identity boundary.
 
-- [ ] Run Impeccable context workflow; record incumbent Operate extension decisions.
-- [ ] Add browser tests for real filter/search persistence, independent column
+- [x] Run Impeccable context workflow; record incumbent Operate extension decisions.
+- [x] Add browser tests for real filter/search persistence, independent column
   paging/retry, My Work deduplication/linking and keyboard/mobile/session state.
-- [ ] Run focused browser tests; expect missing control/route failures.
-- [ ] Read craft-floor, implement accessible form, page keys, independent columns,
+- [x] Run focused browser tests; expect missing control/route failures.
+- [x] Read craft-floor, implement accessible form, page keys, independent columns,
   task summary links and route using Task1 API; preserve creation intent recovery.
-- [ ] Run browser tests, web check/build and inspect actual light/dark/mobile
+- [x] Run browser tests, web check/build and inspect actual light/dark/mobile
   captures. Expect passing behavior, axe and no overflow.
-- [ ] Apply prescribed Impeccable finishing review/documentation; commit.
+- [x] Apply prescribed Impeccable finishing review/documentation; commit.
 
 ## Task 3: Review and exact-artifact qualification
 
 Files: packaged proof/runbook/evidence and roadmap; test helpers where needed.
 Consumes Task1/2 exact application revision. Produces bounded evidence and status.
 
-- [ ] Request one fresh source review of the complete increment, including Review
+- [x] Request one fresh source review of the complete increment, including Review
   Focus above. Fix important findings with RED/GREEN proof and relevant suites.
-- [ ] Run full API/browser and required hosted source/image/container gates.
+- [x] Run full API/browser and required hosted source/image/container gates.
 - [ ] Extend packaged proof to task search, scope, columns/personal query and
   persistence. Build/test the exact source in a new private target directory,
   loopback-only ingress, existing authenticated task SSH multiplexing.
 - [ ] Execute native FTS/GIN and representative query/resource checks on actual
   x86-64-v1 images; retain exact tested image/scan identity evidence.
-- [ ] Update evidence/runbook/roadmap without overclaiming remaining Phase2;
+- [x] Update evidence/runbook/roadmap without overclaiming remaining Phase2;
   commit/push authorized main. Record any external authentication gate precisely.
+
+## Current execution evidence
+
+Contracts 215eb31; backend 4d56e97; reviewed browser 8c1be1d; packaged proof
+9d53841; final navigation acceptance correction 1c20f48. All five hosted gates
+passed on 1c20f48 with 424 API/52 browser tests and zero reported vulnerabilities
+in all five hosted images. Local affected browser10/10 passed; the Windows full
+suite's internal axe error remains recorded rather than hidden. Full Linux proof
+and exact commands/results are in docs/phase-2d-discovery-evidence.md.
+
+Task3 remains incomplete for actual changed-artifact target-VM execution, native
+resource/image identity proof and authentication. The pinned archive is prepared;
+no upload or production deployment occurred. Preserve the task ledger/evidence
+for continuation rather than marking the increment qualified.

@@ -30,9 +30,13 @@ transitions, internal comments and attributable history. Source d5ae972 passed 4
 API/48 browser tests, all five hosted gates and actual x86-64-v1 qualification.
 The same five tested images report zero vulnerabilities. See
 [Task-core evidence](docs/phase-2c-work-evidence.md) and the
-[task runbook](docs/runbooks/work-items.md). Phase 2 remains open for Kanban,
-filter/search/My Work and later client contracts. Production deployment and
-real-data import remain separate.
+[task runbook](docs/runbooks/work-items.md).
+Phase 2D implements native PostgreSQL task search, typed filters, independently
+paged project Kanban and task-only My Work. Source and browser behavior are
+tested; changed-artifact x86-64-v1 target qualification remains open. See
+[Discovery evidence](docs/phase-2d-discovery-evidence.md). Phase 2 remains open for
+that qualification and later client contracts. Production deployment and real-data
+import remain separate.
 Phase 1C-a extends restricted host administration for ordinary accounts and
 platform privileges, with session revocation and last-active-admin protection.
 Phase 1C-b adds the team identity/roster API, optimistic concurrency and protected

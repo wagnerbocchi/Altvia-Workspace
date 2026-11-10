@@ -1,7 +1,8 @@
 # ADR-0023: Scoped project member administration
 
-Date: 2026-11-10. Status: selected before implementation.
+Date: 2026-11-10. Status: implemented and qualified for the Phase 2F member slice.
 Scope: Phase 2F, completing the browser member workflow of FR-002.
+Acceptance: docs/phase-2f-member-evidence.md, qualified source b179695.
 
 ## Decision and alternatives
 

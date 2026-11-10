@@ -32,31 +32,31 @@ generated OpenAPI/TypeScript contracts; docs/contracts/api.md.
 with Project ETag. Shared change_project_access(db,user,project,role,actor_id,
 correlation_id)->bool requires identity/project locks.
 
-- [ ] Write real PostgreSQL tests for lifecycle, no-op/inactive, privacy/ACL,
+- [x] Write real PostgreSQL tests for lifecycle, no-op/inactive, privacy/ACL,
   preconditions/replay, self-session revocation, split pair and concurrent writes.
   Lifecycle asserts new role/membership, Project version, target auth version,
   redacted audit/outbox and immutable minimal replay receipt.
-- [ ] Run `python .superpowers/phase1-tests/run.py --api apps/api/tests/test_project_members.py -q`.
+- [x] Run `python .superpowers/phase1-tests/run.py --api apps/api/tests/test_project_members.py -q`.
   Expected: missing-route failures (404/405), then implement and expect all pass.
-- [ ] Extend the responsible domain helper and HTTP schemas/routes. Generate
+- [x] Extend the responsible domain helper and HTTP schemas/routes. Generate
   contracts using scripts/export_openapi.py and web generate:api convention.
-- [ ] Run affected project tests, ruff, mypy and full API suite; commit intended files.
+- [x] Run affected project tests, ruff, mypy and full API suite; commit intended files.
 
 ### Task 2: Protected member browser workflow
 
 **Files:** lib/projects.ts; components/project-workspace/members.tsx; project detail;
-app/projects/[projectId]/members/page.tsx; browser fixture; tests/project-members.spec.ts.
+app/projects/[id]/members/page.tsx; browser fixture; tests/project-members.spec.ts.
 **Interfaces:** Consumes Task1 generated schemas, session-owned query/write helpers.
 
-- [ ] Add real browser lifecycle/recovery/conflict/self-removal/ACL tests first;
+- [x] Add real browser lifecycle/recovery/conflict/self-removal/ACL tests first;
   run the guarded browser runner with explicit project-members.spec.ts.
   Expected: missing member screen; implement then expect pass.
-- [ ] Preserve incumbent Operate design and reviewed Project version. Add known-email
+- [x] Preserve incumbent Operate design and reviewed Project version. Add known-email
   add form, role editor, explicit removal/self-demotion confirmation, current-state
   recovery and immutable uncertain POST retry. No global lookup or email display.
-- [ ] Check types/lint/build/contracts and complete browser suite; inspect actual
+- [x] Check types/lint/build/contracts and complete browser suite; inspect actual
   desktop/mobile/light/dark captures and axe; perform Impeccable finishing workflow.
-- [ ] Commit intended browser/fixture/test/docs files after checks pass.
+- [x] Commit intended browser/fixture/test/docs files after checks pass.
 
 ### Task 3: Review, qualification and evidence
 
@@ -64,11 +64,11 @@ app/projects/[projectId]/members/page.tsx; browser fixture; tests/project-member
 docs/roadmap.md and PRD delivery status.
 **Interfaces:** Consumes reviewed application source and immutable archive/images.
 
-- [ ] One fresh whole-increment source review; important fixes get RED/GREEN proof.
-- [ ] Run required hosted API/browser/container/image/source gates and actual isolated
+- [x] One fresh whole-increment source review; important fixes get RED/GREEN proof.
+- [x] Run required hosted API/browser/container/image/source gates and actual isolated
   baseline-VM membership/replay/session/ACL/recovery proof. Reuse unchanged evidence
   only where runtime inputs are identical. Record exact source/image IDs and results.
-- [ ] Publish coherent checked commits directly to main; fast-forward clean remote
+- [x] Publish coherent checked commits directly to main; fast-forward clean remote
   development checkout. Preserve evidence and task volumes; stop task containers.
-- [ ] Document exact remaining milestones/external participants; never claim Phase2
+- [x] Document exact remaining milestones/external participants; never claim Phase2
   complete or production ready. Final report includes material rulings and blockers.

@@ -55,6 +55,16 @@ native-tested images report zero vulnerabilities. Phase 2E is complete. See
 docs/phase-2e-contact-evidence.md. Audit remaining Phase 2 traceability before
 Service Desk; do not declare the whole phase complete from this increment alone.
 
+Phase 2F now delivers scoped browser membership administration under ADR-0023:
+known-email grants with explicit immutable review, versioned role changes/removal,
+session invalidation, protected replay and scoped redacted events. Source b179695
+passed all five hosted gates (480 API/67 browser) and actual x86-64-v1 packaged
+member/ACL/session/replay/persistence/native/resource/recovery proof. Exact native
+image IDs have zero reported vulnerabilities. Impeccable's single spacing fix
+scored resolved; its documenter preserved the incumbent system. See
+docs/phase-2f-member-evidence.md. Basic project milestones and external work
+participants remain subsequent Phase 2 slices; advanced dependencies stay P2.
+
 | Phase | Ordered vertical deliveries | Dependencies | Exit evidence |
 | --- | --- | --- | --- |
 | 0 Discovery/design | Source inspection, PRD, ERD/dictionary, RBAC, ADRs, API/events, CPU plan and roadmap | Master spec + XLSX | Reviewable contracts, divergences and unknowns recorded; no product implementation in Phase 0 commit |
@@ -70,19 +80,19 @@ advancement from UI appearance alone. Reuse unchanged passing evidence; test
 affected behavior after each change. No release date/velocity estimate without
 environment/volume data. Do not replace Zammad until formal operational acceptance.
 
-The supplied VM now qualifies the current five-image contact/default stack; future
+The supplied VM now qualifies the current five-image member-administration stack; future
 mandatory native artifacts must repeat that gate. Production readiness remains
 open. If all independent work is exhausted, report
 the exact blocker rather than silently weakening acceptance.
 
 ## Definition of ready and done per slice
 
-Phase 2F selected on 2026-11-10: scoped browser member administration under
+Phase 2F qualified on 2026-11-10: scoped browser member administration under
 ADR-0023 and docs/plans/2026-11-10-project-members.md. Reuse the existing access
 service; add accounts by known email without a global discovery endpoint. The
 Phase 2 traceability audit leaves basic project milestones and external work
 participants for subsequent bounded slices. Advanced dependency planning stays
-FR-016/P2 backlog. This selection is not an implementation or qualification claim.
+FR-016/P2 backlog. Exact qualification evidence is in docs/phase-2f-member-evidence.md.
 
 Before implementation: ownership, typed request/response, permission predicates,
 schema/constraint delta, failure/race behavior and meaningful tests are defined.
@@ -99,7 +109,7 @@ currently covers this GitHub repository's main only, not production services.
 
 | ID | Needed answer / owner | Safe action while pending | Gate blocked |
 | --- | --- | --- | --- |
-| Q-01 | Five-image contact/default application 334d477 qualified on the supplied VM, 2026-11-10; final test-only c722de2 leaves runtime inputs unchanged; actual contact/default/ACL/browser/native/cgroup/image-scan and worker/Redis recovery proof retained | Reuse exact tested image evidence; repeat qualification for changed mandatory native artifacts and future components | Satisfied for current stack; future artifact qualification remains required |
+| Q-01 | Five-image member application b179695 qualified on the supplied VM, 2026-11-10; member/session/replay/ACL/browser/native/cgroup/image-scan and worker/Redis recovery proof retained | Reuse exact tested image evidence; repeat qualification for changed mandatory native artifacts and future components | Satisfied for current stack; future artifact qualification remains required |
 | Q-02 | Infrastructure admin: IOPS, workload/users/mail per day and production volume/backup policy; observed 8 vCPUs, 31.3 GiB RAM and 500 GiB disk | Conservative bounded defaults; inventory alone establishes no capacity or performance promise | Capacity/prod readiness |
 | Q-03 | Support owner: mailboxes, TLS/auth/forwarding/trusted MTA and SMTP limits | Adapter contracts and controlled test SMTP/IMAP only | Real Phase 3 email acceptance |
 | Q-04 | Operations: actual client/team/project/queue membership matrix | Deny by default; test explicit grants with synthetic test data only | Provisioning/pilot |
@@ -115,6 +125,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-14 | Engineering/security: ongoing service-image security | All five actual target-tested images have zero reported vulnerabilities; blocking HIGH/CRITICAL CI, SAST medium+ and every detected secret; retained complete severity metadata, no risk acceptance | Remaining production security/readiness gates |
 | Q-15 | Resolved: owner authorized workstation public-key registration, remote Codex login and project registration; fresh noninteractive Windows SSH and actual Phase 2D qualification passed | Reuse agent-backed key with strict known-host checks; one connection per stage because native Windows multiplexing failed its probe; preserve previous environments and server security | None for current qualification; key removal, agent restart or changed host identity may require user action |
 | Q-16 | Support/security owner: trusted contact verification, international mailbox/IDNA and authenticated sender correlation policy | Contacts remain server-only unverified, bounded ASCII mailboxes; no send, account linking, portal grant or client selection by email alone | Future actual email/verification acceptance; registry work can proceed |
+| Q-17 | Engineering: diagnose Windows full-browser intermittency; one current task lifecycle run timed out with a connection-error screen, and older axe failure has no established cause | Preserve complete failed logs; affected 11, complete hosted 67 and actual packaged target passed; no relaxed caps/timeouts or claimed root-cause fix | Local runner reliability; no open member acceptance failure on the qualified target |
 
 ## Backlog after core
 
@@ -132,9 +143,10 @@ and Phase 2C task core are qualified under the user's subsequent instructions.
 Phase 2D contracts preceded Kanban/filter/search/My Work implementation; exact
 source 1c20f48 passed hosted and actual target qualification. This bounded
 increment is complete. Phase 2E contracts preceded persisted contact/default
-configuration and its qualified browser/worker/native delivery. Before the next
-slice, audit planned member writes, milestones and external participants against
-master/Phase 2 acceptance, record remaining contracts and keep ticket state separate.
+configuration and its qualified browser/worker/native delivery. Phase 2F completes
+browser member writes and the exit traceability audit. The next slices cover basic
+project milestones and external work participants, with contracts before code and
+ticket state kept separate. Advanced dependency planning remains FR-016/P2 backlog.
 Production capacity/retention/provider decisions remain
 the later gates listed above, not unimplemented Foundation requirements.
 
@@ -148,6 +160,20 @@ portal/knowledge base. Billing/subscriptions, marketplace, advanced ITIL/CMDB,
 native mobile and local AI remain outside MVP. No speculative code for backlog.
 
 ## Evidence ledger
+
+- Phase 2F: contracts 32e5a78, persisted writes 619f94c, deterministic revocation/
+  roster race proofs ce15847, reviewed browser/packaged d55a4b2 and test-only account
+  expectation correction b179695. Final local API 480 and affected browser 11 passed;
+  all five exact-source hosted gates passed with 480 API/67 browser. Actual baseline
+  guest ran the complete immutable b179695 stack: member/session/replay/ACL/browser/
+  persistence/resource/native/FTS/logical restore passed. Same five tested image IDs
+  have zero reported vulnerabilities; six access events projected once. Worker
+  exited 0 in 7.608 seconds during Redis blackhole, recovering 27 events. Important
+  source findings have RED/GREEN proof; Impeccable spacing fix resolved, system
+  preserved. Initial smoke expectation failure and Windows connection timeout are
+  retained, with exact corrections/limits in docs/phase-2f-member-evidence.md.
+  Containers stopped, volumes preserved, SSH stages closed, remote dev synchronized.
+  This increment is complete; milestones/external participants and production remain open.
 
 - Phase 2E: contracts 3f0d1f1, backend c67c195, Unicode correction a3028b5, reviewed
   browser/packaged application 334d477 and test-fixture correctionc722de2. All five

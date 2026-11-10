@@ -346,7 +346,8 @@ filters; unsupported/repeated/invalid parameters return422. See ADR for boundari
 | GET/PATCH `/clients/{id}` | client.read/manage | 200 / 409 invalid default project or stale version |
 | GET/POST `/projects` | project.read/manage | 200 / 201, validate client ceiling and owning team |
 | GET/PATCH `/projects/{id}` | project.read/manage | 200, refuse scope change when children/links conflict |
-| POST/DELETE `/projects/{id}/members` | project.manage | Explicit user scope validation, 201/204 |
+| POST `/projects/{id}/members` | project.manage | Known email/role, Project version and protected minimal receipt, 201/replay200 |
+| PATCH/DELETE `/projects/{id}/members/{user_id}` | project.manage | Reviewed Project version, atomic direct-access changes, 204/ETag |
 | GET/POST `/work-items` | work.read/create | 200 / 201, owner and all participants validated |
 | GET/PATCH `/work-items/{id}` | work.read/update | 200, prohibit direct state mutation through PATCH |
 | POST `/work-items/{id}/transitions` | work.transition | 200, invalid transition 409, reason/ongoing rule required |

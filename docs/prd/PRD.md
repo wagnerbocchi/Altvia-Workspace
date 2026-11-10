@@ -72,8 +72,13 @@ external contacts and same-client default ticket projects under ADR-0022,
 without account linkage, verification or ticket/email side effects. Application
 334d477 passed actual x86-64-v1 qualification; test-only c722de2 passed all five
 hosted gates with 463 API/60 browser tests. Exact native-tested image reports have
-zero vulnerabilities. See docs/phase-2e-contact-evidence.md. Planned member,
-milestone and external-participant workflows still need Phase 2 exit traceability;
+zero vulnerabilities. See docs/phase-2e-contact-evidence.md. Phase 2F now delivers
+scoped browser member grants/roles/removal under ADR-0023, with session invalidation,
+immutable grant confirmation/replay and reviewed versions. Exact b179695 passed
+all five hosted gates with 480 API/67 browser tests and actual x86-64-v1 member/
+ACL/browser/recovery/native/resource proof. The same five target-tested images
+report zero vulnerabilities; see docs/phase-2f-member-evidence.md. Basic project
+milestone and external-participant workflows remain subsequent Phase 2 slices;
 ticket consolidation remains Phase 4 and production acceptance remains separate.
 
 Non-goals: SaaS billing/subscriptions, marketplace, local AI/embeddings, external

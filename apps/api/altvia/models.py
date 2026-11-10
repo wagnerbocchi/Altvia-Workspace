@@ -270,6 +270,36 @@ class ProjectMember(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class ProjectMilestone(Base):
+    __tablename__ = "project_milestones"
+    __table_args__ = (
+        CheckConstraint("char_length(btrim(title)) > 0", name="ck_milestone_title"),
+        CheckConstraint("state IN ('planned','done','cancelled')", name="ck_milestone_state"),
+        CheckConstraint("version > 0", name="ck_milestone_version"),
+        CheckConstraint(
+            "(due_at IS NULL AND due_precision IS NULL "
+            "AND due_date_local IS NULL AND due_timezone IS NULL) "
+            "OR (due_at IS NOT NULL AND due_precision IS NOT NULL AND due_precision='date' "
+            "AND due_date_local IS NOT NULL AND due_timezone IS NOT NULL) "
+            "OR (due_at IS NOT NULL AND due_precision IS NOT NULL AND due_precision='instant' "
+            "AND due_date_local IS NULL AND due_timezone IS NULL)",
+            name="ck_milestone_due",
+        ),
+        Index("ix_project_milestones_page", "project_id", "id"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    project_id: Mapped[UUID] = mapped_column(ForeignKey("projects.id"))
+    title: Mapped[str] = mapped_column(String(300))
+    state: Mapped[str] = mapped_column(String(20), default="planned")
+    due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    due_precision: Mapped[str | None] = mapped_column(String(10))
+    due_date_local: Mapped[date | None] = mapped_column(Date)
+    due_timezone: Mapped[str | None] = mapped_column(String(100))
+    version: Mapped[int] = mapped_column(default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class WorkItem(Base):
     __tablename__ = "work_items"
     __table_args__ = (

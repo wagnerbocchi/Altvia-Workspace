@@ -16,6 +16,7 @@ from altvia.models import (
     OperationalArea,
     Project,
     ProjectMember,
+    ProjectMilestone,
     Role,
     RoleBinding,
     Team,
@@ -89,7 +90,7 @@ def scoped_project(
     return project, manage
 
 
-def advance(resource: Project | OperationalArea) -> None:
+def advance(resource: Project | OperationalArea | ProjectMilestone) -> None:
     if resource.version >= 2147483647:
         raise identity.IdentityError(409, "version_exhausted")
     resource.version += 1

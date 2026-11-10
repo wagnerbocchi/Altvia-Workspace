@@ -40,6 +40,7 @@ CLIENT_EVENT_TYPES = {
     "client.contact_updated",
 }
 PROJECT_EVENT_TYPES = {"project.created", "project.updated", "project.access_changed"}
+MILESTONE_EVENT_TYPES = {"project.milestone_created", "project.milestone_updated"}
 AREA_EVENT_TYPES = {"operational_area.created", "operational_area.updated"}
 WORK_EVENT_TYPES = {
     "work_item.created",
@@ -50,6 +51,24 @@ WORK_EVENT_TYPES = {
     "work_item.status_changed",
     "work_item.commented",
 }
+
+
+class MilestoneEventPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
+    actor_id: UUID
+    actor_kind: Literal["user"]
+    milestone_id: UUID
+    changed_fields: str | None = Field(default=None, max_length=30)
+
+    @model_validator(mode="after")
+    def valid_changes(self) -> "MilestoneEventPayload":
+        if self.changed_fields is not None:
+            fields = self.changed_fields.split(",")
+            if len(fields) != len(set(fields)) or not set(fields).issubset(
+                {"title", "due", "state"}
+            ):
+                raise ValueError("Invalid milestone changes")
+        return self
 
 
 class WorkEventPayload(BaseModel):
@@ -217,6 +236,7 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
             | PROJECT_EVENT_TYPES
             | AREA_EVENT_TYPES
             | WORK_EVENT_TYPES
+            | MILESTONE_EVENT_TYPES
             or event.schema_version != 1
         ):
             event.status, event.last_error_code, event.lease_until = (
@@ -226,8 +246,20 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
             )
             return False
         try:
-            payload: EventPayload | ClientEventPayload | RegistryEventPayload | WorkEventPayload
-            if event.event_type in WORK_EVENT_TYPES:
+            payload: (
+                EventPayload
+                | ClientEventPayload
+                | RegistryEventPayload
+                | WorkEventPayload
+                | MilestoneEventPayload
+            )
+            if event.event_type in MILESTONE_EVENT_TYPES:
+                payload = MilestoneEventPayload.model_validate(event.payload)
+                if (payload.changed_fields is not None) != (
+                    event.event_type == "project.milestone_updated"
+                ):
+                    raise ValueError("Invalid milestone event fields")
+            elif event.event_type in WORK_EVENT_TYPES:
                 payload = WorkEventPayload.model_validate(event.payload)
                 fields = set(payload.model_dump(exclude_none=True)) - {
                     "actor_id",
@@ -330,7 +362,7 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                 "work_item"
                 if event.event_type in WORK_EVENT_TYPES
                 else "project"
-                if event.event_type in PROJECT_EVENT_TYPES
+                if event.event_type in PROJECT_EVENT_TYPES | MILESTONE_EVENT_TYPES
                 else "operational_area"
                 if event.event_type in AREA_EVENT_TYPES
                 else "client"

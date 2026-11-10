@@ -190,6 +190,24 @@ epoch coercion is rejected; instant precision requires an aware ISO timestamp.
 No recurrence, dependency graph, Kanban, FTS, My Work or import is supplied by
 this task-core slice. Complete-product routes below remain separate contracts.
 
+### Project milestone extension (ADR-0024)
+
+Phase 2G adds /projects/{project_id}/milestones. Scoped GET collection returns
+items/next_cursor/project_writable, SQL UUID paging bound to actor and parent,
+limit1..100/default50 and no counts. POST accepts strict {title,due?}, Origin/CSRF
+and Idempotency-Key; receipt201/replay200 is only {project_id,milestone_id} after
+fresh project management. A committed replay never changes current state.
+
+GET /projects/{project_id}/milestones/{milestone_id} returns scoped fields, own
+version/ETag, can_manage and project_writable. PATCH there accepts strict nonempty
+{title?,due?,state?}, milestone If-Match, nullable due only; it returns current
+record/ETag. States planned/done/cancelled require reopening to planned before
+switching between terminal states. Dates/instants reuse existing work semantics.
+Actual writes require active project/team/customer, advance milestone and Project
+versions, and emit redacted project-bound milestone activity. No-op/replay preserves
+existing versions/state after archival; no delete or task synchronization.
+Source/runtime tests are recorded separately from deferred final target homologation.
+
 ### Implemented projects and operational areas (ADR-0019)
 
 The Phase 2B registry uses the /api/v1 prefix and the existing secure session,

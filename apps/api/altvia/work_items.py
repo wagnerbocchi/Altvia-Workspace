@@ -8,6 +8,8 @@ from sqlalchemy import Select, and_, false, or_, select, text, true
 from sqlalchemy.orm import Session
 
 from altvia import identity, project_registry
+from altvia.deadlines import due_output as due_output
+from altvia.deadlines import set_due as set_due
 from altvia.models import (
     Client,
     ClientAccessGrant,
@@ -22,9 +24,6 @@ from altvia.models import (
 from altvia.work_schemas import (
     WORK_TRANSITIONS,
     Candidate,
-    DateDue,
-    Due,
-    InstantDue,
     Transition,
     WorkOutput,
 )
@@ -173,39 +172,6 @@ def validate_parent(db: Session, item: WorkItem) -> None:
     )
     if cycle:
         raise identity.IdentityError(409, "parent_cycle")
-
-
-def set_due(db: Session, item: WorkItem, due: Due | None) -> None:
-    item.due_at = item.due_precision = item.due_date_local = item.due_timezone = None
-    if isinstance(due, InstantDue):
-        item.due_at, item.due_precision = due.instant.astimezone(UTC), "instant"
-    elif isinstance(due, DateDue):
-        known = db.scalar(
-            text("SELECT EXISTS(SELECT 1 FROM pg_timezone_names WHERE name=:zone)"),
-            {"zone": due.timezone},
-        )
-        if not known or due.date.year >= 9999:
-            raise identity.IdentityError(422, "invalid_due")
-        result = db.execute(
-            text("""SELECT
-            altvia_work_day_start(CAST(:day AS date)+1, :zone) AS boundary,
-            (altvia_work_day_start(CAST(:day AS date), :zone)
-                AT TIME ZONE :zone)::date AS roundtrip"""),
-            {"day": due.date, "zone": due.timezone},
-        ).one()
-        if result.roundtrip != due.date:
-            raise identity.IdentityError(422, "invalid_due")
-        item.due_at, item.due_precision = result.boundary, "date"
-        item.due_date_local, item.due_timezone = due.date, due.timezone
-
-
-def due_output(item: WorkItem) -> Due | None:
-    due: Due | None = None
-    if item.due_precision == "date" and item.due_date_local and item.due_timezone:
-        due = DateDue(precision="date", date=item.due_date_local, timezone=item.due_timezone)
-    elif item.due_at:
-        due = InstantDue(precision="instant", instant=item.due_at)
-    return due
 
 
 def output(item: WorkItem, permission: Access, user_id: UUID) -> WorkOutput:

@@ -144,7 +144,7 @@ ticket project, milestone, graph table or future membership-write API is precrea
 | operational_areas | name UNIQUE, active; project classification, not a security grant |
 | projects | client_id nullable, scope_kind internal/client, team_id, area_id nullable, name, active; CHECK internal has no client and client scope has client_id |
 | project_members | PK(project_id,user_id); membership alone cannot override client ceiling |
-| project_milestones | project_id, title, due_at, state; Phase 2 after basic work |
+| project_milestones | ADR-0024/Phase 2G: project_id FK, title1..300, planned/done/cancelled, own positive version/UTC timestamps, due_at/precision/local-date/timezone as work deadlines; UUID parent index; no physical delete or task-state coupling |
 | work_items | project_id NOT NULL, parent_id nullable, owner_id nullable, title 1..300, description, status, work_type, priority, due_at, due_date_local nullable DATE, due_precision date/instant, due_timezone, started_at, completed_at, completion_time_known, blocked_reason, estimated_minutes >=0, version |
 | work_item_assignees | PK(work_item_id,user_id), participant_role; owner stored separately, visible involvement total counts distinct users |
 | work_item_external_participants | work_item_id, client_contact_id nullable, unresolved_label; CHECK known contact XOR unresolved label; no automatic login rights |

@@ -19,6 +19,7 @@ from altvia.config import Settings
 from altvia.contact_api import create_contact_router
 from altvia.database import Base, make_engine
 from altvia.http import RequestBoundary, problem, require_csrf, require_origin
+from altvia.milestone_api import create_milestone_router
 from altvia.models import User
 from altvia.observability import configure_logging
 from altvia.project_api import create_project_router
@@ -191,5 +192,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(create_client_router(engine, config))
     app.include_router(create_contact_router(engine, config))
     app.include_router(create_project_router(engine, config))
+    app.include_router(create_milestone_router(engine, config))
     app.include_router(create_work_router(engine, config))
     return app

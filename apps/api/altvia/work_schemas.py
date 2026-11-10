@@ -1,7 +1,7 @@
 """Strict work-item contracts; state is changed only through explicit transitions."""
 
 import re
-from datetime import date, datetime
+from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -16,6 +16,10 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+
+from altvia.deadlines import DateDue as DateDue
+from altvia.deadlines import Due as Due
+from altvia.deadlines import InstantDue as InstantDue
 
 Status = Literal["todo", "in_progress", "blocked", "done", "cancelled"]
 Priority = Literal["low", "medium", "high", "critical"]
@@ -35,36 +39,6 @@ Title = Annotated[
 
 class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
-
-
-class DateDue(StrictModel):
-    precision: Literal["date"]
-    date: date
-    timezone: str = Field(min_length=1, max_length=100)
-
-    @field_validator("date", mode="before")
-    @classmethod
-    def iso_date(cls, value: object) -> object:
-        if type(value) is date or (
-            isinstance(value, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", value)
-        ):
-            return value
-        raise ValueError("An ISO date is required")
-
-
-class InstantDue(StrictModel):
-    precision: Literal["instant"]
-    instant: AwareDatetime
-
-    @field_validator("instant", mode="before")
-    @classmethod
-    def iso_instant(cls, value: object) -> object:
-        if isinstance(value, datetime) or (isinstance(value, str) and "T" in value):
-            return value
-        raise ValueError("A timezone-aware ISO timestamp is required")
-
-
-Due = Annotated[DateDue | InstantDue, Field(discriminator="precision")]
 
 
 class WorkCreate(StrictModel):

@@ -66,6 +66,9 @@ Fresh authority is checked before receipt lookup; archived references do not
 invalidate a committed receipt. Missing precondition428, malformed422, stale409,
 exhausted version409. Unsupported/repeated collection query fields return422.
 All transport stays no-store and plain text. Resource scope is immutable.
+Records and pages expose project_writable as scoped active-reference eligibility,
+independent of can_manage authority, so the browser can disable unavailable writes
+even when a project's own active flag is unchanged or its list is empty.
 
 ## Browser and acceptance
 

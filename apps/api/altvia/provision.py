@@ -39,6 +39,8 @@ ROLE_PRIVILEGES = {
         **{table: {"SELECT", "INSERT", "UPDATE", "DELETE"} for table in CRUD_TABLES},
         "client_contacts": {"SELECT", "INSERT", "UPDATE"},
         "project_milestones": {"SELECT", "INSERT", "UPDATE"},
+        "ticket_queues": {"SELECT", "INSERT", "UPDATE"},
+        "ticket_categories": {"SELECT", "INSERT", "UPDATE"},
         "work_item_external_participants": {"SELECT", "INSERT", "DELETE"},
         "audit_logs": {"INSERT"},
         "outbox_events": {"INSERT"},

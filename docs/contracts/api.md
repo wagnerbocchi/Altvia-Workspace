@@ -460,3 +460,29 @@ explicit review of new-work effects. Never reuse action IDs or infer identity
 from position. Existing execution history retains the original rule revision.
 Transport is at least once. Exactly-once claims refer only to protected business
 effects, not Redis or SMTP delivery.
+
+## Phase 3A queue configuration under ADR-0026
+
+GET/POST /ticket-queues and GET/PATCH /ticket-queues/{queue_id} operate team-owned
+queue metadata. GET /ticket-queue-teams provides independently paged readable team
+choices with can_manage. Queue listing exposes independently computed can_create,
+including on empty pages. QueueOutput includes team_name, team_active and can_manage.
+The actor's global platform configuration role or explicit team viewer/manager
+binding determines visibility before paging. Creation/editing requires manager
+or platform authority. Team roster supplies no authority.
+
+Categories use GET/POST /ticket-queues/{queue_id}/categories and GET/PATCH on
+/{category_id} under that same parent. Queue/category names are stripped single-line
+1..150 code points and exact-unique within the immutable parent, including archived
+records. Both use active archive/restore and positive versions. Category changes
+advance the queue aggregate as well as the changed child. Every PATCH requires
+reviewed If-Match and returns ETag. Protected POST saves immutable ID receipts and
+rechecks current authority before replay. Active ancestors are required for new
+records/actual edits. Coherent no-ops and committed receipt replay survive archive.
+
+GET /ticket-queues/{queue_id}/activity reads only that queue's redacted projected
+history. All lists accept unique limit/cursor only, limit1..100/default50 and
+actor/resource-bound cursors. Queue events have aggregate ticket_queue and exact
+created/updated/category_created/category_updated shapes with actor ID/kind and
+optional category ID/allowlisted changed field names. Customer content grants and
+actual ticket behavior follow subsequent Phase 3 contracts.

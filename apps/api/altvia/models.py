@@ -175,6 +175,46 @@ class TeamMember(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class TicketQueue(Base):
+    __tablename__ = "ticket_queues"
+    __table_args__ = (
+        UniqueConstraint("team_id", "name", name="uq_queue_team_name"),
+        Index("ix_ticket_queues_page", "team_id", "id"),
+        CheckConstraint("char_length(btrim(name)) > 0", name="ck_queue_name"),
+        CheckConstraint(
+            "position(chr(10) in name)=0 AND position(chr(13) in name)=0", name="ck_queue_line"
+        ),
+        CheckConstraint("version > 0", name="ck_queue_version"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    team_id: Mapped[UUID] = mapped_column(ForeignKey("teams.id", ondelete="RESTRICT"))
+    name: Mapped[str] = mapped_column(String(150))
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    version: Mapped[int] = mapped_column(default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class TicketCategory(Base):
+    __tablename__ = "ticket_categories"
+    __table_args__ = (
+        UniqueConstraint("queue_id", "name", name="uq_category_queue_name"),
+        Index("ix_ticket_categories_page", "queue_id", "id"),
+        CheckConstraint("char_length(btrim(name)) > 0", name="ck_category_name"),
+        CheckConstraint(
+            "position(chr(10) in name)=0 AND position(chr(13) in name)=0", name="ck_category_line"
+        ),
+        CheckConstraint("version > 0", name="ck_category_version"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    queue_id: Mapped[UUID] = mapped_column(ForeignKey("ticket_queues.id", ondelete="RESTRICT"))
+    name: Mapped[str] = mapped_column(String(150))
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    version: Mapped[int] = mapped_column(default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class Client(Base):
     __tablename__ = "clients"
     __table_args__ = (
@@ -474,7 +514,7 @@ class ActivityEvent(Base):
         CheckConstraint("aggregate_version > 0", name="ck_activity_version"),
         CheckConstraint(
             "resource_type IN "
-            "('identity','team','client','project','operational_area','work_item')",
+            "('identity','team','client','project','operational_area','work_item','ticket_queue')",
             name="ck_activity_resource",
         ),
         CheckConstraint("actor_kind IN ('user','management_command')", name="ck_activity_actor"),

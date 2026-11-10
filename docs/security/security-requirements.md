@@ -153,3 +153,14 @@ Direct main push authorization does not waive these gates or production approval
 Audit records identity/action/resource/correlation with allowlisted diffs,
 append-only permissions and restricted reads. Application append-only logs are
 not claimed cryptographically tamper-proof; off-host retention is a production decision.
+
+## Phase 3A queue configuration boundary
+
+ADR-0026 implements queue/category metadata reads for explicit team viewers and
+operations managers and global platform configuration administrators. Writes use
+the corresponding team manager or platform configuration authority, identity-before-
+auth serialization, immutable parents and queue/category versions. Roster alone
+supplies no authority. Metadata grants do not supply customer ticket content
+permissions. Future ticket reads require the ticket's explicit customer ceiling
+and its separately implemented queue role. Queue events are redacted and scoped
+to their queue activity feed. They never enter identity history.

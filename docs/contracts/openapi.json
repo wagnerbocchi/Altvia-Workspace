@@ -267,6 +267,117 @@
         "title": "CandidatePage",
         "type": "object"
       },
+      "CategoryCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "CategoryCreate",
+        "type": "object"
+      },
+      "CategoryOutput": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "queue_id": {
+            "format": "uuid",
+            "title": "Queue Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "active",
+          "version",
+          "created_at",
+          "updated_at",
+          "queue_id"
+        ],
+        "title": "CategoryOutput",
+        "type": "object"
+      },
+      "CategoryPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryOutput"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "CategoryPage",
+        "type": "object"
+      },
+      "CategoryReceipt": {
+        "properties": {
+          "category_id": {
+            "format": "uuid",
+            "title": "Category Id",
+            "type": "string"
+          },
+          "queue_id": {
+            "format": "uuid",
+            "title": "Queue Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "queue_id",
+          "category_id"
+        ],
+        "title": "CategoryReceipt",
+        "type": "object"
+      },
       "ClientCreate": {
         "additionalProperties": false,
         "properties": {
@@ -1652,6 +1763,212 @@
           }
         },
         "title": "ProjectPatch",
+        "type": "object"
+      },
+      "QueueCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "team_id": {
+            "format": "uuid",
+            "title": "Team Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "team_id"
+        ],
+        "title": "QueueCreate",
+        "type": "object"
+      },
+      "QueueOutput": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "can_manage": {
+            "title": "Can Manage",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "team_active": {
+            "title": "Team Active",
+            "type": "boolean"
+          },
+          "team_id": {
+            "format": "uuid",
+            "title": "Team Id",
+            "type": "string"
+          },
+          "team_name": {
+            "title": "Team Name",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "active",
+          "version",
+          "created_at",
+          "updated_at",
+          "team_id",
+          "team_name",
+          "team_active",
+          "can_manage"
+        ],
+        "title": "QueueOutput",
+        "type": "object"
+      },
+      "QueuePage": {
+        "properties": {
+          "can_create": {
+            "title": "Can Create",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/QueueOutput"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor",
+          "can_create"
+        ],
+        "title": "QueuePage",
+        "type": "object"
+      },
+      "QueuePatch": {
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "title": "QueuePatch",
+        "type": "object"
+      },
+      "QueueReceipt": {
+        "properties": {
+          "queue_id": {
+            "format": "uuid",
+            "title": "Queue Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "queue_id"
+        ],
+        "title": "QueueReceipt",
+        "type": "object"
+      },
+      "QueueTeam": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "can_manage": {
+            "title": "Can Manage",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "active",
+          "can_manage"
+        ],
+        "title": "QueueTeam",
+        "type": "object"
+      },
+      "QueueTeamPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/QueueTeam"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "QueueTeamPage",
         "type": "object"
       },
       "StateOutput": {
@@ -5361,6 +5678,630 @@
         "summary": "Remove Member",
         "tags": [
           "Identity administration"
+        ]
+      }
+    },
+    "/api/v1/ticket-queue-teams": {
+      "get": {
+        "operationId": "teams_api_v1_ticket_queue_teams_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueTeamPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Teams",
+        "tags": [
+          "Service Desk configuration"
+        ]
+      }
+    },
+    "/api/v1/ticket-queues": {
+      "get": {
+        "operationId": "listing_api_v1_ticket_queues_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueuePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listing",
+        "tags": [
+          "Service Desk configuration"
+        ]
+      },
+      "post": {
+        "operationId": "create_api_v1_ticket_queues_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueueCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueReceipt"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create",
+        "tags": [
+          "Service Desk configuration"
+        ]
+      }
+    },
+    "/api/v1/ticket-queues/{queue_id}": {
+      "get": {
+        "operationId": "get_api_v1_ticket_queues__queue_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "queue_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Queue Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueOutput"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get",
+        "tags": [
+          "Service Desk configuration"
+        ]
+      },
+      "patch": {
+        "operationId": "patch_api_v1_ticket_queues__queue_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "queue_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Queue Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "pattern": "^\"[1-9][0-9]{0,9}\"$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueuePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueueOutput"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch",
+        "tags": [
+          "Service Desk configuration"
+        ]
+      }
+    },
+    "/api/v1/ticket-queues/{queue_id}/activity": {
+      "get": {
+        "operationId": "activity_api_v1_ticket_queues__queue_id__activity_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "queue_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Queue Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Activity",
+        "tags": [
+          "Service Desk configuration"
+        ]
+      }
+    },
+    "/api/v1/ticket-queues/{queue_id}/categories": {
+      "get": {
+        "operationId": "categories_api_v1_ticket_queues__queue_id__categories_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "queue_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Queue Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Categories",
+        "tags": [
+          "Service Desk configuration"
+        ]
+      },
+      "post": {
+        "operationId": "create_category_api_v1_ticket_queues__queue_id__categories_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "queue_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Queue Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryReceipt"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Category",
+        "tags": [
+          "Service Desk configuration"
+        ]
+      }
+    },
+    "/api/v1/ticket-queues/{queue_id}/categories/{category_id}": {
+      "get": {
+        "operationId": "get_category_api_v1_ticket_queues__queue_id__categories__category_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "queue_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Queue Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "category_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Category Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryOutput"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Category",
+        "tags": [
+          "Service Desk configuration"
+        ]
+      },
+      "patch": {
+        "operationId": "patch_category_api_v1_ticket_queues__queue_id__categories__category_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "queue_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Queue Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "category_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Category Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "pattern": "^\"[1-9][0-9]{0,9}\"$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QueuePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryOutput"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Category",
+        "tags": [
+          "Service Desk configuration"
         ]
       }
     },

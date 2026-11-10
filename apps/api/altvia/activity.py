@@ -51,6 +51,28 @@ WORK_EVENT_TYPES = {
     "work_item.status_changed",
     "work_item.commented",
 }
+QUEUE_EVENT_TYPES = {
+    "ticket_queue.created",
+    "ticket_queue.updated",
+    "ticket_queue.category_created",
+    "ticket_queue.category_updated",
+}
+
+
+class QueueEventPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
+    actor_id: UUID
+    actor_kind: Literal["user"]
+    category_id: UUID | None = None
+    changed_fields: str | None = Field(default=None, max_length=20)
+
+    @model_validator(mode="after")
+    def valid_changes(self) -> "QueueEventPayload":
+        if self.changed_fields is not None:
+            fields = self.changed_fields.split(",")
+            if len(fields) != len(set(fields)) or not set(fields).issubset({"name", "active"}):
+                raise ValueError("Invalid queue changes")
+        return self
 
 
 class MilestoneEventPayload(BaseModel):
@@ -238,6 +260,7 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
             | AREA_EVENT_TYPES
             | WORK_EVENT_TYPES
             | MILESTONE_EVENT_TYPES
+            | QUEUE_EVENT_TYPES
             or event.schema_version != 1
         ):
             event.status, event.last_error_code, event.lease_until = (
@@ -253,8 +276,18 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                 | RegistryEventPayload
                 | WorkEventPayload
                 | MilestoneEventPayload
+                | QueueEventPayload
             )
-            if event.event_type in MILESTONE_EVENT_TYPES:
+            if event.event_type in QUEUE_EVENT_TYPES:
+                payload = QueueEventPayload.model_validate(event.payload)
+                if (payload.category_id is not None) != (
+                    event.event_type
+                    in {"ticket_queue.category_created", "ticket_queue.category_updated"}
+                ) or (payload.changed_fields is not None) != (
+                    event.event_type in {"ticket_queue.updated", "ticket_queue.category_updated"}
+                ):
+                    raise ValueError("Invalid queue event fields")
+            elif event.event_type in MILESTONE_EVENT_TYPES:
                 payload = MilestoneEventPayload.model_validate(event.payload)
                 if (payload.changed_fields is not None) != (
                     event.event_type == "project.milestone_updated"
@@ -348,7 +381,15 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                 payload = EventPayload.model_validate(event.payload)
             if (
                 event.aggregate_type
-                not in {"identity", "team", "client", "project", "operational_area", "work_item"}
+                not in {
+                    "identity",
+                    "team",
+                    "client",
+                    "project",
+                    "operational_area",
+                    "work_item",
+                    "ticket_queue",
+                }
                 or event.aggregate_version < 1
                 or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", event.correlation_id)
             ):
@@ -360,7 +401,9 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                 "identity.team_member_removed",
             }
             expected_resource = (
-                "work_item"
+                "ticket_queue"
+                if event.event_type in QUEUE_EVENT_TYPES
+                else "work_item"
                 if event.event_type in WORK_EVENT_TYPES
                 else "project"
                 if event.event_type in PROJECT_EVENT_TYPES | MILESTONE_EVENT_TYPES

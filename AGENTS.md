@@ -9,6 +9,10 @@
 - External work participants are bounded task-owned unverified labels, never
   accounts, contact lookups or grants. Manager-only writes reuse the task version
   and lock protocol; preserve legacy creation fingerprints and transition receipts.
+- Queue/category configuration uses ADR-0026's explicit team metadata roles or
+  global platform configuration authority. Team roster and queue configuration
+  never grant customer ticket content. Lock identity before auth, then team,
+  queue and category. Category changes advance the queue aggregate as well.
 - Administrative account/role mutations must reuse altvia.management's lock protocol,
   last-active-admin guard, session invalidation and audit/outbox. A profile edit
   never grants roles; platform administration never bypasses customer scope.

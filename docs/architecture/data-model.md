@@ -257,3 +257,15 @@ policy is awaiting management, so no destructive TTL job is authorized.
 Outbox kernel starts in Phase 1 for consistent writes; ticket automation consumers
 arrive in Phase 4. Every migration has backup/compatibility/rollback notes before
 production. No SQL/Alembic migration or database change is executed by this design.
+
+## Phase 3A persisted queue configuration
+
+ADR-0026 and migration b46087000013 add ticket_queues and ticket_categories.
+Queues contain immutable team_id, exact parent-unique name, active, version and
+UTC timestamps. Categories contain immutable queue_id and the same metadata.
+Both have RESTRICT FKs, single-line/nonblank name checks, positive versions and
+parent/id page indexes. The activity resource constraint expands to ticket_queue.
+Category changes advance the queue aggregate for ordered redacted activity.
+The API has SELECT/INSERT/UPDATE only and the worker has no metadata-table access.
+Downgrade locks both tables and refuses surviving rows or durable queue history.
+The earlier entity dictionary remains the planned model for later ticket content.

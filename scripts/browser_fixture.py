@@ -95,6 +95,19 @@ with Session(engine) as db, db.begin():
         ]:
             set_project_access(db, work_accounts[kind][0], work_project.id, role)
         roster_hash = hash_new_password(secrets.token_urlsafe(30))
+        external_work_project = Project(
+            name="Projeto de envolvidos externos - Validacao",
+            scope_kind="internal",
+            team_id=work_team.id,
+        )
+        db.add(external_work_project)
+        db.flush()
+        for kind, role in [
+            ("MANAGER", "project_manager"),
+            ("AGENT", "agent"),
+            ("READER", "viewer"),
+        ]:
+            set_project_access(db, work_accounts[kind][0], external_work_project.id, role)
         member_accounts = {}
         for kind in ["MANAGER", "VIEWER", "HIDDEN", "SELF", "TARGET"]:
             member_email = f"browser-member-{kind.lower()}-{secrets.token_hex(8)}@example.invalid"
@@ -184,6 +197,7 @@ with Session(engine) as db, db.begin():
                     f"ALTVIA_E2E_CONTACT_{kind}_EMAIL={contact_email}\nALTVIA_E2E_CONTACT_{kind}_PASSWORD={contact_password}\n"
                 )
             target.write(f"ALTVIA_E2E_WORK_PROJECT_ID={work_project.id}\n")
+            target.write(f"ALTVIA_E2E_EXTERNAL_WORK_PROJECT_ID={external_work_project.id}\n")
             for kind, (work_email, work_password) in work_accounts.items():
                 target.write(
                     f"ALTVIA_E2E_WORK_{kind}_EMAIL={work_email}\nALTVIA_E2E_WORK_{kind}_PASSWORD={work_password}\n"
@@ -211,6 +225,15 @@ if not os.environ.get("ALTVIA_E2E_EXPIRE") and not os.environ.get("ALTVIA_E2E_DI
             target.write(f"ALTVIA_E2E_MEMBER_{kind}_SESSION={token}\n")
     Path(".env.browser-session").chmod(0o600)
     with Path(".env.browser-session").open("a", encoding="utf-8") as target:
+        for kind in ["MANAGER", "AGENT", "READER"]:
+            with Session(engine) as db:
+                _, _, token = login(
+                    db,
+                    *work_accounts[kind],
+                    "external-work-fixture",
+                    "external_work_fixture_session",
+                )
+            target.write(f"ALTVIA_E2E_WORK_{kind}_SESSION={token}\n")
         for kind, (milestone_email, milestone_password) in milestone_accounts.items():
             with Session(engine) as db:
                 _, _, token = login(

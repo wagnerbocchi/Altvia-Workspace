@@ -942,6 +942,7 @@ with Session(make_engine(WorkerSettings())) as db:
                         "work_type": "one_off",
                         "owner_id": owner,
                         "assignee_ids": [owner],
+                        "external_participants": ["Packaged external participant"],
                         "due": {
                             "precision": "date",
                             "date": "2026-11-09",
@@ -1122,6 +1123,7 @@ with Session(make_engine(Settings())) as db,db.begin():
             assert persisted_members["project_version"] == 4
             assert [row["id"] for row in persisted_members["items"]] == [reader_id]
             persisted_work = client.get("/api/v1/work-items/" + work_ids[0]).json()
+            assert persisted_work["external_participants"] == ["Packaged external participant"]
             assert (
                 persisted_work["version"] == 4
                 and persisted_work["description"] == "Persisted task content"

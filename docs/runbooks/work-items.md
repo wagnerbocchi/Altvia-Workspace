@@ -33,6 +33,33 @@ show author identifiers and bounded navigation. Activity may appear after worker
 projection; use Atualizar atividade. Safe field names explain edits without
 placing comment, title, description or reason prose in queue payloads.
 
+## Identify outside involvement
+
+ADR-0025 adds Envolvidos externos, um por linha to the manager's existing create
+and edit form. Enter up to 50 names, at most 150 Unicode code points per name.
+Blank lines are ignored; repeated exact names are refused after whitespace trim.
+Names are supplied attribution, not verified identities. They do not create an
+account, grant project/client access, send a message or add work to an employee's
+My Work. No contact directory or matching by name/email is consulted.
+
+Detail displays these names separately from internal participants. Managers can
+replace the list or clear the field to remove all external involvement. Agents
+and readers consult the names; an assigned agent editing other content preserves
+them. The list shares the task's reviewed version, current-reference checks,
+original creation intent and explicit conflict reload. Do not rebase an old edit
+on a fresh task version without reviewing the current list.
+
+The browser follows the API's whitespace rules and preserves non-whitespace
+Unicode content, including U+FEFF, during unrelated edits. External-only changes
+record the field name in internal task history without copying names into events.
+
+Migration b46087000012 adds a task-owned link table. Preserve the expanded table,
+all existing labels and durable audit/outbox/activity on application rollback.
+Downgrade refuses data or new-field events, even after every label was cleared;
+its table lock prevents a concurrent link write from bypassing the data check.
+Keep a compatible worker for the new changed field, or stop it until compatible
+code resumes. No forced downgrade, volume reset or real-data import is authorized.
+
 ## Find tasks and operate the board
 
 Project task discovery defaults to a paged list. Search applies to the title and

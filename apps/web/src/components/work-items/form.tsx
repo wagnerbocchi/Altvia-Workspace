@@ -10,12 +10,21 @@ import { RecordPicker, type Choice } from "@/components/project-workspace/picker
 import { usePaging } from "@/components/team-admin/common";
 import { type WorkApi, type WorkCreate, type WorkPatch, type WorkRecord, workPriorities } from "@/lib/work-items";
 
+// Match Python str.strip; ECMAScript trim would discard meaningful U+FEFF.
+const externalLabels = (value: string) => value.split(/\r\n|\r|\n/).map(label => label.replace(/^[\p{White_Space}\u001c-\u001f]+|[\p{White_Space}\u001c-\u001f]+$/gu, "")).filter(Boolean);
 const schema = z.object({
   title: z.string().trim().refine(value => Array.from(value).length >= 1 && Array.from(value).length <= 300, "Use um título de 1 a 300 caracteres."),
   description: z.string().max(20000, "Use até 20.000 caracteres."),
   priority: z.enum(["low", "medium", "high", "critical"]),
   work_type: z.enum(["one_off", "ongoing"]),
   estimate: z.string().refine(value => !value || (/^\d+$/.test(value) && Number(value) <= 2147483647), "Informe minutos inteiros não negativos."),
+  external_labels: z.string().superRefine((value, context) => {
+    const labels = externalLabels(value);
+    const message = labels.length > 50 ? "Use no maximo 50 nomes externos."
+      : labels.some(label => Array.from(label).length > 150 || label.includes("\0")) ? "Use nomes de 1 a 150 caracteres, sem caractere nulo."
+      : new Set(labels).size !== labels.length ? "Remova os nomes externos repetidos." : null;
+    if (message) context.addIssue({ code: "custom", message });
+  }),
 });
 type Values = z.infer<typeof schema>;
 type Fields = Omit<WorkCreate, "project_id">;
@@ -68,6 +77,7 @@ export function WorkForm({ api, project, initial, manage, actor, locked, onSubmi
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: {
     title: initial?.title ?? "", description: initial?.description ?? "", priority: initial?.priority ?? "medium",
     work_type: initial?.work_type ?? "one_off", estimate: initial?.estimated_minutes?.toString() ?? "",
+    external_labels: (initial?.external_participants ?? []).join("\n"),
   } });
   const submit = (values: Values) => {
     setError("");
@@ -85,12 +95,17 @@ export function WorkForm({ api, project, initial, manage, actor, locked, onSubmi
     }
     const fields: Fields = { title: values.title, description: values.description, priority: values.priority, work_type: values.work_type,
       due, estimated_minutes: values.estimate ? Number(values.estimate) : null,
-      ...(manage ? { owner_id: owner?.id ?? null, parent_id: parent?.id ?? null, assignee_ids: assignees.map(row => row.id) }
+      ...(manage ? { owner_id: owner?.id ?? null, parent_id: parent?.id ?? null, assignee_ids: assignees.map(row => row.id), external_participants: externalLabels(values.external_labels) }
         : create ? { owner_id: actor.id } : {}),
     };
     if (create) { onSubmit(fields); return; }
     const body: WorkPatch = {};
-    for (const key of ["title", "description", "priority", "due", "estimated_minutes", ...(manage ? ["owner_id", "parent_id", "assignee_ids"] as const : [])] as const) {
+    for (const key of ["title", "description", "priority", "due", "estimated_minutes", ...(manage ? ["owner_id", "parent_id", "assignee_ids", "external_participants"] as const : [])] as const) {
+      if (key === "external_participants") {
+        const labels = fields.external_participants ?? [], previous = initial.external_participants ?? [];
+        if (labels.length !== previous.length || labels.some(label => !previous.includes(label))) body.external_participants = labels;
+        continue;
+      }
       if (JSON.stringify(fields[key]) !== JSON.stringify(initial[key])) Object.assign(body, { [key]: fields[key] });
     }
     if (!Object.keys(body).length) { setError("Nenhuma alteração para salvar."); return; }
@@ -115,6 +130,11 @@ export function WorkForm({ api, project, initial, manage, actor, locked, onSubmi
         <RecordPicker id="work-participant" label="Adicionar envolvido" value={person} onChange={setPerson} choices={choices.filter(row => !assignees.some(selected => selected.id === row.id))} paging={peoplePaging} next={people.data?.next_cursor} pending={people.isPending} failed={people.isError} retry={() => void people.refetch()} disabled={locked || assignees.length >= 50} />
         <Button type="button" variant="outline" disabled={locked || !person || assignees.length >= 50} onClick={() => { if (person) setAssignees([...assignees, person]); setPerson(null); }}>Incluir envolvido</Button>
         <ul className="record-list" aria-label="Envolvidos selecionados">{assignees.map(row => <li className="team-row" key={row.id}><span className="record-text">{row.label}</span><Button type="button" variant="outline" onClick={() => setAssignees(assignees.filter(selected => selected.id !== row.id))}>Remover {row.label}</Button></li>)}</ul>
+      </div>}
+      {manage && <div className="field work-participants"><label htmlFor="work-external">Envolvidos externos, um por linha</label>
+        <p id="work-external-help" className="field-help">Ate 50 nomes, com no maximo 150 caracteres por nome. Nomes informados nao criam contas, nao enviam mensagens e nao concedem acesso.</p>
+        <textarea id="work-external" rows={4} maxLength={20000} {...form.register("external_labels")} aria-invalid={!!form.formState.errors.external_labels} aria-describedby="work-external-help work-external-error" />
+        <p id="work-external-error" className="field-error" role={form.formState.errors.external_labels ? "alert" : undefined}>{form.formState.errors.external_labels?.message}</p>
       </div>}
       {!manage && create && <p className="field-help">Você será responsável por esta tarefa. O gestor pode ajustar os envolvidos e a tarefa principal.</p>}
       {error && <p role="alert" className="field-error">{error}</p>}

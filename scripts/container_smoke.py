@@ -797,6 +797,92 @@ with Session(make_engine(WorkerSettings())) as db:
                     assert login_work.status_code == 201
                     contributor.headers["X-CSRF-Token"] = login_work.json()["csrf_token"]
                     owner = login_work.json()["user"]["id"]
+                    if index == 1:
+                        member_path = f"/api/v1/projects/{project_id}/members"
+                        member_body = {
+                            "email": "http-administered@example.test",
+                            "role_name": "agent",
+                        }
+                        member_headers = {"If-Match": '"1"', "Idempotency-Key": uuid4().hex}
+                        with httpx.Client(
+                            base_url=origin,
+                            verify=str(secret_dir / "tls_cert"),
+                            headers={"Origin": origin},
+                            timeout=10,
+                            trust_env=False,
+                        ) as affected:
+                            assert (
+                                affected.post(
+                                    "/api/v1/auth/sessions",
+                                    json={
+                                        "email": "http-administered@example.test",
+                                        "password": password,
+                                    },
+                                ).status_code
+                                == 201
+                            )
+                            grant = contributor.post(
+                                member_path, json=member_body, headers=member_headers
+                            )
+                            assert grant.status_code == 201
+                            assert grant.json() == {"project_id": project_id, "user_id": other_id}
+                            assert affected.get("/api/v1/auth/me").status_code == 401
+                        assert contributor.get(member_path).json()["project_version"] == 2
+                        assert (
+                            contributor.post(
+                                member_path,
+                                json=member_body,
+                                headers={"If-Match": '"2"', "Idempotency-Key": uuid4().hex},
+                            ).status_code
+                            == 201
+                        )
+                        assert contributor.get(member_path).json()["project_version"] == 2
+                        assert (
+                            contributor.patch(
+                                member_path + "/" + other_id,
+                                json={"role_name": "viewer"},
+                                headers={"If-Match": '"2"'},
+                            ).status_code
+                            == 204
+                        )
+                        assert (
+                            contributor.delete(
+                                member_path + "/" + other_id,
+                                headers={"If-Match": '"3"'},
+                            ).status_code
+                            == 204
+                        )
+                        replay = contributor.post(
+                            member_path, json=member_body, headers=member_headers
+                        )
+                        assert replay.status_code == 200 and replay.json() == grant.json()
+                        current_members = contributor.get(member_path).json()
+                        assert current_members["project_version"] == 4
+                        assert [row["id"] for row in current_members["items"]] == [owner]
+                        forbidden = contributor.post(
+                            f"/api/v1/projects/{project_ids[0]}/members",
+                            json=member_body,
+                            headers={"If-Match": '"1"', "Idempotency-Key": uuid4().hex},
+                        )
+                        assert forbidden.status_code == 422
+                        (work / "project-member-proof.json").write_text(
+                            json.dumps(
+                                {
+                                    "project_id": project_id,
+                                    "grant": 201,
+                                    "noop": 201,
+                                    "role_change": 204,
+                                    "removal": 204,
+                                    "replay": 200,
+                                    "affected_session": 401,
+                                    "ceiling_denial": 422,
+                                    "final_version": 4,
+                                },
+                                indent=2,
+                            )
+                            + "\n",
+                            encoding="utf-8",
+                        )
                     if index in {0, 2}:
                         customer = customer_ids[0 if index == 0 else 1]
                         contact_collection = f"/api/v1/clients/{customer}/contacts"
@@ -1031,6 +1117,9 @@ with Session(make_engine(Settings())) as db,db.begin():
                 == reader_id
             )
             assert client.get("/api/v1/operational-areas").json()["items"][0]["id"] == area_id
+            persisted_members = client.get(f"/api/v1/projects/{project_ids[2]}/members").json()
+            assert persisted_members["project_version"] == 4
+            assert [row["id"] for row in persisted_members["items"]] == [reader_id]
             persisted_work = client.get("/api/v1/work-items/" + work_ids[0]).json()
             assert (
                 persisted_work["version"] == 4

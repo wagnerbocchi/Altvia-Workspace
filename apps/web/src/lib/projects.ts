@@ -4,6 +4,8 @@ import { createAdminTransport, pageQuery, versionHeader } from "./admin-http";
 export type ProjectRecord = components["schemas"]["ProjectOutput"];
 export type ProjectCreate = components["schemas"]["ProjectCreate"];
 export type ProjectPatch = components["schemas"]["ProjectPatch"];
+export type ProjectMember = components["schemas"]["ProjectMemberOutput"];
+export type ProjectMemberRole = components["schemas"]["ProjectMemberRole"]["role_name"];
 export type AreaRecord = components["schemas"]["AreaOutput"];
 export function createProjectApi(csrf: string, onAuthError: (error: unknown) => void) {
   const { request, write } = createAdminTransport(csrf, onAuthError);
@@ -29,6 +31,15 @@ export function createProjectApi(csrf: string, onAuthError: (error: unknown) => 
     },
     async members(id: string, cursor: string | null, signal?: AbortSignal): Promise<components["schemas"]["ProjectMemberPage"]> {
       return (await request(`${path(id)}/members${pageQuery(cursor)}`, { signal })).json();
+    },
+    async addMember(id: string, body: components["schemas"]["ProjectMemberAdd"], version: number, key: string): Promise<components["schemas"]["ProjectMemberReceipt"]> {
+      return (await request(`${path(id)}/members`, write("POST", body, version, key))).json();
+    },
+    async changeMember(id: string, userId: string, role: ProjectMemberRole | null, version: number) {
+      const response = await request(`${path(id)}/members/${encodeURIComponent(userId)}`,
+        write(role === null ? "DELETE" : "PATCH", role === null ? undefined : { role_name: role }, version));
+      const current = Number(response.headers.get("ETag")?.replaceAll('"', ""));
+      if (response.headers.get("ETag") !== versionHeader(current)) throw Error("Resource version not confirmed");
     },
     async activity(id: string, cursor: string | null, signal?: AbortSignal): Promise<components["schemas"]["ActivityPage"]> {
       return (await request(`${path(id)}/activity${pageQuery(cursor)}`, { signal })).json();

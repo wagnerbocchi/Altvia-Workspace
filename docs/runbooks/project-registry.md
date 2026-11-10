@@ -41,7 +41,27 @@ through the project API. Archived resources remain readable until access is revo
 
 ## Change project access
 
-Further membership/role changes use a trusted interactive terminal with the existing
+ADR-0023 adds Administrar membros from a readable project's detail. Only scoped
+project managers or customer operations managers can write; global administration
+alone does not grant content access. Add an existing account by its known email,
+select a project role, then review and confirm the exact email/role. Existing direct
+roles are replaced. The screen never lists global accounts or grants a customer
+ceiling. An unavailable account and an ineligible account share one safe error.
+
+Alterar papel retains the reviewed Project version. Removing a direct access pair
+preserves work assignments/history and does not revoke inherited customer access.
+Access changes end affected sessions; changing your own access requires login
+again and can remove your management authority. There is no last-manager guard.
+Use the trusted CLI below for approved recovery if no browser manager remains.
+
+After a lost add response, use Verificar concessao to retry only its original
+email/role/version/key. A replay confirms that submission, not the current role.
+Refresh current data before another edit. A version conflict requires explicit
+reload and review; never resubmit against a newer version without checking it.
+Failed parent/list refresh keeps an uncertain add frozen. Archived projects permit
+removal, while new grants/role changes require active references.
+
+Membership/role changes also remain available in a trusted interactive terminal with the existing
 runtime configuration. Confirm the target email and project UUID. Examples use
 placeholders; enter actual approved identifiers, never a password argument.
 

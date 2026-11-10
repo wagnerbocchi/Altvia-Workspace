@@ -95,6 +95,23 @@ with Session(engine) as db, db.begin():
         ]:
             set_project_access(db, work_accounts[kind][0], work_project.id, role)
         roster_hash = hash_new_password(secrets.token_urlsafe(30))
+        member_accounts = {}
+        for kind in ["MANAGER", "VIEWER", "HIDDEN", "SELF", "TARGET"]:
+            member_email = f"browser-member-{kind.lower()}-{secrets.token_hex(8)}@example.invalid"
+            member_password = secrets.token_urlsafe(30)
+            person = create_user(db, member_email, f"Membro {kind} - Validacao", member_password)
+            member_accounts[kind] = (member_email, member_password, person.id)
+        member_project = Project(
+            name="Projeto de membros - Validacao", scope_kind="internal", team_id=work_team.id
+        )
+        db.add(member_project)
+        db.flush()
+        for kind, role in [
+            ("MANAGER", "project_manager"),
+            ("VIEWER", "viewer"),
+            ("SELF", "project_manager"),
+        ]:
+            set_project_access(db, member_accounts[kind][0], member_project.id, role)
         contact_accounts = {}
         for kind in ["MANAGER", "VIEWER", "HIDDEN"]:
             contact_email = f"browser-contact-{kind.lower()}-{secrets.token_hex(8)}@example.invalid"
@@ -141,6 +158,13 @@ with Session(engine) as db, db.begin():
             encoding="utf-8",
         )
         with Path(".env.browser-session").open("a", encoding="utf-8") as target:
+            target.write(f"ALTVIA_E2E_MEMBER_PROJECT_ID={member_project.id}\n")
+            for kind, (member_email, member_password, member_id) in member_accounts.items():
+                target.write(
+                    f"ALTVIA_E2E_MEMBER_{kind}_EMAIL={member_email}\n"
+                    f"ALTVIA_E2E_MEMBER_{kind}_PASSWORD={member_password}\n"
+                    f"ALTVIA_E2E_MEMBER_{kind}_ID={member_id}\n"
+                )
             target.write(f"ALTVIA_E2E_CONTACT_CLIENT_ID={contact_client.id}\n")
             for kind, (contact_email, contact_password, _) in contact_accounts.items():
                 target.write(
@@ -166,5 +190,11 @@ if not os.environ.get("ALTVIA_E2E_EXPIRE") and not os.environ.get("ALTVIA_E2E_DI
                     "contact_fixture_session",
                 )
             target.write(f"ALTVIA_E2E_CONTACT_{kind}_SESSION={token}\n")
+        for kind, (member_email, member_password, _) in member_accounts.items():
+            with Session(engine) as db:
+                _, _, token = login(
+                    db, member_email, member_password, "member-fixture", "member_fixture_session"
+                )
+            target.write(f"ALTVIA_E2E_MEMBER_{kind}_SESSION={token}\n")
     Path(".env.browser-session").chmod(0o600)
 engine.dispose()

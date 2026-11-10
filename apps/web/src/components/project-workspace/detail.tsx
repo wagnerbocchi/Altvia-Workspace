@@ -37,6 +37,7 @@ export function ProjectDetail({ id, api, session }: { id: string; api: ProjectAp
     {query.isPending ? <LoadingRows label="Carregando projeto..." /> : query.isError ? <><h1 id="project-heading" tabIndex={-1}>Projeto indisponível</h1><ReadError retry={() => void query.refetch()}>{query.error instanceof ApiError && query.error.status === 404 ? "Este projeto não está disponível para sua conta." : undefined}</ReadError></> : project && <>
       <h1 id="project-heading" tabIndex={-1}>{project.name}</h1><p className="admin-intro">{project.active ? "Projeto ativo" : "Projeto arquivado"}</p>
       <p><Link className="text-link" href={`/projects/${encodeURIComponent(id)}/work`}>Tarefas do projeto</Link></p>
+      <p><Link className="text-link" href={`/projects/${encodeURIComponent(id)}/members`}>Administrar membros</Link></p>
       {notice && <p role="status" className="read-notice">{notice}</p>}
       {write.error && <div className="read-error"><p role="alert">{writeError(write.error)}</p><Button variant="outline" disabled={write.reloading} onClick={() => void write.reconcile(reload)}>Recarregar e descartar edição</Button></div>}
       {write.reloadFailed && <p role="alert" className="error-message">Não foi possível atualizar. A edição continua bloqueada.</p>}

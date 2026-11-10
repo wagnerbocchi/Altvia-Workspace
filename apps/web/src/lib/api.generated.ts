@@ -159,6 +159,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/my-work": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Work */
+        get: operations["my_work_api_v1_my_work_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/operational-areas": {
         parameters: {
             query?: never;
@@ -861,6 +878,60 @@ export interface components {
         MemberPage: {
             /** Items */
             items: components["schemas"]["MemberOutput"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** MyWorkItem */
+        MyWorkItem: {
+            /** Due */
+            due: (components["schemas"]["DateDue"] | components["schemas"]["InstantDue"]) | null;
+            /** Due At */
+            due_at: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @default work_item
+             * @constant
+             */
+            kind: "work_item";
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "low" | "medium" | "high" | "critical";
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Project Name */
+            project_name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "todo" | "in_progress" | "blocked" | "done" | "cancelled";
+            /** Title */
+            title: string;
+            /**
+             * Work Type
+             * @enum {string}
+             */
+            work_type: "one_off" | "ongoing";
+        };
+        /** MyWorkPage */
+        MyWorkPage: {
+            /**
+             * As Of
+             * Format: date-time
+             */
+            as_of: string;
+            /** Items */
+            items: components["schemas"]["MyWorkItem"][];
             /** Next Cursor */
             next_cursor: string | null;
         };
@@ -1690,6 +1761,51 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActivityPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_work_api_v1_my_work_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+                status?: ("todo" | "in_progress" | "blocked" | "done" | "cancelled") | null;
+                priority?: ("low" | "medium" | "high" | "critical") | null;
+                work_type?: ("one_off" | "ongoing") | null;
+                owner_id?: string | null;
+                involved_user_id?: string | null;
+                unassigned?: boolean;
+                due_presence?: ("dated" | "undated") | null;
+                due_from?: string | null;
+                due_before?: string | null;
+                q?: string | null;
+                project_id?: string | null;
+                client_id?: string | null;
+                team_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyWorkPage"];
                 };
             };
             /** @description Validation Error */
@@ -2607,9 +2723,19 @@ export interface operations {
     listing_api_v1_work_items_get: {
         parameters: {
             query: {
-                project_id: string;
                 limit?: number;
                 cursor?: string | null;
+                status?: ("todo" | "in_progress" | "blocked" | "done" | "cancelled") | null;
+                priority?: ("low" | "medium" | "high" | "critical") | null;
+                work_type?: ("one_off" | "ongoing") | null;
+                owner_id?: string | null;
+                involved_user_id?: string | null;
+                unassigned?: boolean;
+                due_presence?: ("dated" | "undated") | null;
+                due_from?: string | null;
+                due_before?: string | null;
+                q?: string | null;
+                project_id: string;
             };
             header?: never;
             path?: never;

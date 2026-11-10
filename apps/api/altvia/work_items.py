@@ -199,12 +199,16 @@ def set_due(db: Session, item: WorkItem, due: Due | None) -> None:
         item.due_date_local, item.due_timezone = due.date, due.timezone
 
 
-def output(item: WorkItem, permission: Access, user_id: UUID) -> WorkOutput:
+def due_output(item: WorkItem) -> Due | None:
     due: Due | None = None
     if item.due_precision == "date" and item.due_date_local and item.due_timezone:
         due = DateDue(precision="date", date=item.due_date_local, timezone=item.due_timezone)
     elif item.due_at:
         due = InstantDue(precision="instant", instant=item.due_at)
+    return due
+
+
+def output(item: WorkItem, permission: Access, user_id: UUID) -> WorkOutput:
     return WorkOutput(
         **{
             field: getattr(item, field)
@@ -221,7 +225,7 @@ def output(item: WorkItem, permission: Access, user_id: UUID) -> WorkOutput:
                 "project_writable",
             }
         },
-        due=due,
+        due=due_output(item),
         project_writable=permission.writable,
         owner_name=item.owner.display_name if item.owner else None,
         assignees=[

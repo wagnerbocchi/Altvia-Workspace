@@ -164,6 +164,70 @@ class WorkPage(StrictModel):
     project_writable: bool
 
 
+class WorkFilters(StrictModel):
+    limit: int = Field(default=50, ge=1, le=100)
+    cursor: str | None = Field(default=None, max_length=250)
+    status: Status | None = None
+    priority: Priority | None = None
+    work_type: Literal["one_off", "ongoing"] | None = None
+    owner_id: UUID | None = None
+    involved_user_id: UUID | None = None
+    unassigned: bool = False
+    due_presence: Literal["dated", "undated"] | None = None
+    due_from: AwareDatetime | None = None
+    due_before: AwareDatetime | None = None
+    q: (
+        Annotated[
+            str,
+            BeforeValidator(lambda v: v.strip() if isinstance(v, str) else v),
+            Field(max_length=200),
+        ]
+        | None
+    ) = None
+
+    @field_validator("due_from", "due_before", mode="before")
+    @classmethod
+    def iso_range(cls, value: object) -> object:
+        if isinstance(value, str) and not re.match(r"^\d{4}-\d{2}-\d{2}[Tt ]", value):
+            raise ValueError("Use an aware ISO timestamp")
+        return value
+
+    @model_validator(mode="after")
+    def valid_range(self) -> "WorkFilters":
+        if self.due_from and self.due_before and self.due_from >= self.due_before:
+            raise ValueError("due_from must precede due_before")
+        return self
+
+
+class ProjectWorkFilters(WorkFilters):
+    project_id: UUID
+
+
+class MyWorkFilters(WorkFilters):
+    project_id: UUID | None = None
+    client_id: UUID | None = None
+    team_id: UUID | None = None
+
+
+class MyWorkItem(StrictModel):
+    kind: Literal["work_item"] = "work_item"
+    id: UUID
+    project_id: UUID
+    project_name: str
+    title: str
+    status: Status
+    priority: Priority
+    work_type: Literal["one_off", "ongoing"]
+    due: Due | None
+    due_at: datetime | None
+
+
+class MyWorkPage(StrictModel):
+    items: list[MyWorkItem]
+    next_cursor: str | None
+    as_of: datetime
+
+
 class Candidate(StrictModel):
     id: UUID
     display_name: str

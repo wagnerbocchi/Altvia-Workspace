@@ -284,11 +284,24 @@ class WorkItem(Base):
             name="ck_work_due",
         ),
         Index("ix_work_project_id", "project_id", "id"),
+        Index("ix_work_project_status_id", "project_id", "status", "id"),
+        Index("ix_work_owner_page", "owner_id", "id"),
+        Index(
+            "ix_work_search",
+            text(
+                # Match pg_get_indexdef's canonical casts/parentheses so
+                # Alembic can compare the expression without false drift.
+                "to_tsvector('portuguese'::regconfig, "
+                "(coalesce(title, ''::character varying)::text || ' '::text) "
+                "|| coalesce(description, ''::text))"
+            ),
+            postgresql_using="gin",
+        ),
     )
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     project_id: Mapped[UUID] = mapped_column(ForeignKey("projects.id"))
     parent_id: Mapped[UUID | None] = mapped_column()
-    owner_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    owner_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"))
     owner: Mapped[User | None] = relationship(lazy="joined", foreign_keys=[owner_id])
     title: Mapped[str] = mapped_column(String(300))
     description: Mapped[str] = mapped_column(Text, default="")
@@ -313,8 +326,9 @@ class WorkItem(Base):
 
 class WorkAssignee(Base):
     __tablename__ = "work_item_assignees"
+    __table_args__ = (Index("ix_work_assignee_page", "user_id", "work_item_id"),)
     work_item_id: Mapped[UUID] = mapped_column(ForeignKey("work_items.id"), primary_key=True)
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True, index=True)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), primary_key=True)
     user: Mapped[User] = relationship(lazy="joined")
 
 

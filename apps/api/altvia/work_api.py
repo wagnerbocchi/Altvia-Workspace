@@ -7,9 +7,9 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Query, Request, Response
 from sqlalchemy import Engine, select, tuple_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, noload
 
-from altvia import identity
+from altvia import identity, project_registry, work_queries
 from altvia import work_items as work
 from altvia.activity_api import ActivityPage, activity_page
 from altvia.admin_http import (
@@ -40,6 +40,10 @@ from altvia.work_schemas import (
     CommentCreate,
     CommentOutput,
     CommentPage,
+    MyWorkFilters,
+    MyWorkItem,
+    MyWorkPage,
+    ProjectWorkFilters,
     StateOutput,
     StatePage,
     Transition,
@@ -83,19 +87,18 @@ def create_work_router(engine: Engine, settings: Settings) -> APIRouter:
     @router.get("/work-items", response_model=WorkPage)
     def listing(
         request: Request,
-        project_id: UUID,
-        limit: Annotated[int, Query(ge=1, le=100)] = 50,
-        cursor: Annotated[str | None, Query(max_length=250)] = None,
+        filters: Annotated[ProjectWorkFilters, Query()],
     ) -> WorkPage:
         with Session(engine) as db, db.begin():
             actor = authenticate_request(db, request, settings)
-            permission = work.access(db, actor.id, project_id)
-            _query(request, {"project_id"})
-            scope = f"work-items:{project_id}"
-            last = _cursor(cursor, scope)
+            permission = work.access(db, actor.id, filters.project_id)
+            scope = work_queries.scope(request, filters, actor.id, "work-items")
+            last = _cursor(filters.cursor, scope)
+            limit = filters.limit
             query = (
-                select(WorkItem)
-                .where(WorkItem.project_id == project_id)
+                work_queries.filtered(
+                    select(WorkItem).where(WorkItem.project_id == filters.project_id), filters
+                )
                 .order_by(WorkItem.id)
                 .limit(limit + 1)
             )
@@ -108,6 +111,58 @@ def create_work_router(engine: Engine, settings: Settings) -> APIRouter:
                 can_create=permission.contribute,
                 can_manage=permission.manage,
                 project_writable=permission.writable,
+            )
+
+    @router.get("/my-work", response_model=MyWorkPage)
+    def my_work(request: Request, filters: Annotated[MyWorkFilters, Query()]) -> MyWorkPage:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings)
+            scope = work_queries.scope(request, filters, actor.id, "my-work")
+            last = _cursor(filters.cursor, scope)
+            projects = project_registry.visible_projects(actor.id).subquery()
+            query = (
+                select(WorkItem, projects.c.name)
+                .join(projects, projects.c.id == WorkItem.project_id)
+                .where(work_queries.involved(actor.id))
+                # Summary needs no account/assignment directory or per-project
+                # permission lookups. Detail rechecks all write capabilities.
+                .options(noload(WorkItem.owner), noload(WorkItem.assignees))
+            )
+            for field in ("project_id", "client_id", "team_id"):
+                value = getattr(filters, field)
+                if value is not None:
+                    column = projects.c.id if field == "project_id" else projects.c[field]
+                    query = query.where(column == value)
+            query = (
+                work_queries.filtered(query, filters).order_by(WorkItem.id).limit(filters.limit + 1)
+            )
+            if last:
+                query = query.where(WorkItem.id > last)
+            rows = list(db.execute(query))
+            return MyWorkPage(
+                items=[
+                    MyWorkItem(
+                        **{
+                            key: getattr(item, key)
+                            for key in (
+                                "id",
+                                "project_id",
+                                "title",
+                                "status",
+                                "priority",
+                                "work_type",
+                                "due_at",
+                            )
+                        },
+                        project_name=name,
+                        due=work.due_output(item),
+                    )
+                    for item, name in rows[: filters.limit]
+                ],
+                next_cursor=_next_cursor(scope, rows[filters.limit - 1][0].id)
+                if len(rows) > filters.limit
+                else None,
+                as_of=datetime.now(UTC),
             )
 
     @router.post(

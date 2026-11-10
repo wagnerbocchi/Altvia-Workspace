@@ -61,12 +61,12 @@ def _change_access(
         )
     )
     grant = db.get(ClientAccessGrant, (user.id, client.id))
-    if role is not None and (not user.active or not client.active):
-        raise IdentityError(409, "account_inactive" if not user.active else "client_inactive")
     if role is None and binding is None and grant is None:
         return False
     if role is not None and binding is not None and binding.role_name == role and grant is not None:
         return False
+    if role is not None and (not user.active or not client.active):
+        raise IdentityError(409, "account_inactive" if not user.active else "client_inactive")
     now = datetime.now(UTC)
     if role is None:
         if binding is not None:

@@ -143,3 +143,26 @@ def test_client_created_event_requires_its_delegation_metadata(
         } | payload
         event_id = event.event_id
     assert not consume_event(db_engine, event_id, datetime.now(UTC))
+
+
+@pytest.mark.parametrize("inactive", ["client", "user"])
+def test_identical_grant_is_a_no_op_on_inactive_targets_but_repairs_remain_denied(
+    admin_client, seeded_user, db_engine, inactive
+):
+    from altvia.client_registry import set_client_access
+    from altvia.identity import IdentityError
+    from altvia.models import User
+
+    identifier = UUID(created(admin_client, seeded_user))
+    with Session(db_engine) as db, db.begin():
+        target = db.get(Client, identifier) if inactive == "client" else db.get(User, seeded_user)
+        target.active = False
+        original_version = db.get(User, seeded_user).auth_version
+    with Session(db_engine) as db, db.begin():
+        assert not set_client_access(db, "employee@example.test", identifier, "operations_manager")
+        assert db.get(User, seeded_user).auth_version == original_version
+    with Session(db_engine) as db, db.begin():
+        db.delete(db.get(ClientAccessGrant, (seeded_user, identifier)))
+    with Session(db_engine) as db, db.begin(), pytest.raises(IdentityError) as error:
+        set_client_access(db, "employee@example.test", identifier, "operations_manager")
+    assert error.value.status == 409

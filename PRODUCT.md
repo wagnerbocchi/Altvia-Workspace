@@ -43,8 +43,12 @@ Foundation also includes durable worker/Redis processing and restricted identity
 activity. Phase 2A adds a persisted client directory, explicit initial-manager
 selection, scoped rename/archive/restore and client history. Client content always
 requires a separate ceiling and role, including for platform administrators.
-Further customer access changes use the restricted host CLI. Projects, areas,
-contacts, tasks and Service Desk remain future deliveries.
+Further customer access changes use the restricted host CLI. Phase 2B implements
+internal/customer projects, explicit initial managers, scoped metadata lifecycle,
+operational classification, real members and project-only history under ADR-0019.
+Creation controls follow current API creation authority independently of pagination.
+Further project role/membership changes use the restricted host CLI. Contacts,
+tasks, default ticket projects and Service Desk remain future deliveries.
 HTTPS, secure HttpOnly cookies, Origin/CSRF checks and no browser auth-token
 storage are required. Keyboard access, visible focus, responsive layout and
 dark/light themes are required. All mandatory runtime dependencies must support

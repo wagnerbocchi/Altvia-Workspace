@@ -25,12 +25,20 @@ export function usePaging() {
 export function Paging({ paging, next, label, disabled = false }: {
   paging: ReturnType<typeof usePaging>; next?: string | null; label: string; disabled?: boolean;
 }) {
+  const aliases: Record<string, string> = { "cliente do projeto": "clientes", "equipe responsável": "equipes", "área do projeto": "áreas", "gestor inicial": "contas" };
+  const labels: Record<string, [string, string]> = {
+    projetos: ["Projetos anteriores", "Próximos projetos"], áreas: ["Áreas anteriores", "Próximas áreas"],
+    clientes: ["Clientes anteriores", "Próximos clientes"], equipes: ["Equipes anteriores", "Próximas equipes"],
+    contas: ["Contas anteriores", "Próximas contas"], acessos: ["Acessos anteriores", "Próximos acessos"],
+    atividades: ["Atividades anteriores", "Próximas atividades"],
+  };
+  const [previousLabel, nextLabel] = labels[aliases[label] ?? label] ?? ["Participantes anteriores", "Próximos participantes"];
   return <nav className="paging" aria-label={`Páginas de ${label}`}>
     <Button type="button" variant="outline" disabled={disabled || paging.index === 0} onClick={paging.previous}>
-      {label === "clientes" ? "Clientes anteriores" : label === "equipes" ? "Equipes anteriores" : label === "contas" ? "Contas anteriores" : label === "acessos" ? "Acessos anteriores" : label === "atividades" ? "Atividades anteriores" : "Participantes anteriores"}
+      {previousLabel}
     </Button><span>Página {paging.index + 1}</span>
     <Button type="button" variant="outline" disabled={disabled || !next} onClick={() => next && paging.next(next)}>
-      {label === "clientes" ? "Próximos clientes" : label === "equipes" ? "Próximas equipes" : label === "contas" ? "Próximas contas" : label === "acessos" ? "Próximos acessos" : label === "atividades" ? "Próximas atividades" : "Próximos participantes"}
+      {nextLabel}
     </Button>
   </nav>;
 }

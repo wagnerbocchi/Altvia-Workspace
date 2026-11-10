@@ -76,6 +76,19 @@ history. Expanded client data/history must survive application rollback.
 
 ## Trust boundaries and controls
 
+Phase 2B (ADR-0019) adds explicit project membership/role scopes. Internal projects
+require both; customer projects first require a ceiling and then either a direct
+project role/member pair or a client viewer/operations_manager. Only client
+operations_manager or project_manager may alter metadata. Team metadata roles and
+global administration never grant project reads. Configuration creation returns
+only a minimal receipt and explicitly delegates to the selected manager, requiring
+an existing customer ceiling when applicable. Scoped creation additionally requires
+team read and explicit self-selection. Every saved replay rechecks that authority.
+Shared operational areas contain classification names suitable for all authenticated
+staff, not customer-sensitive data. Changing classification never changes scope.
+Creation visibility is API-owned and independent of list pagination; browsing or
+recovering the list must not dispose an uncertain POST body/idempotency key.
+
 | Threat/boundary | Required control | Verification gate |
 | --- | --- | --- |
 | BOLA/IDOR, high contextual priority | Policy-filtered lookup and same-client DB/link constraints | For each endpoint, other-client ID read/write/search/link/download denied |

@@ -154,6 +154,40 @@ created by this interface. Global auth capability output remains unchanged.
 
 ## Domain resource schemas
 
+### Implemented projects and operational areas (ADR-0019)
+
+The Phase 2B registry uses the /api/v1 prefix and the existing secure session,
+Origin/CSRF, protected POST and optimistic-version protocols.
+
+| Method and suffix | Current contract |
+| --- | --- |
+| GET /operational-areas | Shared authenticated classification catalog, UUID cursor, limit 1..100/default 50 |
+| POST /operational-areas | identity.manage, {name}, Idempotency-Key, 201/replay200 |
+| PATCH /operational-areas/{id} | identity.manage, If-Match, strict nonempty {name?,active?}, duplicate-name409 |
+| GET /projects | SQL-authorized UUID page, optional client_id filter, fresh can_create independent of pagination, no total count |
+| POST /projects | Configuration or scoped creation authority; {name,scope_kind,client_id?,team_id,operational_area_id?,manager_user_id}; minimal receipt {project_id,manager_user_id}, 201/replay200 |
+| GET /projects/{id} | Scoped metadata/IDs, shared operational_area_name, can_manage and ETag |
+| PATCH /projects/{id} | Scoped manager, If-Match, strict {name?,active?,operational_area_id?}; explicit null clears area |
+| GET /projects/{id}/members | Parent authorization first; bounded id/display_name/active/role_name only |
+| GET /projects/{id}/activity | Parent authorization first; project-bound descending activity cursor |
+
+Names trim to 1..150 code points. Area names are unique and case-sensitive; project
+names need not be unique. Scope/customer/owning team are immutable. Active linked
+references and an existing customer ceiling for the selected manager are required
+at creation; no implicit creator membership or customer grant. Self-delegation
+revokes the current session. Fresh creation authority is checked before a saved
+receipt, which never regrants access or exposes current project metadata.
+
+Configuration authority is identity.manage. Scoped creation requires a customer
+operations_manager plus team metadata read scope and explicit self as manager.
+Internal projects require explicit project membership/binding to read; customer
+projects additionally require a customer ceiling, then inherited client viewer/
+operations_manager or explicit project membership/binding. Client operations_manager
+and project_manager can change project metadata; viewer/agent cannot. Team roles
+and platform administration never confer project reads. Further project grants
+use the interactive CLI in docs/runbooks/project-registry.md. No browser member
+write, task, milestone, board, default ticket project or scope-changing API yet.
+
 ### Implemented client registry (ADR-0018)
 
 Phase 2A implements the following narrower registry contract. The complete-product

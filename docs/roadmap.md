@@ -13,7 +13,12 @@ development. Phase 2A now delivers the scoped client registry in ADR-0018.
 Source dc091de passed 316 API/37 browser tests, all five hosted gates and actual
 baseline-VM packaged/native/cgroup proof. Exact tested five images report zero
 vulnerabilities. See docs/phase-2a-client-evidence.md and its implementation plan.
-Phase 2 remains open; projects/areas/work are subsequent slices.
+Phase 2B now delivers internal/customer projects, shared operational areas,
+explicit project management/membership and scoped history under ADR-0019.
+Source 5faa866 passed 358 API/42 browser tests, all five hosted gates and actual
+baseline-VM packaged/native/cgroup proof; the same five tested images report zero
+vulnerabilities. See docs/phase-2b-project-evidence.md. Phase 2 remains open for
+work items/boards/search/My Work and later client contacts/default-project contracts.
 
 ## Milestones and gates
 
@@ -32,7 +37,7 @@ advancement from UI appearance alone. Reuse unchanged passing evidence; test
 affected behavior after each change. No release date/velocity estimate without
 environment/volume data. Do not replace Zammad until formal operational acceptance.
 
-The supplied VM now qualifies the current five-image client-registry stack; future
+The supplied VM now qualifies the current five-image project/area-registry stack; future
 mandatory native artifacts must repeat that gate. Production readiness remains
 open. If all independent work is exhausted, report
 the exact blocker rather than silently weakening acceptance.
@@ -54,7 +59,7 @@ currently covers this GitHub repository's main only, not production services.
 
 | ID | Needed answer / owner | Safe action while pending | Gate blocked |
 | --- | --- | --- | --- |
-| Q-01 | Final five-image client-registry stack dc091de qualified on the supplied VM, 2026-11-09; native build/runtime/HTTPS/client ACL/restore/browser/cgroup/image-scan and worker/Redis recovery proof retained | Reuse exact tested image evidence; repeat qualification for changed mandatory native artifacts and future components | Satisfied for current stack; future artifact qualification remains required |
+| Q-01 | Final five-image project/area-registry stack 5faa866 qualified on the supplied VM, 2026-11-09; native build/runtime/HTTPS/project ACL/restore/browser/cgroup/image-scan and worker/Redis recovery proof retained | Reuse exact tested image evidence; repeat qualification for changed mandatory native artifacts and future components | Satisfied for current stack; future artifact qualification remains required |
 | Q-02 | Infrastructure admin: IOPS, workload/users/mail per day and production volume/backup policy; observed 8 vCPUs, 31.3 GiB RAM and 500 GiB disk | Conservative bounded defaults; inventory alone establishes no capacity or performance promise | Capacity/prod readiness |
 | Q-03 | Support owner: mailboxes, TLS/auth/forwarding/trusted MTA and SMTP limits | Adapter contracts and controlled test SMTP/IMAP only | Real Phase 3 email acceptance |
 | Q-04 | Operations: actual client/team/project/queue membership matrix | Deny by default; test explicit grants with synthetic test data only | Provisioning/pilot |
@@ -78,10 +83,10 @@ source review had no findings; Impeccable's spacing fix was scored resolved and
 the incumbent system preserved. Updated actual target images passed packaged
 account/TLS/ACL/recovery/cgroup proof and have zero reported image findings.
 Exact evidence: docs/account-administration-evidence.md.
-The final Foundation increment now delivers the actual durable identity activity
+The final Foundation increment delivers the actual durable identity activity
 consumer, restricted browser history, private Redis, safe logs and source-security
-gates under ADR-0017. All Foundation gates passed on 2f6ba60. Phase 2A now starts
-under the user's subsequent instruction. Production capacity/retention/provider decisions remain
+gates under ADR-0017. All Foundation gates passed on 2f6ba60. Phase 2A/2B registries
+are qualified under the user's subsequent instructions. Production capacity/retention/provider decisions remain
 the later gates listed above, not unimplemented Foundation requirements.
 
 Residual findings were fixed on683e34d; packaged same-origin web ingress passed
@@ -95,6 +100,18 @@ native mobile and local AI remain outside MVP. No speculative code for backlog.
 
 ## Evidence ledger
 
+- Phase 2B: contracts fa14b3f, backend caa9deb, creation authority 7172128,
+  reviewed browser c40198e and packaged proof 5faa866. Full 358 API/42 browser
+  tests, fresh source-review corrections, Impeccable ship/documentation and all
+  five hosted gates passed. Actual baseline guest built/executed the final five
+  images, with exact-ID zero-finding scans and native/cgroup/project-isolation/
+  persistence proof. Worker exited 0 in 8.784 seconds under broker blackhole;
+  27 events recovered. Full-page skip-link artifact reproduced in a controlled
+  same-image diagnostic; viewport/keyboard behavior passed without a product edit.
+  Task containers stopped, volumes retained, SSH closed. See
+  docs/phase-2b-project-evidence.md. Registry/areas complete; Phase 2 remains open.
+  Stop before tasks/boards; no production deployment or real import.
+
 - Phase 2A: contracts 06537b2, backend 4a9a954, reviewed no-op correction 24d534b,
   browser 7092456, packaged proof 11b5043 and test corrections dc091de. Full 316 API/
   37 browser tests, fresh source review fixes, Impeccable ship/documentation and all five
@@ -103,7 +120,8 @@ native mobile and local AI remain outside MVP. No speculative code for backlog.
   proof. Worker exited 0 in 8.681 seconds under broker blackhole; 27 events recovered.
   Task stopped, volumes retained, SSH closed. See docs/phase-2a-client-evidence.md.
   Registry slice complete; FR-002/Phase 2 projects/areas/work remain open. No
-  production deployment or real import. Stop before the next project/area slice.
+  production deployment or real import. That increment stopped before projects/areas;
+  the subsequently authorized Phase 2B result is recorded above.
 
 - Phase 1 closure: contracts 3fba9a0, worker c9dfb26, history 410abe2, runtime 6e655f5,
   source-review fixes c4252eb, runtime-test corrections 2a80c60/7851794/29f1e4e and

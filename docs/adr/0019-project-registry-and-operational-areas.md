@@ -1,8 +1,9 @@
 # ADR-0019: Project registry and operational areas
 
-Date: 2026-11-09. Status: selected for Phase 2B implementation.
+Date: 2026-11-09. Status: implemented and qualified for the Phase 2B registry slice.
 Scope: next FR-002 slice after the qualified client registry; no work items yet.
 User authorized continued development, direct main publication and routine choices.
+Acceptance: docs/phase-2b-project-evidence.md; exact application source 5faa866.
 
 ## Decision and alternatives
 

@@ -104,6 +104,23 @@ explicit and prevent team/project grants from revealing another client.
 
 ## Projects and work
 
+Applied Phase 2B migration b46087000007 adds operational_areas (unique case-sensitive
+name/active/version/UTC timestamps), projects (internal/client CHECK, required owning
+team, optional customer/area, name/active/version/UTC timestamps) and project_members
+(project/user composite PK and created_at). FKs restrict deletion. Role bindings
+gain exclusive project scope with viewer/agent/project_manager and unique user/project.
+Project role plus membership is required for direct access; customer projects also
+require the separate ceiling. Existing client viewer/operations_manager can read
+customer projects under that ceiling; operations_manager can manage metadata.
+Team metadata/roster is not project authority. Scope/customer/team remain immutable.
+
+The shared classification name is eagerly joined for authorized project responses,
+without N+1 lookups or protected team/customer name leakage. Area archive preserves
+old references and refuses new assignments. Project/area activity extends the same
+projection while identity/customer feeds keep their existing resource filters.
+Populated project/area/history data refuses destructive downgrade. No task, default
+ticket project, milestone, graph table or future membership-write API is precreated.
+
 | Table | Essential columns and invariants |
 | --- | --- |
 | clients | name, active, default_project_id nullable; default must belong to same client via deferred trigger/check service plus DB trigger |

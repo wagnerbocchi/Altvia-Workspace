@@ -19,9 +19,14 @@ Phase 2A now adds the real client registry, explicit initial-manager delegation,
 scoped archive/restore/history and restricted customer-access CLI. Source dc091de
 passed 316 API/37 browser tests, all five hosted gates and repeated actual guest
 qualification with zero reported vulnerabilities in the five exact tested images.
-See [Client registry evidence](docs/phase-2a-client-evidence.md). Phase 2 remains
-open for projects, areas and work; production deployment and real-data import
-remain separate.
+See [Client registry evidence](docs/phase-2a-client-evidence.md).
+Phase 2B adds persisted internal/customer projects, explicit project management,
+shared operational areas, members and scoped history. Source 5faa866 passed 358
+API/42 browser tests, all five hosted gates and actual x86-64-v1 qualification;
+the same five tested images report zero vulnerabilities. See
+[Project registry evidence](docs/phase-2b-project-evidence.md). Phase 2 remains open
+for work items/boards/search/My Work and later client contracts. Production
+deployment and real-data import remain separate.
 Phase 1C-a extends restricted host administration for ordinary accounts and
 platform privileges, with session revocation and last-active-admin protection.
 Phase 1C-b adds the team identity/roster API, optimistic concurrency and protected
@@ -56,6 +61,8 @@ browser, with explicit concurrency/recovery and isolated private session data.
 - [Phase 1 closure and final acceptance matrix](docs/phase-1-closure-evidence.md)
 - [Phase 2A client registry acceptance](docs/phase-2a-client-evidence.md)
 - [Client registry and explicit access operations](docs/runbooks/client-registry.md)
+- [Phase 2B project and area acceptance](docs/phase-2b-project-evidence.md)
+- [Project registry and explicit access operations](docs/runbooks/project-registry.md)
 - [Phase 1C administration evidence](docs/phase-1c-evidence.md)
 
 The original XLSX is retained locally under `data/sources/`, ignored by Git.

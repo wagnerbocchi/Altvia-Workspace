@@ -16,6 +16,11 @@
   for platform administrators. Creation requires explicit initial-manager selection;
   never grant the creator implicitly. Keep client events out of identity activity.
   Reuse ADR-0018's lock/session/replay protocol and preserve expanded data on rollback.
+- Project scope/customer/owning team are immutable in the registry slice. Require
+  the customer ceiling plus client role or explicit project binding/membership;
+  team metadata roles never grant project content. Area classification is shared
+  authenticated metadata, never a grant. Keep creation authority independent of
+  list pagination so an uncertain protected POST retains its original intent.
 - Never add Elasticsearch, OpenSearch, Solr, MongoDB, vector engines, local model
   runtimes or mandatory dependencies requiring ISA beyond x86-64-v1.
   Never use `-march=native`. Real target-VM testing is required for homologation.

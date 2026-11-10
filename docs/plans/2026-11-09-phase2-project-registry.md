@@ -27,13 +27,13 @@ cli.py, policy.py, main.py, provision.py; migration b46087000007; tests.
 Consume existing Client/ClientAccessGrant, identity lock, HTTP replay/version and
 activity_page; produce typed area/project/member/history routes and trusted grants.
 
-- [ ] Write failing real DB/API tests for area lifecycle, explicit-manager creation,
+- [x] Write failing real DB/API tests for area lifecycle, explicit-manager creation,
   internal/customer isolation, safe members, scope halves and denied linked refs.
-- [ ] Observe absent route/schema RED, then implement schema/domain/HTTP/CLI.
-- [ ] Prove role/ceiling revoke, no-op/inactive changes, replay, version/concurrency,
+- [x] Observe absent route/schema RED, then implement schema/domain/HTTP/CLI.
+- [x] Prove role/ceiling revoke, no-op/inactive changes, replay, version/concurrency,
   archive/reference checks, migration preservation/refusal and runtime privileges.
-- [ ] Extend strict worker payloads/projection and prove global-feed isolation.
-- [ ] Run focused/full API, Ruff/format/mypy/build and regenerate contracts; commit.
+- [x] Extend strict worker payloads/projection and prove global-feed isolation.
+- [x] Run focused/full API, Ruff/format/mypy/build and regenerate contracts; commit.
 
 ## Task 2: Real area/project browser flow
 
@@ -41,21 +41,29 @@ Files: web project transport, projects/operational-areas routes and components,
 existing account navigation; browser tests. Reuse current controls/session-owned
 queries/mutations; no new visual world or shared-cache bypass.
 
-- [ ] Apply existing Impeccable context and a narrow incumbent extension brief.
-- [ ] Observe real absent-screen browser RED; build real bounded selectors/list,
+- [x] Apply existing Impeccable context and a narrow incumbent extension brief.
+- [x] Observe real absent-screen browser RED; build real bounded selectors/list,
   explicit-manager form, scoped detail, area clear/change and safe member/history.
-- [ ] Prove self-delegation relogin, lifecycle/reload, uncertainty/conflict/recovery,
+- [x] Prove self-delegation relogin, lifecycle/reload, uncertainty/conflict/recovery,
   session disposal, mobile/light/dark/axe and no overflow.
-- [ ] Run build/check/full browser; fresh source review, fixes and regression proof.
-- [ ] Finish Impeccable reviewer/documenter handoffs; commit reviewed slice.
+- [x] Run build/check/full browser; fresh source review, fixes and regression proof.
+- [x] Finish Impeccable reviewer/documenter handoffs; commit reviewed slice.
 
 ## Task 3: Packaged qualification and publication
 
 Files: scripts/container_smoke.py, scripts/container_browser.mjs, evidence/runbooks,
 roadmap and relevant model/security/product docs. Reuse isolated target tooling.
 
-- [ ] Extend packaged persistence/ACL/projection/browser checks for projects/areas.
-- [ ] Pass all five hosted workflows and actual target smoke/native/cgroup checks.
-- [ ] Scan the same actual five images, compare tested IDs and inspect packaged PNGs.
-- [ ] Retain raw evidence outside Git; stop task containers/preserve volumes/close SSH.
-- [ ] Document exact proof/limits/rollback and publish coherent main commits, no PR.
+- [x] Extend packaged persistence/ACL/projection/browser checks for projects/areas.
+- [x] Pass all five hosted workflows and actual target smoke/native/cgroup checks.
+- [x] Scan the same actual five images, compare tested IDs and inspect packaged PNGs.
+- [x] Retain raw evidence outside Git; stop task containers/preserve volumes/close SSH.
+- [x] Document exact proof/limits/rollback and publish coherent main commits, no PR.
+
+## Completion evidence
+
+Registry/area slice qualified on source 5faa866. All three tasks complete; exact
+commands, failures/corrections, 358 API/42 browser results, five hosted gates,
+actual target image IDs and retained proof: docs/phase-2b-project-evidence.md.
+Task containers stopped, volumes preserved, SSH master closed. No tasks/boards,
+real import or production deployment started. Final publication is documentation-only.

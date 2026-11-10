@@ -212,7 +212,7 @@ Test containers were stopped and volumes preserved; SSH control session was clos
 No remaining product feature, future native artifact or production capacity/readiness
 gate is implicitly completed by this result.
 
-### Current Phase 2A qualification
+### Phase 2A qualification
 
 The Foundation worker/Redis increment and subsequent client registry supersede
 the historical four-image observations above. Source dc091de built/executed the
@@ -224,3 +224,17 @@ vulnerabilities. The guest still lacks SSE4.2/AVX/AVX2. See
 docs/phase-2a-client-evidence.md for immutable source/image IDs, commands, dates,
 retained reports and limits. Representative load, production readiness and future
 mandatory native artifacts remain separate gates.
+
+### Current Phase 2B qualification
+
+Source 5faa866 repeated the actual baseline-guest build/runtime qualification for
+projects and operational areas without adding dependencies or changing native
+versions. Internal/customer isolation, explicit delegation, persistent lifecycle,
+scoped activity and packaged browser checks passed. All five hosted gates passed
+with 358 API/42 browser tests. The same five resource/native-tested image IDs have
+zero reported vulnerabilities in unfiltered Trivy 0.75.0 reports. Actual cgroups,
+private networks, loopback ingress and worker broker-loss recovery passed; worker
+exited 0 in 8.784 seconds and recovered 27 events. See
+docs/phase-2b-project-evidence.md for exact identities, retained evidence, capture
+diagnostic and limits. Task containers stopped, volumes retained, SSH master closed.
+Production capacity and future artifacts remain separate gates.

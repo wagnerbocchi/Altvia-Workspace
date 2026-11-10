@@ -64,14 +64,14 @@ server-owned and unverified. Protected creation preserves the original receipt
 through uncertain outcomes; edits use the exact reviewed version. Clients also
 support an explicit nullable same-client default project, with paged active
 choices and deliberate clear. This configuration sends no email and creates no
-ticket, task, account or access grant. Final hosted gates and changed-artifact
-target-VM qualification remain pending for Phase 2E. Unified ticket assignments
+ticket, task, account or access grant. Phase 2E passed final hosted gates and
+actual target-VM qualification in docs/phase-2e-contact-evidence.md. Unified ticket assignments
 and Service Desk remain subsequent deliveries.
 HTTPS, secure HttpOnly cookies, Origin/CSRF checks and no browser auth-token
 storage are required. Keyboard access, visible focus, responsive layout and
 dark/light themes are required. All mandatory runtime dependencies must support
 x86-64-v1. The current five-image Foundation stack passed on the supplied target
-VM, including the Phase 2D discovery increment in docs/phase-2d-discovery-evidence.md;
+VM, including the Phase 2E contact increment in docs/phase-2e-contact-evidence.md;
 changed or future mandatory native artifacts require repeated qualification.
 Representative capacity and production readiness remain open. No Elasticsearch/OpenSearch.
 

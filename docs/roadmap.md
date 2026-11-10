@@ -22,8 +22,8 @@ tasks/subtasks, owners/participants, deadlines, transitions, internal comments a
 attributable scoped history under ADR-0020. Source d5ae972 passed 403 API/48 browser
 tests, all five hosted gates and actual x86-64-v1 packaged/native/cgroup proof.
 The same five tested images report zero vulnerabilities. See
-docs/phase-2c-work-evidence.md. Phase 2 remains open for later client
-contacts/default-project contracts.
+docs/phase-2c-work-evidence.md. Phase 2 exit remains open for traceability of
+planned member, milestone and external-participant workflows.
 Phase 2D task discovery implements ADR-0021 and
 docs/plans/2026-11-10-work-discovery.md after contracts in 215eb31. Backend 4d56e97
 passed 424 API tests; browser search/filters, independent board paging and task-only
@@ -47,9 +47,13 @@ portal or content access. Use a composite PostgreSQL FK for default scope;
 no email/ticket side effect. Backend c67c195 and Unicode guard a3028b5 are tested;
 browser contact/default configuration is implemented with both Impeccable fixes
 scored resolved and documentation completed. Source review's two email-contract
-defects have RED/GREEN fixes. Full local API459, post-grant runtime21, full browser58
-and final affected API39/browser8 passed; exact final hosted/VM qualification
-remains open. See docs/phase-2e-contact-evidence.md.
+defects have RED/GREEN fixes. Final application 334d477 passed actual guest
+packaged/native/cgroup/contact/default event/image qualification. Test-only
+c722de2 passed all five hosted gates with 463 API/60 browser tests. Current local
+full browser 60 and final affected API 39/browser 8 passed; all five exact
+native-tested images report zero vulnerabilities. Phase 2E is complete. See
+docs/phase-2e-contact-evidence.md. Audit remaining Phase 2 traceability before
+Service Desk; do not declare the whole phase complete from this increment alone.
 
 | Phase | Ordered vertical deliveries | Dependencies | Exit evidence |
 | --- | --- | --- | --- |
@@ -66,7 +70,7 @@ advancement from UI appearance alone. Reuse unchanged passing evidence; test
 affected behavior after each change. No release date/velocity estimate without
 environment/volume data. Do not replace Zammad until formal operational acceptance.
 
-The supplied VM now qualifies the current five-image discovery stack; future
+The supplied VM now qualifies the current five-image contact/default stack; future
 mandatory native artifacts must repeat that gate. Production readiness remains
 open. If all independent work is exhausted, report
 the exact blocker rather than silently weakening acceptance.
@@ -88,7 +92,7 @@ currently covers this GitHub repository's main only, not production services.
 
 | ID | Needed answer / owner | Safe action while pending | Gate blocked |
 | --- | --- | --- | --- |
-| Q-01 | Five-image discovery stack 1c20f48 qualified on the supplied VM, 2026-11-10; actual task/filter/search/personal/ACL/browser/native/cgroup/image-scan and worker/Redis recovery proof retained | Reuse exact tested image evidence; repeat qualification for changed mandatory native artifacts and future components | Satisfied for current stack; future artifact qualification remains required |
+| Q-01 | Five-image contact/default application 334d477 qualified on the supplied VM, 2026-11-10; final test-only c722de2 leaves runtime inputs unchanged; actual contact/default/ACL/browser/native/cgroup/image-scan and worker/Redis recovery proof retained | Reuse exact tested image evidence; repeat qualification for changed mandatory native artifacts and future components | Satisfied for current stack; future artifact qualification remains required |
 | Q-02 | Infrastructure admin: IOPS, workload/users/mail per day and production volume/backup policy; observed 8 vCPUs, 31.3 GiB RAM and 500 GiB disk | Conservative bounded defaults; inventory alone establishes no capacity or performance promise | Capacity/prod readiness |
 | Q-03 | Support owner: mailboxes, TLS/auth/forwarding/trusted MTA and SMTP limits | Adapter contracts and controlled test SMTP/IMAP only | Real Phase 3 email acceptance |
 | Q-04 | Operations: actual client/team/project/queue membership matrix | Deny by default; test explicit grants with synthetic test data only | Provisioning/pilot |
@@ -102,7 +106,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-12 | Infrastructure admin: hypervisor ownership and CPU-model change possibility | x86-64-v1 remains mandatory | None: CPU upgrade is not assumed |
 | Q-13 | Product owner: approved logo/brand and visual preferences | Provisional restrained Portuguese interface, system fonts, no invented assets or claims; review after return | Final visual approval only |
 | Q-14 | Engineering/security: ongoing service-image security | All five actual target-tested images have zero reported vulnerabilities; blocking HIGH/CRITICAL CI, SAST medium+ and every detected secret; retained complete severity metadata, no risk acceptance | Remaining production security/readiness gates |
-| Q-15 | Resolved: owner authorized workstation public-key registration, remote Codex login and project registration; fresh noninteractive Windows SSH and actual Phase2D qualification passed | Reuse agent-backed key with strict known-host checks; one connection per stage because native Windows multiplexing failed its probe; preserve previous environments and server security | None for current qualification; key removal, agent restart or changed host identity may require user action |
+| Q-15 | Resolved: owner authorized workstation public-key registration, remote Codex login and project registration; fresh noninteractive Windows SSH and actual Phase 2D qualification passed | Reuse agent-backed key with strict known-host checks; one connection per stage because native Windows multiplexing failed its probe; preserve previous environments and server security | None for current qualification; key removal, agent restart or changed host identity may require user action |
 | Q-16 | Support/security owner: trusted contact verification, international mailbox/IDNA and authenticated sender correlation policy | Contacts remain server-only unverified, bounded ASCII mailboxes; no send, account linking, portal grant or client selection by email alone | Future actual email/verification acceptance; registry work can proceed |
 
 ## Backlog after core
@@ -118,10 +122,12 @@ The final Foundation increment delivers the actual durable identity activity
 consumer, restricted browser history, private Redis, safe logs and source-security
 gates under ADR-0017. All Foundation gates passed on 2f6ba60. Phase 2A/2B registries
 and Phase 2C task core are qualified under the user's subsequent instructions.
-Phase2D contracts preceded Kanban/filter/search/My Work implementation; exact
+Phase 2D contracts preceded Kanban/filter/search/My Work implementation; exact
 source 1c20f48 passed hosted and actual target qualification. This bounded
-increment is complete. Define contacts/default-project contracts and decisions
-before the next Phase2 slice; do not begin Service Desk or unify ticket state here.
+increment is complete. Phase 2E contracts preceded persisted contact/default
+configuration and its qualified browser/worker/native delivery. Before the next
+slice, audit planned member writes, milestones and external participants against
+master/Phase 2 acceptance, record remaining contracts and keep ticket state separate.
 Production capacity/retention/provider decisions remain
 the later gates listed above, not unimplemented Foundation requirements.
 
@@ -135,6 +141,19 @@ portal/knowledge base. Billing/subscriptions, marketplace, advanced ITIL/CMDB,
 native mobile and local AI remain outside MVP. No speculative code for backlog.
 
 ## Evidence ledger
+
+- Phase 2E: contracts 3f0d1f1, backend c67c195, Unicode correction a3028b5, reviewed
+  browser/packaged application 334d477 and test-fixture correctionc722de2. All five
+  final hosted gates passed with 463 API/60 browser tests. Actual baseline guest
+  executed the immutable334d477 archive; exact-ID reports show zero vulnerabilities,
+  with native/cgroup/private-network/loopback/recreation/contact/default event proof.
+  Worker exited 0 in 7.754 seconds under broker blackhole and recovered 27 events.
+  Three contact-created/five contact-updated/two default events projected/delivered.
+  Both source findings have RED/GREEN fixes; both Impeccable fixes scored resolved,
+  documenter preserved the system. Test-only c722de2 fixes login fixture budget
+  without changing caps or runtime inputs. Complete source/image/failure/review/
+  capture evidence preserved; task containers stopped and volumes retained.
+  See docs/phase-2e-contact-evidence.md. Phase 2 exit and production gates remain open.
 
 - Phase 2D: contracts 215eb31, backend 4d56e97, reviewed browser 8c1be1d and
   final packaged proof 1c20f48. All five hosted gates passed with 424 API/52 browser

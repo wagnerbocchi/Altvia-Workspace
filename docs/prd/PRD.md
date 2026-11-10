@@ -67,8 +67,14 @@ See docs/phase-2c-work-evidence.md. Phase 2D delivers the task portion of FR-004
 typed filters, native PostgreSQL FTS, independently paged Kanban and task-only
 My Work. Source 1c20f48 passed 424 API/52 browser tests, all five hosted gates and
 actual x86-64-v1 qualification; the same five tested images report zero
-vulnerabilities. See docs/phase-2d-discovery-evidence.md. Client contacts/default
-ticket projects and ticket consolidation in Phase 4 remain open.
+vulnerabilities. See docs/phase-2d-discovery-evidence.md. Phase 2E now delivers
+external contacts and same-client default ticket projects under ADR-0022,
+without account linkage, verification or ticket/email side effects. Application
+334d477 passed actual x86-64-v1 qualification; test-only c722de2 passed all five
+hosted gates with 463 API/60 browser tests. Exact native-tested image reports have
+zero vulnerabilities. See docs/phase-2e-contact-evidence.md. Planned member,
+milestone and external-participant workflows still need Phase 2 exit traceability;
+ticket consolidation remains Phase 4 and production acceptance remains separate.
 
 Non-goals: SaaS billing/subscriptions, marketplace, local AI/embeddings, external
 search cluster, advanced ITIL/CMDB, advanced Gantt and native mobile applications.

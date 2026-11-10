@@ -1,7 +1,8 @@
 # ADR-0022: Client contacts and default ticket project
 
-Date: 2026-11-10. Status: selected before implementation; Phase 2E implementation
-in progress, final review/qualification pending.
+Date: 2026-11-10. Status: selected before implementation, implemented and qualified
+for Phase 2E. Evidence: docs/phase-2e-contact-evidence.md. Application 334d477;
+final test-only revision c722de2, with unchanged runtime inputs.
 User authorized continuing development, routine decisions and direct main pushes;
 questions are recorded rather than blocking independent safe work.
 

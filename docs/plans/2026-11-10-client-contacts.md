@@ -50,7 +50,7 @@ Page/Creation and the four ADR routes, default_project_id on ClientPatch/Output.
 - [x] Add direct SQL composite-FK/uniqueness, migration preserve/refuse/roundtrip,
   duplicate races, redacted projection/dedup/feed isolation and runtime privilege tests.
 - [x] Run focused tests, Ruff/format/mypy, Alembic drift and generated contracts;
-  expect exit0. Run full API suite and web check; then commit.
+  expect exit 0. Run full API suite and web check; then commit.
 
 ## Task 2: Scoped browser configuration
 
@@ -59,13 +59,13 @@ clients browser tests and PRODUCT context. Consumes Task1 DTOs/receipts and
 existing scoped project list. Produces client contacts list/create/detail edits
 and independent versioned default-project configuration.
 
-- [ ] Apply Impeccable context/craft workflow; record incumbent extension.
-- [ ] Add real browser regressions for CRUD/default persistence, paging, uncertain
+- [x] Apply Impeccable context/craft workflow; record incumbent extension.
+- [x] Add real browser regressions for CRUD/default persistence, paging, uncertain
   POST replay, stale versions, hidden/readonly scope and session cache ownership.
-- [ ] Run affected browser tests; expect missing controls/routes.
-- [ ] Implement accessible labeled forms, paged authorized choices, reviewed
+- [x] Run affected browser tests; expect missing controls/routes.
+- [x] Implement accessible labeled forms, paged authorized choices, reviewed
   intents and explicit retry/reload under existing identity boundary.
-- [ ] Run affected browser and web check/build; inspect theme/mobile/keyboard/axe
+- [x] Run affected browser and web check/build; inspect theme/mobile/keyboard/axe
   captures. Apply prescribed finishing/documentation and commit.
 
 ## Task 3: Review and qualification
@@ -74,11 +74,23 @@ Files: packaged proof helpers, evidence/roadmap/compatibility/README/PRD.
 Consumes exact Task1/2 application source and existing five-image stack.
 Produces honest exact-artifact qualification and remaining product gates.
 
-- [ ] One fresh whole-increment source review with Review Focus; fix important
+- [x] One fresh whole-increment source review with Review Focus; fix important
   findings with RED/GREEN proof and relevant complete suites, no second review.
-- [ ] Execute all five hosted gates including full API/browser/source/image proof.
-- [ ] Extend packaged smoke to contacts/default/reference/ACL/recreation, execute
+- [x] Execute all five hosted gates including full API/browser/source/image proof.
+- [x] Extend packaged smoke to contacts/default/reference/ACL/recreation, execute
   exact archive in a unique private target directory with loopback-only ingress.
-- [ ] Verify actual native/cgroup/worker/recovery and exact five-image security
+- [x] Verify actual native/cgroup/worker/recovery and exact five-image security
   bindings; retain sanitized evidence outside Git and preserve older environments.
-- [ ] Update current status/decisions/remaining gates, commit and push authorized main.
+- [x] Update current status/decisions/remaining gates, commit and push authorized main.
+
+## Completion evidence
+
+Application334d477 passed actual x86-64-v1 qualification with exact tested-image
+zero-finding reports, native/cgroup/contact/default events, restart/restore and
+worker/Redis loss recovery. Final test-only c722de2 passed all five hosted gates
+with 463 API/60 browser tests; runtime inputs are unchanged. Local full browser 60
+passed after the source-budget fixture correction; no production cap was weakened.
+Both P2 source findings and both Impeccable material fixes have regression proof.
+The existing design system is preserved; no second source review was substituted.
+Persistent artifacts, exact IDs/hash/revisions, test commands and remaining
+Phase 2/production gates: docs/phase-2e-contact-evidence.md. This plan ends here.

@@ -140,7 +140,7 @@ ticket project, milestone, graph table or future membership-write API is precrea
 | Table | Essential columns and invariants |
 | --- | --- |
 | clients | name, active, default_project_id nullable; ADR-0022 selects composite FK (default_project_id,id) -> projects(id,client_id), service checks current active eligibility |
-| client_contacts | client_id, display_name, email_normalized, verification_state; UNIQUE(client_id,email_normalized), never global identity equality; ADR-0022 selects UUID/active/version/UTC timestamps and server-only unverified state for Phase2E |
+| client_contacts | client_id, display_name, email_normalized, verification_state; UNIQUE(client_id,email_normalized), never global identity equality; ADR-0022 selects UUID/active/version/UTC timestamps and server-only unverified state for Phase 2E |
 | operational_areas | name UNIQUE, active; project classification, not a security grant |
 | projects | client_id nullable, scope_kind internal/client, team_id, area_id nullable, name, active; CHECK internal has no client and client scope has client_id |
 | project_members | PK(project_id,user_id); membership alone cannot override client ceiling |
@@ -171,6 +171,20 @@ against unique `(id, project_id)`, self-reference CHECK and cycle trigger.
 Concurrent graph writes take a project-level transactional advisory lock before
 cycle detection, preventing two transactions creating A->B and B->A. Apply the
 same ordering/lock to dependencies; do not rely only on Python validation.
+
+## Client contacts and default project
+
+Phase 2E migration b46087000010 implements the ADR-0022 contact/default extension:
+client_contacts has a client/email unique constraint (including archived rows),
+parent/UUID paging index, positive versions and server-only unverified state.
+Client default scope uses a composite FK to projects(id,client_id), backed by its
+unique pair. Current active eligibility remains a service check; retained defaults
+survive archival. Real contact writes advance their own and parent versions with
+redacted client events. API contact DML is SELECT/INSERT/UPDATE only; worker has
+no contact-table read. Downgrade refuses durable contact/default data or events
+before destructive DDL. Expanded data and compatible worker are preserved on
+rollback. Exact application/qualification evidence is recorded separately in
+docs/phase-2e-contact-evidence.md; no ticket/email table or account link is added.
 
 ## Tickets, communication and files
 

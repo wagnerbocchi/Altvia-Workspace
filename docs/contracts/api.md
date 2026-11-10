@@ -224,9 +224,10 @@ and platform administration never confer project reads. Further project grants
 use the interactive CLI in docs/runbooks/project-registry.md. No browser member
 write, task, milestone, board, default ticket project or scope-changing API yet.
 
-### Selected contacts and default-project extension (ADR-0022)
+### Implemented contacts and default-project extension (ADR-0022)
 
-Phase 2E contracts precede implementation. Add GET/POST
+Phase 2E contracts preceded implementation; qualification is recorded in
+docs/phase-2e-contact-evidence.md. Implemented GET/POST
 /clients/{client_id}/contacts and GET/PATCH
 /clients/{client_id}/contacts/{contact_id}. Parent authorization requires both
 customer ceiling and client role; operations_manager writes, viewer reads.
@@ -253,9 +254,10 @@ error, replay, event, migration/rollback and browser acceptance contracts.
 
 ### Implemented client registry (ADR-0018)
 
-Phase 2A implements the following narrower registry contract. The complete-product
-tables below describe subsequent slices; default projects and contacts are not
-accepted by the current API. All paths use the existing /api/v1 prefix.
+Phase 2A originally implemented the following narrower registry contract;
+ADR-0022 above extends it with contacts/default-project configuration. The
+complete-product tables below also describe later slices. All paths use the
+existing /api/v1 prefix.
 
 | Method and suffix | Authorization and behavior |
 | --- | --- |

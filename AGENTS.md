@@ -16,6 +16,10 @@
   for platform administrators. Creation requires explicit initial-manager selection;
   never grant the creator implicitly. Keep client events out of identity activity.
   Reuse ADR-0018's lock/session/replay protocol and preserve expanded data on rollback.
+- External contacts are client-scoped unverified identities, never accounts or
+  grants. Reject non-ASCII mailboxes before casefold and preserve archived email
+  uniqueness. Reuse ADR-0022's parent/contact version and event protocol; default
+  project scope is a composite FK, while active eligibility is rechecked on use.
 - Project scope/customer/owning team are immutable in the registry slice. Require
   the customer ceiling plus client role or explicit project binding/membership;
   team metadata roles never grant project content. Area classification is shared

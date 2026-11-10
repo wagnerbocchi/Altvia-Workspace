@@ -160,7 +160,7 @@ Phase 1 can develop and test locally while access is missing. Its VM gate
 remains open. No production compatibility, performance or availability claim
 is permitted until these checks produce real evidence.
 
-ADR-0014 adds the actual standalone web runtime: signed Alpine Node24.22.1-r1,
+ADR-0014 adds the actual standalone web runtime: signed Alpine Node 24.22.1-r1,
 full ICU for pt-BR, shared zlib1.4/Brotli1.2.1/OpenSSL3.5.9 and Sharp exclusion.
 Pinned builder/runtime inputs are in infra/web.Dockerfile. Local actual SSR,
 static assets, read-only/non-root native guard and SIGTERM cleanup passed; all
@@ -254,7 +254,7 @@ reports, captures and limitations: docs/phase-2c-work-evidence.md. Test containe
 stopped, volumes retained, SSH master and temporary local keeper closed.
 This qualifies exercised task-core paths, not capacity or production readiness.
 
-### Current Phase 2D task-discovery qualification
+### Phase 2D task-discovery qualification
 
 Source 1c20f48 repeated actual baseline-guest build/runtime qualification for native
 PostgreSQL task search, typed filters, independently paged Kanban and task-only
@@ -278,3 +278,28 @@ reused one connection without changing sshd or firewall settings. Remote Codex
 project registration is separate from native development-toolchain validation.
 Future native artifacts, representative capacity and production readiness remain
 separate gates; the recorded Windows browser axe cause is still unresolved.
+
+### Current Phase 2E contact/default qualification
+
+Immutable application 334d477 built/executed on the same actual baseline guest.
+Contact CRUD/replay/client isolation, same-client default eligibility, API/DB
+recreation, real mobile contact configuration and native runtime guards passed.
+Live cgroup limits, read-only roots, non-root services, private database/queue
+networks and loopback-only ingress passed. Worker exited 0 in 7.754 seconds with
+Redis blackholed and recovered 27 events; three contact-created/five contact-updated
+and two default events projected/delivered. Logical restore/Unicode/constraints
+and native GIN selection over 6000 rolled-back rows passed; 0.741 ms is a synthetic
+diagnostic, not a latency/capacity promise.
+
+The exact five tested Docker image IDs have zero reported vulnerabilities across
+all severities, nonempty inventories and verified report/tag/DiffID/user/hash
+bindings. No service, native dependency, pinned native version or ISA requirement
+changed; guest still lacks SSSE3/SSE4.1/SSE4.2/AVX/AVX2/FMA/BMI2. All five final
+hosted gates passed on test-only c722de2, with 463 API/60 browser tests. Git confirms
+only two test-harness files changed after 334d477; runtime and dependency inputs
+are identical, so exact already-tested native images are reused. No hosted image
+ID is claimed to have run on the target. Complete identities, scanner/database
+snapshot, native outputs, commands and limits: docs/phase-2e-contact-evidence.md.
+Task containers stopped, volumes and prior environments preserved; Windows stage
+connections closed without unloading the permanent agent key. Production capacity,
+future native artifacts and the prior intermittent Windows axe cause remain open.

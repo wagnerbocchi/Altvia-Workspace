@@ -35,9 +35,14 @@ Phase 2D implements native PostgreSQL task search, typed filters, independently
 paged project Kanban and task-only My Work. Source 1c20f48 passed 424 API/52
 browser tests, all five hosted gates and actual x86-64-v1 qualification; the same
 five tested images report zero vulnerabilities. See
-[Discovery evidence](docs/phase-2d-discovery-evidence.md). Phase 2 remains open for
-later client contacts/default-project contracts. Production deployment and real-data
-import remain separate.
+[Discovery evidence](docs/phase-2d-discovery-evidence.md).
+Phase 2E adds persisted external contacts and explicit same-client default projects,
+protected browser configuration and scoped activity. Application 334d477 passed
+actual x86-64-v1 qualification; test-only c722de2 passed all five final hosted gates
+with 463 API/60 browser tests. The same five native-tested images report zero
+vulnerabilities. See [Contact/default evidence](docs/phase-2e-contact-evidence.md).
+Phase 2 exit still needs a traceability review of planned member, milestone and
+external-participant workflows. Production deployment and real-data import remain separate.
 Phase 1C-a extends restricted host administration for ordinary accounts and
 platform privileges, with session revocation and last-active-admin protection.
 Phase 1C-b adds the team identity/roster API, optimistic concurrency and protected

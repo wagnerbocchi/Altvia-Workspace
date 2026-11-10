@@ -22,9 +22,7 @@ Open a client to read its state and scoped activity. A client operations_manager
 can rename, archive or restore it. A viewer can read it. Archive preserves data
 and existing read scope. No contact, project, task or default project is created.
 
-## Change customer access
-
-### External contacts and default project
+## External contacts and default project
 
 ADR-0022 adds nested contact GET/POST and GET/PATCH routes under
 /api/v1/clients/CLIENT_UUID/contacts. A contact is an external email identity,
@@ -54,6 +52,8 @@ Migration b46087000010 preserves existing data and refuses downgrade with durabl
 contact/default configuration or events. Keep a compatible expanded application
 and worker; earlier workers reject the new contact/default event payloads. Never
 delete history/contacts/defaults or reset volumes to force rollback.
+
+## Change customer access
 
 Use a trusted interactive host terminal with the existing runtime configuration.
 The CLI confirms the target email and client UUID before writing. Replace the

@@ -28,6 +28,12 @@
 - Never add Elasticsearch, OpenSearch, Solr, MongoDB, vector engines, local model
   runtimes or mandatory dependencies requiring ISA beyond x86-64-v1.
   Never use `-march=native`. Real target-VM testing is required for homologation.
+- Validation cadence updated by the user on 2026-11-10: finish the remaining MVP
+  development before running consolidated homologation on the target VM. Do not
+  perform target-server homologation after every slice. Keep relevant local tests,
+  CI, security checks and CPU/dependency restrictions during development. Track
+  development completion separately from final target qualification; pending VM
+  qualification does not stop independent development or prove new images compatible.
 - Keep source workbooks, raw client data, credentials and production logs out of Git.
   Do not derive architecture requirements or acceptance evidence from workbook notes.
 - Use the `impeccable` skill for all frontend design and implementation work,

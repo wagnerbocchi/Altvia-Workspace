@@ -4,6 +4,26 @@ Updated 2026-11-10. User authorized incremental development after contracts,
 direct pushes to main and no PR. Continue safe independent work while questions
 await answers. This does not authorize production deployment or real data import.
 
+## Current validation cadence
+
+User instruction on 2026-11-10 supersedes the earlier per-slice VM cadence:
+complete the remaining MVP development first, then run consolidated homologation
+on the actual target server. Do not rebuild and homologate the target stack after
+each increment. Continue small persisted slices, contracts before code, relevant
+local tests, CI and security/native-dependency checks throughout development.
+
+Record development completion, local/CI verification and target qualification as
+separate states. Passing development gates permits the next independent slice;
+the deferred VM gate does not block that development. Keep x86-64-v1 mandatory
+and never extend an older image's qualification to a changed untested artifact.
+After development is complete, qualify the final integrated application on the
+actual baseline VM, fixing and revalidating any findings. Production acceptance,
+real imports and Zammad retirement still require their separate authorization.
+Earlier qualification entries below remain historical evidence, not instructions
+to repeat server homologation during each new delivery.
+
+## Delivery status
+
 Phase 1 is closed on 2026-11-09. Final source 2f6ba60 passed all five hosted gates,
 290 API and 31 browser tests, and the full five-image/six-service stack passed on
 the actual x86-64-v1 VM. Exact tested images have zero reported vulnerabilities.
@@ -80,8 +100,9 @@ advancement from UI appearance alone. Reuse unchanged passing evidence; test
 affected behavior after each change. No release date/velocity estimate without
 environment/volume data. Do not replace Zammad until formal operational acceptance.
 
-The supplied VM now qualifies the current five-image member-administration stack; future
-mandatory native artifacts must repeat that gate. Production readiness remains
+The supplied VM qualifies the recorded five-image member-administration stack.
+Changed mandatory artifacts will be qualified together after development under
+the current user-directed cadence above. Production readiness remains
 open. If all independent work is exhausted, report
 the exact blocker rather than silently weakening acceptance.
 
@@ -98,8 +119,10 @@ Before implementation: ownership, typed request/response, permission predicates,
 schema/constraint delta, failure/race behavior and meaningful tests are defined.
 Before commit/push: relevant build/lint/typecheck/tests pass or the bounded
 incomplete status is explicit; no secrets/raw client data; intended diff only.
-Before phase completion: UI uses real API/persistence, negative ACL and recovery
-paths pass; commands and results recorded; required VM gates are satisfied.
+Before development completion of a phase: UI uses real API/persistence, negative
+ACL and recovery paths pass, and relevant local/CI commands and results are recorded.
+Record final target qualification as pending until consolidated homologation runs
+after remaining MVP development. Do not claim target compatibility from local/CI proof.
 
 Production migrations/deploy: immutable images, backup, compatible schema plan,
 documented rollback and post-change verification. External publication permission
@@ -109,7 +132,7 @@ currently covers this GitHub repository's main only, not production services.
 
 | ID | Needed answer / owner | Safe action while pending | Gate blocked |
 | --- | --- | --- | --- |
-| Q-01 | Five-image member application b179695 qualified on the supplied VM, 2026-11-10; member/session/replay/ACL/browser/native/cgroup/image-scan and worker/Redis recovery proof retained | Reuse exact tested image evidence; repeat qualification for changed mandatory native artifacts and future components | Satisfied for current stack; future artifact qualification remains required |
+| Q-01 | Five-image member application b179695 qualified on the supplied VM, 2026-11-10; user subsequently deferred further target homologation until remaining MVP development is complete | Preserve exact tested evidence; continue local/CI checks and qualify the final changed stack together afterward | Satisfied for recorded images; final integrated target qualification remains required |
 | Q-02 | Infrastructure admin: IOPS, workload/users/mail per day and production volume/backup policy; observed 8 vCPUs, 31.3 GiB RAM and 500 GiB disk | Conservative bounded defaults; inventory alone establishes no capacity or performance promise | Capacity/prod readiness |
 | Q-03 | Support owner: mailboxes, TLS/auth/forwarding/trusted MTA and SMTP limits | Adapter contracts and controlled test SMTP/IMAP only | Real Phase 3 email acceptance |
 | Q-04 | Operations: actual client/team/project/queue membership matrix | Deny by default; test explicit grants with synthetic test data only | Provisioning/pilot |

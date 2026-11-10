@@ -1,4 +1,4 @@
-import { test, expect, type Page, type BrowserContext } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -7,18 +7,13 @@ const origin = "https://127.0.0.1:3443";
 const clientId = process.env.ALTVIA_E2E_CONTACT_CLIENT_ID!;
 const path = `/clients/${clientId}`;
 const shots = fileURLToPath(new URL("../../../.impeccable/review/contacts/", import.meta.url));
-const sessions = new Map<string, Awaited<ReturnType<BrowserContext["cookies"]>>>();
 async function login(page: Page, kind = "MANAGER") {
-  const saved = sessions.get(kind);
-  if (saved) await page.context().addCookies(saved);
-  else {
-    const response = await page.request.post("/api/v1/auth/sessions", { data: {
-      email: process.env[`ALTVIA_E2E_CONTACT_${kind}_EMAIL`]!, password: process.env[`ALTVIA_E2E_CONTACT_${kind}_PASSWORD`]!,
-    }, headers: { Origin: origin } });
-    expect(response.status()).toBe(201);
-    sessions.set(kind, await page.context().cookies());
-  }
-  return (await (await page.request.get("/api/v1/auth/me")).json()).csrf_token as string;
+  const token = process.env[`ALTVIA_E2E_CONTACT_${kind}_SESSION`];
+  if (!token) throw Error("Guarded contact session fixture required");
+  await page.context().addCookies([{ name: "__Host-altvia_session", value: token, url: origin, secure: true, httpOnly: true, sameSite: "Lax" }]);
+  const response = await page.request.get("/api/v1/auth/me");
+  expect(response.status()).toBe(200);
+  return (await response.json()).csrf_token as string;
 }
 const headers = (csrf: string, version?: number) => ({ Origin: origin, "X-CSRF-Token": csrf, "Idempotency-Key": crypto.randomUUID(), ...(version ? { "If-Match": `"${version}"` } : {}) });
 async function capture(page: Page, name: string) {

@@ -8,6 +8,7 @@ from pathlib import Path
 from altvia.client_registry import create_client, set_client_access
 from altvia.config import Settings
 from altvia.database import make_engine
+from altvia.identity import login
 from altvia.management import (
     bootstrap_admin,
     create_user,
@@ -150,4 +151,20 @@ with Session(engine) as db, db.begin():
                 target.write(
                     f"ALTVIA_E2E_WORK_{kind}_EMAIL={work_email}\nALTVIA_E2E_WORK_{kind}_PASSWORD={work_password}\n"
                 )
+if not os.environ.get("ALTVIA_E2E_EXPIRE") and not os.environ.get("ALTVIA_E2E_DISABLE_ROSTER"):
+    # Functional contact tests reuse real password-authenticated DB sessions.
+    # Login HTTP/rate-limit acceptance remains in the identity suites; do not
+    # spend that suite's single-source budget on unrelated contact setup.
+    with Path(".env.browser-session").open("a", encoding="utf-8") as target:
+        for kind, (contact_email, contact_password, _) in contact_accounts.items():
+            with Session(engine) as db:
+                _, _, token = login(
+                    db,
+                    contact_email,
+                    contact_password,
+                    "browser-fixture",
+                    "contact_fixture_session",
+                )
+            target.write(f"ALTVIA_E2E_CONTACT_{kind}_SESSION={token}\n")
+    Path(".env.browser-session").chmod(0o600)
 engine.dispose()

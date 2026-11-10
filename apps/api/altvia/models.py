@@ -180,13 +180,40 @@ class Client(Base):
     __table_args__ = (
         CheckConstraint("char_length(btrim(name)) > 0", name="ck_client_name"),
         CheckConstraint("version > 0", name="ck_client_version"),
+        ForeignKeyConstraint(
+            ["default_project_id", "id"],
+            ["projects.id", "projects.client_id"],
+            name="fk_client_default_project",
+            use_alter=True,
+        ),
     )
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     name: Mapped[str] = mapped_column(String(150))
+    default_project_id: Mapped[UUID | None] = mapped_column()
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     version: Mapped[int] = mapped_column(default=1)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ClientContact(Base):
+    __tablename__ = "client_contacts"
+    __table_args__ = (
+        UniqueConstraint("client_id", "email_normalized", name="uq_contact_client_email"),
+        Index("ix_client_contacts_page", "client_id", "id"),
+        CheckConstraint("char_length(btrim(display_name)) > 0", name="ck_contact_name"),
+        CheckConstraint("version > 0", name="ck_contact_version"),
+        CheckConstraint("verification_state='unverified'", name="ck_contact_verification"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    client_id: Mapped[UUID] = mapped_column(ForeignKey("clients.id"))
+    display_name: Mapped[str] = mapped_column(String(150))
+    email_normalized: Mapped[str] = mapped_column(String(254))
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    verification_state: Mapped[str] = mapped_column(String(20), default="unverified")
+    version: Mapped[int] = mapped_column(default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class ClientAccessGrant(Base):
@@ -214,6 +241,7 @@ class OperationalArea(Base):
 class Project(Base):
     __tablename__ = "projects"
     __table_args__ = (
+        UniqueConstraint("id", "client_id", name="uq_project_client"),
         CheckConstraint("char_length(btrim(name)) > 0", name="ck_project_name"),
         CheckConstraint("version > 0", name="ck_project_version"),
         CheckConstraint(

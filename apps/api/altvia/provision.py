@@ -37,6 +37,7 @@ CRUD_TABLES = (
 ROLE_PRIVILEGES = {
     "altvia_app": {
         **{table: {"SELECT", "INSERT", "UPDATE", "DELETE"} for table in CRUD_TABLES},
+        "client_contacts": {"SELECT", "INSERT", "UPDATE"},
         "audit_logs": {"INSERT"},
         "outbox_events": {"INSERT"},
         "activity_events": {"SELECT"},

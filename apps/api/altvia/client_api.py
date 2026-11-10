@@ -18,7 +18,7 @@ from pydantic.json_schema import SkipJsonSchema
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
 
-from altvia import client_registry, identity
+from altvia import client_contacts, client_registry, identity
 from altvia.activity_api import ActivityPage, activity_page
 from altvia.admin_http import (
     IDEMPOTENCY_KEY,
@@ -59,6 +59,7 @@ class ClientPatch(BaseModel):
     model_config = ConfigDict(extra="forbid", json_schema_extra={"minProperties": 1})
     name: ClientName | SkipJsonSchema[None] = None
     active: StrictBool | SkipJsonSchema[None] = None
+    default_project_id: UUID | None = None
 
     @field_validator("name", "active")
     @classmethod
@@ -77,6 +78,7 @@ class ClientPatch(BaseModel):
 class ClientOutput(BaseModel):
     id: UUID
     name: str
+    default_project_id: UUID | None
     active: bool
     version: int
     created_at: datetime
@@ -93,6 +95,7 @@ def _output(client: Client, role: str) -> ClientOutput:
     return ClientOutput(
         id=client.id,
         name=client.name,
+        default_project_id=client.default_project_id,
         active=client.active,
         version=client.version,
         created_at=client.created_at,
@@ -181,6 +184,14 @@ def create_client_router(engine: Engine, settings: Settings) -> APIRouter:
             if body.active is not None and client.active != body.active:
                 client.active = body.active
                 changes.append("active")
+            if (
+                "default_project_id" in body.model_fields_set
+                and client.default_project_id != body.default_project_id
+            ):
+                if body.default_project_id is not None:
+                    client_contacts.eligible_default(db, user.id, client, body.default_project_id)
+                client.default_project_id = body.default_project_id
+                changes.append("default_project_id")
             if changes:
                 client_registry.advance(client)
                 identity.record_event(

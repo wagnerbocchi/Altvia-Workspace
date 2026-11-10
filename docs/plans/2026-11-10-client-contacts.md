@@ -42,14 +42,14 @@ Consumes scoped_client(db,user_id,client_id,write=False), visible_projects(user_
 authenticate_request and _operation/_remember. Produces ContactCreate/Patch/Output/
 Page/Creation and the four ADR routes, default_project_id on ClientPatch/Output.
 
-- [ ] Write PostgreSQL/API tests for scoped CRUD, email normalization/uniqueness,
+- [x] Write PostgreSQL/API tests for scoped CRUD, email normalization/uniqueness,
   receipts/revocation, no implicit User/grant, parent/contact versions and defaults.
-- [ ] Run `uv run python .superpowers/phase1-tests/run.py --api apps/api/tests/test_client_contacts.py -q --tb=short`; expect missing-route/field failures.
-- [ ] Implement exact ADR data, schema, domain validation, routes and client events;
+- [x] Run `uv run python .superpowers/phase1-tests/run.py --api apps/api/tests/test_client_contacts.py -q --tb=short`; expect missing-route/field failures.
+- [x] Implement exact ADR data, schema, domain validation, routes and client events;
   reuse existing locks, transactions, pagination and HTTP helpers.
-- [ ] Add direct SQL composite-FK/uniqueness, migration preserve/refuse/roundtrip,
+- [x] Add direct SQL composite-FK/uniqueness, migration preserve/refuse/roundtrip,
   duplicate races, redacted projection/dedup/feed isolation and runtime privilege tests.
-- [ ] Run focused tests, Ruff/format/mypy, Alembic drift and generated contracts;
+- [x] Run focused tests, Ruff/format/mypy, Alembic drift and generated contracts;
   expect exit0. Run full API suite and web check; then commit.
 
 ## Task 2: Scoped browser configuration

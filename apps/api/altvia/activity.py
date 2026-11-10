@@ -32,7 +32,13 @@ EVENT_TYPES = {
     "identity.team_member_added",
     "identity.team_member_removed",
 }
-CLIENT_EVENT_TYPES = {"client.created", "client.updated", "client.access_changed"}
+CLIENT_EVENT_TYPES = {
+    "client.created",
+    "client.updated",
+    "client.access_changed",
+    "client.contact_created",
+    "client.contact_updated",
+}
 PROJECT_EVENT_TYPES = {"project.created", "project.updated", "project.access_changed"}
 AREA_EVENT_TYPES = {"operational_area.created", "operational_area.updated"}
 WORK_EVENT_TYPES = {
@@ -102,15 +108,20 @@ class ClientEventPayload(BaseModel):
     actor_kind: Literal["user", "management_command"]
     manager_user_id: UUID | None = None
     member_user_id: UUID | None = None
+    contact_id: UUID | None = None
     role_name: Literal["viewer", "operations_manager", "none"] | None = None
-    changed_fields: str | None = Field(
-        default=None, pattern=r"^(name|active)(,(name|active))?$", max_length=20
-    )
+    changed_fields: str | None = Field(default=None, max_length=80)
 
     @model_validator(mode="after")
     def actor_matches_kind(self) -> "ClientEventPayload":
         if (self.actor_kind == "user") != (self.actor_id is not None):
             raise ValueError("Actor kind does not match identifier")
+        if self.changed_fields is not None:
+            fields = self.changed_fields.split(",")
+            if len(fields) != len(set(fields)) or not set(fields).issubset(
+                {"name", "active", "default_project_id", "display_name", "email"}
+            ):
+                raise ValueError("Invalid changed fields")
         return self
 
 
@@ -287,9 +298,19 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                     "client.created": {"manager_user_id"},
                     "client.updated": {"changed_fields"},
                     "client.access_changed": {"member_user_id", "role_name"},
+                    "client.contact_created": {"contact_id"},
+                    "client.contact_updated": {"contact_id", "changed_fields"},
                 }[event.event_type]
                 if fields != expected_fields:
                     raise ValueError("Invalid client event fields")
+                if payload.changed_fields is not None:
+                    allowed = (
+                        {"display_name", "email", "active"}
+                        if event.event_type == "client.contact_updated"
+                        else {"name", "active", "default_project_id"}
+                    )
+                    if not set(payload.changed_fields.split(",")).issubset(allowed):
+                        raise ValueError("Invalid client change")
             else:
                 payload = EventPayload.model_validate(event.payload)
             if (

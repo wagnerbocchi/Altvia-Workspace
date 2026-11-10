@@ -1,6 +1,7 @@
 # ADR-0022: Client contacts and default ticket project
 
-Date: 2026-11-10. Status: selected before implementation, Phase 2E.
+Date: 2026-11-10. Status: selected before implementation; Phase 2E implementation
+in progress, final review/qualification pending.
 User authorized continuing development, routine decisions and direct main pushes;
 questions are recorded rather than blocking independent safe work.
 
@@ -100,9 +101,11 @@ Keep the existing durable consumer identifier/deduplication and worker privilege
 
 ## Browser and acceptance
 
-Use Impeccable's incumbent context workflow. Client detail gets a separate
-contacts section with paged list/create and a scoped contact detail route for
-edit/archive/restore. Explain external identity and unverified status in plain
+Use Impeccable's incumbent context workflow. Client detail links to a dedicated
+contacts directory with paged list/create and a scoped contact detail route for
+edit/archive/restore. This keeps contact creation mounted independently of client
+metadata recovery and avoids growing the existing detail into a long form.
+Explain external identity and unverified status in plain
 language. Default-project selection lists only authorized projects of this
 client, with explicit clear, pagination, reviewed version and conflict recovery.
 Preserve session-owned caches and original protected POST intent through network

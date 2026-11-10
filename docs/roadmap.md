@@ -24,6 +24,10 @@ tests, all five hosted gates and actual x86-64-v1 packaged/native/cgroup proof.
 The same five tested images report zero vulnerabilities. See
 docs/phase-2c-work-evidence.md. Stop this increment at qualified task core; Phase 2
 remains open for Kanban/filter/search/My Work and later client contacts/default-project contracts.
+Phase 2D task discovery is now selected in ADR-0021 and
+docs/plans/2026-11-10-work-discovery.md. Contracts precede code. Implementation,
+review, hosted gates and changed-artifact target qualification remain pending;
+do not reuse Phase2C evidence as proof of new behavior.
 
 ## Milestones and gates
 

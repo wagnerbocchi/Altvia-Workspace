@@ -267,6 +267,23 @@ No permission field, number, actor, version or audit timestamp is client-writabl
 
 ## Endpoint contracts
 
+### Phase 2D selected task discovery contract
+
+ADR-0021 defines the incremental GET /work-items filters and GET /my-work task-only
+projection. This contract is selected before implementation; qualification is
+tracked separately in docs/roadmap.md. Existing task writes remain ADR-0020.
+Project list retains required project_id; common filters are status, priority,
+work_type, owner_id, involved_user_id, unassigned, due_presence (dated/undated),
+due_from (inclusive aware instant), due_before (exclusive aware instant), and q
+(trimmed, <=200 characters; native Portuguese websearch title/description).
+My Work also accepts optional project_id/client_id/team_id. It returns
+{items,next_cursor,as_of}, with task summaries {kind:work_item,id,project_id,
+project_name,title,status,priority,work_type,due,due_at}. UUID ascending pagination,
+limit 1..100/default50, filters ANDed; no global count or ticket consolidation.
+Re-evaluate SQL project authority before pagination; owner OR participant is
+deduplicated across the complete authorized set. Cursors bind actor and normalized
+filters; unsupported/repeated/invalid parameters return422. See ADR for boundaries.
+
 | Method and suffix | Permission | Result and rejection contract |
 | --- | --- | --- |
 | GET/POST `/clients` | client.read/manage | 200 list / 201 persisted client |

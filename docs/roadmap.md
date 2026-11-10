@@ -42,8 +42,8 @@ tasks/subtasks, owners/participants, deadlines, transitions, internal comments a
 attributable scoped history under ADR-0020. Source d5ae972 passed 403 API/48 browser
 tests, all five hosted gates and actual x86-64-v1 packaged/native/cgroup proof.
 The same five tested images report zero vulnerabilities. See
-docs/phase-2c-work-evidence.md. Phase 2 exit remains open for traceability of
-planned member, milestone and external-participant workflows.
+docs/phase-2c-work-evidence.md. Member, milestone and external-participant
+workflow traceability is now closed by docs/phase-2-development-closure.md.
 Phase 2D task discovery implements ADR-0021 and
 docs/plans/2026-11-10-work-discovery.md after contracts in 215eb31. Backend 4d56e97
 passed 424 API tests; browser search/filters, independent board paging and task-only
@@ -60,11 +60,19 @@ entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
-Phase 2H selected before code: ADR-0025 and
-docs/plans/2026-11-10-external-work-participants.md define bounded task-owned
-external labels, manager-only writes, no identity/contact/grant inference and
-legacy replay compatibility. Reuse work authorization, versions, persistence and
-redacted events. No new service/dependency or per-slice target homologation.
+Phase 2H development is complete under ADR-0025 and
+docs/plans/2026-11-10-external-work-participants.md. Contracts 6a03689 preceded
+backend a4c456d and browser f5b4e2a: bounded task-owned external labels,
+manager-only writes, no identity/contact/grant inference and legacy replay
+compatibility. Exact f5b4e2a passed all five hosted gates with 523 API/78 browser
+tests, actual packaged label persistence/recovery, zero blocking source findings
+and zero reported vulnerabilities in all five scanned images. A fresh source
+review's Unicode finding was fixed with RED/GREEN; Impeccable returned ship and
+preserved the incumbent system. See docs/phase-2h-external-participant-evidence.md.
+The Phase 2 development audit is closed in docs/phase-2-development-closure.md.
+Final integrated VM qualification remains deferred. Next: Phase 3 native Service
+Desk contracts, then bounded persisted queue/ticket slices. Phases 3-6 and full
+MVP/production acceptance remain open; no production deployment or real import.
 
 Phase 2G implements basic persisted project milestones under ADR-0024 and
 docs/plans/2026-11-10-project-milestones.md, contracted before code in 83c0858.
@@ -77,7 +85,7 @@ same-DB local five-image scanning with zero findings. Exact corrected source
 vulnerabilities across all five scanned images. Phase 2G development is complete;
 see docs/phase-2g-milestone-evidence.md. Final target qualification
 is deferred under the current cadence. No task synchronization, fabricated progress
-or advanced scheduling is introduced. External work participants remain next.
+or advanced scheduling is introduced. Phase 2H now supplies external involvement.
 
 Phase 2E selected before code: ADR-0022 and
 docs/plans/2026-11-10-client-contacts.md define scoped external contacts and an
@@ -130,9 +138,10 @@ the exact blocker rather than silently weakening acceptance.
 Phase 2F qualified on 2026-11-10: scoped browser member administration under
 ADR-0023 and docs/plans/2026-11-10-project-members.md. Reuse the existing access
 service; add accounts by known email without a global discovery endpoint. The
-Phase 2 traceability audit now leaves external work participants after the
-milestone increment. Advanced dependency planning stays
-FR-016/P2 backlog. Exact qualification evidence is in docs/phase-2f-member-evidence.md.
+Phase 2G/2H now close milestone and external-involvement development traceability;
+see docs/phase-2-development-closure.md. Advanced dependency planning stays
+FR-016/P2 backlog. Historical Phase 2F target evidence remains in
+docs/phase-2f-member-evidence.md; final changed-stack qualification stays pending.
 
 Before implementation: ownership, typed request/response, permission predicates,
 schema/constraint delta, failure/race behavior and meaningful tests are defined.

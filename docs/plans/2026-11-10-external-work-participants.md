@@ -8,6 +8,14 @@ redacted events. Use task-owned labels; no client-contact lookup or new service.
 **Tech Stack:** Existing FastAPI/Pydantic/SQLAlchemy/PostgreSQL and Next.js/TypeScript.
 **Spec:** docs/adr/0025-external-work-participants.md and master specification.
 
+Status 2026-11-10: all three tasks complete. Contracts 6a03689 preceded backend
+a4c456d and frontend f5b4e2a. Exact f5b4e2a passed all five hosted gates, including
+523 API/78 browser tests and packaged external-label recreation proof. Fresh
+source review's Unicode finding has RED/GREEN plus complete passing suites;
+Impeccable returned ship and preserved the incumbent system. See
+docs/phase-2h-external-participant-evidence.md and the Phase 2 development audit.
+Final integrated target qualification remains deferred, not implicitly passed.
+
 ## Global Constraints
 
 - Contracts before code; x86-64-v1 mandatory, no new dependencies or target SSH.
@@ -35,14 +43,14 @@ generated OpenAPI/TypeScript; affected architecture/contracts.
 **Interfaces:** WorkCreate/Patch external_participants list[str]; WorkOutput
 external_participants defaults []; WorkExternalParticipant(work_item_id,unresolved_label).
 
-- [ ] Write real SQL lifecycle/constraints/ACL/no-op/replay/stale/race/event tests.
+- [x] Write real SQL lifecycle/constraints/ACL/no-op/replay/stale/race/event tests.
   Assert trimmed sorted labels, one version advance, no external assignment effect.
   Add explicit old canonical request hash and missing-output-field receipt cases;
   populated/cleared-event downgrade refusal and least-privilege tests.
-- [ ] Run `python .superpowers/phase1-tests/run.py --api apps/api/tests/test_external_work_participants.py -q`.
+- [x] Run `python .superpowers/phase1-tests/run.py --api apps/api/tests/test_external_work_participants.py -q`.
   Expected RED: unsupported field/missing table. Implement the smallest work extension
   and b46087000012, reusing current protocols; no contact identity association.
-- [ ] Run affected tests plus full API, format/lint/mypy/schema drift and generated
+- [x] Run affected tests plus full API, format/lint/mypy/schema drift and generated
   contracts. Expected all pass. Commit backend with tested durable behavior.
 
 ### Task 2: Existing task editor and detail
@@ -51,14 +59,14 @@ external_participants defaults []; WorkExternalParticipant(work_item_id,unresolv
 only if incumbent work accounts/sessions do not already suffice; surface brief.
 **Interfaces:** Consume Task1 DTOs using current WorkApi and session-owned transport.
 
-- [ ] Write real browser create/edit/clear/reload, literal text, reader/agent,
+- [x] Write real browser create/edit/clear/reload, literal text, reader/agent,
   uncertain create and stale review tests. Capture create/detail/edit/recovery at
   1440/390px in light/dark using the real theme control, axe and no-overflow checks.
   Run new suite; expect missing controls before implementation.
-- [ ] Extend WorkForm with manager-only one-label-per-line input and shared list
+- [x] Extend WorkForm with manager-only one-label-per-line input and shared list
   semantics. Detail displays the scoped labels separately from internal contributors.
   Retain exact original POST and reviewed task version; do not resend on read retry.
-- [ ] Run check/build/contracts and relevant/full browser suite; finish Impeccable
+- [x] Run check/build/contracts and relevant/full browser suite; finish Impeccable
   review and incumbent-system documentation. Commit intended frontend/tests.
 
 ### Task 3: Review and development acceptance
@@ -66,10 +74,10 @@ only if incumbent work accounts/sessions do not already suffice; surface brief.
 **Files:** docs/phase-2h-external-participant-evidence.md, roadmap/PRD/runbook/ADR/plan.
 **Interfaces:** Exact local/hosted source, immutable review evidence, deferred VM gate.
 
-- [ ] One fresh whole-increment source review; Important fixes require RED/GREEN.
+- [x] One fresh whole-increment source review; Important fixes require RED/GREEN.
   Preserve failures, review fixes and actual source/image/container security outputs.
-- [ ] Publish checked coherent commits to main without PR; monitor all five gates.
+- [x] Publish checked coherent commits to main without PR; monitor all five gates.
   Expected full API/browser/container/source/image gates pass without suppression.
-- [ ] Preserve evidence, record development complete separately from target pending,
+- [x] Preserve evidence, record development complete separately from target pending,
   and audit Phase 2 remaining traceability before any Service Desk implementation.
   Report rulings/costs and deferred minors. No target-server actions.

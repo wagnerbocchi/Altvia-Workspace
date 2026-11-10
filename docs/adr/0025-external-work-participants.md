@@ -1,6 +1,9 @@
 # ADR-0025: Task-owned external participants
 
-Date: 2026-11-10. Status: selected before code, Phase 2H.
+Date: 2026-11-10. Status: accepted and implemented, Phase 2H development complete.
+Contracts 6a03689 preceded backend a4c456d and browser f5b4e2a. All five hosted
+gates passed with 523 API/78 browser tests; see the Phase 2H evidence report.
+Final integrated target qualification remains deferred under the user's cadence.
 Master sections 2.1, 4/FR-003 and 8.4 require involved people without silently
 turning an unresolved third party into an employee. User delegated routine choices,
 direct main publication and local/CI development before final VM homologation.

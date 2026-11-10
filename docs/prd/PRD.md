@@ -57,8 +57,8 @@ registry portion of FR-002 and its scoped FR-012 activity, qualified on the actu
 baseline VM (docs/phase-2a-client-evidence.md). Phase 2B adds persisted internal/
 customer projects, explicit managers/members, shared operational areas and scoped
 project activity, qualified on the same baseline VM with 358 API/42 browser tests
-and all five hosted gates (docs/phase-2b-project-evidence.md). Broader FR-002 client
-contacts/default ticket project contracts remain later work. Phase 2C now delivers
+and all five hosted gates (docs/phase-2b-project-evidence.md). Phase 2E below adds
+FR-002 client contacts and default ticket projects. Phase 2C now delivers
 the ADR-0020 task core of FR-003 and scoped FR-012: persisted tasks/subtasks,
 owners/participants, deadlines, transitions, internal comments and attributable
 history. Source d5ae972 passed 403 API/48 browser tests, all five hosted gates and
@@ -86,8 +86,16 @@ vendor correction 011e0a5. That exact source passed all five hosted gates with
 using the same scanner DB as the failed scan. Development is complete; evidence
 is recorded in docs/phase-2g-milestone-evidence.md. Final integrated
 target qualification is deferred until remaining MVP development ends, following
-the user's updated cadence. External work participants remain next in Phase 2;
-ticket consolidation remains Phase 4 and production acceptance remains separate.
+the user's updated cadence. Phase 2H now adds bounded task-owned external labels
+under ADR-0025: manager-only writes, plain-text attribution without identity/grants,
+and legacy replay compatibility. Contracts 6a03689 preceded backend a4c456d and
+browser f5b4e2a. Exact f5b4e2a passed all five hosted gates with 523 API/78 browser
+tests, packaged label persistence/recovery, zero blocking source findings and
+zero reported vulnerabilities in all five scanned images. Phase 2 development
+is complete; see docs/phase-2h-external-participant-evidence.md and
+docs/phase-2-development-closure.md. Final integrated target qualification remains
+pending. Phase 3 Service Desk is next; ticket consolidation remains Phase 4 and
+production acceptance remains separate.
 
 Non-goals: SaaS billing/subscriptions, marketplace, local AI/embeddings, external
 search cluster, advanced ITIL/CMDB, advanced Gantt and native mobile applications.

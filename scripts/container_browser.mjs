@@ -148,6 +148,35 @@ try {
   assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations, []);
   await page.getByRole("link", { name: "Voltar às contas" }).click();
   await page.getByRole("link", { name: "Voltar à minha conta" }).click();
+  await page.getByRole("link", { name: "Clientes", exact: true }).click();
+  const ownId = await page.evaluate(async () => (await (await fetch("/api/v1/auth/me")).json()).id);
+  const clientName = `Cliente ${project}`;
+  await page.getByLabel("Nome do cliente", { exact: true }).fill(clientName);
+  await page.getByLabel("Gestor inicial", { exact: true }).selectOption(ownId);
+  await page.getByRole("button", { name: "Cadastrar cliente", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Acesse seu workspace" })).toBeVisible();
+  await page.getByLabel("E-mail", { exact: true }).fill(email);
+  await page.getByLabel("Senha", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Entrar", exact: true }).click();
+  await page.getByRole("link", { name: clientName, exact: true }).click();
+  await page.getByRole("button", { name: "Arquivar cliente", exact: true }).click();
+  await page.getByRole("button", { name: "Confirmar arquivamento", exact: true }).click();
+  await expect(page.getByText("Cliente arquivado", { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("Cliente arquivado", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Restaurar cliente", exact: true }).click();
+  await expect(page.getByText("Cliente ativo", { exact: true })).toBeVisible();
+  for (let attempt = 0; attempt < 60; attempt++) {
+    await page.getByRole("button", { name: "Atualizar histórico", exact: true }).click();
+    const present = await page.getByText("Cliente cadastrado", { exact: true }).count();
+    if (present) break;
+    await delay(250);
+  }
+  await expect(page.getByText("Cliente cadastrado", { exact: true })).toBeVisible();
+  await page.screenshot({ path: resolve(screenshots, "client-mobile.png"), fullPage: true });
+  assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations, []);
+  await page.getByRole("link", { name: "Voltar aos clientes", exact: true }).click();
+  await page.getByRole("link", { name: "Voltar à minha conta" }).click();
   await page.getByRole("button", { name: "Sair da conta" }).click();
   await expect(page.getByRole("status")).toHaveText("Você saiu da conta com segurança.");
   await expect(page.getByRole("heading", { name: "Acesse seu workspace" })).toBeFocused();
@@ -155,7 +184,7 @@ try {
   assert.equal((await context.cookies()).some(item => item.name === "__Host-altvia_session"), false);
   assert.deepEqual(errors, []);
   await context.close();
-  console.log("Packaged browser login/HTTPS/CSP/CSRF/recreation/teams/roster/accounts/logout/themes/axe proof passed.");
+  console.log("Packaged browser login/HTTPS/CSP/CSRF/recreation/teams/roster/accounts/clients/logout/themes/axe proof passed.");
 } catch (error) {
   // Playwright locator diagnostics can include fill arguments. Never publish them.
   console.error(String(error).replaceAll(password, "[REDACTED]"));

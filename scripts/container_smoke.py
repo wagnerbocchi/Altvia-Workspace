@@ -725,6 +725,24 @@ with Session(make_engine(WorkerSettings())) as db:
                 + "\n",
                 encoding="utf-8",
             )
+            # Create real customer scopes before service recreation, without
+            # granting the platform administrator an implicit customer ceiling.
+            accounts = client.get("/api/v1/users?limit=100").json()["items"]
+            reader_id = next(row["id"] for row in accounts if row["email"] == "reader@example.test")
+            other_id = next(
+                row["id"] for row in accounts if row["email"] == "http-administered@example.test"
+            )
+            customer_ids = []
+            for name, manager in [("Visible customer", reader_id), ("Private customer", other_id)]:
+                created_client = client.post(
+                    "/api/v1/clients",
+                    json={"name": name, "manager_user_id": manager},
+                    headers={"Idempotency-Key": uuid4().hex},
+                )
+                assert created_client.status_code == 201
+                customer_ids.append(created_client.json()["client_id"])
+            assert client.get("/api/v1/clients").json()["items"] == []
+            assert client.get(f"/api/v1/clients/{customer_ids[0]}").status_code == 404
             assert (
                 client.patch(
                     path,
@@ -773,6 +791,22 @@ with Session(make_engine(Settings())) as db,db.begin():
             assert client.get(f"/api/v1/teams/{teams[1]}").status_code == 404
             assert client.get("/api/v1/users").status_code == 403
             assert client.get(f"{path}/members").status_code == 200
+            assert [row["id"] for row in client.get("/api/v1/clients").json()["items"]] == [
+                customer_ids[0]
+            ]
+            assert (
+                client.get(f"/api/v1/clients/{customer_ids[0]}").json()["name"]
+                == "Visible customer"
+            )
+            assert client.get(f"/api/v1/clients/{customer_ids[1]}").status_code == 404
+            assert client.get(f"/api/v1/clients/{customer_ids[1]}/activity").status_code == 404
+            for _ in range(60):
+                history = client.get(f"/api/v1/clients/{customer_ids[0]}/activity").json()["items"]
+                if any(row["event_type"] == "client.created" for row in history):
+                    break
+                time.sleep(0.5)
+            else:
+                raise RuntimeError("Scoped client activity did not project on the packaged stack")
         run(
             ["node", "scripts/container_browser.mjs", args.engine, project, str(work)],
             data=json.dumps(
@@ -802,7 +836,7 @@ with Session(make_engine(Settings())) as db,db.begin():
             ]
         )
         print(
-            "Container TLS/ACL/accounts/worker/Redis/replay/persistence/readiness/"
+            "Container TLS/ACL/accounts/clients/worker/Redis/replay/persistence/readiness/"
             "non-root/secret/SIGTERM proof passed."
         )
     finally:

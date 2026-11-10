@@ -1,6 +1,8 @@
 # ADR-0024: Basic project milestones
 
-Date: 2026-11-10. Status: selected before implementation, Phase 2G.
+Date: 2026-11-10. Status: implemented and local/hosted development-validated,
+Phase 2G, source 011e0a5. Final target qualification deferred. Exact evidence:
+docs/phase-2g-milestone-evidence.md.
 Master sections 6/7/8.3 require persisted project milestones. User delegated
 routine decisions and deferred target-VM homologation until MVP development ends.
 

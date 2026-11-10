@@ -89,6 +89,39 @@ To remove all customer-project access, separately revoke the customer ceiling
 through the existing approved client process. No last-project-manager guard is
 claimed; trusted configuration CLI can repair inactive/orphaned project management.
 
+## Project milestones
+
+ADR-0024 adds Marcos do projeto from project detail. Readers consult the scoped
+directory and individual records. Current project managers and customer operations
+managers can create or edit a title and optional deadline, conclude, cancel and
+explicitly reopen a milestone. These actions do not change tasks or grant access.
+Actual writes require the project, owning team and customer to remain active.
+
+Choose no deadline, a local calendar date with an explicit timezone, or an exact
+instant entered in UTC. A calendar date covers that whole local day. Detail shows
+the chosen timezone; changing only a title preserves an existing exact instant,
+including precision finer than the form's milliseconds. Change the time explicitly
+only when intending to replace it.
+
+New milestones start planned. Conclude or cancel a planned milestone; reopen a
+concluded/cancelled milestone before choosing another terminal state. Cancellation
+and reopening require confirmation. There is no physical deletion or automatic
+completion percentage. History remains attributable and project-scoped.
+
+After a lost creation response, Verificar cadastro do marco retries only the
+original body/key. Independent project/list refresh does not replace that intent.
+A confirmed replay identifies the original record and does not restore old values.
+Edit and state confirmation retain the reviewed milestone version. After a stale
+or uncertain edit, Recarregar e descartar edicao fetches current data for review;
+never silently retry against a newer version. Changing session or leaving the
+page disposes private in-memory intents; inspect current state before creating again.
+
+Migration b46087000011 is expand-only. Downgrade refuses milestone records or
+related durable audit/outbox/activity data before DDL. On application rollback,
+preserve the expanded schema, all milestone/history data and volumes, and keep
+a worker supporting project.milestone_created/updated (or stop it until the
+compatible version resumes). Old workers cannot project these event types.
+
 ## Recovery and rollback
 
 Verify an uncertain creation with Verificar cadastro, which reuses the original

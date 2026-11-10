@@ -60,11 +60,18 @@ entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
-Phase 2G selected before code on 2026-11-10: basic persisted project milestones
-under ADR-0024 and docs/plans/2026-11-10-project-milestones.md. Reuse project ACL,
-versions/protected replay/activity and existing date/instant deadline semantics.
-No task synchronization, fabricated progress or advanced scheduling. Local/CI
-development acceptance is separate from deferred final target qualification.
+Phase 2G implements basic persisted project milestones under ADR-0024 and
+docs/plans/2026-11-10-project-milestones.md, contracted before code in 83c0858.
+Backend 14bee57 and browser 128a718 reuse project ACL, versions/protected replay,
+redacted activity and shared date/instant deadlines. Local 500 API/72 browser
+checks and Impeccable corrections/documentation passed. The initial hosted image
+gate found 50 installed library occurrences; vendor correction 011e0a5 passed
+same-DB local five-image scanning with zero findings. Exact corrected source
+011e0a5 passed all five hosted gates with 500 API/72 browser tests and zero reported
+vulnerabilities across all five scanned images. Phase 2G development is complete;
+see docs/phase-2g-milestone-evidence.md. Final target qualification
+is deferred under the current cadence. No task synchronization, fabricated progress
+or advanced scheduling is introduced. External work participants remain next.
 
 Phase 2E selected before code: ADR-0022 and
 docs/plans/2026-11-10-client-contacts.md define scoped external contacts and an
@@ -88,8 +95,8 @@ passed all five hosted gates (480 API/67 browser) and actual x86-64-v1 packaged
 member/ACL/session/replay/persistence/native/resource/recovery proof. Exact native
 image IDs have zero reported vulnerabilities. Impeccable's single spacing fix
 scored resolved; its documenter preserved the incumbent system. See
-docs/phase-2f-member-evidence.md. Basic project milestones and external work
-participants remain subsequent Phase 2 slices; advanced dependencies stay P2.
+docs/phase-2f-member-evidence.md. Phase 2G implements milestones; external work
+participants remain a subsequent Phase 2 slice; advanced dependencies stay P2.
 
 | Phase | Ordered vertical deliveries | Dependencies | Exit evidence |
 | --- | --- | --- | --- |
@@ -117,8 +124,8 @@ the exact blocker rather than silently weakening acceptance.
 Phase 2F qualified on 2026-11-10: scoped browser member administration under
 ADR-0023 and docs/plans/2026-11-10-project-members.md. Reuse the existing access
 service; add accounts by known email without a global discovery endpoint. The
-Phase 2 traceability audit leaves basic project milestones and external work
-participants for subsequent bounded slices. Advanced dependency planning stays
+Phase 2 traceability audit now leaves external work participants after the
+milestone increment. Advanced dependency planning stays
 FR-016/P2 backlog. Exact qualification evidence is in docs/phase-2f-member-evidence.md.
 
 Before implementation: ownership, typed request/response, permission predicates,
@@ -173,9 +180,10 @@ Phase 2D contracts preceded Kanban/filter/search/My Work implementation; exact
 source 1c20f48 passed hosted and actual target qualification. This bounded
 increment is complete. Phase 2E contracts preceded persisted contact/default
 configuration and its qualified browser/worker/native delivery. Phase 2F completes
-browser member writes and the exit traceability audit. The next slices cover basic
-project milestones and external work participants, with contracts before code and
-ticket state kept separate. Advanced dependency planning remains FR-016/P2 backlog.
+browser member writes and the exit traceability audit. Phase 2G implements basic
+project milestones. The next slice covers external work participants, with
+contracts before code and ticket state kept separate. Advanced dependency planning
+remains FR-016/P2 backlog.
 Production capacity/retention/provider decisions remain
 the later gates listed above, not unimplemented Foundation requirements.
 
@@ -189,6 +197,19 @@ portal/knowledge base. Billing/subscriptions, marketplace, advanced ITIL/CMDB,
 native mobile and local AI remain outside MVP. No speculative code for backlog.
 
 ## Evidence ledger
+
+- Phase 2G: contracts 83c0858, backend 14bee57, reviewed browser 128a718 and
+  signed vendor-library correction 011e0a5. Local full API 500/browser 72 passed;
+  all five exact corrected-source hosted gates passed with 500 API/72 browser.
+  Initial image scan detected 50 installed occurrences; exact-pinned Kerberos/
+  libxslt vendor updates removed them, proven with the same scanner DB locally
+  and in hosted scans. Five full inventories report zero vulnerabilities. One
+  source review found no Critical/Important; its paging Minor was also a material
+  visual finding and is fixed. Impeccable scored both fixes resolved, preserving
+  the incumbent system. The calendar issue was a test-only native theme mismatch,
+  corrected by driving the real theme control. Development complete; no target
+  SSH/homologation under the updated cadence. Final integrated x86-64-v1 proof and
+  external work participants remain open. See docs/phase-2g-milestone-evidence.md.
 
 - Phase 2F: contracts 32e5a78, persisted writes 619f94c, deterministic revocation/
   roster race proofs ce15847, reviewed browser/packaged d55a4b2 and test-only account

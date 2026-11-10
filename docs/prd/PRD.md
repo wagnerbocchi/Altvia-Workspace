@@ -33,7 +33,7 @@ automated verification and real UI when applicable. Phase numbers refer to
 | Requirement | Delivery | Verifiable acceptance |
 | --- | --- | --- |
 | FR-001 Identity, teams, sessions, RBAC P0 | 1 | Login succeeds with valid account, expires/revokes; negative cross-client reads and writes fail |
-| FR-002 Clients, areas, projects P0 | 2 | Scoped CRUD persists after restart; multiple projects per client; internal projects need no fake client |
+| FR-002 Clients, areas, projects P0 | 2 | Scoped CRUD and milestone lifecycle persist after restart; multiple projects per client; internal projects need no fake client |
 | FR-003 Work/subtasks/owners P0 | 2 | Create/assign/block/complete, owner and participants distinct; cycles and stale writes rejected |
 | FR-004 Kanban, list, filters, FTS, My Work P0 | 2,4 | Authorized paginated results; consistent filtering; N:N consolidation verified in Phase 4 |
 | FR-005 Tickets/queues/history P0 | 3 | Unique human number; requester, assignee, state and audit survive restart |
@@ -77,8 +77,16 @@ scoped browser member grants/roles/removal under ADR-0023, with session invalida
 immutable grant confirmation/replay and reviewed versions. Exact b179695 passed
 all five hosted gates with 480 API/67 browser tests and actual x86-64-v1 member/
 ACL/browser/recovery/native/resource proof. The same five target-tested images
-report zero vulnerabilities; see docs/phase-2f-member-evidence.md. Basic project
-milestone and external-participant workflows remain subsequent Phase 2 slices;
+report zero vulnerabilities; see docs/phase-2f-member-evidence.md. Phase 2G adds
+basic persisted milestones under ADR-0024: optional date/instant deadlines,
+conclude/cancel/explicit reopen, scoped activity and reviewed-version browser
+recovery. Local 500 API/72 browser passed; initial hosted image findings received
+vendor correction 011e0a5. That exact source passed all five hosted gates with
+500 API/72 browser and zero reported vulnerabilities in all five scanned images,
+using the same scanner DB as the failed scan. Development is complete; evidence
+is recorded in docs/phase-2g-milestone-evidence.md. Final integrated
+target qualification is deferred until remaining MVP development ends, following
+the user's updated cadence. External work participants remain next in Phase 2;
 ticket consolidation remains Phase 4 and production acceptance remains separate.
 
 Non-goals: SaaS billing/subscriptions, marketplace, local AI/embeddings, external

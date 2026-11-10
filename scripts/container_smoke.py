@@ -772,6 +772,114 @@ with Session(make_engine(WorkerSettings())) as db:
                 project_ids.append(created_project.json()["project_id"])
             assert client.get("/api/v1/projects").json()["items"] == []
             assert client.get(f"/api/v1/projects/{project_ids[0]}").status_code == 404
+            # Real scoped work exists before API/PostgreSQL recreation. Separate
+            # authenticated clients keep the configuration operator out of content.
+            work_ids = []
+            child_id = None
+            for index, (email, project_id) in enumerate(
+                [
+                    ("reader@example.test", project_ids[0]),
+                    ("reader@example.test", project_ids[2]),
+                    ("http-administered@example.test", project_ids[1]),
+                ]
+            ):
+                with httpx.Client(
+                    base_url=origin,
+                    verify=str(secret_dir / "tls_cert"),
+                    headers={"Origin": origin},
+                    timeout=10,
+                    trust_env=False,
+                ) as contributor:
+                    login_work = contributor.post(
+                        "/api/v1/auth/sessions", json={"email": email, "password": password}
+                    )
+                    assert login_work.status_code == 201
+                    contributor.headers["X-CSRF-Token"] = login_work.json()["csrf_token"]
+                    owner = login_work.json()["user"]["id"]
+                    work_body = {
+                        "project_id": project_id,
+                        "title": f"Packaged work {index}",
+                        "priority": "high",
+                        "work_type": "one_off",
+                        "owner_id": owner,
+                        "due": {
+                            "precision": "date",
+                            "date": "2026-11-09",
+                            "timezone": "America/Sao_Paulo",
+                        },
+                    }
+                    work_key = {"Idempotency-Key": uuid4().hex}
+                    created_work = contributor.post(
+                        "/api/v1/work-items", json=work_body, headers=work_key
+                    )
+                    assert created_work.status_code == 201
+                    assert (
+                        contributor.post(
+                            "/api/v1/work-items", json=work_body, headers=work_key
+                        ).json()
+                        == created_work.json()
+                    )
+                    work_id = created_work.json()["work_item_id"]
+                    work_ids.append(work_id)
+                    work_path = "/api/v1/work-items/" + work_id
+                    assert contributor.get(work_path).json()["due_at"] == "2026-11-10T03:00:00Z"
+                    state_key = {"Idempotency-Key": uuid4().hex, "If-Match": '"1"'}
+                    state = {"target_status": "in_progress"}
+                    changed_work = contributor.post(
+                        work_path + "/transitions", json=state, headers=state_key
+                    )
+                    assert changed_work.status_code == 200 and changed_work.json()["version"] == 2
+                    assert (
+                        contributor.post(
+                            work_path + "/transitions", json=state, headers=state_key
+                        ).json()
+                        == changed_work.json()
+                    )
+                    evidence_key = {"Idempotency-Key": uuid4().hex, "If-Match": '"2"'}
+                    evidence = {"body": "Packaged internal evidence"}
+                    assert (
+                        contributor.post(
+                            work_path + "/comments", json=evidence, headers=evidence_key
+                        ).status_code
+                        == 201
+                    )
+                    assert (
+                        contributor.post(
+                            work_path + "/comments", json=evidence, headers=evidence_key
+                        ).status_code
+                        == 200
+                    )
+                    assert len(contributor.get(work_path + "/comments").json()["items"]) == 1
+                    assert (
+                        contributor.patch(
+                            work_path,
+                            json={"description": "Persisted task content"},
+                            headers={"If-Match": '"3"'},
+                        ).status_code
+                        == 200
+                    )
+                    if index == 0:
+                        created_child = contributor.post(
+                            "/api/v1/work-items",
+                            json={
+                                "project_id": project_id,
+                                "title": "Packaged subtask",
+                                "priority": "medium",
+                                "work_type": "one_off",
+                                "parent_id": work_id,
+                                "assignee_ids": [owner],
+                            },
+                            headers={"Idempotency-Key": uuid4().hex},
+                        )
+                        assert created_child.status_code == 201
+                        child_id = created_child.json()["work_item_id"]
+                        assert (
+                            contributor.patch(
+                                work_path, json={"parent_id": child_id}, headers={"If-Match": '"4"'}
+                            ).status_code
+                            == 409
+                        )
+            assert client.get("/api/v1/work-items/" + work_ids[0]).status_code == 404
             assert (
                 client.patch(
                     path,
@@ -848,6 +956,38 @@ with Session(make_engine(Settings())) as db,db.begin():
                 == reader_id
             )
             assert client.get("/api/v1/operational-areas").json()["items"][0]["id"] == area_id
+            persisted_work = client.get("/api/v1/work-items/" + work_ids[0]).json()
+            assert (
+                persisted_work["version"] == 4
+                and persisted_work["description"] == "Persisted task content"
+            )
+            assert (
+                persisted_work["owner_name"] == "Container Reader"
+                and persisted_work["status"] == "in_progress"
+            )
+            assert client.get("/api/v1/work-items/" + work_ids[1]).status_code == 200
+            assert child_id is not None
+            assert client.get("/api/v1/work-items/" + child_id).json()["parent_id"] == work_ids[0]
+            for suffix in ["", "/comments", "/status-history", "/activity"]:
+                assert client.get("/api/v1/work-items/" + work_ids[2] + suffix).status_code == 404
+            for _ in range(60):
+                work_history = client.get("/api/v1/work-items/" + work_ids[0] + "/activity").json()[
+                    "items"
+                ]
+                if len(work_history) == 4:
+                    break
+                time.sleep(0.5)
+            else:
+                raise RuntimeError("Scoped work activity did not project on packaged stack")
+            assert "Packaged internal evidence" not in json.dumps(work_history)
+            assert (
+                len(
+                    client.get("/api/v1/work-items/" + work_ids[0] + "/status-history").json()[
+                        "items"
+                    ]
+                )
+                == 2
+            )
             for _ in range(60):
                 projected = client.get(f"/api/v1/projects/{project_ids[0]}/activity").json()[
                     "items"

@@ -42,6 +42,11 @@ try {
   const context = await browser.newContext({ baseURL: origin, ignoreHTTPSErrors: false,
     viewport: { width: 1440, height: 900 } });
   const page = await context.newPage();
+  const capture = async name => {
+    await expect(page.getByRole("status").filter({ hasText: /^(Carregando|Verificando)/ })).toHaveCount(0);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.screenshot({ path: resolve(screenshots, name), fullPage: true });
+  };
   const errors = [];
   page.on("pageerror", error => errors.push(error.message));
   const document = await page.goto("/");
@@ -62,7 +67,7 @@ try {
       await expect(page.getByRole("heading", { name: "Acesse seu workspace" })).toBeVisible();
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations, []);
-      await page.screenshot({ path: resolve(screenshots, `${name}-${theme}.png`), fullPage: true });
+      await capture(`${name}-${theme}.png`);
     }
   }
   await page.getByLabel("E-mail", { exact: true }).fill(email);
@@ -99,7 +104,7 @@ try {
   await expect(page.getByText(email, { exact: true })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Minha conta" })).toBeVisible();
   assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze()).violations, []);
-  await page.screenshot({ path: resolve(screenshots, "account-mobile.png"), fullPage: true });
+  await capture("account-mobile.png");
   await page.getByRole("link", { name: "Administrar equipes" }).click();
   const teamName = `Equipe ${project}`;
   await page.getByLabel("Nome da nova equipe").fill(teamName);
@@ -114,7 +119,7 @@ try {
   await page.getByRole("button", { name: "Confirmar arquivamento" }).click();
   await expect(page.getByText("Equipe arquivada", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Adicionar participante", exact: true })).toBeDisabled();
-  await page.screenshot({ path: resolve(screenshots, "team-mobile.png"), fullPage: true });
+  await capture("team-mobile.png");
   assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations, []);
   await page.getByRole("button", { name: "Restaurar equipe", exact: true }).click();
   await page.getByRole("button", { name: "Confirmar restauração" }).click();
@@ -144,7 +149,7 @@ try {
   await page.getByRole("button", { name: "Ativar conta", exact: true }).click();
   await page.getByRole("button", { name: "Confirmar ativação", exact: true }).click();
   await expect(page.getByText("Conta ativa", { exact: true })).toBeVisible();
-  await page.screenshot({ path: resolve(screenshots, "admin-account-mobile.png"), fullPage: true });
+  await capture("admin-account-mobile.png");
   assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations, []);
   await page.getByRole("link", { name: "Voltar às contas" }).click();
   await page.getByRole("link", { name: "Voltar à minha conta" }).click();
@@ -173,7 +178,7 @@ try {
     await delay(250);
   }
   await expect(page.getByText("Cliente cadastrado", { exact: true })).toBeVisible();
-  await page.screenshot({ path: resolve(screenshots, "client-mobile.png"), fullPage: true });
+  await capture("client-mobile.png");
   assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations, []);
   await page.getByRole("link", { name: "Voltar aos clientes", exact: true }).click();
   await page.getByRole("link", { name: "Voltar à minha conta" }).click();
@@ -183,7 +188,7 @@ try {
   await page.getByLabel("Nome da nova área", { exact: true }).fill(areaName);
   await page.getByRole("button", { name: "Cadastrar área", exact: true }).click();
   await expect(page.getByRole("heading", { name: areaName, exact: true })).toBeVisible();
-  await page.screenshot({ path: resolve(screenshots, "areas-mobile.png"), fullPage: true });
+  await capture("areas-mobile.png");
   assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations, []);
   await page.getByRole("link", { name: "Voltar aos projetos", exact: true }).click();
   const projectName = `Projeto ${project}`;
@@ -211,8 +216,48 @@ try {
     await delay(250);
   }
   await expect(page.getByText("Projeto cadastrado", { exact: true })).toBeVisible();
-  await page.screenshot({ path: resolve(screenshots, "project-mobile.png"), fullPage: true });
+  await capture("project-mobile.png");
   assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations, []);
+  await page.getByRole("link", { name: "Tarefas do projeto", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Tarefas", exact: true })).toBeVisible();
+  await expect(page.getByLabel("Responsável", { exact: true }).locator("option")).not.toHaveCount(1);
+  await capture("work-directory-mobile.png");
+  const taskName = `Tarefa ${project}`;
+  await page.getByLabel("Título da nova tarefa", { exact: true }).fill(taskName);
+  await page.getByLabel("Responsável", { exact: true }).selectOption(ownId);
+  await page.getByLabel("Prazo", { exact: true }).selectOption("date");
+  await page.getByLabel("Data limite", { exact: true }).fill("2026-11-20");
+  await page.getByRole("button", { name: "Criar tarefa", exact: true }).click();
+  await expect(page.getByRole("heading", { name: taskName, exact: true })).toBeVisible();
+  await page.getByLabel("Próximo estado", { exact: true }).selectOption("in_progress");
+  await page.getByRole("button", { name: "Alterar estado", exact: true }).click();
+  await expect(page.locator(".admin-intro")).toContainText("Em andamento");
+  await page.getByLabel("Próximo estado", { exact: true }).selectOption("blocked");
+  await page.getByLabel("Motivo", { exact: true }).fill("Aguardando terceiro no teste isolado");
+  await page.getByRole("button", { name: "Alterar estado", exact: true }).click();
+  await expect(page.locator(".admin-intro")).toContainText("Bloqueada");
+  await page.getByLabel("Comentário interno", { exact: true }).fill("Evidência persistida do container");
+  await page.getByRole("button", { name: "Registrar comentário", exact: true }).click();
+  await expect(page.getByText("Evidência persistida do container", { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("Evidência persistida do container", { exact: true })).toBeVisible();
+  await capture("work-mobile.png");
+  assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations, []);
+  await page.getByRole("link", { name: "Voltar às tarefas", exact: true }).click();
+  await page.getByLabel("Título da nova tarefa", { exact: true }).fill(`Subtarefa ${project}`);
+  await page.getByLabel("Tarefa principal", { exact: true }).selectOption({ label: taskName });
+  await page.getByLabel("Tipo de trabalho", { exact: true }).selectOption("ongoing");
+  await page.getByRole("button", { name: "Criar tarefa", exact: true }).click();
+  await expect(page.getByRole("heading", { name: `Subtarefa ${project}`, exact: true })).toBeVisible();
+  await page.getByLabel("Próximo estado", { exact: true }).selectOption("done");
+  await page.getByLabel("Motivo", { exact: true }).fill("Operação sintética encerrada");
+  await page.getByLabel("Confirmo o encerramento desta operação contínua", { exact: true }).check();
+  await page.getByRole("button", { name: "Alterar estado", exact: true }).click();
+  await expect(page.locator(".admin-intro")).toContainText("Concluída");
+  await page.getByRole("link", { name: taskName, exact: true }).click();
+  await expect(page.locator(".admin-intro")).toContainText("Bloqueada");
+  await page.getByRole("link", { name: "Voltar às tarefas", exact: true }).click();
+  await page.getByRole("link", { name: "Voltar ao projeto", exact: true }).click();
   await page.getByRole("link", { name: "Voltar aos projetos", exact: true }).click();
   await page.getByRole("link", { name: "Voltar à minha conta" }).click();
   await page.getByRole("button", { name: "Sair da conta" }).click();
@@ -222,7 +267,7 @@ try {
   assert.equal((await context.cookies()).some(item => item.name === "__Host-altvia_session"), false);
   assert.deepEqual(errors, []);
   await context.close();
-  console.log("Packaged browser login/HTTPS/CSP/CSRF/recreation/teams/roster/accounts/clients/projects/areas/logout/themes/axe proof passed.");
+  console.log("Packaged browser login/HTTPS/CSP/CSRF/recreation/teams/roster/accounts/clients/projects/areas/work/subtasks/comments/ongoing/logout/themes/axe proof passed.");
 } catch (error) {
   // Playwright locator diagnostics can include fill arguments. Never publish them.
   console.error(String(error).replaceAll(password, "[REDACTED]"));

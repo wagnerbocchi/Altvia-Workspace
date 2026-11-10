@@ -111,6 +111,37 @@ def unique_area_name(db: Session, name: str, except_id: UUID | None = None) -> N
         raise identity.IdentityError(409, "area_name_exists")
 
 
+def can_create_project(db: Session, actor: User) -> bool:
+    if "identity.manage" in identity.capabilities(db, actor):
+        return True
+    customer = (
+        select(RoleBinding.id)
+        .join(Client, Client.id == RoleBinding.client_id)
+        .join(
+            ClientAccessGrant,
+            (ClientAccessGrant.client_id == Client.id)
+            & (ClientAccessGrant.user_id == RoleBinding.user_id),
+        )
+        .where(
+            RoleBinding.user_id == actor.id,
+            RoleBinding.scope_kind == "client",
+            RoleBinding.role_name == "operations_manager",
+        )
+        .exists()
+    )
+    team = (
+        select(RoleBinding.id)
+        .join(Team, Team.id == RoleBinding.team_id)
+        .where(
+            RoleBinding.user_id == actor.id,
+            RoleBinding.scope_kind == "team",
+            RoleBinding.role_name.in_({"viewer", "operations_manager"}),
+        )
+        .exists()
+    )
+    return bool(db.scalar(select(customer & team)))
+
+
 def creation_authority(
     db: Session, actor: User, client_id: UUID | None, team_id: UUID, manager_id: UUID
 ) -> None:

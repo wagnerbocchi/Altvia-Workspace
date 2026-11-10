@@ -36,6 +36,7 @@ def project(client, manager, team, customer=None, classification=None, key=None)
 
 
 def test_area_lifecycle_unique_names_permissions_and_replay(admin_client):
+    assert admin_client.get("/api/v1/projects").json()["can_create"]
     row = area(admin_client)
     assert row["name"] == "Operations" and row["version"] == 1
     assert area(admin_client, "Another")["id"] != row["id"]
@@ -205,10 +206,12 @@ def test_scoped_client_manager_creates_only_with_team_read_and_explicit_self(
     team = create_team(admin_client)["id"]
     customer = create_client(admin_client, seeded_user)
     sign_in(admin_client, "employee@example.test")
+    assert not admin_client.get("/api/v1/projects").json()["can_create"]
     assert project(admin_client, seeded_user, team, customer).status_code == 404
     with Session(db_engine) as db, db.begin():
         set_team_role(db, "employee@example.test", UUID(team), "viewer", True)
     sign_in(admin_client, "employee@example.test")
+    assert admin_client.get("/api/v1/projects").json()["can_create"]
     receipt = project(admin_client, seeded_user, team, customer)
     assert receipt.status_code == 201, receipt.text
     assert admin_client.get("/api/v1/auth/me").status_code == 401

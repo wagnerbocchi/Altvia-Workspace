@@ -772,6 +772,8 @@ export interface components {
         };
         /** ProjectPage */
         ProjectPage: {
+            /** Can Create */
+            can_create: boolean;
             /** Items */
             items: components["schemas"]["ProjectOutput"][];
             /** Next Cursor */

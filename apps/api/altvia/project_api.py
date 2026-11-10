@@ -119,6 +119,7 @@ class ProjectOutput(AreaOutput):
 class ProjectPage(BaseModel):
     items: list[ProjectOutput]
     next_cursor: str | None
+    can_create: bool
 
 
 class ProjectMemberOutput(BaseModel):
@@ -264,6 +265,7 @@ def create_project_router(engine: Engine, settings: Settings) -> APIRouter:
                 query = query.where(Project.id > last)
             rows = list(db.execute(query))
             return ProjectPage(
+                can_create=registry.can_create_project(db, actor),
                 items=[_output(row, manage) for row, manage in rows[:limit]],
                 next_cursor=_next_cursor(scope, rows[limit - 1][0].id)
                 if len(rows) > limit

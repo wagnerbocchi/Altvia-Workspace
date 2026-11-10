@@ -768,6 +768,10 @@
       },
       "ProjectPage": {
         "properties": {
+          "can_create": {
+            "title": "Can Create",
+            "type": "boolean"
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/ProjectOutput"
@@ -789,7 +793,8 @@
         },
         "required": [
           "items",
-          "next_cursor"
+          "next_cursor",
+          "can_create"
         ],
         "title": "ProjectPage",
         "type": "object"

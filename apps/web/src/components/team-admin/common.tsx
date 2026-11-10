@@ -36,6 +36,9 @@ export function Paging({ paging, next, label, disabled = false }: {
     atividades: ["Atividades anteriores", "Próximas atividades"],
     contatos: ["Contatos anteriores", "Próximos contatos"],
     marcos: ["Marcos anteriores", "Proximos marcos"],
+    filas: ["Filas anteriores", "Proximas filas"],
+    categorias: ["Categorias anteriores", "Proximas categorias"],
+    "equipe da fila": ["Equipes anteriores", "Proximas equipes"],
   };
   const [previousLabel, nextLabel] = labels[aliases[label] ?? label] ?? ["Participantes anteriores", "Próximos participantes"];
   return <nav className="paging" aria-label={`Páginas de ${label}`}>
@@ -55,6 +58,8 @@ export function isUncertain(error: unknown) {
 export function writeError(error: unknown) {
   if (isUncertain(error)) return "Não foi possível confirmar a gravação. Confira o resultado antes de enviar outra solicitação.";
   if (error instanceof ApiError) {
+    if (error.code === "name_exists") return "Ja existe um cadastro com esse nome nesta equipe ou fila. Escolha outro nome ou restaure o cadastro existente.";
+    if (error.code === "inactive_parent") return "A equipe ou fila foi arquivada. Recarregue os dados antes de continuar.";
     if (error.code === "contact_email_exists") return "Este e-mail ja pertence a um contato deste cliente. Recarregue para revisar o cadastro existente.";
     if (error.code === "client_inactive") return "Este cliente foi arquivado. Recarregue os dados antes de alterar contatos ou selecionar um projeto.";
     if (error.code === "invalid_default_project") return "Escolha um projeto ativo deste cliente com equipe ativa. Recarregue as opcoes.";

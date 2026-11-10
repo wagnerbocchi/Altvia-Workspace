@@ -14,8 +14,9 @@ from altvia.management import (
     create_user,
     hash_new_password,
     set_account_active,
+    set_team_role,
 )
-from altvia.models import Project, SessionRecord, Team, User
+from altvia.models import Project, SessionRecord, Team, TicketQueue, User
 from altvia.project_registry import set_project_access
 from sqlalchemy import select, update
 from sqlalchemy.engine import make_url
@@ -95,6 +96,17 @@ with Session(engine) as db, db.begin():
         ]:
             set_project_access(db, work_accounts[kind][0], work_project.id, role)
         roster_hash = hash_new_password(secrets.token_urlsafe(30))
+        queue_team = Team(name="Equipe de atendimento - Validacao")
+        db.add(queue_team)
+        db.flush()
+        for kind, role in [("MANAGER", "operations_manager"), ("READER", "viewer")]:
+            set_team_role(db, work_accounts[kind][0], queue_team.id, role, True)
+        fixture_queues = [
+            TicketQueue(team_id=queue_team.id, name=f"Fila de validacao {number:02}")
+            for number in range(1, 13)
+        ]
+        db.add_all(fixture_queues)
+        db.flush()
         external_work_project = Project(
             name="Projeto de envolvidos externos - Validacao",
             scope_kind="internal",
@@ -197,6 +209,8 @@ with Session(engine) as db, db.begin():
                     f"ALTVIA_E2E_CONTACT_{kind}_EMAIL={contact_email}\nALTVIA_E2E_CONTACT_{kind}_PASSWORD={contact_password}\n"
                 )
             target.write(f"ALTVIA_E2E_WORK_PROJECT_ID={work_project.id}\n")
+            target.write(f"ALTVIA_E2E_QUEUE_TEAM_ID={queue_team.id}\n")
+            target.write(f"ALTVIA_E2E_QUEUE_ID={fixture_queues[0].id}\n")
             target.write(f"ALTVIA_E2E_EXTERNAL_WORK_PROJECT_ID={external_work_project.id}\n")
             for kind, (work_email, work_password) in work_accounts.items():
                 target.write(

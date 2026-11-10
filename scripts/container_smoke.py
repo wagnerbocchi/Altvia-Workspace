@@ -725,6 +725,28 @@ with Session(make_engine(WorkerSettings())) as db:
                 + "\n",
                 encoding="utf-8",
             )
+            queue_paths = []
+            for index, team_id in enumerate(teams):
+                queue_receipt = client.post(
+                    "/api/v1/ticket-queues",
+                    json={"team_id": team_id, "name": f"Packaged queue {index}"},
+                    headers={"Idempotency-Key": uuid4().hex},
+                )
+                assert queue_receipt.status_code == 201
+                queue_paths.append("/api/v1/ticket-queues/" + queue_receipt.json()["queue_id"])
+            category_receipt = client.post(
+                queue_paths[0] + "/categories",
+                json={"name": "Packaged category"},
+                headers={"Idempotency-Key": uuid4().hex},
+            )
+            assert category_receipt.status_code == 201
+            category_path = queue_paths[0] + "/categories/" + category_receipt.json()["category_id"]
+            assert (
+                client.patch(
+                    category_path, json={"active": False}, headers={"If-Match": '"1"'}
+                ).status_code
+                == 200
+            )
             # Create real customer scopes before service recreation, without
             # granting the platform administrator an implicit customer ceiling.
             accounts = client.get("/api/v1/users?limit=100").json()["items"]
@@ -1076,6 +1098,19 @@ with Session(make_engine(Settings())) as db,db.begin():
             assert login.status_code == 201 and login.json()["user"]["capabilities"] == []
             assert [row["id"] for row in client.get("/api/v1/teams").json()["items"]] == [teams[0]]
             assert client.get(f"/api/v1/teams/{teams[1]}").status_code == 404
+            persisted_queue = client.get(queue_paths[0]).json()
+            assert persisted_queue["version"] == 3 and not persisted_queue["can_manage"]
+            persisted_category = client.get(category_path).json()
+            assert persisted_category["name"] == "Packaged category"
+            assert persisted_category["version"] == 2 and not persisted_category["active"]
+            assert client.get(queue_paths[1]).status_code == 404
+            assert (
+                client.patch(
+                    queue_paths[0], json={"name": "Denied"}, headers={"If-Match": '"3"'}
+                ).status_code
+                == 403
+            )
+            print("Packaged queue/category scope and restart persistence proof passed.")
             assert client.get("/api/v1/users").status_code == 403
             assert client.get(f"{path}/members").status_code == 200
             assert [row["id"] for row in client.get("/api/v1/clients").json()["items"]] == [

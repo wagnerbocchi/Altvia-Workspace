@@ -22,8 +22,8 @@ tasks/subtasks, owners/participants, deadlines, transitions, internal comments a
 attributable scoped history under ADR-0020. Source d5ae972 passed 403 API/48 browser
 tests, all five hosted gates and actual x86-64-v1 packaged/native/cgroup proof.
 The same five tested images report zero vulnerabilities. See
-docs/phase-2c-work-evidence.md. Phase 2 remains open for discovery qualification
-and later client contacts/default-project contracts.
+docs/phase-2c-work-evidence.md. Phase 2 remains open for later client
+contacts/default-project contracts.
 Phase 2D task discovery implements ADR-0021 and
 docs/plans/2026-11-10-work-discovery.md after contracts in 215eb31. Backend 4d56e97
 passed 424 API tests; browser search/filters, independent board paging and task-only
@@ -31,10 +31,12 @@ My Work are implemented. Source review's authority-recovery defect is fixed;
 Impeccable scored both visual fixes resolved and preserved the incumbent system.
 Final acceptance source 1c20f48 passed all five hosted gates: 424 API and 52 browser
 tests, packaged Docker/HTTPS/native GIN/recovery, source security and five images
-with zero reported vulnerabilities. Changed-artifact target qualification remains
-pending. See docs/phase-2d-discovery-evidence.md; Phase2C evidence does not prove new
-behavior. Task SSH authentication is pending; the immutable archive is prepared.
-Do not change server security or expose credentials to bypass this gate.
+with zero reported vulnerabilities. Exact source 1c20f48 also passed actual
+x86-64-v1 packaged/native/cgroup/GIN/recovery qualification; the same five
+target-tested images report zero vulnerabilities. See
+docs/phase-2d-discovery-evidence.md. Public-key SSH access and remote development
+project registration are complete under separate user authorization. No password
+entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
@@ -53,7 +55,7 @@ advancement from UI appearance alone. Reuse unchanged passing evidence; test
 affected behavior after each change. No release date/velocity estimate without
 environment/volume data. Do not replace Zammad until formal operational acceptance.
 
-The supplied VM now qualifies the current five-image task-core stack; future
+The supplied VM now qualifies the current five-image discovery stack; future
 mandatory native artifacts must repeat that gate. Production readiness remains
 open. If all independent work is exhausted, report
 the exact blocker rather than silently weakening acceptance.
@@ -75,7 +77,7 @@ currently covers this GitHub repository's main only, not production services.
 
 | ID | Needed answer / owner | Safe action while pending | Gate blocked |
 | --- | --- | --- | --- |
-| Q-01 | Five-image task-core stack d5ae972 qualified on the supplied VM, 2026-11-10; actual task persistence/ACL/browser/native/cgroup/image-scan and worker/Redis recovery proof retained | Reuse exact tested image evidence; repeat qualification for changed mandatory native artifacts and future components | Satisfied for current stack; future artifact qualification remains required |
+| Q-01 | Five-image discovery stack 1c20f48 qualified on the supplied VM, 2026-11-10; actual task/filter/search/personal/ACL/browser/native/cgroup/image-scan and worker/Redis recovery proof retained | Reuse exact tested image evidence; repeat qualification for changed mandatory native artifacts and future components | Satisfied for current stack; future artifact qualification remains required |
 | Q-02 | Infrastructure admin: IOPS, workload/users/mail per day and production volume/backup policy; observed 8 vCPUs, 31.3 GiB RAM and 500 GiB disk | Conservative bounded defaults; inventory alone establishes no capacity or performance promise | Capacity/prod readiness |
 | Q-03 | Support owner: mailboxes, TLS/auth/forwarding/trusted MTA and SMTP limits | Adapter contracts and controlled test SMTP/IMAP only | Real Phase 3 email acceptance |
 | Q-04 | Operations: actual client/team/project/queue membership matrix | Deny by default; test explicit grants with synthetic test data only | Provisioning/pilot |
@@ -89,7 +91,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-12 | Infrastructure admin: hypervisor ownership and CPU-model change possibility | x86-64-v1 remains mandatory | None: CPU upgrade is not assumed |
 | Q-13 | Product owner: approved logo/brand and visual preferences | Provisional restrained Portuguese interface, system fonts, no invented assets or claims; review after return | Final visual approval only |
 | Q-14 | Engineering/security: ongoing service-image security | All five actual target-tested images have zero reported vulnerabilities; blocking HIGH/CRITICAL CI, SAST medium+ and every detected secret; retained complete severity metadata, no risk acceptance | Remaining production security/readiness gates |
-| Q-15 | Infrastructure admin: authenticate the current task-scoped SSH master in the interactive terminal for Phase2D changed-artifact proof | Complete local/hosted checks and preserve the previous target environment; no password in chat or SSH/server configuration change | Phase2D actual x86-64-v1 qualification |
+| Q-15 | Resolved: owner authorized workstation public-key registration, remote Codex login and project registration; fresh noninteractive Windows SSH and actual Phase2D qualification passed | Reuse agent-backed key with strict known-host checks; one connection per stage because native Windows multiplexing failed its probe; preserve previous environments and server security | None for current qualification; key removal, agent restart or changed host identity may require user action |
 
 ## Backlog after core
 
@@ -104,8 +106,10 @@ The final Foundation increment delivers the actual durable identity activity
 consumer, restricted browser history, private Redis, safe logs and source-security
 gates under ADR-0017. All Foundation gates passed on 2f6ba60. Phase 2A/2B registries
 and Phase 2C task core are qualified under the user's subsequent instructions.
-Phase2D contracts preceded Kanban/filter/search/My Work implementation; its
-qualification remains open. Complete that bounded increment before a later slice.
+Phase2D contracts preceded Kanban/filter/search/My Work implementation; exact
+source 1c20f48 passed hosted and actual target qualification. This bounded
+increment is complete. Define contacts/default-project contracts and decisions
+before the next Phase2 slice; do not begin Service Desk or unify ticket state here.
 Production capacity/retention/provider decisions remain
 the later gates listed above, not unimplemented Foundation requirements.
 
@@ -119,6 +123,18 @@ portal/knowledge base. Billing/subscriptions, marketplace, advanced ITIL/CMDB,
 native mobile and local AI remain outside MVP. No speculative code for backlog.
 
 ## Evidence ledger
+
+- Phase 2D: contracts 215eb31, backend 4d56e97, reviewed browser 8c1be1d and
+  final packaged proof 1c20f48. All five hosted gates passed with 424 API/52 browser
+  tests. Actual baseline guest built/executed the final five images; exact-ID
+  reports contain zero vulnerabilities and nonempty package inventories. Native
+  cgroups/private networks/loopback, persisted scoped search/personal/columns,
+  logical restore and GIN selection over 6000 rolled-back rows passed. Worker
+  exited 0 in 6.408 seconds under broker blackhole and recovered 27 events.
+  Final mobile captures inspected; task containers stopped and volumes retained.
+  Public-key SSH eliminates repeated password entry; remote development project
+  registered separately. See docs/phase-2d-discovery-evidence.md. Windows full-suite
+  axe cause, production capacity and future domain gates remain open.
 
 - Phase 2B: contracts fa14b3f, backend caa9deb, creation authority 7172128,
   reviewed browser c40198e and packaged proof 5faa866. Full 358 API/42 browser

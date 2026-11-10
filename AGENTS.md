@@ -35,5 +35,10 @@
 - Current user authorization (2026-11-08): local commits and direct pushes to
   `main` in `wagnerbocchi/Altvia-Workspace`, without PR. No production deployment,
   SSH/security change, data import or Zammad retirement is implied.
+- Separate user authorization (2026-11-10) covered registering the workstation's
+  public SSH key, installing/authenticating Codex on the VM and adding the remote
+  development project. Setup is complete; reuse noninteractive public-key access
+  for authorized isolated qualification. This grants no general SSH/security
+  configuration change or production deployment permission.
 - Preserve unrelated changes. Inspect Git before editing. Keep ASCII punctuation
   in authored prose. Run checks for the affected scope before each coherent commit.

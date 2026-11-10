@@ -55,14 +55,14 @@ owned/participating work; managers assign/reparent; viewers remain read-only.
 Protected writes preserve original intents and expose deliberate recovery.
 Task core is qualified in docs/phase-2c-work-evidence.md. Phase 2D implements native
 PostgreSQL task search, deliberate filters, independently paged project Kanban and
-task-only My Work under ADR-0021. Changed-artifact qualification remains open in
+task-only My Work under ADR-0021. Actual x86-64-v1 qualification passed in
 docs/phase-2d-discovery-evidence.md. Contacts, default ticket projects, unified
 ticket assignments and Service Desk remain subsequent deliveries.
 HTTPS, secure HttpOnly cookies, Origin/CSRF checks and no browser auth-token
 storage are required. Keyboard access, visible focus, responsive layout and
 dark/light themes are required. All mandatory runtime dependencies must support
 x86-64-v1. The current five-image Foundation stack passed on the supplied target
-VM, including the Phase 2C task-core increment in docs/phase-2c-work-evidence.md;
+VM, including the Phase 2D discovery increment in docs/phase-2d-discovery-evidence.md;
 changed or future mandatory native artifacts require repeated qualification.
 Representative capacity and production readiness remain open. No Elasticsearch/OpenSearch.
 

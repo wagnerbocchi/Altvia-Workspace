@@ -63,8 +63,12 @@ the ADR-0020 task core of FR-003 and scoped FR-012: persisted tasks/subtasks,
 owners/participants, deadlines, transitions, internal comments and attributable
 history. Source d5ae972 passed 403 API/48 browser tests, all five hosted gates and
 actual x86-64-v1 qualification; same-ID image reports contain zero vulnerabilities.
-See docs/phase-2c-work-evidence.md. The bounded project task list is implemented;
-FR-004 Kanban/filter/search/My Work and remaining domain phases remain open.
+See docs/phase-2c-work-evidence.md. Phase 2D delivers the task portion of FR-004:
+typed filters, native PostgreSQL FTS, independently paged Kanban and task-only
+My Work. Source 1c20f48 passed 424 API/52 browser tests, all five hosted gates and
+actual x86-64-v1 qualification; the same five tested images report zero
+vulnerabilities. See docs/phase-2d-discovery-evidence.md. Client contacts/default
+ticket projects and ticket consolidation in Phase 4 remain open.
 
 Non-goals: SaaS billing/subscriptions, marketplace, local AI/embeddings, external
 search cluster, advanced ITIL/CMDB, advanced Gantt and native mobile applications.

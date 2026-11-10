@@ -75,10 +75,10 @@ Consumes Task1/2 exact application revision. Produces bounded evidence and statu
 - [x] Request one fresh source review of the complete increment, including Review
   Focus above. Fix important findings with RED/GREEN proof and relevant suites.
 - [x] Run full API/browser and required hosted source/image/container gates.
-- [ ] Extend packaged proof to task search, scope, columns/personal query and
+- [x] Extend packaged proof to task search, scope, columns/personal query and
   persistence. Build/test the exact source in a new private target directory,
   loopback-only ingress, existing authenticated task SSH multiplexing.
-- [ ] Execute native FTS/GIN and representative query/resource checks on actual
+- [x] Execute native FTS/GIN and representative query/resource checks on actual
   x86-64-v1 images; retain exact tested image/scan identity evidence.
 - [x] Update evidence/runbook/roadmap without overclaiming remaining Phase2;
   commit/push authorized main. Record any external authentication gate precisely.
@@ -92,7 +92,14 @@ in all five hosted images. Local affected browser10/10 passed; the Windows full
 suite's internal axe error remains recorded rather than hidden. Full Linux proof
 and exact commands/results are in docs/phase-2d-discovery-evidence.md.
 
-Task3 remains incomplete for actual changed-artifact target-VM execution, native
-resource/image identity proof and authentication. The pinned archive is prepared;
-no upload or production deployment occurred. Preserve the task ledger/evidence
-for continuation rather than marking the increment qualified.
+Task3 completed on the actual baseline VM using the pinned archive: full packaged
+smoke, native/cgroup/private-network/loopback checks and matching actual-image
+scans passed. All five reports contain zero vulnerabilities with nonempty package
+inventories and verified hashes/DiffIDs/users/tags. Native GIN selected its index
+over 6000 rolled-back rows; worker recovered all 27 events after broker loss.
+Synthetic captures and the exact-artifact binding verifier passed. Task containers
+stopped, volumes retained. Public-key SSH replaced the expired password transport;
+native Windows ControlMaster was unavailable, so each stage reused one connection.
+No server SSH/firewall setting changed. Persistent target evidence and final
+decisions are in docs/phase-2d-discovery-evidence.md. This increment ends here;
+contacts/default projects require their own contracts before implementation.

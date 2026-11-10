@@ -32,10 +32,11 @@ The same five tested images report zero vulnerabilities. See
 [Task-core evidence](docs/phase-2c-work-evidence.md) and the
 [task runbook](docs/runbooks/work-items.md).
 Phase 2D implements native PostgreSQL task search, typed filters, independently
-paged project Kanban and task-only My Work. Source and browser behavior are
-tested; changed-artifact x86-64-v1 target qualification remains open. See
+paged project Kanban and task-only My Work. Source 1c20f48 passed 424 API/52
+browser tests, all five hosted gates and actual x86-64-v1 qualification; the same
+five tested images report zero vulnerabilities. See
 [Discovery evidence](docs/phase-2d-discovery-evidence.md). Phase 2 remains open for
-that qualification and later client contracts. Production deployment and real-data
+later client contacts/default-project contracts. Production deployment and real-data
 import remain separate.
 Phase 1C-a extends restricted host administration for ordinary accounts and
 platform privileges, with session revocation and last-active-admin protection.

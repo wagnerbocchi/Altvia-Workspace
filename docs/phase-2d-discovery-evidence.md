@@ -1,8 +1,9 @@
 # Phase 2D task discovery evidence
 
 Date: 2026-11-10. Scope: ADR-0021 task filters, native PostgreSQL search,
-independently paged project board and task-only personal queue. Qualification
-remains open until the changed artifacts pass actual target-VM gates.
+independently paged project board and task-only personal queue. Source 1c20f48
+passed actual target-VM qualification, including native/resource proof and scans
+of the exact five executed images.
 Phase 2 and production readiness remain open.
 
 ## Behavior and boundaries
@@ -81,7 +82,7 @@ after8c1be1d; later commits strengthen acceptance evidence only.
   extension and the updated PRODUCT.md. DESIGN.md and sidecar remain unchanged;
   preexisting empty narrative.rules drift is reported without repair.
 
-## Hosted acceptance and remaining qualification
+## Hosted acceptance
 
 All five hosted gates passed on9d53841:424 API tests in203.18 seconds,52 browser
 tests in1.3 minutes, source security, five-image security and actual packaged
@@ -119,16 +120,77 @@ Existing action-level url.parse/punycode deprecation notices and disposable
 PostgreSQL local-init authentication warnings were benign test infrastructure
 messages; they did not require changing product or production security settings.
 
-Actual changed-artifact x86-64-v1 proof requires an authenticated task SSH master
-to the supplied VM. Password entry occurs only in the user's interactive terminal;
-no credential is requested in chat or stored. The previous task-core environment
-and retained volumes must remain intact. New proof uses a unique private directory,
-synthetic data, loopback-only ingress and unchanged server security configuration.
-The locally prepared immutable1c20f48 archive has SHA256
+## Actual target qualification
+
+The exact source archive was uploaded and built on the supplied QEMU/KVM guest
+in /root/altvia-discovery-1c20f48-123229/source. Immutable source 1c20f48 has archive
+SHA256
 e27f1829cd4d612532f7359db832e00db6b3affa525535a2892db4637064a804.
 Client upload wrappers pin that revision independently of later documentation
-commits. Upload and actual target execution await authentication; a prepared
-archive does not establish target compatibility or qualification.
+commits. The previous /root/altvia-work-core-d5ae972-040512 environment and its
+volumes were preserved. Only synthetic data and loopback application ingress
+were used. Complete packaged smoke ran from 14:06:30Z to 14:10:14Z on 2026-11-10,
+exit 0. Native/resource verification and actual-image scanning also exited 0.
+
+The guest advertises SSE2/pni/cx16 but no SSSE3, SSE4.1, SSE4.2, AVX, AVX2, FMA or
+BMI2. Python 3.12.16/Argon2/imports, Node 24.22.1/ICU/TLS, PostgreSQL 17.11,
+Redis 7.4.12 and nginx 1.30.6 ran successfully. Runtime guards confirmed no SQLite
+in API, no Sharp in web and no package installers in either. No new dependency, service or ISA
+requirement was introduced by discovery.
+
+| Target proof | Executed result |
+| --- | --- |
+| Packaged behavior | Persisted filtered/search/personal queries, deduplication, scope denial, five task states, HTTPS and real mobile board/personal flows passed |
+| Native search | 6000 synthetic rows inside a rolled-back transaction; ix_work_search Bitmap Index Scan, one match; 3.328ms execution, 3.174ms planning |
+| Recovery | Cross-libc logical restore/Unicode/FTS/constraints, recreation, migrations, replay and scoped worker projection passed |
+| Broker loss | Worker exited 0 in 6.408 seconds with Redis blackholed; all 27 events recovered |
+| Resources/isolation | Actual memory.max, cpu.max and pids.max matched Compose; read-only roots, dropped capabilities, no-new-privileges, private DB/queue networks and loopback-only ingress verified |
+| Visual inspection | Native mobile board retains its blocked task and query; My Work retains its query and matching scoped task; filtered empty list and existing task-detail captures retained |
+| Cleanup | No task containers running; task volumes and previous qualified environment retained |
+
+Actual memory/CPU/PID limits are API/PostgreSQL/web 512 MiB/1 CPU/128,
+worker/migration 256 MiB/1 CPU/64, Redis 128 MiB/0.5 CPU/64 and ingress
+64 MiB/0.5 CPU/64. PostgreSQL starts through its existing privilege-dropping
+entrypoint; API/web/worker/Redis/ingress use their declared non-root accounts.
+
+| Actual target image | Docker image ID | Inventoried packages | Reported vulnerabilities |
+| --- | --- | --- | --- |
+| API, also worker/migration | sha256:07508787d0e9e854b8dcfc624feb8dd5a157ae70b072b63bdd5a87d70cd1e701 | 66 | 0 |
+| PostgreSQL | sha256:030526216a757e65f001c37624b8b8d5d4cf5e66958d45d16e3890039fc982a9 | 49 | 0 |
+| Web | sha256:cdbe776946e76d2fb9c942f1a343aa2e9396b995f87fd7c85ae6ba64cc2cbed0 | 43 | 0 |
+| Ingress | sha256:d699b69148333067ce388102fed4737b029cf574f6aff75e0aa002985505b928 | 70 | 0 |
+| Redis | sha256:f7668e5a73c59af1dd235f4485e8da506e454ed793e73a0e788c029ccf3aa4bb | 16 | 0 |
+
+Trivy 0.75.0 used the fresh available database snapshot updated
+2026-11-09T19:03:15Z, next update 2026-11-10T19:03:15Z; database SHA256
+8c808b8e2b45da2b9849fab569412fd5b0a59455d3335ea0321f0179bcd86130.
+Reports retain every severity and package inventory, with no ignore file or
+unfixed filter. Verification matched each resource-tested Docker image ID to
+the scan manifest, plus each unique archive tag, ordered DiffIDs, configured
+user and report SHA256. Trivy archive Metadata.ImageID is not assumed to equal
+Docker's runtime image ID. Exact manifests and complete reports are retained.
+
+The owner separately authorized public-key registration and remote Codex setup.
+Fresh Windows SSH connections now authenticate through the loaded user agent
+with password/interactive prompts disabled and strict known-host verification.
+Native Windows ControlMaster failed its client probe, so each stage reused one
+authenticated SSH connection for all its sequential commands; connections closed
+when stages finished. No sshd/firewall setting was changed. The dedicated remote
+development project is /root/altvia-workspace-dev; its registration does not
+prove native development build/test-toolchain readiness. The old task-local WSL
+keeper had already exited; no unrelated process was stopped.
+
+Reproduction sequence: prepare frozen dependencies, run
+`ALTVIA_ALLOW_CONTAINER_TEST=1 python3 scripts/container_smoke.py` on the exact
+archive, restart its unique Compose project with `--no-build`, execute retained
+native/cgroup checks, stop it preserving volumes, scan its five `docker save`
+archives, transfer evidence and run the retained binding verifier. Commands,
+exit codes and native-probe stdout/stderr are in the target archive below.
+
+This qualifies the exercised discovery paths. Synthetic GIN timing is neither
+a production latency target nor a capacity benchmark. Future native artifacts,
+contacts/default ticket projects, ticket consolidation, retention and production
+readiness remain separate gates. The recorded Windows axe cause remains open.
 No production deployment, real import or Zammad retirement is authorized here.
 
 ## Retained evidence
@@ -141,11 +203,16 @@ Security target artifact store:
   d37ab2cbc88f7a075e36c0ca7fdd83e82fba3ca28080e42c648ffea5099da406.
 - artifacts/phase2-discovery-hosted-evidence.zip, SHA256
   c03adacab5dc229f240f847324a65ef8f285c45a450e7fb90fbb6bc92e9c46ca.
+- artifacts/phase2-discovery-vm/target-proof.zip, SHA256
+  202949ca7239a45b23b15fa349443f20dced925e370457e2d9cf7d9f2da707d3.
 
 The hosted archive preserves both exact-revision run manifests, complete logs,
 five-image JSON reports and hash/package verification, source summaries and
 packaged synthetic captures. Its final capture supersedes the earlier personal
 navigation evidence; the earlier capture remains for audit. Runtime secrets,
 source workbook and production logs are excluded. Later documentation-only commits
-reuse the recorded passing application/proof checks without asserting that the
-Windows axe cause or actual-target qualification is complete.
+reuse the recorded passing application/proof checks. The target archive preserves
+the final source/state/resource/scan manifests, complete JSON reports, native
+search plan, outage proof, fourteen synthetic captures, stage outputs, helper
+scripts, reviewed decisions and successful binding verification. It establishes
+actual-target qualification without claiming the Windows axe cause is resolved.

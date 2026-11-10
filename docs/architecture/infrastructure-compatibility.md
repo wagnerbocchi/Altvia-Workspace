@@ -240,7 +240,7 @@ docs/phase-2b-project-evidence.md for exact identities, retained evidence, captu
 diagnostic and limits. Task containers stopped, volumes retained, SSH master closed.
 Production capacity and future artifacts remain separate gates.
 
-### Current Phase 2C task-core qualification
+### Phase 2C task-core qualification
 
 Source d5ae972 repeated actual baseline-guest build/runtime qualification for the
 persisted task core without a new dependency, service, native version or ISA
@@ -253,3 +253,28 @@ The guest still lacks SSSE3/SSE4.1/SSE4.2/AVX/AVX2. Exact images, timestamps,
 reports, captures and limitations: docs/phase-2c-work-evidence.md. Test containers
 stopped, volumes retained, SSH master and temporary local keeper closed.
 This qualifies exercised task-core paths, not capacity or production readiness.
+
+### Current Phase 2D task-discovery qualification
+
+Source 1c20f48 repeated actual baseline-guest build/runtime qualification for native
+PostgreSQL task search, typed filters, independently paged Kanban and task-only
+My Work. No new dependency, service, native version or ISA requirement. All five
+hosted gates passed with 424 API/52 browser tests. Actual scoped/persisted queries,
+mobile browser flows, native runtime guards, cgroup limits, private networks,
+loopback ingress and logical restore passed. The GIN probe selected ix_work_search
+over 6000 transaction-rolled-back synthetic rows; 3.328ms execution is diagnostic
+evidence, not a production latency/capacity promise. Worker exited 0 in 6.408
+seconds under blackholed Redis and recovered all 27 events.
+
+The same five native/resource-tested Docker image IDs report zero vulnerabilities
+across every severity, with nonempty inventories and verified report hashes,
+unique archive tags, ordered DiffIDs and configured users. The guest still lacks
+SSSE3/SSE4.1/SSE4.2/AVX/AVX2/FMA/BMI2. Exact identities, scanner/database snapshot,
+commands, native outputs, synthetic captures and limits are retained in
+docs/phase-2d-discovery-evidence.md. Test containers stopped, volumes and previous
+qualified environment retained. Owner-approved public-key SSH now authenticates
+noninteractively; native Windows multiplexing failed its probe, so each stage
+reused one connection without changing sshd or firewall settings. Remote Codex
+project registration is separate from native development-toolchain validation.
+Future native artifacts, representative capacity and production readiness remain
+separate gates; the recorded Windows browser axe cause is still unresolved.

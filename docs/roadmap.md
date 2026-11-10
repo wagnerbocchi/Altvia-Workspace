@@ -77,6 +77,13 @@ the exact blocker rather than silently weakening acceptance.
 
 ## Definition of ready and done per slice
 
+Phase 2F selected on 2026-11-10: scoped browser member administration under
+ADR-0023 and docs/plans/2026-11-10-project-members.md. Reuse the existing access
+service; add accounts by known email without a global discovery endpoint. The
+Phase 2 traceability audit leaves basic project milestones and external work
+participants for subsequent bounded slices. Advanced dependency planning stays
+FR-016/P2 backlog. This selection is not an implementation or qualification claim.
+
 Before implementation: ownership, typed request/response, permission predicates,
 schema/constraint delta, failure/race behavior and meaningful tests are defined.
 Before commit/push: relevant build/lint/typecheck/tests pass or the bounded

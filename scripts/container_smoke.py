@@ -802,6 +802,7 @@ with Session(make_engine(WorkerSettings())) as db:
                         "priority": "high",
                         "work_type": "one_off",
                         "owner_id": owner,
+                        "assignee_ids": [owner],
                         "due": {
                             "precision": "date",
                             "date": "2026-11-09",
@@ -823,6 +824,10 @@ with Session(make_engine(WorkerSettings())) as db:
                     work_ids.append(work_id)
                     work_path = "/api/v1/work-items/" + work_id
                     assert contributor.get(work_path).json()["due_at"] == "2026-11-10T03:00:00Z"
+                    personal = contributor.get("/api/v1/my-work", params={"project_id": project_id})
+                    assert personal.status_code == 200
+                    assert [row["id"] for row in personal.json()["items"]] == [work_id]
+                    assert personal.json()["items"][0]["kind"] == "work_item"
                     state_key = {"Idempotency-Key": uuid4().hex, "If-Match": '"1"'}
                     state = {"target_status": "in_progress"}
                     changed_work = contributor.post(
@@ -880,6 +885,7 @@ with Session(make_engine(WorkerSettings())) as db:
                             == 409
                         )
             assert client.get("/api/v1/work-items/" + work_ids[0]).status_code == 404
+            assert client.get("/api/v1/my-work").json()["items"] == []
             assert (
                 client.patch(
                     path,
@@ -968,6 +974,31 @@ with Session(make_engine(Settings())) as db,db.begin():
             assert client.get("/api/v1/work-items/" + work_ids[1]).status_code == 200
             assert child_id is not None
             assert client.get("/api/v1/work-items/" + child_id).json()["parent_id"] == work_ids[0]
+            personal = client.get("/api/v1/my-work").json()
+            assert {row["id"] for row in personal["items"]} == {work_ids[0], work_ids[1], child_id}
+            searched = client.get(
+                "/api/v1/my-work", params={"q": '"Persisted task content"'}
+            ).json()
+            assert {row["id"] for row in searched["items"]} == set(work_ids[:2])
+            assert (
+                client.get("/api/v1/my-work", params={"project_id": project_ids[1]}).json()["items"]
+                == []
+            )
+            columns = {}
+            for state in ["todo", "in_progress", "blocked", "done", "cancelled"]:
+                column = client.get(
+                    "/api/v1/work-items",
+                    params={"project_id": project_ids[0], "status": state},
+                )
+                assert column.status_code == 200
+                columns[state] = [row["id"] for row in column.json()["items"]]
+            assert columns == {
+                "todo": [child_id],
+                "in_progress": [work_ids[0]],
+                "blocked": [],
+                "done": [],
+                "cancelled": [],
+            }
             for suffix in ["", "/comments", "/status-history", "/activity"]:
                 assert client.get("/api/v1/work-items/" + work_ids[2] + suffix).status_code == 404
             for _ in range(60):
@@ -997,6 +1028,43 @@ with Session(make_engine(Settings())) as db,db.begin():
                 time.sleep(0.5)
             else:
                 raise RuntimeError("Scoped project activity did not project on the packaged stack")
+        search_plan = json.loads(
+            run(
+                [
+                    *compose,
+                    "exec",
+                    "-T",
+                    "postgres",
+                    "psql",
+                    "-X",
+                    "-qAt",
+                    "-v",
+                    "ON_ERROR_STOP=1",
+                    "-U",
+                    "altvia_owner",
+                    "-d",
+                    "altvia_test",
+                ],
+                data="""BEGIN;
+            INSERT INTO work_items
+                (id,project_id,title,description,status,work_type,priority,version)
+            SELECT gen_random_uuid(), (SELECT id FROM projects ORDER BY id LIMIT 1),
+                CASE n WHEN 1 THEN 'AltviaUniqueProbe' ELSE 'Common operation' END,
+                '', 'todo','one_off','medium',1 FROM generate_series(1,6000) n;
+            ANALYZE work_items;
+            EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) SELECT id FROM work_items
+            WHERE to_tsvector('portuguese'::regconfig,
+                coalesce(title,'') || ' ' || coalesce(description,''))
+                @@ websearch_to_tsquery('portuguese'::regconfig, 'AltviaUniqueProbe');
+            ROLLBACK;
+            ANALYZE work_items;
+            """,
+            )
+        )
+        assert "ix_work_search" in json.dumps(search_plan)
+        assert search_plan[0]["Plan"]["Actual Rows"] == 1
+        (work / "work-search-plan.json").write_text(json.dumps(search_plan, indent=2))
+        print("Authorized personal/filter/search persistence and native task GIN proof passed.")
         run(
             ["node", "scripts/container_browser.mjs", args.engine, project, str(work)],
             data=json.dumps(

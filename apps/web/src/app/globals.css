@@ -40,7 +40,7 @@ html { min-width: 320px; background: var(--ground); scrollbar-color: var(--line)
 body { margin: 0; color: var(--ink); font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Arial, sans-serif; font-size: 16px; line-height: 1.5; }
 ::selection { background: var(--primary); color: var(--surface); }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
-button, input { font: inherit; }
+button, input, select { font: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: wait; opacity: .65; }
 input { caret-color: var(--primary); }
@@ -61,7 +61,7 @@ h1 { margin: 0 0 10px; font-size: 28px; line-height: 1.2; font-weight: 650; lett
 .intro { margin: 0 0 32px; color: var(--muted); }
 .field { margin-bottom: 24px; }
 label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
-input { display: block; width: 100%; min-height: 48px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); padding: 10px 12px; }
+input, select { display: block; width: 100%; min-height: 48px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); padding: 10px 12px; }
 input::placeholder { color: var(--muted); opacity: 1; }
 input[aria-invalid="true"] { border-color: var(--error); }
 .password-wrap { position: relative; }
@@ -119,6 +119,7 @@ dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 .account-option input[type="radio"] { width: 20px; height: 20px; min-height: 20px; padding: 0; margin: 3px 0 0; accent-color: var(--primary); }
 .account-option:has(input:disabled) { cursor: default; }
 .add-member-action { margin-top: 24px; }
+.client-create-action { margin-top: 24px; }
 .confirmation { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
 .confirmation p { max-width: 72ch; }
 .read-error { margin: 20px 0; color: var(--error); }

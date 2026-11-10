@@ -7,7 +7,12 @@ from pathlib import Path
 
 from altvia.config import Settings
 from altvia.database import make_engine
-from altvia.management import bootstrap_admin, hash_new_password, set_account_active
+from altvia.management import (
+    bootstrap_admin,
+    create_user,
+    hash_new_password,
+    set_account_active,
+)
 from altvia.models import SessionRecord, User
 from sqlalchemy import update
 from sqlalchemy.engine import make_url
@@ -50,6 +55,9 @@ with Session(engine) as db, db.begin():
         admin_email = f"browser-admin-{secrets.token_hex(8)}@example.invalid"
         admin_password = secrets.token_urlsafe(30)
         bootstrap_admin(db, admin_email, "Administrador - Validacao", admin_password)
+        client_admin_email = f"browser-client-admin-{secrets.token_hex(8)}@example.invalid"
+        client_admin_password = secrets.token_urlsafe(30)
+        create_user(db, client_admin_email, "Gestor de clientes - Validacao", client_admin_password)
         roster_hash = hash_new_password(secrets.token_urlsafe(30))
         for index in range(14):
             db.add(
@@ -65,7 +73,9 @@ with Session(engine) as db, db.begin():
         # Credentials never go to stdout, source control or browser traces.
         Path(".env.browser-session").write_text(
             f"ALTVIA_E2E_EMAIL={email}\nALTVIA_E2E_PASSWORD={password}\n"
-            f"ALTVIA_E2E_ADMIN_EMAIL={admin_email}\nALTVIA_E2E_ADMIN_PASSWORD={admin_password}\n",
+            f"ALTVIA_E2E_ADMIN_EMAIL={admin_email}\nALTVIA_E2E_ADMIN_PASSWORD={admin_password}\n"
+            f"ALTVIA_E2E_CLIENT_ADMIN_EMAIL={client_admin_email}\n"
+            f"ALTVIA_E2E_CLIENT_ADMIN_PASSWORD={client_admin_password}\n",
             encoding="utf-8",
         )
 engine.dispose()

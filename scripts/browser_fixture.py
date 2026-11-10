@@ -69,6 +69,8 @@ with Session(engine) as db, db.begin():
             ("MANAGER", "Gestor de tarefas"),
             ("AGENT", "Agente de tarefas"),
             ("READER", "Leitor de tarefas"),
+            ("REVIEW_MANAGER", "Gestor de revisão"),
+            ("REVIEW_AGENT", "Agente de revisão"),
         ]:
             work_email = f"browser-work-{kind.lower()}-{secrets.token_hex(8)}@example.invalid"
             work_password = secrets.token_urlsafe(30)
@@ -86,6 +88,8 @@ with Session(engine) as db, db.begin():
             ("MANAGER", "project_manager"),
             ("AGENT", "agent"),
             ("READER", "viewer"),
+            ("REVIEW_MANAGER", "project_manager"),
+            ("REVIEW_AGENT", "agent"),
         ]:
             set_project_access(db, work_accounts[kind][0], work_project.id, role)
         roster_hash = hash_new_password(secrets.token_urlsafe(30))

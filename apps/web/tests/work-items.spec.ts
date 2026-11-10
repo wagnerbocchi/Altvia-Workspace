@@ -2,15 +2,13 @@ import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { mkdir, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import { loginWork } from "./work-session";
 
 const project = process.env.ALTVIA_E2E_WORK_PROJECT_ID!;
 const origin = "https://127.0.0.1:3443";
 const shots = fileURLToPath(new URL("../../../.impeccable/review/work-items/", import.meta.url));
 async function login(page: Page, kind = "MANAGER") {
-  const response = await page.request.post("/api/v1/auth/sessions", { data: {
-    email: process.env[`ALTVIA_E2E_WORK_${kind}_EMAIL`]!, password: process.env[`ALTVIA_E2E_WORK_${kind}_PASSWORD`]!,
-  }, headers: { Origin: origin } });
-  expect(response.status()).toBe(201); return (await response.json()).user;
+  return loginWork(page, kind);
 }
 async function headers(page: Page, version = 1) {
   const me = await (await page.request.get("/api/v1/auth/me")).json();

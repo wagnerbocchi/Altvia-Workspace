@@ -52,5 +52,6 @@ export function dueLabel(row: WorkRecord) {
     const [year, month, day] = row.due.date.split("-");
     return `${day}/${month}/${year} (${row.due.timezone})`;
   }
-  return new Date(row.due.instant).toLocaleString("pt-BR");
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return `${new Date(row.due.instant).toLocaleString("pt-BR", { timeZoneName: "short" })} (${timezone})`;
 }

@@ -19,10 +19,32 @@ const schema = z.object({
 });
 type Values = z.infer<typeof schema>;
 type Fields = Omit<WorkCreate, "project_id">;
-function localInstant(instant?: string) {
+function localInstant(instant?: string, mode: "device" | "utc" = "device") {
   if (!instant) return "";
   const date = new Date(instant);
-  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}T${String(date.getHours()).padStart(2,"0")}:${String(date.getMinutes()).padStart(2,"0")}`;
+  const parts = mode === "utc" ? [date.getUTCFullYear(), date.getUTCMonth()+1, date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds(), date.getUTCMilliseconds()] : [date.getFullYear(), date.getMonth()+1, date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds()];
+  const [year, month, day, hour, minute, second, milliseconds] = parts;
+  const tail = second || milliseconds ? `:${String(second).padStart(2,"0")}${milliseconds ? `.${String(milliseconds).padStart(3,"0").replace(/0+$/,"")}` : ""}` : "";
+  return `${String(year).padStart(4,"0")}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}T${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}${tail}`;
+}
+function instantKey(value: string) {
+  const fraction = value.match(/\.(\d+)(?:Z|[+-]\d{2}:\d{2})$/)?.[1] ?? "";
+  return `${new Date(value).valueOf()}:${fraction.padEnd(6,"0").slice(3)}`;
+}
+function localOffset(date: Date) {
+  const clock = new Date(0);
+  clock.setUTCFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+  clock.setUTCHours(date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
+  return clock.valueOf() - date.valueOf();
+}
+function ambiguousClock(date: Date, value: string) {
+  const offset = localOffset(date);
+  for (let hour = -48; hour <= 48; hour++) {
+    const otherOffset = localOffset(new Date(date.valueOf() + hour * 3600000));
+    const alternate = new Date(date.valueOf() + offset - otherOffset);
+    if (alternate.valueOf() !== date.valueOf() && localInstant(alternate.toISOString()) === value) return true;
+  }
+  return false;
 }
 export function WorkForm({ api, project, initial, manage, actor, locked, onSubmit, cancel }: {
   api: WorkApi; project: string; initial?: WorkRecord; manage: boolean; actor: { id: string; display_name: string };
@@ -40,6 +62,8 @@ export function WorkForm({ api, project, initial, manage, actor, locked, onSubmi
   const [day, setDay] = useState(initial?.due?.precision === "date" ? initial.due.date : "");
   const [zone, setZone] = useState(initial?.due?.precision === "date" ? initial.due.timezone : "America/Sao_Paulo");
   const [instant, setInstant] = useState(localInstant(initial?.due?.precision === "instant" ? initial.due.instant : undefined));
+  const [instantMode, setInstantMode] = useState<"device" | "utc">("device");
+  const [deadlineChanged, setDeadlineChanged] = useState(false);
   const [error, setError] = useState("");
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: {
     title: initial?.title ?? "", description: initial?.description ?? "", priority: initial?.priority ?? "medium",
@@ -47,14 +71,17 @@ export function WorkForm({ api, project, initial, manage, actor, locked, onSubmi
   } });
   const submit = (values: Values) => {
     setError("");
-    let due: WorkCreate["due"] = null;
-    if (precision === "date") {
+    let due: WorkCreate["due"] = initial?.due ?? null;
+    if ((create || deadlineChanged) && precision === "none") due = null;
+    if ((create || deadlineChanged) && precision === "date") {
       if (!day || !zone.trim()) { setError("Informe a data limite e o fuso horário."); return; }
       due = { precision: "date", date: day, timezone: zone.trim() };
-    } else if (precision === "instant") {
-      const date = new Date(instant);
-      if (!instant || !Number.isFinite(date.valueOf()) || localInstant(date.toISOString()) !== instant) { setError("Informe uma data e hora válida no fuso do seu dispositivo."); return; }
+    } else if ((create || deadlineChanged) && precision === "instant") {
+      const date = new Date(instantMode === "utc" ? `${instant}Z` : instant);
+      if (!instant || !Number.isFinite(date.valueOf()) || localInstant(date.toISOString(), instantMode) !== instant) { setError("Informe uma data e hora válida no fuso escolhido, com até milissegundos."); return; }
+      if (instantMode === "device" && ambiguousClock(date, instant)) { setError("Esse horário ocorre duas vezes no fuso do dispositivo. Informe a hora em UTC para escolher o instante exato."); return; }
       due = { precision: "instant", instant: date.toISOString() };
+      if (initial?.due?.precision === "instant" && instantKey(initial.due.instant) === instantKey(due.instant)) due = initial.due;
     }
     const fields: Fields = { title: values.title, description: values.description, priority: values.priority, work_type: values.work_type,
       due, estimated_minutes: values.estimate ? Number(values.estimate) : null,
@@ -78,9 +105,9 @@ export function WorkForm({ api, project, initial, manage, actor, locked, onSubmi
         {create && <div><label htmlFor="work-type">Tipo de trabalho</label><select id="work-type" {...form.register("work_type")}><option value="one_off">Pontual</option><option value="ongoing">Contínuo</option></select><p className="field-help">Trabalho contínuo inicia em andamento e exige encerramento explícito, sem gerar recorrências.</p></div>}
         {manage && <RecordPicker id="work-owner" label="Responsável" value={owner} onChange={setOwner} choices={choices} paging={peoplePaging} next={people.data?.next_cursor} pending={people.isPending} failed={people.isError} retry={() => void people.refetch()} disabled={locked} empty="Sem responsável" />}
         {manage && <RecordPicker id="work-parent" label="Tarefa principal" value={parent} onChange={setParent} choices={parents.data?.items.filter(row => row.id !== initial?.id).map(row => ({ id: row.id, label: row.title })) ?? []} paging={parentsPaging} next={parents.data?.next_cursor} pending={parents.isPending} failed={parents.isError} retry={() => void parents.refetch()} disabled={locked} empty="Sem tarefa principal" />}
-        <div><label htmlFor="work-due">Prazo</label><select id="work-due" value={precision} onChange={event => setPrecision(event.target.value as typeof precision)}><option value="none">Sem prazo</option><option value="date">Data</option><option value="instant">Data e hora exatas</option></select></div>
-        {precision === "date" && <><div><label htmlFor="work-day">Data limite</label><input id="work-day" type="date" value={day} onChange={event => setDay(event.target.value)} /></div><div><label htmlFor="work-zone">Fuso do prazo</label><input id="work-zone" value={zone} maxLength={100} onChange={event => setZone(event.target.value)} /><p className="field-help">O prazo inclui todo o dia neste fuso, por exemplo America/Sao_Paulo.</p></div></>}
-        {precision === "instant" && <div><label htmlFor="work-instant">Data e hora limite</label><input id="work-instant" type="datetime-local" value={instant} onChange={event => setInstant(event.target.value)} /><p className="field-help">Fuso do dispositivo: {Intl.DateTimeFormat().resolvedOptions().timeZone}.</p></div>}
+        <div><label htmlFor="work-due">Prazo</label><select id="work-due" value={precision} onChange={event => { setDeadlineChanged(true); setPrecision(event.target.value as typeof precision); }}><option value="none">Sem prazo</option><option value="date">Data</option><option value="instant">Data e hora exatas</option></select></div>
+        {precision === "date" && <><div><label htmlFor="work-day">Data limite</label><input id="work-day" type="date" value={day} onChange={event => { setDeadlineChanged(true); setDay(event.target.value); }} /></div><div><label htmlFor="work-zone">Fuso do prazo</label><input id="work-zone" value={zone} maxLength={100} onChange={event => { setDeadlineChanged(true); setZone(event.target.value); }} /><p className="field-help">O prazo inclui todo o dia neste fuso, por exemplo America/Sao_Paulo.</p></div></>}
+        {precision === "instant" && <><div><label htmlFor="work-instant-mode">Fuso da hora limite</label><select id="work-instant-mode" value={instantMode} onChange={event => { setDeadlineChanged(true); setInstantMode(event.target.value as typeof instantMode); }}><option value="device">Dispositivo ({Intl.DateTimeFormat().resolvedOptions().timeZone})</option><option value="utc">UTC</option></select></div><div><label htmlFor="work-instant">Data e hora limite</label><input id="work-instant" type="datetime-local" step="any" value={instant} onChange={event => { setDeadlineChanged(true); setInstant(event.target.value); }} /><p className="field-help">O horário digitado será interpretado no fuso escolhido, com precisão de milissegundos.</p></div></>}
         <div><label htmlFor="work-estimate">Estimativa em minutos</label><input id="work-estimate" type="number" min={0} max={2147483647} step={1} {...form.register("estimate")} aria-invalid={!!form.formState.errors.estimate} aria-describedby="work-estimate-error" /><p id="work-estimate-error" className="field-error">{form.formState.errors.estimate?.message}</p></div>
       </div>
       <div className="field work-description"><label htmlFor="work-description">Descrição</label><textarea id="work-description" maxLength={20000} rows={5} {...form.register("description")} /></div>

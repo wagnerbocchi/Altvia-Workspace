@@ -113,6 +113,20 @@ refresh-copy defects have RED/GREEN proof. The separate project-test session
 interference is corrected. See docs/phase-3b-queue-access-evidence.md. Final target
 qualification follows remaining MVP development.
 
+Phase 3C now delivers ADR-0028 manual ticket lifecycle and scoped FR-005/012
+content enforcement. Contracts 22befa4 preceded backend 1751269 and browser/packaged
+da7999c. Exact da7999c passed all five hosted gates with 584 API/107 browser tests,
+real ticket/history restart persistence, zero blocking source findings and five
+complete zero-reported-vulnerability image inventories. Queue authority and
+customer ceilings apply to all reads/writes/references. Ticket numbers retain
+BIGINT precision as strings. Customer/queue remain fixed in this increment,
+requesters remain unverified and close/reopen flags default false under Q-19.
+Reviewed transition/creation recovery defects have regression-tested corrections.
+Impeccable scored its two fixes resolved and preserved the incumbent system.
+See docs/phase-3c-ticket-evidence.md. Ticket messages/private files, native email,
+SLA and subsequent transfer contracts remain in Phase 3, with consolidation in
+Phase 4 and final integrated target qualification after remaining MVP development.
+
 Non-goals: SaaS billing/subscriptions, marketplace, local AI/embeddings, external
 search cluster, advanced ITIL/CMDB, advanced Gantt and native mobile applications.
 No speculative scaffolding for these capabilities.

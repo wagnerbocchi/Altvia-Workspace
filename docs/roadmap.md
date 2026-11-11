@@ -60,6 +60,22 @@ entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
+Phase 3C manual ticket development is complete under ADR-0028 and
+docs/plans/2026-11-10-manual-tickets.md. Contracts 22befa4 preceded backend 1751269
+and browser/packaged da7999c. Exact da7999c passed all five hosted gates with
+584 API/107 browser tests, packaged manual lifecycle/replay/customer-queue scope
+and restart persistence, zero blocking source findings and five complete image
+inventories with zero reported vulnerabilities. Two Important source-review
+browser defects have RED/GREEN corrections. Impeccable scored both listed fixes
+resolved and the documenter preserved the incumbent system. A legacy test's
+fixed-page assumption was corrected using observed real paging without changing
+timeouts/retries or production behavior. See docs/phase-3c-ticket-evidence.md.
+Customer/queue are immutable in this increment, requester labels remain
+unverified and queue close/reopen flags default false under Q-19. Remaining
+Phase 3 work includes messages/private files, native email, SLA and subsequent
+transfer contracts. Phase 3, later phases and integrated target qualification
+remain open under the current development-first cadence.
+
 Phase 3B development is complete under ADR-0027 and
 docs/plans/2026-11-10-queue-access.md. Contracts 748c7ec preceded persisted access
 8cde51d, reviewed logout-lock correction 08e8294, browser/packaged f366f40 and
@@ -71,8 +87,8 @@ fixed with real RED/GREEN. Impeccable scored its sole copy fix resolved and
 preserved the incumbent system. A separate full-run test interference was proven
 by a shared-reader selection capture and corrected with a dedicated account.
 See docs/phase-3b-queue-access-evidence.md. Queue roles, configuration authority and
-customer ceilings remain independent. Next is actual ticket lifecycle and content
-enforcement. Phase 3 and final integrated target qualification remain open.
+customer ceilings remain independent. Phase 3C supplies actual ticket lifecycle
+and content enforcement. Phase 3 and integrated target qualification remain open.
 
 Phase 3A implements ADR-0026's scoped persisted team-owned queue/category
 configuration. Contracts 0f9059d preceded backend 7ef3a7a and browser 30e337e.
@@ -85,8 +101,9 @@ and scope proof, zero blocking source findings and zero reported vulnerabilities
 in five complete scanned image inventories. Phase 3A development is complete.
 See docs/phase-3a-queue-evidence.md. Final integrated target qualification stays
 pending under the user's cadence. Phase 3 remains open.
-Phase 3B supplies explicit queue grant administration. Actual ticket
-content enforcement/lifecycle, messages/files and transport follow as bounded slices. Mailbox/provider questions remain Q-03/Q-16.
+Phase 3B supplies explicit queue grant administration and Phase 3C supplies manual
+ticket content/lifecycle. Messages/files and transport follow as bounded slices.
+Mailbox/provider questions remain Q-03/Q-16.
 
 Known Phase 3A follow-up from source review concerns raw SQL whitespace-only
 names. Default PostgreSQL btrim checks ordinary spaces, while HTTP validation
@@ -209,7 +226,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-14 | Engineering/security: ongoing service-image security | All five actual target-tested images have zero reported vulnerabilities; blocking HIGH/CRITICAL CI, SAST medium+ and every detected secret; retained complete severity metadata, no risk acceptance | Remaining production security/readiness gates |
 | Q-15 | Resolved: owner authorized workstation public-key registration, remote Codex login and project registration; fresh noninteractive Windows SSH and actual Phase 2D qualification passed | Reuse agent-backed key with strict known-host checks; one connection per stage because native Windows multiplexing failed its probe; preserve previous environments and server security | None for current qualification; key removal, agent restart or changed host identity may require user action |
 | Q-16 | Support/security owner: trusted contact verification, international mailbox/IDNA and authenticated sender correlation policy | Contacts remain server-only unverified, bounded ASCII mailboxes; no send, account linking, portal grant or client selection by email alone | Future actual email/verification acceptance; registry work can proceed |
-| Q-17 | Engineering should diagnose remaining browser intermittency. Earlier Windows task/axe observations and the initial Phase 3A contact timeout remain unexplained | Phase 3B confirmed separate project-test interference through a shared-reader selection capture. Dedicated target 9e183ef plus preserved reader-session assertions passed local/hosted 96. Preserve failed logs and existing caps/timeouts/retries. The earlier contact cause remains unestablished | Remaining runner reliability branches and final integrated acceptance |
+| Q-17 | Engineering should diagnose remaining browser intermittency. Earlier Windows task/axe observations and the initial Phase 3A contact timeout remain unexplained | Phase 3B fixed separate shared-reader interference. Phase 3C observed an independent team test stopping at page 5 despite available next records and replaced fixed-page lookup with real advancement checks. Final da7999c passed local/hosted 107 with original timeout/retries. Preserve failed logs and distinguish these proven causes from the unexplained earlier contact/task/axe cases | Remaining runner reliability branches and final integrated acceptance |
 | Q-18 | Product/security: whether task-owned external labels should later associate with client contacts, and how to preserve their distinct read scopes | Bounded supplied labels only, including internal projects; no contact lookup, matching, account creation or content grant | Future association policy only; Phase 2H can proceed |
 
 | Q-19 | Support owner should select actual manual-close/reopen policy and any future automatic grace period | Phase 3C fixed queue flags default false. Synthetic tests explicitly enable manual behavior. Keep real calendars, SLA hours and automatic closure outside this manual setting | Production workflow policy and later SLA/automation acceptance |

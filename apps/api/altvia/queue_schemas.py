@@ -38,7 +38,7 @@ class QueueCreate(CategoryCreate):
     team_id: UUID
 
 
-class QueuePatch(BaseModel):
+class CategoryPatch(BaseModel):
     model_config = ConfigDict(extra="forbid", json_schema_extra={"minProperties": 1})
     name: QueueName | SkipJsonSchema[None] = None
     active: StrictBool | SkipJsonSchema[None] = None
@@ -51,10 +51,22 @@ class QueuePatch(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def nonempty(self) -> "QueuePatch":
+    def nonempty(self) -> "CategoryPatch":
         if not self.model_fields_set:
             raise ValueError("At least one field is required")
         return self
+
+
+class QueuePatch(CategoryPatch):
+    allow_manual_close: StrictBool | SkipJsonSchema[None] = None
+    allow_reopen: StrictBool | SkipJsonSchema[None] = None
+
+    @field_validator("allow_manual_close", "allow_reopen")
+    @classmethod
+    def non_null_policy(cls, value: bool | None) -> bool:
+        if value is None:
+            raise ValueError("A non-null value is required")
+        return value
 
 
 class QueueRecord(BaseModel):
@@ -72,6 +84,8 @@ class QueueOutput(QueueRecord):
     team_name: str
     team_active: bool
     can_manage: bool
+    allow_manual_close: bool
+    allow_reopen: bool
 
 
 class CategoryOutput(QueueRecord):

@@ -9,6 +9,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     ForeignKeyConstraint,
+    Identity,
     Index,
     String,
     Text,
@@ -133,7 +134,7 @@ class AuditLog(Base):
     resource_id: Mapped[UUID | None]
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
     correlation_id: Mapped[str] = mapped_column(String(64))
-    details: Mapped[dict[str, str]] = mapped_column(JSONB, default=dict)
+    details: Mapped[dict[str, str | None]] = mapped_column(JSONB, default=dict)
 
 
 class OutboxEvent(Base):
@@ -206,6 +207,8 @@ class TicketQueue(Base):
     team_id: Mapped[UUID] = mapped_column(ForeignKey("teams.id", ondelete="RESTRICT"))
     name: Mapped[str] = mapped_column(String(150))
     active: Mapped[bool] = mapped_column(Boolean, default=True)
+    allow_manual_close: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    allow_reopen: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     version: Mapped[int] = mapped_column(default=1)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -215,6 +218,7 @@ class TicketCategory(Base):
     __tablename__ = "ticket_categories"
     __table_args__ = (
         UniqueConstraint("queue_id", "name", name="uq_category_queue_name"),
+        UniqueConstraint("id", "queue_id", name="uq_category_identity_queue"),
         Index("ix_ticket_categories_page", "queue_id", "id"),
         CheckConstraint("char_length(btrim(name)) > 0", name="ck_category_name"),
         CheckConstraint(
@@ -256,6 +260,7 @@ class ClientContact(Base):
     __tablename__ = "client_contacts"
     __table_args__ = (
         UniqueConstraint("client_id", "email_normalized", name="uq_contact_client_email"),
+        UniqueConstraint("id", "client_id", name="uq_contact_identity_client"),
         Index("ix_client_contacts_page", "client_id", "id"),
         CheckConstraint("char_length(btrim(display_name)) > 0", name="ck_contact_name"),
         CheckConstraint("version > 0", name="ck_contact_version"),
@@ -524,13 +529,133 @@ class ProcessedEvent(Base):
     processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class Ticket(Base):
+    __tablename__ = "tickets"
+    __table_args__ = (
+        UniqueConstraint("number", name="uq_ticket_number"),
+        ForeignKeyConstraint(
+            ["requester_id", "client_id"],
+            ["client_contacts.id", "client_contacts.client_id"],
+            name="fk_ticket_requester_client",
+            ondelete="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["category_id", "queue_id"],
+            ["ticket_categories.id", "ticket_categories.queue_id"],
+            name="fk_ticket_category_queue",
+            ondelete="RESTRICT",
+        ),
+        CheckConstraint("number > 0", name="ck_ticket_number"),
+        CheckConstraint(
+            r"char_length(btrim(subject,U&'\0009\000A\000B\000C\000D\001C\001D\001E\001F"
+            r"\0020\0085\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009"
+            r"\200A\2028\2029\202F\205F\3000')) > 0",
+            name="ck_ticket_subject",
+        ),
+        CheckConstraint(
+            "position(chr(10) in subject)=0 AND position(chr(13) in subject)=0",
+            name="ck_ticket_subject_line",
+        ),
+        CheckConstraint("char_length(description) <= 20000", name="ck_ticket_description"),
+        CheckConstraint("version > 0", name="ck_ticket_version"),
+        CheckConstraint(
+            "priority IN ('low','medium','high','critical')", name="ck_ticket_priority"
+        ),
+        CheckConstraint("source='manual'", name="ck_ticket_source"),
+        CheckConstraint(
+            "status IN ('new','open','pending_customer','pending_third_party','resolved','closed')",
+            name="ck_ticket_status",
+        ),
+        CheckConstraint(
+            "(status IN ('new','open','pending_customer','pending_third_party') "
+            "AND resolved_at IS NULL AND closed_at IS NULL) OR "
+            "(status='resolved' AND resolved_at IS NOT NULL AND closed_at IS NULL) OR "
+            "(status='closed' AND resolved_at IS NOT NULL AND closed_at IS NOT NULL)",
+            name="ck_ticket_state_times",
+        ),
+        Index("ix_tickets_queue_page", "queue_id", text("created_at DESC"), text("id DESC")),
+        Index("ix_tickets_client_page", "client_id", text("created_at DESC"), text("id DESC")),
+        Index("ix_tickets_assignee", "assignee_id", "queue_id", "status"),
+        Index(
+            "ix_ticket_search",
+            text(
+                "to_tsvector('portuguese'::regconfig, "
+                "(coalesce(subject, ''::character varying)::text || ' '::text) "
+                "|| coalesce(description, ''::text))"
+            ),
+            postgresql_using="gin",
+        ),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    number: Mapped[int] = mapped_column(BigInteger, Identity(always=True))
+    client_id: Mapped[UUID] = mapped_column(ForeignKey("clients.id", ondelete="RESTRICT"))
+    requester_id: Mapped[UUID] = mapped_column()
+    queue_id: Mapped[UUID] = mapped_column(ForeignKey("ticket_queues.id", ondelete="RESTRICT"))
+    category_id: Mapped[UUID | None] = mapped_column()
+    assignee_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    subject: Mapped[str] = mapped_column(String(300))
+    description: Mapped[str] = mapped_column(Text, default="", server_default="")
+    status: Mapped[str] = mapped_column(String(20), default="new", server_default="new")
+    priority: Mapped[str] = mapped_column(String(20))
+    source: Mapped[str] = mapped_column(String(20), default="manual", server_default="manual")
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    version: Mapped[int] = mapped_column(default=1, server_default="1")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    client: Mapped[Client] = relationship(foreign_keys=[client_id], lazy="joined", viewonly=True)
+    queue: Mapped[TicketQueue] = relationship(foreign_keys=[queue_id], lazy="joined", viewonly=True)
+    requester: Mapped[ClientContact] = relationship(
+        foreign_keys=[requester_id, client_id], lazy="joined", viewonly=True
+    )
+    category: Mapped[TicketCategory | None] = relationship(
+        foreign_keys=[category_id, queue_id], lazy="joined", viewonly=True
+    )
+    assignee: Mapped[User | None] = relationship(
+        foreign_keys=[assignee_id], lazy="joined", viewonly=True
+    )
+
+
+class TicketStatusHistory(Base):
+    __tablename__ = "ticket_status_history"
+    __table_args__ = (
+        UniqueConstraint("ticket_id", "version", name="uq_ticket_state_version"),
+        CheckConstraint("version > 0", name="ck_ticket_state_version"),
+        CheckConstraint(
+            "reason IS NULL OR char_length(reason) <= 2000", name="ck_ticket_state_reason"
+        ),
+        CheckConstraint(
+            "(from_status IS NULL AND to_status='new' AND version=1) OR "
+            "(from_status IS NOT NULL AND version > 1 AND ("
+            "(from_status='new' AND to_status='open') OR "
+            "(from_status='open' AND to_status IN "
+            "('pending_customer','pending_third_party','resolved')) OR "
+            "(from_status IN ('pending_customer','pending_third_party') "
+            "AND to_status IN ('open','resolved')) OR "
+            "(from_status='resolved' AND to_status IN ('closed','open')) OR "
+            "(from_status='closed' AND to_status='open')))",
+            name="ck_ticket_state_graph",
+        ),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    ticket_id: Mapped[UUID] = mapped_column(ForeignKey("tickets.id", ondelete="RESTRICT"))
+    actor_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    from_status: Mapped[str | None] = mapped_column(String(20))
+    to_status: Mapped[str] = mapped_column(String(20))
+    reason: Mapped[str | None] = mapped_column(Text)
+    version: Mapped[int]
+    occurred_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
 class ActivityEvent(Base):
     __tablename__ = "activity_events"
     __table_args__ = (
         CheckConstraint("aggregate_version > 0", name="ck_activity_version"),
         CheckConstraint(
             "resource_type IN "
-            "('identity','team','client','project','operational_area','work_item','ticket_queue')",
+            "('identity','team','client','project','operational_area','work_item','ticket_queue','ticket')",
             name="ck_activity_resource",
         ),
         CheckConstraint("actor_kind IN ('user','management_command')", name="ck_activity_actor"),
@@ -545,4 +670,4 @@ class ActivityEvent(Base):
     actor_kind: Mapped[str] = mapped_column(String(30))
     aggregate_version: Mapped[int]
     correlation_id: Mapped[str] = mapped_column(String(64))
-    details: Mapped[dict[str, str]] = mapped_column(JSONB)
+    details: Mapped[dict[str, str | None]] = mapped_column(JSONB)

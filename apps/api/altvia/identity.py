@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import secrets
+from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from threading import BoundedSemaphore
 from uuid import UUID
@@ -52,9 +53,9 @@ def record_event(
     version: int,
     *,
     aggregate_type: str = "identity",
-    details: dict[str, str] | None = None,
+    details: Mapping[str, str | None] | None = None,
 ) -> None:
-    metadata = details or {}
+    metadata = dict(details or {})
     db.add(
         AuditLog(
             actor_id=actor_id,

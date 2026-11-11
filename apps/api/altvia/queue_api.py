@@ -29,6 +29,7 @@ from altvia.queue_schemas import (
     CategoryCreate,
     CategoryOutput,
     CategoryPage,
+    CategoryPatch,
     CategoryReceipt,
     QueueCreate,
     QueueMemberAdd,
@@ -59,6 +60,8 @@ def _output(queue: TicketQueue, team_name: str, team_active: bool, can_manage: b
         team_name=team_name,
         team_active=team_active,
         can_manage=can_manage,
+        allow_manual_close=queue.allow_manual_close,
+        allow_reopen=queue.allow_reopen,
     )
 
 
@@ -300,7 +303,7 @@ def create_queue_router(engine: Engine, settings: Settings) -> APIRouter:
         openapi_extra={"parameters": [IF_MATCH]},
     )
     def patch_category(
-        queue_id: UUID, category_id: UUID, body: QueuePatch, request: Request, response: Response
+        queue_id: UUID, category_id: UUID, body: CategoryPatch, request: Request, response: Response
     ) -> CategoryOutput:
         with Session(engine) as db, db.begin():
             actor = authenticate_request(db, request, settings, write=True)

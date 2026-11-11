@@ -102,40 +102,30 @@ def can(principal: Principal, action: str, resource: Resource) -> bool:
         "ticket.claim",
         "ticket.assign",
     }
-    read_actions = {"work.read", "ticket.read", "project.read", "client.read"}
-    for binding in principal.bindings:
-        matches = binding.scope_id is not None and binding.scope_id == {
-            "client": resource.client_id,
-            "project": resource.project_id,
-            "team": resource.team_id,
-            "queue": resource.queue_id,
-        }.get(binding.scope_kind)
-        if not matches:
-            continue
-        if binding.role == "operations_manager" and binding.scope_kind in {"client", "team"}:
-            if action in work_actions | ticket_actions | read_actions | (
-                {"client.manage"} if binding.scope_kind == "client" else set()
-            ):
+    if action in ticket_actions:
+        if resource.client_id is None or resource.queue_id is None:
+            return False
+        for binding in principal.bindings:
+            if binding.scope_kind != "queue" or binding.scope_id != resource.queue_id:
+                continue
+            if binding.role == "operations_manager":
                 return True
-        if binding.role == "project_manager" and binding.scope_kind == "project":
-            if action in work_actions | {"project.read", "project.manage"}:
+            if binding.role == "viewer" and action == "ticket.read":
                 return True
-        if binding.role == "viewer" and action in read_actions:
-            return True
-        if binding.role != "agent":
-            continue
-        if binding.scope_kind == "project" and resource.project_id in principal.project_ids:
-            if action in {"work.read", "work.create", "work.comment", "project.read"}:
-                return True
-            if action in {"work.update", "work.transition"} and (
-                principal.user_id == resource.owner_id or principal.user_id in resource.assignee_ids
-            ):
-                return True
-        if binding.scope_kind == "queue":
-            if action in {"ticket.read", "ticket.create", "ticket.reply"}:
-                return True
-            if action in {"ticket.update", "ticket.transition"} and (
-                principal.user_id in resource.assignee_ids
-            ):
-                return True
+            if binding.role == "agent":
+                if action in {"ticket.read", "ticket.create", "ticket.reply", "ticket.claim"}:
+                    return True
+                if action in {"ticket.update", "ticket.transition"}:
+                    return principal.user_id in resource.assignee_ids
+        return False
+    if action in {"client.read", "client.manage"} and resource.client_id is not None:
+        return any(
+            binding.scope_kind == "client"
+            and binding.scope_id == resource.client_id
+            and (
+                binding.role == "operations_manager"
+                or (binding.role == "viewer" and action == "client.read")
+            )
+            for binding in principal.bindings
+        )
     return False

@@ -41,6 +41,8 @@ ROLE_PRIVILEGES = {
         "project_milestones": {"SELECT", "INSERT", "UPDATE"},
         "ticket_queues": {"SELECT", "INSERT", "UPDATE"},
         "ticket_categories": {"SELECT", "INSERT", "UPDATE"},
+        "tickets": {"SELECT", "INSERT", "UPDATE"},
+        "ticket_status_history": {"SELECT", "INSERT"},
         "work_item_external_participants": {"SELECT", "INSERT", "DELETE"},
         "audit_logs": {"INSERT"},
         "outbox_events": {"INSERT"},

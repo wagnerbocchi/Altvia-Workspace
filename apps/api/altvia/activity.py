@@ -11,6 +11,7 @@ from sqlalchemy import Engine, and_, or_, select
 from sqlalchemy.orm import Session
 
 from altvia.models import ActivityEvent, AuditLog, OutboxEvent, ProcessedEvent
+from altvia.ticket_schemas import TICKET_TRANSITIONS, Status
 from altvia.work_schemas import WORK_TRANSITIONS
 
 CONSUMER = "identity_activity_v1"
@@ -58,6 +59,37 @@ QUEUE_EVENT_TYPES = {
     "ticket_queue.category_updated",
     "ticket_queue.access_changed",
 }
+TICKET_EVENT_TYPES = {
+    "ticket.created",
+    "ticket.updated",
+    "ticket.assigned",
+    "ticket.status_changed",
+}
+
+
+class TicketEventPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
+    actor_id: UUID
+    actor_kind: Literal["user"]
+    ticket_id: UUID
+    client_id: UUID
+    queue_id: UUID
+    changed_fields: str | None = Field(default=None, max_length=100)
+    old_assignee_id: UUID | None = None
+    new_assignee_id: UUID | None = None
+    from_status: Status | None = None
+    to_status: Status | None = None
+    history_id: UUID | None = None
+
+    @model_validator(mode="after")
+    def valid_changes(self) -> "TicketEventPayload":
+        if self.changed_fields is not None:
+            fields = self.changed_fields.split(",")
+            if len(fields) != len(set(fields)) or not set(fields).issubset(
+                {"subject", "description", "priority", "category_id", "assignee_id", "requester_id"}
+            ):
+                raise ValueError("Invalid ticket changes")
+        return self
 
 
 class QueueAccessEventPayload(BaseModel):
@@ -73,13 +105,15 @@ class QueueEventPayload(BaseModel):
     actor_id: UUID
     actor_kind: Literal["user"]
     category_id: UUID | None = None
-    changed_fields: str | None = Field(default=None, max_length=20)
+    changed_fields: str | None = Field(default=None, max_length=60)
 
     @model_validator(mode="after")
     def valid_changes(self) -> "QueueEventPayload":
         if self.changed_fields is not None:
             fields = self.changed_fields.split(",")
-            if len(fields) != len(set(fields)) or not set(fields).issubset({"name", "active"}):
+            if len(fields) != len(set(fields)) or not set(fields).issubset(
+                {"name", "active", "allow_manual_close", "allow_reopen"}
+            ):
                 raise ValueError("Invalid queue changes")
         return self
 
@@ -270,6 +304,7 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
             | WORK_EVENT_TYPES
             | MILESTONE_EVENT_TYPES
             | QUEUE_EVENT_TYPES
+            | TICKET_EVENT_TYPES
             or event.schema_version != 1
         ):
             event.status, event.last_error_code, event.lease_until = (
@@ -287,8 +322,41 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                 | MilestoneEventPayload
                 | QueueEventPayload
                 | QueueAccessEventPayload
+                | TicketEventPayload
             )
-            if event.event_type == "ticket_queue.access_changed":
+            if event.event_type in TICKET_EVENT_TYPES:
+                payload = TicketEventPayload.model_validate(event.payload)
+                fields = payload.model_fields_set - {
+                    "actor_id",
+                    "actor_kind",
+                    "ticket_id",
+                    "client_id",
+                    "queue_id",
+                }
+                expected_ticket_fields = {
+                    "ticket.created": set(),
+                    "ticket.updated": {"changed_fields"},
+                    "ticket.assigned": {"changed_fields", "old_assignee_id", "new_assignee_id"},
+                    "ticket.status_changed": {"from_status", "to_status", "history_id"},
+                }[event.event_type]
+                if payload.ticket_id != event.aggregate_id or fields != expected_ticket_fields:
+                    raise ValueError("Invalid ticket event fields")
+                if event.event_type in {"ticket.updated", "ticket.assigned"}:
+                    if not payload.changed_fields:
+                        raise ValueError("Missing ticket changes")
+                if event.event_type == "ticket.assigned" and (
+                    payload.new_assignee_id is None
+                    or payload.new_assignee_id == payload.old_assignee_id
+                    or "assignee_id" not in (payload.changed_fields or "").split(",")
+                ):
+                    raise ValueError("Invalid ticket assignment")
+                if event.event_type == "ticket.status_changed" and (
+                    payload.history_id is None
+                    or payload.from_status is None
+                    or payload.to_status not in TICKET_TRANSITIONS[payload.from_status]
+                ):
+                    raise ValueError("Invalid ticket transition")
+            elif event.event_type == "ticket_queue.access_changed":
                 payload = QueueAccessEventPayload.model_validate(event.payload)
             elif event.event_type in QUEUE_EVENT_TYPES:
                 payload = QueueEventPayload.model_validate(event.payload)
@@ -299,6 +367,9 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                     event.event_type in {"ticket_queue.updated", "ticket_queue.category_updated"}
                 ):
                     raise ValueError("Invalid queue event fields")
+                if payload.category_id is not None and payload.changed_fields is not None:
+                    if not set(payload.changed_fields.split(",")).issubset({"name", "active"}):
+                        raise ValueError("Invalid category changes")
             elif event.event_type in MILESTONE_EVENT_TYPES:
                 payload = MilestoneEventPayload.model_validate(event.payload)
                 if (payload.changed_fields is not None) != (
@@ -401,6 +472,7 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                     "operational_area",
                     "work_item",
                     "ticket_queue",
+                    "ticket",
                 }
                 or event.aggregate_version < 1
                 or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", event.correlation_id)
@@ -413,7 +485,9 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                 "identity.team_member_removed",
             }
             expected_resource = (
-                "ticket_queue"
+                "ticket"
+                if event.event_type in TICKET_EVENT_TYPES
+                else "ticket_queue"
                 if event.event_type in QUEUE_EVENT_TYPES
                 else "work_item"
                 if event.event_type in WORK_EVENT_TYPES
@@ -432,11 +506,15 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
         except (ValueError, ValidationError):
             event.status, event.last_error_code, event.lease_until = "dead", "invalid_event", None
             return False
-        details = {
+        details: dict[str, str | None] = {
             k: str(v)
             for k, v in payload.model_dump(exclude_none=True).items()
             if k not in {"actor_id", "actor_kind"}
         }
+        if isinstance(payload, TicketEventPayload) and event.event_type == "ticket.assigned":
+            details["old_assignee_id"] = (
+                str(payload.old_assignee_id) if payload.old_assignee_id is not None else None
+            )
         db.add(ProcessedEvent(consumer=CONSUMER, event_id=event_id, processed_at=now))
         db.add(
             ActivityEvent(

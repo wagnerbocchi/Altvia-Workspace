@@ -43,7 +43,14 @@
           },
           "details": {
             "additionalProperties": {
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             },
             "title": "Details",
             "type": "object"
@@ -356,6 +363,24 @@
           "next_cursor"
         ],
         "title": "CategoryPage",
+        "type": "object"
+      },
+      "CategoryPatch": {
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "name": {
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "title": "CategoryPatch",
         "type": "object"
       },
       "CategoryReceipt": {
@@ -1926,6 +1951,14 @@
             "title": "Active",
             "type": "boolean"
           },
+          "allow_manual_close": {
+            "title": "Allow Manual Close",
+            "type": "boolean"
+          },
+          "allow_reopen": {
+            "title": "Allow Reopen",
+            "type": "boolean"
+          },
           "can_manage": {
             "title": "Can Manage",
             "type": "boolean"
@@ -1977,7 +2010,9 @@
           "team_id",
           "team_name",
           "team_active",
-          "can_manage"
+          "can_manage",
+          "allow_manual_close",
+          "allow_reopen"
         ],
         "title": "QueueOutput",
         "type": "object"
@@ -2021,6 +2056,14 @@
         "properties": {
           "active": {
             "title": "Active",
+            "type": "boolean"
+          },
+          "allow_manual_close": {
+            "title": "Allow Manual Close",
+            "type": "boolean"
+          },
+          "allow_reopen": {
+            "title": "Allow Reopen",
             "type": "boolean"
           },
           "name": {
@@ -2102,6 +2145,66 @@
           "next_cursor"
         ],
         "title": "QueueTeamPage",
+        "type": "object"
+      },
+      "RequesterChoice": {
+        "additionalProperties": false,
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "verification_state": {
+            "const": "unverified",
+            "title": "Verification State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "display_name",
+          "email",
+          "verification_state"
+        ],
+        "title": "RequesterChoice",
+        "type": "object"
+      },
+      "RequesterPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RequesterChoice"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "RequesterPage",
         "type": "object"
       },
       "StateOutput": {
@@ -2405,6 +2508,746 @@
           "next_cursor"
         ],
         "title": "TeamRolePage",
+        "type": "object"
+      },
+      "TicketClaim": {
+        "additionalProperties": false,
+        "properties": {},
+        "title": "TicketClaim",
+        "type": "object"
+      },
+      "TicketClientChoice": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "TicketClientChoice",
+        "type": "object"
+      },
+      "TicketClientChoices": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TicketClientChoice"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "TicketClientChoices",
+        "type": "object"
+      },
+      "TicketCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "assignee_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Id"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "client_id": {
+            "format": "uuid",
+            "title": "Client Id",
+            "type": "string"
+          },
+          "description": {
+            "default": "",
+            "maxLength": 20000,
+            "title": "Description",
+            "type": "string"
+          },
+          "priority": {
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
+            "title": "Priority",
+            "type": "string"
+          },
+          "queue_id": {
+            "format": "uuid",
+            "title": "Queue Id",
+            "type": "string"
+          },
+          "requester_id": {
+            "format": "uuid",
+            "title": "Requester Id",
+            "type": "string"
+          },
+          "subject": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Subject",
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id",
+          "queue_id",
+          "requester_id",
+          "subject",
+          "priority"
+        ],
+        "title": "TicketCreate",
+        "type": "object"
+      },
+      "TicketOutput": {
+        "additionalProperties": false,
+        "properties": {
+          "allowed_transitions": {
+            "items": {
+              "enum": [
+                "new",
+                "open",
+                "pending_customer",
+                "pending_third_party",
+                "resolved",
+                "closed"
+              ],
+              "type": "string"
+            },
+            "title": "Allowed Transitions",
+            "type": "array"
+          },
+          "assignee_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Id"
+          },
+          "assignee_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Name"
+          },
+          "can_assign": {
+            "title": "Can Assign",
+            "type": "boolean"
+          },
+          "can_claim": {
+            "title": "Can Claim",
+            "type": "boolean"
+          },
+          "can_update": {
+            "title": "Can Update",
+            "type": "boolean"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "category_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Name"
+          },
+          "client_id": {
+            "format": "uuid",
+            "title": "Client Id",
+            "type": "string"
+          },
+          "client_name": {
+            "title": "Client Name",
+            "type": "string"
+          },
+          "closed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "number": {
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "title": "Number",
+            "type": "string"
+          },
+          "priority": {
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
+            "title": "Priority",
+            "type": "string"
+          },
+          "queue_id": {
+            "format": "uuid",
+            "title": "Queue Id",
+            "type": "string"
+          },
+          "queue_name": {
+            "title": "Queue Name",
+            "type": "string"
+          },
+          "requester_active": {
+            "title": "Requester Active",
+            "type": "boolean"
+          },
+          "requester_email": {
+            "title": "Requester Email",
+            "type": "string"
+          },
+          "requester_id": {
+            "format": "uuid",
+            "title": "Requester Id",
+            "type": "string"
+          },
+          "requester_name": {
+            "title": "Requester Name",
+            "type": "string"
+          },
+          "requester_verification": {
+            "const": "unverified",
+            "title": "Requester Verification",
+            "type": "string"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "source": {
+            "const": "manual",
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "new",
+              "open",
+              "pending_customer",
+              "pending_third_party",
+              "resolved",
+              "closed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "writable": {
+            "title": "Writable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "client_id",
+          "client_name",
+          "queue_id",
+          "queue_name",
+          "requester_id",
+          "requester_name",
+          "requester_email",
+          "requester_active",
+          "requester_verification",
+          "category_id",
+          "category_name",
+          "assignee_id",
+          "assignee_name",
+          "subject",
+          "description",
+          "priority",
+          "status",
+          "source",
+          "resolved_at",
+          "closed_at",
+          "version",
+          "created_at",
+          "updated_at",
+          "writable",
+          "can_update",
+          "can_assign",
+          "can_claim",
+          "allowed_transitions"
+        ],
+        "title": "TicketOutput",
+        "type": "object"
+      },
+      "TicketPage": {
+        "additionalProperties": false,
+        "properties": {
+          "can_create": {
+            "title": "Can Create",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TicketOutput"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor",
+          "can_create"
+        ],
+        "title": "TicketPage",
+        "type": "object"
+      },
+      "TicketPatch": {
+        "additionalProperties": false,
+        "properties": {
+          "assignee_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Id"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "enum": [
+                  "low",
+                  "medium",
+                  "high",
+                  "critical"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
+          "requester_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requester Id"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          }
+        },
+        "title": "TicketPatch",
+        "type": "object"
+      },
+      "TicketQueueChoice": {
+        "additionalProperties": false,
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "can_assign": {
+            "title": "Can Assign",
+            "type": "boolean"
+          },
+          "can_create": {
+            "title": "Can Create",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "active",
+          "can_create",
+          "can_assign"
+        ],
+        "title": "TicketQueueChoice",
+        "type": "object"
+      },
+      "TicketQueueChoices": {
+        "additionalProperties": false,
+        "properties": {
+          "can_create": {
+            "title": "Can Create",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TicketQueueChoice"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor",
+          "can_create"
+        ],
+        "title": "TicketQueueChoices",
+        "type": "object"
+      },
+      "TicketReceipt": {
+        "additionalProperties": false,
+        "properties": {
+          "ticket_id": {
+            "format": "uuid",
+            "title": "Ticket Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket_id"
+        ],
+        "title": "TicketReceipt",
+        "type": "object"
+      },
+      "TicketState": {
+        "additionalProperties": false,
+        "properties": {
+          "actor_id": {
+            "format": "uuid",
+            "title": "Actor Id",
+            "type": "string"
+          },
+          "from_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "new",
+                  "open",
+                  "pending_customer",
+                  "pending_third_party",
+                  "resolved",
+                  "closed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Status"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "to_status": {
+            "enum": [
+              "new",
+              "open",
+              "pending_customer",
+              "pending_third_party",
+              "resolved",
+              "closed"
+            ],
+            "title": "To Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "actor_id",
+          "from_status",
+          "to_status",
+          "reason",
+          "version",
+          "occurred_at"
+        ],
+        "title": "TicketState",
+        "type": "object"
+      },
+      "TicketStates": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TicketState"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "TicketStates",
+        "type": "object"
+      },
+      "TicketTransition": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "target_status": {
+            "enum": [
+              "new",
+              "open",
+              "pending_customer",
+              "pending_third_party",
+              "resolved",
+              "closed"
+            ],
+            "title": "Target Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_status"
+        ],
+        "title": "TicketTransition",
+        "type": "object"
+      },
+      "TicketTransitionReceipt": {
+        "additionalProperties": false,
+        "properties": {
+          "history_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "History Id"
+          },
+          "ticket_id": {
+            "format": "uuid",
+            "title": "Ticket Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket_id",
+          "history_id"
+        ],
+        "title": "TicketTransitionReceipt",
         "type": "object"
       },
       "Transition": {
@@ -5814,6 +6657,304 @@
         ]
       }
     },
+    "/api/v1/ticket-choices/queues": {
+      "get": {
+        "operationId": "queues_api_v1_ticket_choices_queues_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 250,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketQueueChoices"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Queues",
+        "tags": [
+          "Tickets"
+        ]
+      }
+    },
+    "/api/v1/ticket-choices/{queue_id}/clients": {
+      "get": {
+        "operationId": "clients_api_v1_ticket_choices__queue_id__clients_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "queue_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Queue Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 250,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketClientChoices"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clients",
+        "tags": [
+          "Tickets"
+        ]
+      }
+    },
+    "/api/v1/ticket-choices/{queue_id}/clients/{client_id}/assignees": {
+      "get": {
+        "operationId": "assignees_api_v1_ticket_choices__queue_id__clients__client_id__assignees_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "queue_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Queue Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Client Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 250,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidatePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Assignees",
+        "tags": [
+          "Tickets"
+        ]
+      }
+    },
+    "/api/v1/ticket-choices/{queue_id}/clients/{client_id}/requesters": {
+      "get": {
+        "operationId": "requesters_api_v1_ticket_choices__queue_id__clients__client_id__requesters_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "queue_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Queue Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Client Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 250,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequesterPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Requesters",
+        "tags": [
+          "Tickets"
+        ]
+      }
+    },
     "/api/v1/ticket-queue-teams": {
       "get": {
         "operationId": "teams_api_v1_ticket_queue_teams_get",
@@ -6404,7 +7545,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/QueuePatch"
+                "$ref": "#/components/schemas/CategoryPatch"
               }
             }
           },
@@ -6704,6 +7845,641 @@
         "summary": "Change Member",
         "tags": [
           "Service Desk configuration"
+        ]
+      }
+    },
+    "/api/v1/tickets": {
+      "get": {
+        "operationId": "listing_api_v1_tickets_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 300,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "queue_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Queue Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Client Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "new",
+                    "open",
+                    "pending_customer",
+                    "pending_third_party",
+                    "resolved",
+                    "closed"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "priority",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high",
+                    "critical"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Priority"
+            }
+          },
+          {
+            "in": "query",
+            "name": "assignee_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Assignee Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "unassigned",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Unassigned",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listing",
+        "tags": [
+          "Tickets"
+        ]
+      },
+      "post": {
+        "operationId": "create_api_v1_tickets_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketReceipt"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create",
+        "tags": [
+          "Tickets"
+        ]
+      }
+    },
+    "/api/v1/tickets/{identifier}": {
+      "get": {
+        "operationId": "get_api_v1_tickets__identifier__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketOutput"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get",
+        "tags": [
+          "Tickets"
+        ]
+      },
+      "patch": {
+        "operationId": "patch_api_v1_tickets__identifier__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identifier",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "pattern": "^\"[1-9][0-9]{0,9}\"$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketOutput"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch",
+        "tags": [
+          "Tickets"
+        ]
+      }
+    },
+    "/api/v1/tickets/{identifier}/activity": {
+      "get": {
+        "operationId": "activity_api_v1_tickets__identifier__activity_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identifier",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 250,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivityPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Activity",
+        "tags": [
+          "Tickets"
+        ]
+      }
+    },
+    "/api/v1/tickets/{identifier}/claim": {
+      "post": {
+        "operationId": "claim_api_v1_tickets__identifier__claim_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identifier",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "pattern": "^\"[1-9][0-9]{0,9}\"$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketClaim"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Claim",
+        "tags": [
+          "Tickets"
+        ]
+      }
+    },
+    "/api/v1/tickets/{identifier}/status-history": {
+      "get": {
+        "operationId": "states_api_v1_tickets__identifier__status_history_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identifier",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 250,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketStates"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "States",
+        "tags": [
+          "Tickets"
+        ]
+      }
+    },
+    "/api/v1/tickets/{identifier}/transitions": {
+      "post": {
+        "operationId": "transition_api_v1_tickets__identifier__transitions_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identifier",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "pattern": "^\"[1-9][0-9]{0,9}\"$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketTransition"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketTransitionReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Transition",
+        "tags": [
+          "Tickets"
         ]
       }
     },

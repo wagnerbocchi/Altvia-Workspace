@@ -25,7 +25,7 @@ class ActivityOutput(BaseModel):
     actor_kind: str
     aggregate_version: int
     correlation_id: str
-    details: dict[str, str]
+    details: dict[str, str | None]
 
 
 class ActivityPage(BaseModel):

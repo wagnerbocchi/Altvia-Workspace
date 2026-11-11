@@ -460,6 +460,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ticket-choices/queues": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Queues */
+        get: operations["queues_api_v1_ticket_choices_queues_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ticket-choices/{queue_id}/clients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Clients */
+        get: operations["clients_api_v1_ticket_choices__queue_id__clients_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ticket-choices/{queue_id}/clients/{client_id}/assignees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Assignees */
+        get: operations["assignees_api_v1_ticket_choices__queue_id__clients__client_id__assignees_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ticket-choices/{queue_id}/clients/{client_id}/requesters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Requesters */
+        get: operations["requesters_api_v1_ticket_choices__queue_id__clients__client_id__requesters_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ticket-queue-teams": {
         parameters: {
             query?: never;
@@ -600,6 +668,110 @@ export interface paths {
         head?: never;
         /** Change Member */
         patch: operations["change_member_api_v1_ticket_queues__queue_id__members__user_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/tickets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listing */
+        get: operations["listing_api_v1_tickets_get"];
+        put?: never;
+        /** Create */
+        post: operations["create_api_v1_tickets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/{identifier}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get */
+        get: operations["get_api_v1_tickets__identifier__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch */
+        patch: operations["patch_api_v1_tickets__identifier__patch"];
+        trace?: never;
+    };
+    "/api/v1/tickets/{identifier}/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Activity */
+        get: operations["activity_api_v1_tickets__identifier__activity_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/{identifier}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Claim */
+        post: operations["claim_api_v1_tickets__identifier__claim_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/{identifier}/status-history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** States */
+        get: operations["states_api_v1_tickets__identifier__status_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/{identifier}/transitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Transition */
+        post: operations["transition_api_v1_tickets__identifier__transitions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/users": {
@@ -832,7 +1004,7 @@ export interface components {
             correlation_id: string;
             /** Details */
             details: {
-                [key: string]: string;
+                [key: string]: string | null;
             };
             /**
              * Event Id
@@ -961,6 +1133,13 @@ export interface components {
             items: components["schemas"]["CategoryOutput"][];
             /** Next Cursor */
             next_cursor: string | null;
+        };
+        /** CategoryPatch */
+        CategoryPatch: {
+            /** Active */
+            active?: boolean;
+            /** Name */
+            name?: string;
         };
         /** CategoryReceipt */
         CategoryReceipt: {
@@ -1608,6 +1787,10 @@ export interface components {
         QueueOutput: {
             /** Active */
             active: boolean;
+            /** Allow Manual Close */
+            allow_manual_close: boolean;
+            /** Allow Reopen */
+            allow_reopen: boolean;
             /** Can Manage */
             can_manage: boolean;
             /**
@@ -1652,6 +1835,10 @@ export interface components {
         QueuePatch: {
             /** Active */
             active?: boolean;
+            /** Allow Manual Close */
+            allow_manual_close?: boolean;
+            /** Allow Reopen */
+            allow_reopen?: boolean;
             /** Name */
             name?: string;
         };
@@ -1681,6 +1868,30 @@ export interface components {
         QueueTeamPage: {
             /** Items */
             items: components["schemas"]["QueueTeam"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** RequesterChoice */
+        RequesterChoice: {
+            /** Display Name */
+            display_name: string;
+            /** Email */
+            email: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Verification State
+             * @constant
+             */
+            verification_state: "unverified";
+        };
+        /** RequesterPage */
+        RequesterPage: {
+            /** Items */
+            items: components["schemas"]["RequesterChoice"][];
             /** Next Cursor */
             next_cursor: string | null;
         };
@@ -1806,6 +2017,265 @@ export interface components {
             items: components["schemas"]["TeamRoleOutput"][];
             /** Next Cursor */
             next_cursor: string | null;
+        };
+        /** TicketClaim */
+        TicketClaim: Record<string, never>;
+        /** TicketClientChoice */
+        TicketClientChoice: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
+        /** TicketClientChoices */
+        TicketClientChoices: {
+            /** Items */
+            items: components["schemas"]["TicketClientChoice"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** TicketCreate */
+        TicketCreate: {
+            /** Assignee Id */
+            assignee_id?: string | null;
+            /** Category Id */
+            category_id?: string | null;
+            /**
+             * Client Id
+             * Format: uuid
+             */
+            client_id: string;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "low" | "medium" | "high" | "critical";
+            /**
+             * Queue Id
+             * Format: uuid
+             */
+            queue_id: string;
+            /**
+             * Requester Id
+             * Format: uuid
+             */
+            requester_id: string;
+            /** Subject */
+            subject: string;
+        };
+        /** TicketOutput */
+        TicketOutput: {
+            /** Allowed Transitions */
+            allowed_transitions: ("new" | "open" | "pending_customer" | "pending_third_party" | "resolved" | "closed")[];
+            /** Assignee Id */
+            assignee_id: string | null;
+            /** Assignee Name */
+            assignee_name: string | null;
+            /** Can Assign */
+            can_assign: boolean;
+            /** Can Claim */
+            can_claim: boolean;
+            /** Can Update */
+            can_update: boolean;
+            /** Category Id */
+            category_id: string | null;
+            /** Category Name */
+            category_name: string | null;
+            /**
+             * Client Id
+             * Format: uuid
+             */
+            client_id: string;
+            /** Client Name */
+            client_name: string;
+            /** Closed At */
+            closed_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Description */
+            description: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "low" | "medium" | "high" | "critical";
+            /**
+             * Queue Id
+             * Format: uuid
+             */
+            queue_id: string;
+            /** Queue Name */
+            queue_name: string;
+            /** Requester Active */
+            requester_active: boolean;
+            /** Requester Email */
+            requester_email: string;
+            /**
+             * Requester Id
+             * Format: uuid
+             */
+            requester_id: string;
+            /** Requester Name */
+            requester_name: string;
+            /**
+             * Requester Verification
+             * @constant
+             */
+            requester_verification: "unverified";
+            /** Resolved At */
+            resolved_at: string | null;
+            /**
+             * Source
+             * @constant
+             */
+            source: "manual";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "new" | "open" | "pending_customer" | "pending_third_party" | "resolved" | "closed";
+            /** Subject */
+            subject: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+            /** Writable */
+            writable: boolean;
+        };
+        /** TicketPage */
+        TicketPage: {
+            /** Can Create */
+            can_create: boolean;
+            /** Items */
+            items: components["schemas"]["TicketOutput"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** TicketPatch */
+        TicketPatch: {
+            /** Assignee Id */
+            assignee_id?: string | null;
+            /** Category Id */
+            category_id?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Priority */
+            priority?: ("low" | "medium" | "high" | "critical") | null;
+            /** Requester Id */
+            requester_id?: string | null;
+            /** Subject */
+            subject?: string | null;
+        };
+        /** TicketQueueChoice */
+        TicketQueueChoice: {
+            /** Active */
+            active: boolean;
+            /** Can Assign */
+            can_assign: boolean;
+            /** Can Create */
+            can_create: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
+        /** TicketQueueChoices */
+        TicketQueueChoices: {
+            /** Can Create */
+            can_create: boolean;
+            /** Items */
+            items: components["schemas"]["TicketQueueChoice"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** TicketReceipt */
+        TicketReceipt: {
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
+        };
+        /** TicketState */
+        TicketState: {
+            /**
+             * Actor Id
+             * Format: uuid
+             */
+            actor_id: string;
+            /** From Status */
+            from_status: ("new" | "open" | "pending_customer" | "pending_third_party" | "resolved" | "closed") | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            /** Reason */
+            reason: string | null;
+            /**
+             * To Status
+             * @enum {string}
+             */
+            to_status: "new" | "open" | "pending_customer" | "pending_third_party" | "resolved" | "closed";
+            /** Version */
+            version: number;
+        };
+        /** TicketStates */
+        TicketStates: {
+            /** Items */
+            items: components["schemas"]["TicketState"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** TicketTransition */
+        TicketTransition: {
+            /** Reason */
+            reason?: string | null;
+            /**
+             * Target Status
+             * @enum {string}
+             */
+            target_status: "new" | "open" | "pending_customer" | "pending_third_party" | "resolved" | "closed";
+        };
+        /** TicketTransitionReceipt */
+        TicketTransitionReceipt: {
+            /** History Id */
+            history_id: string | null;
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
         };
         /** Transition */
         Transition: {
@@ -3478,6 +3948,142 @@ export interface operations {
             };
         };
     };
+    queues_api_v1_ticket_choices_queues_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketQueueChoices"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clients_api_v1_ticket_choices__queue_id__clients_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                queue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketClientChoices"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    assignees_api_v1_ticket_choices__queue_id__clients__client_id__assignees_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                queue_id: string;
+                client_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandidatePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    requesters_api_v1_ticket_choices__queue_id__clients__client_id__requesters_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                queue_id: string;
+                client_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RequesterPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     teams_api_v1_ticket_queue_teams_get: {
         parameters: {
             query?: {
@@ -3814,7 +4420,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["QueuePatch"];
+                "application/json": components["schemas"]["CategoryPatch"];
             };
         };
         responses: {
@@ -3975,6 +4581,301 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listing_api_v1_tickets_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+                queue_id?: string | null;
+                client_id?: string | null;
+                status?: ("new" | "open" | "pending_customer" | "pending_third_party" | "resolved" | "closed") | null;
+                priority?: ("low" | "medium" | "high" | "critical") | null;
+                assignee_id?: string | null;
+                unassigned?: boolean;
+                q?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_api_v1_tickets_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TicketCreate"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketReceipt"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_api_v1_tickets__identifier__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketOutput"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_api_v1_tickets__identifier__patch: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+            };
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TicketPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketOutput"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    activity_api_v1_tickets__identifier__activity_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    claim_api_v1_tickets__identifier__claim_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TicketClaim"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    states_api_v1_tickets__identifier__status_history_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketStates"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    transition_api_v1_tickets__identifier__transitions_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TicketTransition"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketTransitionReceipt"];
+                };
             };
             /** @description Validation Error */
             422: {

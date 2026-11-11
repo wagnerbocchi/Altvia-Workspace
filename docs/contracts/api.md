@@ -486,3 +486,30 @@ actor/resource-bound cursors. Queue events have aggregate ticket_queue and exact
 created/updated/category_created/category_updated shapes with actor ID/kind and
 optional category ID/allowlisted changed field names. Customer content grants and
 actual ticket behavior follow subsequent Phase 3 contracts.
+
+### Phase 3B explicit queue access under ADR-0027
+
+Selected before implementation in 748c7ec. GET /ticket-queues/{id}/members returns
+bounded account ID/display_name/active/role_name, next_cursor and queue_version.
+The reviewed queue version is checked unchanged around the roster query. Pages
+bind actor/queue and accept unique limit/cursor only, limit1..100/default50.
+Configuration readers and direct queue members can read this metadata. Queue
+members see their queue/category/history and roster without team directory or
+customer authority. Configuration can_manage retains ADR-0026's separate rule.
+
+POST /ticket-queues/{id}/members accepts strict {email,role_name}, If-Match queue
+and Idempotency-Key, returning minimal {queue_id,user_id}, 201/new intent or
+200/committed replay. PATCH on /members/{user_id} accepts strict {role_name};
+DELETE removes direct access. Both require If-Match and return204/current ETag.
+Roles are viewer|agent|operations_manager. Global platform configuration authority
+or explicit owning-team operations_manager administers grants. Queue manager
+never grants configuration authority or customer ceilings. Known email resolution
+occurs only in an authorized mutation, using existing identity normalization.
+
+Actual grants require active account/queue/team. Coherent no-ops and removals
+survive archive. Real changes advance queue/auth versions, revoke target sessions
+and emit strict redacted ticket_queue.access_changed atomically. POST replay
+rechecks present configuration authority and valid If-Match syntax before IDs,
+never regranting or disclosing current state. Fresh POST alone compares version.
+Unknown/inactive account422 invalid_queue_member, stale409, missing header428,
+hidden404, readable forbidden403. No ticket content route is implemented here.

@@ -16,7 +16,7 @@ from altvia.management import (
     set_account_active,
     set_team_role,
 )
-from altvia.models import Project, SessionRecord, Team, TicketQueue, User
+from altvia.models import Project, RoleBinding, SessionRecord, Team, TicketQueue, User
 from altvia.project_registry import set_project_access
 from sqlalchemy import select, update
 from sqlalchemy.engine import make_url
@@ -107,6 +107,37 @@ with Session(engine) as db, db.begin():
         ]
         db.add_all(fixture_queues)
         db.flush()
+        queue_access_team = Team(name="Equipe de acesso a filas - Validacao")
+        db.add(queue_access_team)
+        db.flush()
+        queue_access_queue = TicketQueue(
+            team_id=queue_access_team.id, name="Fila de acessos - Validacao"
+        )
+        db.add(queue_access_queue)
+        db.flush()
+        queue_access_accounts = {}
+        for kind in ["MANAGER", "VIEWER", "AGENT", "HIDDEN", "SELF", "TARGET"]:
+            account_email = f"browser-queue-{kind.lower()}-{secrets.token_hex(8)}@example.invalid"
+            account_password = secrets.token_urlsafe(30)
+            person = create_user(db, account_email, f"Fila {kind} - Validacao", account_password)
+            queue_access_accounts[kind] = (account_email, account_password, person.id)
+            if kind in {"MANAGER", "SELF", "VIEWER"}:
+                set_team_role(
+                    db,
+                    account_email,
+                    queue_access_team.id,
+                    "viewer" if kind == "VIEWER" else "operations_manager",
+                    True,
+                )
+            if kind in {"AGENT", "SELF"}:
+                db.add(
+                    RoleBinding(
+                        user_id=person.id,
+                        role_name="agent",
+                        scope_kind="queue",
+                        queue_id=queue_access_queue.id,
+                    )
+                )
         external_work_project = Project(
             name="Projeto de envolvidos externos - Validacao",
             scope_kind="internal",
@@ -211,6 +242,17 @@ with Session(engine) as db, db.begin():
             target.write(f"ALTVIA_E2E_WORK_PROJECT_ID={work_project.id}\n")
             target.write(f"ALTVIA_E2E_QUEUE_TEAM_ID={queue_team.id}\n")
             target.write(f"ALTVIA_E2E_QUEUE_ID={fixture_queues[0].id}\n")
+            target.write(f"ALTVIA_E2E_QUEUE_ACCESS_ID={queue_access_queue.id}\n")
+            for kind, (
+                account_email,
+                account_password,
+                account_id,
+            ) in queue_access_accounts.items():
+                target.write(
+                    f"ALTVIA_E2E_QUEUE_ACCESS_{kind}_EMAIL={account_email}\n"
+                    f"ALTVIA_E2E_QUEUE_ACCESS_{kind}_PASSWORD={account_password}\n"
+                    f"ALTVIA_E2E_QUEUE_ACCESS_{kind}_ID={account_id}\n"
+                )
             target.write(f"ALTVIA_E2E_EXTERNAL_WORK_PROJECT_ID={external_work_project.id}\n")
             for kind, (work_email, work_password) in work_accounts.items():
                 target.write(
@@ -221,6 +263,12 @@ if not os.environ.get("ALTVIA_E2E_EXPIRE") and not os.environ.get("ALTVIA_E2E_DI
     # Login HTTP/rate-limit acceptance remains in the identity suites; do not
     # spend that suite's single-source budget on unrelated contact setup.
     with Path(".env.browser-session").open("a", encoding="utf-8") as target:
+        for kind, (account_email, account_password, _) in queue_access_accounts.items():
+            with Session(engine) as db:
+                _, _, token = login(
+                    db, account_email, account_password, "queue-fixture", "queue_fixture_session"
+                )
+            target.write(f"ALTVIA_E2E_QUEUE_ACCESS_{kind}_SESSION={token}\n")
         for kind, (contact_email, contact_password, _) in contact_accounts.items():
             with Session(engine) as db:
                 _, _, token = login(

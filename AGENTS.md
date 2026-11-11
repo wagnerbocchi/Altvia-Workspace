@@ -13,6 +13,11 @@
   global platform configuration authority. Team roster and queue configuration
   never grant customer ticket content. Lock identity before auth, then team,
   queue and category. Category changes advance the queue aggregate as well.
+- Explicit queue bindings use ADR-0027. Queue roles grant their operational
+  metadata, never configuration authority or customer ceilings. Configuration
+  managers alone delegate queue roles. Reuse identity-before-auth, reviewed queue
+  versions, protected receipts, session invalidation and audit/outbox. Target
+  account locks must use FOR NO KEY UPDATE so concurrent logout audit FKs proceed.
 - Administrative account/role mutations must reuse altvia.management's lock protocol,
   last-active-admin guard, session invalidation and audit/outbox. A profile edit
   never grants roles; platform administration never bypasses customer scope.

@@ -268,4 +268,21 @@ parent/id page indexes. The activity resource constraint expands to ticket_queue
 Category changes advance the queue aggregate for ordered redacted activity.
 The API has SELECT/INSERT/UPDATE only and the worker has no metadata-table access.
 Downgrade locks both tables and refuses surviving rows or durable queue history.
+
+## Phase 3B explicit queue bindings
+
+ADR-0027 and migration b46087000014 extend role_bindings with nullable queue_id,
+RESTRICT FK and a unique partial user_id/queue_id index. The scope CHECK requires
+exactly its queue parent and viewer|agent|operations_manager, with every other
+typed parent null. Existing global/team/client/project shapes remain valid and
+require queue_id null. No duplicate queue-membership table is introduced.
+
+Queue membership supplies bounded operational metadata and roster reads for its
+queue. Delegation retains independent platform/owning-team configuration checks.
+It supplies no client ceiling, client role, team roster or other queue authority.
+Actual grant changes atomically advance queue and target auth versions, revoke
+sessions and emit redacted ticket_queue.access_changed. Its exact worker payload
+contains actor, member ID and role only. No new runtime table privilege is needed.
+Downgrade refuses queue grants or durable access history and preserves older data.
+Ticket rows, conversation, attachments and transport follow later increments.
 The earlier entity dictionary remains the planned model for later ticket content.

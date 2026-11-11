@@ -747,6 +747,22 @@ with Session(make_engine(WorkerSettings())) as db:
                 ).status_code
                 == 200
             )
+            queue_account = client.post(
+                "/api/v1/users",
+                json={
+                    "email": "queue-agent@example.test",
+                    "display_name": "Queue Agent",
+                    "password": password,
+                },
+                headers={"Idempotency-Key": uuid4().hex},
+            )
+            assert queue_account.status_code == 201
+            queue_member_headers = {"If-Match": '"3"', "Idempotency-Key": uuid4().hex}
+            queue_member_body = {"email": "queue-agent@example.test", "role_name": "agent"}
+            queue_member_receipt = client.post(
+                queue_paths[0] + "/members", json=queue_member_body, headers=queue_member_headers
+            )
+            assert queue_member_receipt.status_code == 201
             # Create real customer scopes before service recreation, without
             # granting the platform administrator an implicit customer ceiling.
             accounts = client.get("/api/v1/users?limit=100").json()["items"]
@@ -1091,6 +1107,40 @@ from altvia.management import set_team_role
 with Session(make_engine(Settings())) as db,db.begin():
     set_team_role(db,'reader@example.test',UUID(json.load(sys.stdin)['team']),'viewer',True)
 """
+            queue_replay = client.post(
+                queue_paths[0] + "/members", json=queue_member_body, headers=queue_member_headers
+            )
+            assert queue_replay.status_code == 200
+            assert queue_replay.json() == queue_member_receipt.json()
+            with httpx.Client(
+                base_url=origin,
+                verify=str(secret_dir / "tls_cert"),
+                headers={"Origin": origin},
+                timeout=10,
+                trust_env=False,
+            ) as queue_agent:
+                queue_login = queue_agent.post(
+                    "/api/v1/auth/sessions",
+                    json={"email": "queue-agent@example.test", "password": password},
+                )
+                assert queue_login.status_code == 201
+                queue_agent.headers["X-CSRF-Token"] = queue_login.json()["csrf_token"]
+                assert queue_agent.get(queue_paths[0]).json()["version"] == 4
+                assert queue_agent.get(queue_paths[0] + "/members").json()["queue_version"] == 4
+                assert queue_agent.get(queue_paths[1]).status_code == 404
+                assert queue_agent.get("/api/v1/clients").json()["items"] == []
+                assert queue_agent.get("/api/v1/ticket-queue-teams").json()["items"] == []
+                assert (
+                    queue_agent.post(
+                        queue_paths[0] + "/members",
+                        json={**queue_member_body, "role_name": "operations_manager"},
+                        headers={"If-Match": '"4"', "Idempotency-Key": uuid4().hex},
+                    ).status_code
+                    == 403
+                )
+            print(
+                "Packaged queue access persistence, protected replay and denied escalation passed."
+            )
             exec_api(grant, {"team": teams[0]})
             login = client.post(
                 "/api/v1/auth/sessions", json={"email": "reader@example.test", "password": password}
@@ -1100,13 +1150,13 @@ with Session(make_engine(Settings())) as db,db.begin():
             assert [row["id"] for row in client.get("/api/v1/teams").json()["items"]] == [teams[0]]
             assert client.get(f"/api/v1/teams/{teams[1]}").status_code == 404
             persisted_queue = client.get(queue_paths[0]).json()
-            assert persisted_queue["version"] == 3 and not persisted_queue["can_manage"]
+            assert persisted_queue["version"] == 4 and not persisted_queue["can_manage"]
             persisted_category = client.get(category_path).json()
             assert persisted_category["name"] == "Packaged category"
             assert persisted_category["version"] == 2 and not persisted_category["active"]
             assert client.get(queue_paths[1]).status_code == 404
             denied_queue_write = client.patch(
-                queue_paths[0], json={"name": "Denied"}, headers={"If-Match": '"3"'}
+                queue_paths[0], json={"name": "Denied"}, headers={"If-Match": '"4"'}
             )
             assert denied_queue_write.status_code == 403
             assert denied_queue_write.json()["code"] == "forbidden"

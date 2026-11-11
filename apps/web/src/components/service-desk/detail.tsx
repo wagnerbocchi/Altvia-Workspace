@@ -11,6 +11,7 @@ import { MetadataEditor } from "./metadata-editor";
 import { QueueCategories } from "./categories";
 
 const actions: Record<string, string> = {
+  "ticket_queue.access_changed": "Acesso a fila alterado",
   "ticket_queue.created": "Fila cadastrada",
   "ticket_queue.updated": "Fila atualizada",
   "ticket_queue.category_created": "Categoria cadastrada",
@@ -54,6 +55,7 @@ export function QueueDetail({ id, api, session }: { id: string; api: QueueApi; s
     {queue && <>
       <h1 id="queue-heading" tabIndex={-1}>{queue.name}</h1>
       <p className="admin-intro">{queue.active ? "Fila ativa" : "Fila arquivada"}</p>
+      <Link className="text-link" href={`/service-desk/queues/${encodeURIComponent(id)}/members`}>Administrar membros</Link>
       <div className="admin-plane">
         <section className="admin-section" aria-labelledby="queue-data-heading">
           <h2 id="queue-data-heading">Dados da fila</h2>

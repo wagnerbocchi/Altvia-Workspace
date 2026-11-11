@@ -110,7 +110,7 @@ try {
   await page.getByLabel("Nome da nova equipe").fill(teamName);
   await page.getByRole("button", { name: "Criar equipe", exact: true }).click();
   await expect(page.getByRole("heading", { name: teamName, exact: true })).toBeVisible();
-  await page.getByRole("radio", { name: /reader@example.test/ }).check();
+  await page.getByRole("radio", { name: /^Container Reader.*reader@example\.test/ }).check();
   await page.getByRole("button", { name: "Adicionar participante", exact: true }).click();
   await expect(page.getByRole("list", { name: "Participantes da equipe" })).toContainText("Container Reader");
   await page.reload();

@@ -810,6 +810,30 @@ with Session(make_engine(WorkerSettings())) as db:
                 project_ids.append(created_project.json()["project_id"])
             assert client.get("/api/v1/projects").json()["items"] == []
             assert client.get(f"/api/v1/projects/{project_ids[0]}").status_code == 404
+            ticket_queue_receipt = client.post(
+                "/api/v1/ticket-queues",
+                json={"team_id": teams[0], "name": "Packaged manual tickets"},
+                headers={"Idempotency-Key": uuid4().hex},
+            )
+            assert ticket_queue_receipt.status_code == 201
+            ticket_queue_id = ticket_queue_receipt.json()["queue_id"]
+            ticket_queue_path = "/api/v1/ticket-queues/" + ticket_queue_id
+            assert (
+                client.post(
+                    ticket_queue_path + "/members",
+                    json={"email": "reader@example.test", "role_name": "operations_manager"},
+                    headers={"If-Match": '"1"', "Idempotency-Key": uuid4().hex},
+                ).status_code
+                == 201
+            )
+            assert (
+                client.patch(
+                    ticket_queue_path,
+                    json={"allow_manual_close": True, "allow_reopen": True},
+                    headers={"If-Match": '"2"'},
+                ).status_code
+                == 200
+            )
             # Real scoped work exists before API/PostgreSQL recreation. Separate
             # authenticated clients keep the configuration operator out of content.
             work_ids = []
@@ -973,6 +997,41 @@ with Session(make_engine(WorkerSettings())) as db:
                         )
                         assert default.status_code == 200
                         assert default.json()["default_project_id"] == project_id
+                        if index == 0:
+                            ticket_body = {
+                                "queue_id": ticket_queue_id,
+                                "client_id": customer,
+                                "requester_id": contact_id,
+                                "subject": "Packaged manual incident",
+                                "description": "Persisted ticket content",
+                                "priority": "critical",
+                                "assignee_id": owner,
+                            }
+                            ticket_key = {"Idempotency-Key": uuid4().hex}
+                            manual_ticket = contributor.post(
+                                "/api/v1/tickets", json=ticket_body, headers=ticket_key
+                            )
+                            assert manual_ticket.status_code == 201
+                            ticket_path = "/api/v1/tickets/" + manual_ticket.json()["ticket_id"]
+                            assert client.get(ticket_path).status_code == 404
+                            assert (
+                                contributor.post(
+                                    "/api/v1/tickets", json=ticket_body, headers=ticket_key
+                                ).json()
+                                == manual_ticket.json()
+                            )
+                            for version, state in enumerate(
+                                ["open", "pending_customer", "resolved", "closed", "open"], start=1
+                            ):
+                                changed_ticket = contributor.post(
+                                    ticket_path + "/transitions",
+                                    json={"target_status": state, "reason": "Packaged lifecycle"},
+                                    headers={
+                                        "If-Match": f'"{version}"',
+                                        "Idempotency-Key": uuid4().hex,
+                                    },
+                                )
+                                assert changed_ticket.status_code == 200
                     work_body = {
                         "project_id": project_id,
                         "title": f"Packaged work {index}",
@@ -1087,9 +1146,8 @@ with Session(make_engine(WorkerSettings())) as db:
             run([*compose, "up", "-d", "--no-deps", "--force-recreate", "postgres"])
             await_ready(client)
             assert client.get(path).json()["name"] == "Visible"
-            # Explicit client and project delegations each advance the manager's
-            # account version once, from 10 to 12.
-            # The member grant, role change and removal then advance 12 to 15.
+            # Client/project delegation and three project member mutations
+            # advance this separate account from 10 to 15.
             assert client.get(account_path).json()["version"] == 15
             assert client.get("/api/v1/auth/me").status_code == 200
             run([*compose, "stop", "postgres"])
@@ -1161,6 +1219,36 @@ with Session(make_engine(Settings())) as db,db.begin():
             assert denied_queue_write.status_code == 403
             assert denied_queue_write.json()["code"] == "forbidden"
             print("Packaged queue/category scope and restart persistence proof passed.")
+            persisted_ticket = client.get(ticket_path).json()
+            assert persisted_ticket["version"] == 6 and persisted_ticket["status"] == "open"
+            assert persisted_ticket["description"] == "Persisted ticket content"
+            assert isinstance(persisted_ticket["number"], str)
+            assert persisted_ticket["resolved_at"] is None and persisted_ticket["closed_at"] is None
+            ticket_history = client.get(ticket_path + "/status-history").json()["items"]
+            assert len(ticket_history) == 6 and ticket_history[0]["to_status"] == "open"
+            for _ in range(60):
+                ticket_activity = client.get(ticket_path + "/activity").json()["items"]
+                if len(ticket_activity) == 7:
+                    break
+                time.sleep(0.5)
+            else:
+                raise RuntimeError("Packaged ticket activity did not project")
+            (work / "manual-ticket-proof.json").write_text(
+                json.dumps(
+                    {
+                        "ticket_id": persisted_ticket["id"],
+                        "version": 6,
+                        "states": 6,
+                        "projected_events": 7,
+                        "configuration_content_denied": 404,
+                        "restart_persistence": True,
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            print("Packaged manual ticket lifecycle, denied scope and restart persistence passed.")
             assert client.get("/api/v1/users").status_code == 403
             assert client.get(f"{path}/members").status_code == 200
             assert [row["id"] for row in client.get("/api/v1/clients").json()["items"]] == [

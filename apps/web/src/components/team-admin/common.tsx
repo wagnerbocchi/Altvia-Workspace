@@ -38,6 +38,12 @@ export function Paging({ paging, next, label, disabled = false }: {
     marcos: ["Marcos anteriores", "Proximos marcos"],
     filas: ["Filas anteriores", "Proximas filas"],
     categorias: ["Categorias anteriores", "Proximas categorias"],
+    chamados: ["Chamados anteriores", "Proximos chamados"],
+    solicitante: ["Solicitantes anteriores", "Proximos solicitantes"],
+    categoria: ["Categorias anteriores", "Proximas categorias"],
+    responsavel: ["Responsaveis anteriores", "Proximos responsaveis"],
+    "fila do chamado": ["Filas anteriores", "Proximas filas"],
+    "cliente do chamado": ["Clientes anteriores", "Proximos clientes"],
     "equipe da fila": ["Equipes anteriores", "Proximas equipes"],
   };
   const [previousLabel, nextLabel] = labels[aliases[label] ?? label] ?? ["Participantes anteriores", "Próximos participantes"];

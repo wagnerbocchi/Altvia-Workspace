@@ -16,9 +16,20 @@ from altvia.management import (
     set_account_active,
     set_team_role,
 )
-from altvia.models import Project, RoleBinding, SessionRecord, Team, TicketQueue, User
+from altvia.models import (
+    Client,
+    ClientAccessGrant,
+    ClientContact,
+    Project,
+    RoleBinding,
+    SessionRecord,
+    Team,
+    TicketCategory,
+    TicketQueue,
+    User,
+)
 from altvia.project_registry import set_project_access
-from sqlalchemy import select, update
+from sqlalchemy import select, text, update
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
@@ -144,6 +155,61 @@ with Session(engine) as db, db.begin():
             team_id=work_team.id,
         )
         db.add(external_work_project)
+        ticket_client = Client(
+            name="Cliente de chamados - Validacao",
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        )
+        ticket_queue = TicketQueue(
+            team_id=queue_access_team.id, name="Atendimento manual - Validacao"
+        )
+        db.add_all([ticket_client, ticket_queue])
+        db.flush()
+        db.execute(text("ALTER SEQUENCE tickets_number_seq RESTART WITH 9007199254740993"))
+        ticket_contact = ClientContact(
+            client_id=ticket_client.id,
+            display_name="Solicitante de validacao",
+            email_normalized="ticket-requester@example.invalid",
+        )
+        ticket_category = TicketCategory(queue_id=ticket_queue.id, name="Infraestrutura")
+        db.add_all([ticket_contact, ticket_category])
+        db.add_all(
+            [
+                ClientContact(
+                    client_id=ticket_client.id,
+                    display_name=f"Solicitante extra {number:02}",
+                    email_normalized=f"ticket-extra-{number}@example.invalid",
+                )
+                for number in range(12)
+            ]
+        )
+        ticket_accounts = {}
+        for kind, role in [
+            ("MANAGER", "operations_manager"),
+            ("AGENT", "agent"),
+            ("VIEWER", "viewer"),
+            ("CONFIG", None),
+        ]:
+            account_email = f"browser-ticket-{kind.lower()}-{secrets.token_hex(8)}@example.invalid"
+            account_password = secrets.token_urlsafe(30)
+            person = create_user(db, account_email, f"Chamados {kind}", account_password)
+            ticket_accounts[kind] = (account_email, account_password, person.id)
+            db.add(
+                ClientAccessGrant(
+                    user_id=person.id, client_id=ticket_client.id, created_at=datetime.now(UTC)
+                )
+            )
+            if role:
+                db.add(
+                    RoleBinding(
+                        user_id=person.id,
+                        role_name=role,
+                        scope_kind="queue",
+                        queue_id=ticket_queue.id,
+                    )
+                )
+            else:
+                set_team_role(db, account_email, queue_access_team.id, "operations_manager", True)
         db.flush()
         for kind, role in [
             ("MANAGER", "project_manager"),
@@ -243,6 +309,11 @@ with Session(engine) as db, db.begin():
             target.write(f"ALTVIA_E2E_QUEUE_TEAM_ID={queue_team.id}\n")
             target.write(f"ALTVIA_E2E_QUEUE_ID={fixture_queues[0].id}\n")
             target.write(f"ALTVIA_E2E_QUEUE_ACCESS_ID={queue_access_queue.id}\n")
+            target.write(
+                f"ALTVIA_E2E_TICKET_QUEUE_ID={ticket_queue.id}\n"
+                f"ALTVIA_E2E_TICKET_CLIENT_ID={ticket_client.id}\n"
+                f"ALTVIA_E2E_TICKET_REQUESTER_ID={ticket_contact.id}\n"
+            )
             for kind, (
                 account_email,
                 account_password,
@@ -263,6 +334,14 @@ if not os.environ.get("ALTVIA_E2E_EXPIRE") and not os.environ.get("ALTVIA_E2E_DI
     # Login HTTP/rate-limit acceptance remains in the identity suites; do not
     # spend that suite's single-source budget on unrelated contact setup.
     with Path(".env.browser-session").open("a", encoding="utf-8") as target:
+        for kind, (account_email, account_password, account_id) in ticket_accounts.items():
+            with Session(engine) as db:
+                _, _, token = login(
+                    db, account_email, account_password, "ticket-fixture", "ticket_fixture_session"
+                )
+            target.write(
+                f"ALTVIA_E2E_TICKET_{kind}_SESSION={token}\nALTVIA_E2E_TICKET_{kind}_ID={account_id}\n"
+            )
         for kind, (account_email, account_password, _) in queue_access_accounts.items():
             with Session(engine) as db:
                 _, _, token = login(

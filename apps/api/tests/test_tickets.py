@@ -307,7 +307,7 @@ def test_ticket_strict_input_cross_scope_and_active_reference_boundaries(
         {"assignee_id": refs["viewer_id"]},
     ]:
         assert create(admin_client, refs, **change).status_code == 422
-    path = ticket(admin_client, refs)
+    path = ticket(admin_client, refs, assignee_id=refs["agent_id"])
     for patch in [
         {},
         {"client_id": refs["client_id"]},
@@ -319,12 +319,14 @@ def test_ticket_strict_input_cross_scope_and_active_reference_boundaries(
         assert admin_client.patch(path, json=patch, headers=preconditions()).status_code == 422
     with Session(db_engine) as db, db.begin():
         db.get(ClientContact, UUID(refs["requester_id"])).active = False
+        db.get(User, UUID(refs["agent_id"])).active = False
     assert create(admin_client, refs).status_code == 422
     assert (
         admin_client.patch(path, json={"priority": "critical"}, headers=preconditions()).status_code
         == 200
     )
     assert admin_client.get(path).json()["requester_name"] == "Solicitante"
+    assert admin_client.get(path).json()["assignee_name"] == "Agent"
 
 
 def test_ticket_create_receipt_survives_archive_but_requires_present_role(

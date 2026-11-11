@@ -46,6 +46,26 @@ async function headers(page: Page, version?: number) {
     ...(version === undefined ? {} : { "If-Match": `"${version}"` }) };
 }
 
+async function findAccount(page: Page, name: RegExp) {
+  const choice = page.getByRole("radio", { name });
+  const group = page.getByRole("group", { name: "Conta para adicionar" });
+  const visited = new Set<string>();
+  while (true) {
+    await expect(group).toBeVisible();
+    if (await choice.count()) return choice;
+    const signature = await group.locator("input").evaluateAll(inputs => inputs.map(input => (input as HTMLInputElement).value).join(","));
+    expect(signature).not.toBe("");
+    expect(visited.has(signature), "Account paging must advance").toBe(false);
+    visited.add(signature);
+    const next = page.getByRole("button", { name: "Próximas contas", exact: true });
+    await expect(next, "Fixture account must exist before the last page").toBeEnabled();
+    const response = page.waitForResponse(result => result.url().includes("/api/v1/users?") && result.ok());
+    await next.click();
+    const rows = (await (await response).json()).items;
+    await expect(group.locator(`input[value="${rows[0].id}"]`)).toBeVisible();
+  }
+}
+
 test("@teams administrative lifecycle persists, preserves history and uses real account selection", async ({ page }) => {
   await signIn(page);
   await page.getByRole("link", { name: "Administrar equipes" }).click();
@@ -56,12 +76,7 @@ test("@teams administrative lifecycle persists, preserves history and uses real 
   await page.getByLabel("Nome da equipe", { exact: true }).fill(name + " revisada");
   await page.getByRole("button", { name: "Salvar nome" }).click();
   await expect(page.getByRole("heading", { name: name + " revisada", exact: true })).toBeVisible();
-  const choice = page.getByRole("radio", { name: new RegExp(email.replaceAll(".", "\\.")) });
-  for (let attempt = 0; attempt < 4; attempt++) {
-    await expect(page.getByRole("group", { name: "Conta para adicionar" })).toBeVisible();
-    if (await choice.count()) break;
-    await page.getByRole("button", { name: "Próximas contas" }).click();
-  }
+  const choice = await findAccount(page, new RegExp(email.replaceAll(".", "\\.")));
   await choice.check();
   await page.getByRole("button", { name: "Adicionar participante", exact: true }).click();
   await expect(page.getByRole("list", { name: "Participantes da equipe" })
@@ -399,12 +414,7 @@ test("@teams bounded team and roster pages expose inactive accounts without sele
   await expect(roster.getByRole("listitem")).toHaveCount(2);
   await page.getByRole("button", { name: "Participantes anteriores" }).click();
   await expect(roster.getByRole("listitem")).toHaveCount(10);
-  const inactive = page.getByRole("radio", { name: /browser-roster-13@example.invalid/ });
-  await expect(page.getByRole("group", { name: "Conta para adicionar" })).toBeVisible();
-  for (let attempt = 0; attempt < 4 && !(await inactive.count()); attempt++) {
-    await page.getByRole("button", { name: "Próximas contas" }).click();
-    await expect(page.getByRole("group", { name: "Conta para adicionar" })).toBeVisible();
-  }
+  const inactive = await findAccount(page, /browser-roster-13@example.invalid/);
   await expect(inactive).toBeDisabled();
   await page.getByRole("link", { name: "Voltar às equipes" }).click();
   const teams = page.getByRole("list", { name: "Equipes cadastradas" });
@@ -420,12 +430,7 @@ test("@teams bounded team and roster pages expose inactive accounts without sele
 test("@teams account-inactive conflict refreshes the existing-account selection", async ({ page }) => {
   await signIn(page);
   await createTeam(page, `Conta alterada ${crypto.randomUUID().slice(0, 8)}`);
-  const choice = page.getByRole("radio", { name: /browser-roster-12@example.invalid/ });
-  await expect(page.getByRole("group", { name: "Conta para adicionar" })).toBeVisible();
-  for (let attempt = 0; attempt < 4 && !(await choice.count()); attempt++) {
-    await page.getByRole("button", { name: "Próximas contas" }).click();
-    await expect(page.getByRole("group", { name: "Conta para adicionar" })).toBeVisible();
-  }
+  const choice = await findAccount(page, /browser-roster-12@example.invalid/);
   await choice.check();
   execFileSync(process.platform === "win32" ? "uv.exe" : "uv", ["run", "python", "scripts/browser_fixture.py"], {
     cwd: root, env: { ...process.env, ALTVIA_E2E_DISABLE_ROSTER: "1" }, stdio: "pipe",

@@ -9,6 +9,7 @@ import type { QueueApi } from "@/lib/ticket-queues";
 import { ApiError } from "@/lib/http";
 import { MetadataEditor } from "./metadata-editor";
 import { QueueCategories } from "./categories";
+import { QueueWorkflow } from "./workflow";
 
 const actions: Record<string, string> = {
   "ticket_queue.access_changed": "Acesso a fila alterado",
@@ -67,6 +68,7 @@ export function QueueDetail({ id, api, session }: { id: string; api: QueueApi; s
             update={(body, version) => api.update(id, body, version)} refresh={refresh} />
         </section>
         <QueueCategories id={id} api={api} session={session} writable={queue.can_manage && queue.team_active && queue.active} refresh={refresh} />
+        <QueueWorkflow row={queue} api={api} session={session} disabled={query.isFetching || query.isError || mutating > 0} refresh={refresh} />
         <QueueHistory id={id} api={api} />
       </div>
     </>}

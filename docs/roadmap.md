@@ -1,6 +1,6 @@
 # Development roadmap and decision register
 
-Updated 2026-11-10. User authorized incremental development after contracts,
+Updated 2026-11-11. User authorized incremental development after contracts,
 direct pushes to main and no PR. Continue safe independent work while questions
 await answers. This does not authorize production deployment or real data import.
 
@@ -60,10 +60,20 @@ entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
-Phase 3D implements ADR-0029's private ticket notes and separately delegated queue
-note_access. Contracts precede code, with old bindings default none. Complete the
-scoped persisted notes/browser path and privacy/replay tests before acceptance.
-Public replies, files, native email and later phases retain their own contracts.
+Phase 3D development is complete under ADR-0029: immutable private ticket notes,
+independently delegated note_access none/read/write, scoped private activity and
+browser draft/uncertainty recovery. Contracts 4a5267a preceded backend 089bf39
+and browser/packaged 1864f61. Final fb83c03 passed all five hosted gates with
+612 API/116 browser tests, packaged populated-reader denial/redaction/no-outbound
+and restart persistence, zero blocking source findings and zero vulnerabilities
+across five nonempty image inventories. The Important acceptance gap is closed;
+the independent source review found no application defect or deferred Minor.
+Go runtime finding CVE-2026-97054 was removed by a patched builder and same-DB
+rescan; failed historical reports remain retained. See
+docs/phase-3d-note-evidence.md. Actual note delegates remain Q-20, default none.
+Public replies, files, native email and subsequent transfer contracts retain their
+own increments. Phase 3, the full MVP and integrated actual-target qualification
+remain open under the development-first cadence.
 
 Phase 3C manual ticket development is complete under ADR-0028 and
 docs/plans/2026-11-10-manual-tickets.md. Contracts 22befa4 preceded backend 1751269

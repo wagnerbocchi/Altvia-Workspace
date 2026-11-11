@@ -36,13 +36,13 @@ affected queue/ticket regressions and generated OpenAPI/TypeScript.
 **Interfaces** note_access none|read|write; TicketNoteCreate/Output/Page/Receipt;
 can_read_notes/can_add_note; GET/POST notes and scoped GET note ID; strict note event.
 
-- [ ] Write/run failing PostgreSQL/API tests for explicit grants/default denial,
+- [x] Write/run failing PostgreSQL/API tests for explicit grants/default denial,
   note creation/read, filtered activity, strict protocols, replay, old fingerprints/
   envelopes, ordered paging, SQL/runtime boundaries and the five review-focus cases.
-- [ ] Extend current owners/locking/session/receipt protocol. Reuse state-history
+- [x] Extend current owners/locking/session/receipt protocol. Reuse state-history
   version cursor parsing. Implement immutable notes, current scope/capabilities,
   private activity filtering and strict redacted projection.
-- [ ] Prove concurrent note/replay/role/logout, rollback/overflow, archive/closure,
+- [x] Prove concurrent note/replay/role/logout, rollback/overflow, archive/closure,
   privileges/guarded downgrade and bounded queries. Run focused/full API, static,
   schema/build and generated contract checks. Commit passing backend batches.
 
@@ -54,11 +54,11 @@ tests/ticket-notes.spec.ts and surface brief.
 **Interfaces** Task1 DTOs, session-owned transport, retained intent/acknowledged ID,
 successful authoritative refresh and independent note paging.
 
-- [ ] Write/run failing browser grant review/private note tests, including no denied
+- [x] Write/run failing browser grant review/private note tests, including no denied
   fetch/render, uncertain POST, focus/stale version and failed post-receipt refresh.
-- [ ] Load Impeccable context/craft floor and extend incumbent UI with visibly
+- [x] Load Impeccable context/craft floor and extend incumbent UI with visibly
   internal plain text, protected intent recovery, fresh-write gating and real states.
-- [ ] Run web check/build, focused/full browser, keyboard/axe/overflow and light/dark
+- [x] Run web check/build, focused/full browser, keyboard/axe/overflow and light/dark
   desktop/mobile captures. Complete Impeccable review/documentation and commit.
 
 ### Task 3 Acceptance and publication
@@ -67,10 +67,16 @@ successful authoritative refresh and independent note paging.
 roadmap/PRD/ADR/plan status and private immutable evidence.
 **Interfaces** Exact reviewed source and complete local/hosted/security evidence.
 
-- [ ] Prove packaged delegation, note restart persistence, ordinary reader denial
+- [x] Prove packaged delegation, note restart persistence, ordinary reader denial
   and no outbound mail. Obtain one fresh source review and fix Important findings
   with RED/GREEN and appropriate passing suites.
-- [ ] Push checked coherent commits to main. Follow five exact-source hosted gates,
+- [x] Push checked coherent commits to main. Follow five exact-source hosted gates,
   preserving full logs/artifacts, severities and five nonempty image inventories.
-- [ ] Freeze hashed evidence, document bounded completion/remaining phases, publish
+- [x] Freeze hashed evidence, document bounded completion/remaining phases, publish
   Markdown closure and verify clean actual remote main and source compatibility.
+
+Acceptance source fb83c03 passed all five hosted gates, local API 612 and browser
+116. The source review's Important finding was missing packaged coverage, not an
+application defect: expanded privacy assertions now pass on the real stack.
+The later test-selector collision has a real Chromium RED/GREEN reproduction.
+See docs/phase-3d-note-evidence.md for full results, advisories and remaining scope.

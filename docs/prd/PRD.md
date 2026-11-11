@@ -52,7 +52,7 @@ automated verification and real UI when applicable. Phase numbers refer to
 | Source import | 5 | All 34 rows accounted for, 19 weekly updates and 8 notes preserved; approved mappings and replay tested |
 | CPU and recovery | 1,6 | Runtime and functional tests on actual guest; consistent database/file restore and rollback |
 
-Delivery status 2026-11-10: Foundation is closed. Phase 2A delivers only the client
+Delivery status 2026-11-11: Foundation is closed. Phase 2A delivers only the client
 registry portion of FR-002 and its scoped FR-012 activity, qualified on the actual
 baseline VM (docs/phase-2a-client-evidence.md). Phase 2B adds persisted internal/
 customer projects, explicit managers/members, shared operational areas and scoped
@@ -126,6 +126,17 @@ Impeccable scored its two fixes resolved and preserved the incumbent system.
 See docs/phase-3c-ticket-evidence.md. Ticket messages/private files, native email,
 SLA and subsequent transfer contracts remain in Phase 3, with consolidation in
 Phase 4 and final integrated target qualification after remaining MVP development.
+
+Phase 3D now delivers the private-note portion of FR-006 and scoped FR-012 under
+ADR-0029. Immutable notes require an explicit independent queue note tier plus
+current customer/queue authority; every legacy binding defaults none. Protected
+replay, revocation, private activity filtering and browser draft/acknowledgement
+recovery are persisted and tested. Final fb83c03 passed all five hosted gates:
+612 API/116 browser tests, packaged restart/populated-reader denial/redaction/
+no-outbound proof, zero blocking source findings and zero vulnerabilities across
+five nonempty image inventories. See docs/phase-3d-note-evidence.md. Public
+replies, files and native email are not delivered by this note increment; Phase 3,
+full MVP acceptance and deferred integrated actual-target qualification stay open.
 
 Non-goals: SaaS billing/subscriptions, marketplace, local AI/embeddings, external
 search cluster, advanced ITIL/CMDB, advanced Gantt and native mobile applications.

@@ -49,6 +49,10 @@ note-permission history. Never discard these records to force contraction.
 Run real disposable PostgreSQL tests, rebuilt HTTPS browser tests and existing
 static/generated-contract gates. The packaged smoke proves default queue-manager
 denial, explicit delegation, session invalidation, protected replay and note
-persistence after API/PostgreSQL recreation. Five exact-source hosted workflows
+persistence after API/PostgreSQL recreation. A separate ordinary ticket reader
+then reads the ticket but receives denial on both populated note routes; paged
+activity excludes private events. Owner-side metadata inspection verifies
+redaction and absence of outbound events without widening runtime privileges.
+Five exact-source hosted workflows
 and complete image inventories remain the publication evidence. Actual x86-64-v1
 qualification occurs after remaining MVP development under the user's cadence.

@@ -1,8 +1,9 @@
 """Actual controlled TLS, real PostgreSQL and fenced native IMAPS progress."""
 
-import os
+import shutil
 import subprocess
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 from alembic import command
@@ -22,12 +23,43 @@ __all__ = ["source"]
 @pytest.fixture(scope="session")
 def imap_cert(tmp_path_factory):
     directory = tmp_path_factory.mktemp("imap-tls")
+    executable = shutil.which("openssl")
+    if executable is None:
+        git = Path(shutil.which("git") or "")
+        bundled = git.parent.parent / "usr/bin/openssl.exe"
+        if bundled.is_file():
+            executable = str(bundled)
+    if executable is None:
+        pytest.fail("Controlled TLS tests require system OpenSSL or Git for Windows OpenSSL")
+    configuration = directory / "certificate.cnf"
+    configuration.write_text(
+        "[req]\nprompt=no\ndistinguished_name=dn\nx509_extensions=ext\n"
+        "[dn]\nCN=localhost\n[ext]\nsubjectAltName=DNS:localhost\n"
+        "basicConstraints=critical,CA:TRUE\nkeyUsage=digitalSignature,keyEncipherment,keyCertSign\n",
+        encoding="ascii",
+    )
     subprocess.run(
-        ["node", "scripts/imap_test_certificate.mjs", str(directory)],
-        env={**os.environ, "ALTVIA_ALLOW_IMAP_TEST": "1"},
+        [
+            executable,
+            "req",
+            "-x509",
+            "-newkey",
+            "rsa:2048",
+            "-sha256",
+            "-nodes",
+            "-days",
+            "1",
+            "-config",
+            str(configuration),
+            "-keyout",
+            str(directory / "imap_key"),
+            "-out",
+            str(directory / "imap_cert"),
+        ],
         check=True,
         capture_output=True,
     )
+    (directory / "imap_key").chmod(0o600)
     return directory / "imap_cert", directory / "imap_key"
 
 

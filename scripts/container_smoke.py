@@ -1361,37 +1361,55 @@ with Session(make_engine(Settings())) as db,db.begin():
                 assert all(row["event_type"] != "ticket.note_added" for row in visible_events)
                 assert note_receipt.json()["note_id"] not in json.dumps(visible_events)
                 assert note_body["body_text"] not in json.dumps(visible_events)
-            note_event_proof = """
-import json,sys
-from uuid import UUID
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-from altvia.config import Settings
-from altvia.database import make_engine
-from altvia.models import AuditLog,OutboxEvent
-data=json.load(sys.stdin)
-with Session(make_engine(Settings())) as db:
-    events=list(db.scalars(select(OutboxEvent).where(OutboxEvent.aggregate_id==UUID(data['ticket']))))
-    notes=[event for event in events if event.event_type=='ticket.note_added']
-    assert len(events)==8 and len(notes)==1
-    assert set(notes[0].payload)=={
-        'actor_id','actor_kind','ticket_id','client_id','queue_id','note_id'}
-    assert notes[0].payload['note_id']==data['note']
-    assert data['body'] not in json.dumps([event.payload for event in events])
-    assert {event.event_type for event in events} <= {
-        'ticket.created','ticket.assigned','ticket.status_changed','ticket.note_added'}
-    audits=list(db.scalars(select(AuditLog).where(AuditLog.resource_id==UUID(data['ticket']))))
-    assert data['body'] not in json.dumps([row.details for row in audits])
-    print('Packaged private event redaction and no outbound event passed.')
-"""
-            exec_api(
-                note_event_proof,
-                {
-                    "ticket": persisted_ticket["id"],
-                    "note": note_receipt.json()["note_id"],
-                    "body": note_body["body_text"],
-                },
+            # Audit/outbox reads intentionally belong to the existing owner-side
+            # probe. The API runtime has INSERT only on those tables.
+            private_metadata = json.loads(
+                run(
+                    [
+                        *compose,
+                        "exec",
+                        "-T",
+                        "postgres",
+                        "psql",
+                        "-X",
+                        "-qAt",
+                        "-v",
+                        "ON_ERROR_STOP=1",
+                        "-U",
+                        "altvia_owner",
+                        "-d",
+                        "altvia_test",
+                        "-v",
+                        "ticket=" + persisted_ticket["id"],
+                    ],
+                    data="""
+SELECT json_build_object(
+  'events', (SELECT json_agg(json_build_object('type',event_type,'payload',payload))
+             FROM outbox_events WHERE aggregate_id=:'ticket'::uuid),
+  'audits', (SELECT json_agg(details)
+             FROM audit_logs WHERE resource_id=:'ticket'::uuid));
+""",
+                )
             )
+            events = private_metadata["events"]
+            private_events = [row for row in events if row["type"] == "ticket.note_added"]
+            assert len(events) == 8 and len(private_events) == 1
+            assert set(private_events[0]["payload"]) == {
+                "actor_id",
+                "actor_kind",
+                "ticket_id",
+                "client_id",
+                "queue_id",
+                "note_id",
+            }
+            assert private_events[0]["payload"]["note_id"] == note_receipt.json()["note_id"]
+            assert note_body["body_text"] not in json.dumps(private_metadata)
+            assert {row["type"] for row in events} <= {
+                "ticket.created",
+                "ticket.assigned",
+                "ticket.status_changed",
+                "ticket.note_added",
+            }
             (work / "private-note-proof.json").write_text(
                 json.dumps(
                     {

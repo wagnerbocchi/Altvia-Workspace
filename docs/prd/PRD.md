@@ -102,8 +102,16 @@ zero reported vulnerabilities in five scanned image inventories. The reviewed
 parent-version refresh race has a regression-tested correction. Direct SQL
 whitespace-only names remain a documented defense follow-up, with HTTP validation
 enforcing the full strip rule. See docs/phase-3a-queue-evidence.md. Phase 3 remains
-open for ticket content roles/lifecycle, messages, private files and native email.
+open for ticket content enforcement/lifecycle, messages, private files and native email.
 Ticket consolidation remains Phase 4 and production acceptance remains separate.
+Phase 3B now delivers ADR-0027 explicit queue access administration and scoped
+operational metadata. Contracts preceded real persistence, protected known-email
+grants, session revocation and browser recovery. Final 9e183ef passed all five
+hosted gates with 557 API/96 browser tests, packaged restart/scope proof and five
+complete zero-reported-vulnerability image inventories. Reviewed logout and
+refresh-copy defects have RED/GREEN proof. The separate project-test session
+interference is corrected. See docs/phase-3b-queue-access-evidence.md. Final target
+qualification follows remaining MVP development.
 
 Non-goals: SaaS billing/subscriptions, marketplace, local AI/embeddings, external
 search cluster, advanced ITIL/CMDB, advanced Gantt and native mobile applications.

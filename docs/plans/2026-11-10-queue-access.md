@@ -10,6 +10,14 @@ identity-before-auth lock, immutable receipts, reviewed queue versions and outbo
 **Tech stack** Existing FastAPI/Pydantic/SQLAlchemy/PostgreSQL and Next.js/TypeScript.
 **Spec** docs/adr/0027-queue-content-access.md and the master specification.
 
+Development acceptance completed on 2026-11-10. Exact 9e183ef passed all five
+hosted gates with 557 API/96 browser tests and actual packaged persistence/scope
+proof. Source review deadlock and Impeccable copy findings have RED/GREEN fixes.
+The project recovery fixture now uses a dedicated delegate, preserving shared
+sessions under full-suite execution. Impeccable review/documentation is complete.
+See docs/phase-3b-queue-access-evidence.md. Final integrated VM qualification
+follows remaining MVP development.
+
 ## Global constraints
 
 - Contracts precede code. Preserve existing scopes, data and x86-64-v1 restrictions.
@@ -34,13 +42,13 @@ migration b46087000014_queue_access.py, tests/test_queue_access.py, generated co
 **Interfaces** QueueMemberRole(role_name), QueueMemberAdd(email,role_name),
 QueueMemberReceipt(queue_id,user_id), QueueMemberPage(items,next_cursor,queue_version).
 
-- [ ] Write failing PostgreSQL/API tests for all ADR invariants, including queue-only
+- [x] Write failing PostgreSQL/API tests for all ADR invariants, including queue-only
   read scope, strict role checks, archived no-ops, atomic rollback, lock races and
   migration preservation/refusal. Run the new tests before product code.
-- [ ] Extend existing registry and DTOs. Use known-email lookup inside authorized
+- [x] Extend existing registry and DTOs. Use known-email lookup inside authorized
   POST, exact queue version protocol and the existing session invalidation helper.
   Add strict event validation without broadening legacy event shapes.
-- [ ] Run focused/full API, ruff/format/mypy, Alembic drift and OpenAPI generation.
+- [x] Run focused/full API, ruff/format/mypy, Alembic drift and OpenAPI generation.
   Expect passing tests and unchanged existing behavior. Commit coherent backend.
 
 ### Task 2 Browser access administration
@@ -49,11 +57,11 @@ QueueMemberReceipt(queue_id,user_id), QueueMemberPage(items,next_cursor,queue_ve
 link, browser_fixture.py and tests/queue-access.spec.ts.
 **Interfaces** Task 1 DTOs and existing session-owned transport, paging/recovery.
 
-- [ ] Write real browser lifecycle, viewer/queue-only isolation, stale writes,
+- [x] Write real browser lifecycle, viewer/queue-only isolation, stale writes,
   original POST retry and failed-refresh tests. Run before UI for missing controls.
-- [ ] Read Impeccable craft floor, implement the incumbent admin patterns, explicit
+- [x] Read Impeccable craft floor, implement the incumbent admin patterns, explicit
   grant review and removal confirmation. Keep original drafts immutable through errors.
-- [ ] Run web check/build and focused/full browsers. Capture desktop/mobile light/dark,
+- [x] Run web check/build and focused/full browsers. Capture desktop/mobile light/dark,
   inspect frames and run axe/overflow. Complete Impeccable finish/documentation.
   Expect passing tests and actionable controls backed by real persistence. Commit.
 
@@ -62,9 +70,9 @@ link, browser_fixture.py and tests/queue-access.spec.ts.
 **Files** packaged persistence assertions, runbook, Phase 3B evidence, roadmap/ADR/plan.
 **Interfaces** Exact source and preserved local/hosted logs, scans and review evidence.
 
-- [ ] Extend packaged smoke with real access persistence and denied escalation.
+- [x] Extend packaged smoke with real access persistence and denied escalation.
   Obtain one whole-increment source review. Fix Important findings with RED/GREEN.
-- [ ] Push checked coherent commits to main, follow all five hosted gates and collect
+- [x] Push checked coherent commits to main, follow all five hosted gates and collect
   complete logs/artifacts/image inventories and all severities. Expect all pass.
-- [ ] Record bounded completion, deferred integrated VM qualification and remaining
+- [x] Record bounded completion, deferred integrated VM qualification and remaining
   ticket lifecycle/messages/email. Commit/push evidence, verify actual remote main.

@@ -1,6 +1,10 @@
 # ADR-0027 Explicit queue access administration
 
-Date 2026-11-10. Selected before implementation for Phase 3B, FR-001/005/012.
+Date 2026-11-10. Accepted and implemented for Phase 3B, FR-001/005/012.
+Contracts 748c7ec preceded code. Final 9e183ef passed all five hosted gates with
+557 API/96 browser tests and packaged grant/replay/restart/scope proof.
+See docs/phase-3b-queue-access-evidence.md. Final target qualification follows
+remaining MVP development.
 The master specification and current user development authorization apply.
 
 ## Decision and scope

@@ -8,7 +8,7 @@ exact submitted email and role, confirms a grant, changes a role or removes acce
 Queue and metadata readers inspect a bounded roster. Separate customer ceilings
 and configuration authority remain explicit. Changes end target sessions.
 
-Use the established two-column admin plane, list rows, inline confirmations,
+Use the established stacked admin sections, desktop identity/action rows, inline confirmations,
 Portuguese action labels, immutable POST intent and reviewed parent/roster versions.
 Retain drafts on network failure. An uncertain retry reuses original key/body/version.
 Block further edits until the receipt's authoritative refresh succeeds. Conflict

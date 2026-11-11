@@ -60,6 +60,20 @@ entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
+Phase 3B development is complete under ADR-0027 and
+docs/plans/2026-11-10-queue-access.md. Contracts 748c7ec preceded persisted access
+8cde51d, reviewed logout-lock correction 08e8294, browser/packaged f366f40 and
+project-test isolation 9e183ef. Final 9e183ef passed all five hosted gates with
+557 API/96 browser tests, real queue grant persistence/replay/restart/scope proof,
+zero blocking source findings and zero reported vulnerabilities in five complete
+image inventories. Source review found one Important deadlock, reproduced and
+fixed with real RED/GREEN. Impeccable scored its sole copy fix resolved and
+preserved the incumbent system. A separate full-run test interference was proven
+by a shared-reader selection capture and corrected with a dedicated account.
+See docs/phase-3b-queue-access-evidence.md. Queue roles, configuration authority and
+customer ceilings remain independent. Next is actual ticket lifecycle and content
+enforcement. Phase 3 and final integrated target qualification remain open.
+
 Phase 3A implements ADR-0026's scoped persisted team-owned queue/category
 configuration. Contracts 0f9059d preceded backend 7ef3a7a and browser 30e337e.
 Test-only e3a79c2 strengthens packaged reader CSRF and authorization proof.
@@ -71,8 +85,8 @@ and scope proof, zero blocking source findings and zero reported vulnerabilities
 in five complete scanned image inventories. Phase 3A development is complete.
 See docs/phase-3a-queue-evidence.md. Final integrated target qualification stays
 pending under the user's cadence. Phase 3 remains open.
-Ticket content grants, lifecycle, messages/files and transport follow as bounded
-slices. Mailbox/provider questions remain Q-03/Q-16.
+Phase 3B supplies explicit queue grant administration. Actual ticket
+content enforcement/lifecycle, messages/files and transport follow as bounded slices. Mailbox/provider questions remain Q-03/Q-16.
 
 Known Phase 3A follow-up from source review concerns raw SQL whitespace-only
 names. Default PostgreSQL btrim checks ordinary spaces, while HTTP validation
@@ -195,7 +209,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-14 | Engineering/security: ongoing service-image security | All five actual target-tested images have zero reported vulnerabilities; blocking HIGH/CRITICAL CI, SAST medium+ and every detected secret; retained complete severity metadata, no risk acceptance | Remaining production security/readiness gates |
 | Q-15 | Resolved: owner authorized workstation public-key registration, remote Codex login and project registration; fresh noninteractive Windows SSH and actual Phase 2D qualification passed | Reuse agent-backed key with strict known-host checks; one connection per stage because native Windows multiplexing failed its probe; preserve previous environments and server security | None for current qualification; key removal, agent restart or changed host identity may require user action |
 | Q-16 | Support/security owner: trusted contact verification, international mailbox/IDNA and authenticated sender correlation policy | Contacts remain server-only unverified, bounded ASCII mailboxes; no send, account linking, portal grant or client selection by email alone | Future actual email/verification acceptance; registry work can proceed |
-| Q-17 | Engineering should diagnose browser-run intermittency. Earlier Windows task/axe observations remain unexplained. An initial Phase 3A Linux CI contact test also timed out before a contact POST was logged | Preserve full failed logs. Final local and hosted 87 passed with unchanged contact code. Keep existing caps/timeouts/retries and distinguish observed recovery from a root-cause fix | Runner reliability investigation and final integrated acceptance |
+| Q-17 | Engineering should diagnose remaining browser intermittency. Earlier Windows task/axe observations and the initial Phase 3A contact timeout remain unexplained | Phase 3B confirmed separate project-test interference through a shared-reader selection capture. Dedicated target 9e183ef plus preserved reader-session assertions passed local/hosted 96. Preserve failed logs and existing caps/timeouts/retries. The earlier contact cause remains unestablished | Remaining runner reliability branches and final integrated acceptance |
 | Q-18 | Product/security: whether task-owned external labels should later associate with client contacts, and how to preserve their distinct read scopes | Bounded supplied labels only, including internal projects; no contact lookup, matching, account creation or content grant | Future association policy only; Phase 2H can proceed |
 
 ## Backlog after core

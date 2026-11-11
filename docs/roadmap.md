@@ -60,6 +60,11 @@ entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
+Phase 3E-b selects ADR-0031 before code: bounded read-only IMAPS into existing
+quarantine, namespace binding, fenced leases and atomic durable checkpoints.
+Tests use controlled synthetic TLS only; Q-03/Q-16/Q-21 and live mailbox acceptance
+remain open. MIME verification/promotion/public replies retain later contracts.
+
 Phase 3E-a development is complete under ADR-0030: owner-only durable native mail
 quarantine intake, explicit source/UID identity, immutable raw variants, permanent
 collision replay and strictly private event receipts. Contracts 489b3fc preceded

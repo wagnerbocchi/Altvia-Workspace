@@ -1263,9 +1263,9 @@ with Session(make_engine(Settings())) as db,db.begin():
             assert mail_replay["variant_id"] == mail_first["variant_id"]
             intake_denial = """
 from sqlalchemy import text
-from altvia.config import Settings
+from altvia.config import DatabaseSettings
 from altvia.database import make_engine
-with make_engine(Settings()).connect() as db:
+with make_engine(DatabaseSettings()).connect() as db:
     for table in ('mailbox_sources','inbound_mail_envelopes','inbound_mail_variants'):
         for privilege in ('SELECT','INSERT','UPDATE','DELETE'):
             assert not db.scalar(text('SELECT has_table_privilege(current_user,:table,:privilege)'),

@@ -61,6 +61,10 @@ UID before/after BODY[] metadata. Reject extra/missing fields, mismatched identi
 oversize/truncated literals, malformed lines and unexpected responses. Enforce the
 2 MiB raw limit before imaplib allocates/reads the literal, not from a trusted
 RFC822.SIZE claim. Bound wire lines to16384 bytes and buffered reads as well.
+Cap aggregate control responses at65536 bytes with no literals; FETCH permits one
+literal and at most2097152+32768 total response bytes. Enforce these budgets in
+the wire reader before imaplib retains unsolicited frames. Check session epoch
+immediately after SEARCH, including empty results, and after each FETCH.
 
 Capture raw receipt and advance its checkpoint in one transaction, reusing the
 existing source lock, replay/collision rules and audit/outbox owner. A failure

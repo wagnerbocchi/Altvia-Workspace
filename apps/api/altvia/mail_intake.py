@@ -32,7 +32,11 @@ from altvia.models import (
 MAX_RAW_BYTES = 2097152
 MAX_VARIANTS = 16
 MAX_VERSION = 2147483647
-INTAKE_EVENTS = {"mailbox_source.created", "mailbox.message_quarantined"}
+INTAKE_EVENTS = {
+    "mailbox_source.created",
+    "mailbox.message_quarantined",
+    "mailbox.poll_checkpointed",
+}
 
 
 class IntakeError(ValueError):
@@ -56,6 +60,9 @@ class IntakeEventPayload(BaseModel):
     envelope_id: UUID | None = None
     variant_id: UUID | None = None
     state: str | None = None
+    uid_validity: str | None = None
+    last_uid: str | None = None
+    reason: str | None = None
 
 
 def validate_intake_event(event: OutboxEvent) -> None:
@@ -67,6 +74,17 @@ def validate_intake_event(event: OutboxEvent) -> None:
             raise ValueError("Invalid intake event")
         if payload.state not in {"quarantine", "collision"}:
             raise ValueError("Invalid intake event")
+    elif event.event_type == "mailbox.poll_checkpointed":
+        expected |= {"uid_validity", "last_uid", "reason"}
+        for value, minimum in ((payload.uid_validity, 1), (payload.last_uid, 0)):
+            if (
+                value is None
+                or not re.fullmatch(r"0|[1-9][0-9]{0,9}", value)
+                or not minimum <= int(value) <= 4294967295
+            ):
+                raise ValueError("Invalid poll event")
+        if payload.reason not in {"initial", "epoch_changed", "message_captured", "range_scanned"}:
+            raise ValueError("Invalid poll event")
     if (
         event.event_type not in INTAKE_EVENTS
         or event.aggregate_type != "mailbox_source"
@@ -80,8 +98,8 @@ def validate_intake_event(event: OutboxEvent) -> None:
         raise ValueError("Invalid intake event")
 
 
-def _record(
-    db: Session, source: MailboxSource, action: str, receipt: CaptureReceipt | None
+def record_intake_event(
+    db: Session, source: MailboxSource, action: str, details: dict[str, str] | None = None
 ) -> None:
     now, correlation = datetime.now(UTC), uuid4().hex
     payload: dict[str, str | None] = {
@@ -89,12 +107,8 @@ def _record(
         "actor_kind": "management_command",
         "source_id": str(source.id),
     }
-    if receipt is not None:
-        payload |= {
-            "envelope_id": str(receipt.envelope_id),
-            "variant_id": str(receipt.variant_id),
-            "state": receipt.state,
-        }
+    if details is not None:
+        payload |= details
     event = OutboxEvent(
         schema_version=1,
         aggregate_type="mailbox_source",
@@ -142,7 +156,7 @@ def register_source(db: Session, key: str, queue_id: UUID) -> MailboxSource:
     source = MailboxSource(source_key=key, queue_id=queue_id, version=1)
     db.add(source)
     db.flush()
-    _record(db, source, "mailbox_source.created", None)
+    record_intake_event(db, source, "mailbox_source.created")
     return source
 
 
@@ -198,11 +212,20 @@ def capture_message(
     source.version += 1
     db.flush()
     receipt = CaptureReceipt(source.id, envelope.id, variant.id, envelope.state, False)
-    _record(db, source, "mailbox.message_quarantined", receipt)
+    record_intake_event(
+        db,
+        source,
+        "mailbox.message_quarantined",
+        {
+            "envelope_id": str(receipt.envelope_id),
+            "variant_id": str(receipt.variant_id),
+            "state": receipt.state,
+        },
+    )
     return receipt
 
 
-class _SafeParser(argparse.ArgumentParser):
+class SafeMailParser(argparse.ArgumentParser):
     def error(self, message: str) -> NoReturn:
         # argparse's normal diagnostic includes invalid values and unknown args.
         print("Invalid mail intake arguments; use --help for supported options.", file=sys.stderr)
@@ -213,7 +236,7 @@ def main(argv: list[str] | None = None) -> int:
     if os.environ.get("ALTVIA_ALLOW_MAIL_INTAKE") != "1":
         print("Explicit ALTVIA_ALLOW_MAIL_INTAKE=1 is required.", file=sys.stderr)
         return 1
-    parser = _SafeParser(
+    parser = SafeMailParser(
         description="Restricted owner-side opaque mail quarantine", allow_abbrev=False
     )
     commands = parser.add_subparsers(dest="command", required=True)

@@ -186,3 +186,16 @@ mapping, ticket promotion, checkpoint advance or outbound action is performed.
 Strict redacted outbox metadata is acknowledged without shared activity. UID
 collisions retain all bounded variants and remain collisions on old receipt replay.
 Production mailbox/identity/retention/size policy stays Q-03/Q-09/Q-16/Q-21.
+
+## Read-only IMAPS polling
+
+ADR-0031 adds finite owner-only, certificate/hostname-verified implicit TLS into
+quarantine. No plaintext fallback, server flag/deletion writes or public content
+grant. LOGIN fields are bounded/quoted; credentials and server diagnostics never
+appear in CLI output. Bound individual lines/literals and cumulative control/FETCH
+bytes/literal count before imaplib can accumulate unsolicited data. Validate epoch
+after every SEARCH, including empty results, and every FETCH before persistence.
+Namespace binding follows successful authentication/selection and excludes rotated
+passwords. Current lease token/expiry fences all cursor/epoch/capture writes with
+no network-held transaction. Preserve old receipts on UIDVALIDITY reset. Actual
+mailbox/provider use remains separately authorized and subject to Q-03/Q-16/Q-21.

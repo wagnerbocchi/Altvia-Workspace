@@ -306,3 +306,14 @@ atomically commits version/audit/outbox. Equal content under a different identit
 is not deduplicated. No ticket/contact/participant association or checkpoint is
 added. API/worker raw-table privileges remain empty; no shared activity is created.
 Downgrade refuses surviving sources, receipts or intake event/audit history.
+
+## Phase 3E-b fenced IMAPS progress
+
+ADR-0031/migration b46087000018 add mailbox_poll_states with source PK/RESTRICT FK,
+nullable initialized namespace SHA256/uint32 UIDVALIDITY, last_uid0..4294967295 and
+paired operational lease token/until. SQL checks reject half-initialized namespace,
+invalid cursors and half-leases; a trigger preserves bound namespaces and forward
+progress within an epoch, permitting reset to0 only on a changed UIDVALIDITY.
+Source-row serialization and unexpired token checks fence every service write.
+Raw capture/cursor/source-version/audit/outbox commit together. No runtime table
+grant is added. Downgrade refuses state or durable private checkpoint history.

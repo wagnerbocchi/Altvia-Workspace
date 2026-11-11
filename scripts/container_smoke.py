@@ -167,6 +167,8 @@ def main():
     web_canary = ROOT / "apps/web/src" / (".env.container-test-" + uuid4().hex + ".ts")
     try:
         run(["node", "scripts/container_tls.mjs", str(secret_dir)])
+        env["ALTVIA_ALLOW_IMAP_TEST"] = "1"
+        run(["node", "scripts/imap_test_certificate.mjs", str(secret_dir)])
         with canary.open("x", encoding="utf-8") as source:
             source.write(password)
         with web_canary.open("x", encoding="utf-8") as source:
@@ -1253,6 +1255,37 @@ with Session(make_engine(Settings())) as db,db.begin():
             mail_collision = intake_command(*intake_args, data=mail_bytes + " collision")
             assert mail_collision["state"] == "collision"
             assert mail_collision["envelope_id"] == mail_first["envelope_id"]
+            # Feed reviewed fixture code, never untrusted message code, to the
+            # existing owner-only synthetic runner. TLS/key material stays private.
+            imap_code = (ROOT / "apps/api/tests/imap_fixture.py").read_text(encoding="utf-8")
+            imap_code += "\n" + (ROOT / "scripts/packaged_imap_proof.py").read_text(
+                encoding="utf-8"
+            )
+            imap_code += "\npackaged_imap_proof(imap_server)\n"
+            imap_proof = json.loads(
+                run(
+                    [
+                        *compose,
+                        "run",
+                        "--rm",
+                        "--no-deps",
+                        "-T",
+                        "-e",
+                        "ALTVIA_ALLOW_CONTAINER_TEST=1",
+                        "migrate",
+                        "python",
+                        "-c",
+                        imap_code,
+                    ],
+                    data=json.dumps(
+                        {
+                            "queue_id": ticket_queue_id,
+                            "cert": (secret_dir / "imap_cert").read_text(),
+                            "key": (secret_dir / "imap_key").read_text(),
+                        }
+                    ),
+                )
+            )
             run([*compose, "up", "-d", "--no-deps", "--no-build", "--force-recreate", "api"])
             await_ready(client)
             assert client.get("/api/v1/auth/me").status_code == 200
@@ -1261,12 +1294,38 @@ with Session(make_engine(Settings())) as db,db.begin():
             mail_replay = intake_command(*intake_args, data=mail_bytes)
             assert mail_replay["replayed"] and mail_replay["state"] == "collision"
             assert mail_replay["variant_id"] == mail_first["variant_id"]
+            poll_restart = json.loads(
+                run(
+                    [
+                        *compose,
+                        "exec",
+                        "-T",
+                        "postgres",
+                        "psql",
+                        "-X",
+                        "-qAt",
+                        "-v",
+                        "ON_ERROR_STOP=1",
+                        "-U",
+                        "altvia_owner",
+                        "-d",
+                        "altvia_test",
+                        "-v",
+                        "source=" + imap_proof["source_id"],
+                    ],
+                    data="SELECT json_build_object('last_uid',last_uid,"
+                    "'released',lease_token IS NULL) "
+                    "FROM mailbox_poll_states WHERE source_id=:'source'::uuid;",
+                )
+            )
+            assert poll_restart == {"last_uid": 1, "released": True}
             intake_denial = """
 from sqlalchemy import text
 from altvia.config import DatabaseSettings
 from altvia.database import make_engine
 with make_engine(DatabaseSettings()).connect() as db:
-    for table in ('mailbox_sources','inbound_mail_envelopes','inbound_mail_variants'):
+    for table in ('mailbox_sources','inbound_mail_envelopes',
+                  'inbound_mail_variants','mailbox_poll_states'):
         for privilege in ('SELECT','INSERT','UPDATE','DELETE'):
             assert not db.scalar(text('SELECT has_table_privilege(current_user,:table,:privilege)'),
                                  {'table':table,'privilege':privilege})
@@ -1288,6 +1347,7 @@ with make_engine(DatabaseSettings()).connect() as db:
                 encoding="utf-8",
             )
             print("Packaged opaque mail quarantine, collision, replay and runtime denial passed.")
+            print("Packaged read-only TLS IMAPS, checkpoint restart and runtime denial passed.")
             assert client.get(path).json()["name"] == "Visible"
             # Client/project delegation and three project member mutations
             # advance this separate account from 10 to 15.

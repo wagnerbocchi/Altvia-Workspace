@@ -533,3 +533,14 @@ Raw messages do not enter ticket, identity or queue activity APIs. Source and
 capture audit/outbox records contain strict identifiers/state only; their consumer
 acknowledges without producing a shared activity record. Actual IMAP, verified
 correlation, MIME display, public response and SMTP retain subsequent contracts.
+
+## Phase 3E-b owner-only IMAPS collection
+
+ADR-0031 adds no HTTP/OpenAPI surface. The restricted poll command uses verified
+implicit TLS and read-only INBOX/EXAMINE/BODY.PEEK into existing quarantine.
+External secret-backed configuration is bound to its source namespace only after
+authenticated selection; password rotation preserves it. A finite lease fences
+atomic capture/checkpoint/reset transactions with no network I/O inside them.
+Strict private checkpoint events contain source/UID/reason metadata only and
+produce no shared activity. Raw/poll-state tables remain inaccessible to both
+runtime roles. No sender proof, ticket promotion, MIME display or SMTP is inferred.

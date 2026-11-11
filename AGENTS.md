@@ -27,6 +27,11 @@
   state on every replay. Neither runtime role receives raw-table privileges.
   Strict intake metadata never creates shared activity, identity proof, ticket
   promotion, checkpoint advancement or outbound delivery.
+- Read-only IMAPS uses ADR-0031: owner-only INBOX/EXAMINE/BODY.PEEK, verified TLS,
+  bounded wire reads and namespace binding after authenticated selection. Fence
+  checkpoint/reset/capture writes with the current unexpired poll token, keep
+  network I/O outside DB transactions and preserve all UIDVALIDITY epochs.
+  Poll metadata is private; neither runtime role gains poll-state/raw-table access.
 - Administrative account/role mutations must reuse altvia.management's lock protocol,
   last-active-admin guard, session invalidation and audit/outbox. A profile edit
   never grants roles; platform administration never bypasses customer scope.

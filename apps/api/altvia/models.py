@@ -190,6 +190,28 @@ class MailboxSource(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class MailboxPollState(Base):
+    __tablename__ = "mailbox_poll_states"
+    __table_args__ = (
+        CheckConstraint("last_uid BETWEEN 0 AND 4294967295", name="ck_poll_uid"),
+        CheckConstraint(
+            "(namespace_hash IS NULL AND uid_validity IS NULL AND last_uid=0) OR "
+            "(namespace_hash IS NOT NULL AND uid_validity IS NOT NULL "
+            "AND namespace_hash ~ '^[0-9a-f]{64}$' AND uid_validity BETWEEN 1 AND 4294967295)",
+            name="ck_poll_namespace",
+        ),
+        CheckConstraint("(lease_token IS NULL)=(lease_until IS NULL)", name="ck_poll_lease"),
+    )
+    source_id: Mapped[UUID] = mapped_column(
+        ForeignKey("mailbox_sources.id", ondelete="RESTRICT"), primary_key=True
+    )
+    namespace_hash: Mapped[str | None] = mapped_column(String(64))
+    uid_validity: Mapped[int | None] = mapped_column(BigInteger)
+    last_uid: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    lease_token: Mapped[UUID | None]
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class InboundMailEnvelope(Base):
     __tablename__ = "inbound_mail_envelopes"
     __table_args__ = (

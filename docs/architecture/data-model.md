@@ -292,3 +292,17 @@ contains actor, member ID and role only. No new runtime table privilege is neede
 Downgrade refuses queue grants or durable access history and preserves older data.
 Ticket rows, conversation, attachments and transport follow later increments.
 The earlier entity dictionary remains the planned model for later ticket content.
+
+## Phase 3E-a private mail intake ledger
+
+ADR-0030/migration b46087000017 add mailbox_sources (unique immutable ASCII key,
+queue RESTRICT FK, positive aggregate version), inbound_mail_envelopes (unique
+source/uint32 UIDVALIDITY/UID, permanent quarantine/collision) and immutable
+inbound_mail_variants (envelope RESTRICT FK, unique raw SHA256, opaque bounded
+BYTEA). SQL enforces raw1..2097152 bytes and hash equality with built-in SHA256.
+Source identity and envelope identity/collision have mutation guards. Owner-side
+capture serializes on source, limits 16 variants, preserves original bytes and
+atomically commits version/audit/outbox. Equal content under a different identity
+is not deduplicated. No ticket/contact/participant association or checkpoint is
+added. API/worker raw-table privileges remain empty; no shared activity is created.
+Downgrade refuses surviving sources, receipts or intake event/audit history.

@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_valida
 from sqlalchemy import Engine, and_, or_, select
 from sqlalchemy.orm import Session
 
+from altvia.mail_intake import INTAKE_EVENTS, validate_intake_event
 from altvia.models import ActivityEvent, AuditLog, OutboxEvent, ProcessedEvent
 from altvia.ticket_schemas import TICKET_TRANSITIONS, Status
 from altvia.work_schemas import WORK_TRANSITIONS
@@ -306,6 +307,21 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
         if db.get(ProcessedEvent, (CONSUMER, event_id)) is not None:
             event.status, event.lease_until, event.last_error_code = "delivered", None, None
             return False
+        if event.event_type in INTAKE_EVENTS:
+            # Unclassified mail has no shared-feed audience. Acknowledge only its
+            # strictly redacted metadata; raw tables remain inaccessible here.
+            try:
+                validate_intake_event(event)
+            except (ValueError, ValidationError):
+                event.status, event.last_error_code, event.lease_until = (
+                    "dead",
+                    "invalid_event",
+                    None,
+                )
+                return False
+            db.add(ProcessedEvent(consumer=CONSUMER, event_id=event_id, processed_at=now))
+            event.status, event.lease_until, event.last_error_code = "delivered", None, None
+            return True
         if (
             event.event_type
             not in EVENT_TYPES

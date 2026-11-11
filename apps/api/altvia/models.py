@@ -11,6 +11,7 @@ from sqlalchemy import (
     ForeignKeyConstraint,
     Identity,
     Index,
+    LargeBinary,
     String,
     Text,
     UniqueConstraint,
@@ -174,6 +175,53 @@ class LoginBucket(Base):
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
     window: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     attempts: Mapped[int]
+
+
+class MailboxSource(Base):
+    __tablename__ = "mailbox_sources"
+    __table_args__ = (
+        CheckConstraint("source_key ~ '^[A-Za-z0-9_-]{1,64}$'", name="ck_mail_source_key"),
+        CheckConstraint("version > 0", name="ck_mail_source_version"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    source_key: Mapped[str] = mapped_column(String(64), unique=True)
+    queue_id: Mapped[UUID] = mapped_column(ForeignKey("ticket_queues.id", ondelete="RESTRICT"))
+    version: Mapped[int] = mapped_column(default=1, server_default="1")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class InboundMailEnvelope(Base):
+    __tablename__ = "inbound_mail_envelopes"
+    __table_args__ = (
+        UniqueConstraint("source_id", "uid_validity", "uid", name="uq_mail_envelope_identity"),
+        CheckConstraint("uid_validity BETWEEN 1 AND 4294967295", name="ck_mail_uid_validity"),
+        CheckConstraint("uid BETWEEN 1 AND 4294967295", name="ck_mail_uid"),
+        CheckConstraint("state IN ('quarantine','collision')", name="ck_mail_envelope_state"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    source_id: Mapped[UUID] = mapped_column(ForeignKey("mailbox_sources.id", ondelete="RESTRICT"))
+    uid_validity: Mapped[int] = mapped_column(BigInteger)
+    uid: Mapped[int] = mapped_column(BigInteger)
+    state: Mapped[str] = mapped_column(
+        String(20), default="quarantine", server_default="quarantine"
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class InboundMailVariant(Base):
+    __tablename__ = "inbound_mail_variants"
+    __table_args__ = (
+        UniqueConstraint("envelope_id", "raw_sha256", name="uq_mail_variant_hash"),
+        CheckConstraint("octet_length(raw_message) BETWEEN 1 AND 2097152", name="ck_mail_raw_size"),
+        CheckConstraint("raw_sha256=encode(sha256(raw_message),'hex')", name="ck_mail_raw_hash"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    envelope_id: Mapped[UUID] = mapped_column(
+        ForeignKey("inbound_mail_envelopes.id", ondelete="RESTRICT")
+    )
+    raw_message: Mapped[bytes] = mapped_column(LargeBinary)
+    raw_sha256: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class Team(Base):

@@ -127,6 +127,27 @@ def main():
             data=json.dumps(payload) if payload is not None else None,
         )
 
+    def intake_command(*arguments, data=None):
+        return json.loads(
+            run(
+                [
+                    *compose,
+                    "run",
+                    "--rm",
+                    "--no-deps",
+                    "-T",
+                    "-e",
+                    "ALTVIA_ALLOW_MAIL_INTAKE=1",
+                    "migrate",
+                    "python",
+                    "-m",
+                    "altvia.mail_intake",
+                    *arguments,
+                ],
+                data=data,
+            )
+        )
+
     def container(service):
         container_id = run([*compose, "ps", "-a", "-q", service]).strip()
         return json.loads(run([args.engine, "inspect", container_id]))[0]
@@ -1208,11 +1229,65 @@ with Session(make_engine(Settings())) as db,db.begin():
                 ).status_code
                 == 403
             )
+            # Exercise the actual owner-only command. These fixed test bytes are
+            # opaque quarantine input, never a live provider or customer import.
+            intake_command(
+                "register-source",
+                "--source-key",
+                "packaged-synthetic",
+                "--queue-id",
+                ticket_queue_id,
+            )
+            intake_args = (
+                "capture",
+                "--source-key",
+                "packaged-synthetic",
+                "--uid-validity",
+                "1",
+                "--uid",
+                "1",
+            )
+            mail_bytes = "From: synthetic@example.test\r\n\r\nOpaque packaged quarantine"
+            mail_first = intake_command(*intake_args, data=mail_bytes)
+            assert mail_first["state"] == "quarantine" and not mail_first["replayed"]
+            mail_collision = intake_command(*intake_args, data=mail_bytes + " collision")
+            assert mail_collision["state"] == "collision"
+            assert mail_collision["envelope_id"] == mail_first["envelope_id"]
             run([*compose, "up", "-d", "--no-deps", "--no-build", "--force-recreate", "api"])
             await_ready(client)
             assert client.get("/api/v1/auth/me").status_code == 200
             run([*compose, "up", "-d", "--no-deps", "--force-recreate", "postgres"])
             await_ready(client)
+            mail_replay = intake_command(*intake_args, data=mail_bytes)
+            assert mail_replay["replayed"] and mail_replay["state"] == "collision"
+            assert mail_replay["variant_id"] == mail_first["variant_id"]
+            intake_denial = """
+from sqlalchemy import text
+from altvia.config import Settings
+from altvia.database import make_engine
+with make_engine(Settings()).connect() as db:
+    for table in ('mailbox_sources','inbound_mail_envelopes','inbound_mail_variants'):
+        for privilege in ('SELECT','INSERT','UPDATE','DELETE'):
+            assert not db.scalar(text('SELECT has_table_privilege(current_user,:table,:privilege)'),
+                                 {'table':table,'privilege':privilege})
+"""
+            exec_api(intake_denial)
+            run([*compose, "exec", "-T", "worker", "python", "-c", intake_denial])
+            (work / "mail-intake-proof.json").write_text(
+                json.dumps(
+                    {
+                        "synthetic_only": True,
+                        "opaque_capture": True,
+                        "collision_preserved": True,
+                        "restart_replay": True,
+                        "api_worker_raw_privileges": False,
+                        "outbound_delivery": False,
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+            print("Packaged opaque mail quarantine, collision, replay and runtime denial passed.")
             assert client.get(path).json()["name"] == "Visible"
             # Client/project delegation and three project member mutations
             # advance this separate account from 10 to 15.

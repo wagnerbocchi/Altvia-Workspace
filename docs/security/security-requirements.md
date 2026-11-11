@@ -172,3 +172,17 @@ supplies no authority. Metadata grants do not supply customer ticket content
 permissions. Future ticket reads require the ticket's explicit customer ceiling
 and its separately implemented queue role. Queue events are redacted and scoped
 to their queue activity feed. They never enter identity history.
+
+## Native raw mail quarantine intake
+
+ADR-0030's first native intake is restricted to the database owner and an explicit
+operator opt-in. Neither API nor worker has raw-table privileges; configuration
+administration does not grant an audience for unclassified customer mail. Capture
+accepts bounded binary stdin, never credentials/content as CLI arguments. Errors
+and minimal receipts expose no raw bytes, hashes, headers, addresses or secrets.
+Input remains opaque quarantine, including hostile/malformed bytes. No MIME
+rendering, external fetch, attachment extraction, identity verification, customer
+mapping, ticket promotion, checkpoint advance or outbound action is performed.
+Strict redacted outbox metadata is acknowledged without shared activity. UID
+collisions retain all bounded variants and remain collisions on old receipt replay.
+Production mailbox/identity/retention/size policy stays Q-03/Q-09/Q-16/Q-21.

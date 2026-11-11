@@ -22,6 +22,11 @@
   existing queue binding, default none. Queue/customer authority remains required.
   Preserve old omitted-field POST fingerprints and event envelopes. Notes are
   immutable; denied callers receive no note body/ID/count or activity event.
+- Native raw mail intake uses ADR-0030's owner-only binary-stdin quarantine.
+  Preserve source/UIDVALIDITY/UID identity, immutable raw variants and collision
+  state on every replay. Neither runtime role receives raw-table privileges.
+  Strict intake metadata never creates shared activity, identity proof, ticket
+  promotion, checkpoint advancement or outbound delivery.
 - Administrative account/role mutations must reuse altvia.management's lock protocol,
   last-active-admin guard, session invalidation and audit/outbox. A profile edit
   never grants roles; platform administration never bypasses customer scope.

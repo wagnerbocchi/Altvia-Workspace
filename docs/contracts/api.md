@@ -521,3 +521,15 @@ rechecks present configuration authority and valid If-Match syntax before IDs,
 never regranting or disclosing current state. Fresh POST alone compares version.
 Unknown/inactive account422 invalid_queue_member, stale409, missing header428,
 hidden404, readable forbidden403. No ticket content route is implemented here.
+
+## Phase 3E-a restricted mail quarantine boundary
+
+ADR-0030 adds no HTTP operation or OpenAPI schema. Owner-only register-source and
+capture commands consume a reviewed source key/queue and bounded binary stdin.
+UIDVALIDITY/UID identity and immutable raw variants remain private to the database
+owner. Minimal receipts acknowledge commit, replay and permanent collision only.
+No platform, queue, customer or project role gains unclassified mail content.
+Raw messages do not enter ticket, identity or queue activity APIs. Source and
+capture audit/outbox records contain strict identifiers/state only; their consumer
+acknowledges without producing a shared activity record. Actual IMAP, verified
+correlation, MIME display, public response and SMTP retain subsequent contracts.

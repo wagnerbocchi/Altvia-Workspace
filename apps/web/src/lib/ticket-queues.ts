@@ -6,6 +6,7 @@ export type CategoryRecord = components["schemas"]["CategoryOutput"];
 export type QueuePatch = components["schemas"]["QueuePatch"];
 export type QueueMember = components["schemas"]["QueueMemberOutput"];
 export type QueueMemberRole = components["schemas"]["QueueMemberRole"]["role_name"];
+export type NoteAccess = QueueMember["note_access"];
 export type QueueCreate = components["schemas"]["QueueCreate"];
 
 export function createQueueApi(csrf: string, onAuthError: (error: unknown) => void) {
@@ -49,8 +50,8 @@ export function createQueueApi(csrf: string, onAuthError: (error: unknown) => vo
     async addMember(id: string, body: components["schemas"]["QueueMemberAdd"], version: number, key: string): Promise<components["schemas"]["QueueMemberReceipt"]> {
       return (await request(`${path(id)}/members`, write("POST", body, version, key))).json();
     },
-    async changeMember(id: string, userId: string, role: QueueMemberRole | null, version: number) {
-      const response = await request(`${path(id)}/members/${encodeURIComponent(userId)}`, write(role === null ? "DELETE" : "PATCH", role === null ? undefined : { role_name: role }, version));
+    async changeMember(id: string, userId: string, role: QueueMemberRole | null, version: number, noteAccess?: NoteAccess) {
+      const response = await request(`${path(id)}/members/${encodeURIComponent(userId)}`, write(role === null ? "DELETE" : "PATCH", role === null ? undefined : { role_name: role, ...(noteAccess === undefined ? {} : { note_access: noteAccess }) }, version));
       if (!response.headers.get("ETag")) throw Error("Resource version not confirmed");
     },
     async activity(id: string, cursor: string | null, signal?: AbortSignal): Promise<components["schemas"]["ActivityPage"]> {

@@ -61,6 +61,15 @@ export function createTicketApi(csrf: string, onAuthError: (error: unknown) => v
     async activity(id: string, cursor: string | null, signal?: AbortSignal): Promise<components["schemas"]["ActivityPage"]> {
       return (await request(`${path(id)}/activity${pageQuery(cursor)}`, { signal })).json();
     },
+    async notes(id: string, cursor: string | null, signal?: AbortSignal): Promise<components["schemas"]["TicketNotePage"]> {
+      return (await request(`${path(id)}/notes${pageQuery(cursor)}`, { signal })).json();
+    },
+    async note(id: string, noteId: string): Promise<components["schemas"]["TicketNoteOutput"]> {
+      return (await request(`${path(id)}/notes/${encodeURIComponent(noteId)}`)).json();
+    },
+    async addNote(id: string, body: components["schemas"]["TicketNoteCreate"], version: number, key: string): Promise<components["schemas"]["TicketNoteReceipt"]> {
+      return (await request(`${path(id)}/notes`, write("POST", body, version, key))).json();
+    },
   };
 }
 export type TicketApi = ReturnType<typeof createTicketApi>;

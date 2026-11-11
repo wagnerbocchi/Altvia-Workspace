@@ -39,6 +39,7 @@ export function Paging({ paging, next, label, disabled = false }: {
     filas: ["Filas anteriores", "Proximas filas"],
     categorias: ["Categorias anteriores", "Proximas categorias"],
     chamados: ["Chamados anteriores", "Proximos chamados"],
+    notas: ["Notas anteriores", "Proximas notas"],
     solicitante: ["Solicitantes anteriores", "Proximos solicitantes"],
     categoria: ["Categorias anteriores", "Proximas categorias"],
     responsavel: ["Responsaveis anteriores", "Proximos responsaveis"],

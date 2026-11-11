@@ -3,30 +3,36 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import type { WorkspaceSession } from "@/components/workspace-session";
 import { LoadingRows, Paging, ReadError, usePaging, useTeamWrite, writeError } from "@/components/team-admin/common";
-import type { QueueApi, QueueMember, QueueMemberRole } from "@/lib/ticket-queues";
+import type { NoteAccess, QueueApi, QueueMember, QueueMemberRole } from "@/lib/ticket-queues";
 import { ApiError } from "@/lib/http";
 
 const roles: Record<QueueMemberRole, string> = { viewer: "Consulta", agent: "Agente", operations_manager: "Gestor de atendimento" };
+const noteAccessLabels: Record<NoteAccess, string> = { none: "Sem acesso a notas", read: "Somente leitura de notas", write: "Leitura e escrita de notas" };
 const schema = z.object({
   email: z.string().trim().min(3, "Informe o e-mail da conta.").max(254, "Use ate 254 caracteres.")
     .refine(value => { const parts = value.split("@"); return parts.length === 2 && !!parts[0] && parts[1].includes(".") && !/\s/.test(value); }, "Informe um e-mail valido."),
   role_name: z.enum(["viewer", "agent", "operations_manager"]),
+  note_access: z.enum(["none", "read", "write"]),
 });
 type Fields = z.infer<typeof schema>;
 type Editor = { member: QueueMember; version: number; remove: boolean };
 type Intent = { version: number } & (
-  { kind: "add"; email: string; role_name: QueueMemberRole; key: string }
-  | { kind: "change"; userId: string; role: QueueMemberRole | null }
+  { kind: "add"; email: string; role_name: QueueMemberRole; note_access: NoteAccess; key: string }
+  | { kind: "change"; userId: string; role: QueueMemberRole | null; noteAccess?: NoteAccess }
 );
 
 function RoleOptions() {
   return <>{Object.entries(roles).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</>;
+}
+
+function NoteAccessOptions({ viewer }: { viewer: boolean }) {
+  return <>{Object.entries(noteAccessLabels).map(([value, label]) => <option value={value} key={value} disabled={viewer && value !== "none"}>{label}</option>)}</>;
 }
 
 export function QueueMemberDirectory({ id, api, session }: { id: string; api: QueueApi; session: WorkspaceSession }) {
@@ -37,11 +43,13 @@ export function QueueMemberDirectory({ id, api, session }: { id: string; api: Qu
   const [creating, setCreating] = useState(false), [addVersion, setAddVersion] = useState(1);
   const [reviewedAdd, setReviewedAdd] = useState<Extract<Intent, { kind: "add" }> | null>(null);
   const [editor, setEditor] = useState<Editor | null>(null), [role, setRole] = useState<QueueMemberRole>("viewer");
+  const [noteAccess, setNoteAccess] = useState<NoteAccess>("none");
   const [selfConfirm, setSelfConfirm] = useState(false);
   const [needsReview, setNeedsReview] = useState(false), [notice, setNotice] = useState("");
   const heading = useRef<HTMLHeadingElement>(null);
   const grantHeading = useRef<HTMLHeadingElement>(null);
-  const form = useForm<Fields>({ resolver: zodResolver(schema), defaultValues: { email: "", role_name: "agent" } });
+  const form = useForm<Fields>({ resolver: zodResolver(schema), defaultValues: { email: "", role_name: "agent", note_access: "none" } });
+  const newRole = useWatch({ control: form.control, name: "role_name" });
   const refresh = async () => { await Promise.all([parent.refetch({ throwOnError: true }), query.refetch({ throwOnError: true })]); };
   const close = () => {
     setCreating(false); setEditor(null); setSelfConfirm(false); setReviewedAdd(null); form.reset();
@@ -52,8 +60,8 @@ export function QueueMemberDirectory({ id, api, session }: { id: string; api: Qu
     if (session.isCurrent()) { setNeedsReview(false); close(); }
   };
   const write = useTeamWrite(session, async (intent: Intent) => {
-    if (intent.kind === "add") return api.addMember(id, { email: intent.email, role_name: intent.role_name }, intent.version, intent.key);
-    await api.changeMember(id, intent.userId, intent.role, intent.version);
+    if (intent.kind === "add") return api.addMember(id, { email: intent.email, role_name: intent.role_name, note_access: intent.note_access }, intent.version, intent.key);
+    await api.changeMember(id, intent.userId, intent.role, intent.version, intent.noteAccess);
     return { user_id: intent.userId };
   }, result => {
     setNotice("Solicitacao confirmada. Confira o acesso atual na lista.");
@@ -69,6 +77,8 @@ export function QueueMemberDirectory({ id, api, session }: { id: string; api: Qu
   const consistent = parent.isSuccess && query.isSuccess && parent.data.version === query.data.queue_version;
   const blocked = !allowed || !consistent || parent.isFetching || query.isFetching || write.locked || needsReview;
   const grantBlocked = blocked || !parent.data?.active || !parent.data?.team_active;
+  const reduction = !!editor && role === editor.member.role_name && ["none", "read", "write"].indexOf(noteAccess) < ["none", "read", "write"].indexOf(editor.member.note_access);
+  const changeBlocked = blocked || (!reduction && (!parent.data?.active || !parent.data?.team_active || !editor?.member.active));
   const editingSelf = editor?.member.id === session.user.id;
   const sessionWarning = "Sua sessao sera encerrada. Sera necessario entrar novamente.";
   const review = async () => { await refresh(); if (session.isCurrent()) { close(); setNeedsReview(false); setNotice(""); } };
@@ -76,12 +86,13 @@ export function QueueMemberDirectory({ id, api, session }: { id: string; api: Qu
     if (blocked) return;
     setCreating(false); setSelfConfirm(false); setNotice("");
     setRole(member.role_name as QueueMemberRole);
+    setNoteAccess(member.note_access);
     setEditor({ member: { ...member }, version: query.data!.queue_version, remove });
   };
   const submitRole = () => {
-    if (!editor || blocked) return;
-    if (editingSelf && role !== editor?.member.role_name && !selfConfirm) { setSelfConfirm(true); return; }
-    write.submit({ kind: "change", userId: editor.member.id, role, version: editor.version });
+    if (!editor || changeBlocked) return;
+    if (editingSelf && (role !== editor.member.role_name || noteAccess !== editor.member.note_access) && !selfConfirm) { setSelfConfirm(true); return; }
+    write.submit({ kind: "change", userId: editor.member.id, role, noteAccess, version: editor.version });
   };
 
   return <div className="admin-workspace">
@@ -96,8 +107,8 @@ export function QueueMemberDirectory({ id, api, session }: { id: string; api: Qu
         <h2 id="member-list-heading">Acessos diretos</h2>
         <Button variant="outline" disabled={query.isFetching || parent.isFetching || write.pending} onClick={() => void refresh().catch(() => {})}>Atualizar membros</Button>
         {query.isPending ? <LoadingRows label="Carregando membros..." /> : query.isError ? <ReadError retry={() => void refresh().catch(() => {})} /> : !parent.isSuccess ? null : query.data.items.length ? <ul className="record-list" aria-label="Membros da fila">{query.data.items.map(member => <li className="member-row" key={member.id}>
-          <div className="record-text"><strong>{member.display_name}{member.id === session.user.id && " (voce)"}</strong><span className="record-meta">{roles[member.role_name as QueueMemberRole] ?? "Acesso da fila"}</span><span className="record-meta">{member.active ? "Conta ativa" : "Conta desativada"}</span></div>
-          {allowed && <div className="action-row"><Button variant="outline" disabled={blocked || !!editor || creating || (!parent.data.active || !parent.data.team_active)} onClick={() => edit(member, false)}>Alterar papel</Button><Button variant="outline" disabled={blocked || !!editor || creating} onClick={() => edit(member, true)}>Remover acesso</Button></div>}
+          <div className="record-text"><strong>{member.display_name}{member.id === session.user.id && " (voce)"}</strong><span className="record-meta">{roles[member.role_name as QueueMemberRole] ?? "Acesso da fila"}</span><span className="record-meta">{noteAccessLabels[member.note_access]}</span><span className="record-meta">{member.active ? "Conta ativa" : "Conta desativada"}</span></div>
+          {allowed && <div className="action-row"><Button variant="outline" disabled={blocked || !!editor || creating || ((!parent.data.active || !parent.data.team_active || !member.active) && member.note_access === "none")} onClick={() => edit(member, false)}>Alterar papel</Button><Button variant="outline" disabled={blocked || !!editor || creating} onClick={() => edit(member, true)}>Remover acesso</Button></div>}
         </li>)}</ul> : <p>Nenhum membro nesta pagina.</p>}
         <Paging paging={paging} next={query.data?.next_cursor} label="membros da fila" disabled={query.isFetching || write.locked || !!editor || creating || needsReview} />
         {parent.isSuccess && query.isSuccess && !consistent && <p role="alert">A lista mudou. Atualize os membros antes de alterar um acesso.</p>}
@@ -105,7 +116,7 @@ export function QueueMemberDirectory({ id, api, session }: { id: string; api: Qu
       <section className="admin-section" aria-labelledby="member-access-heading">
         <h2 id="member-access-heading">Acesso a fila</h2>
         {parent.isSuccess && !allowed && <p>Acesso somente para consulta.</p>}
-        {parent.isSuccess && (!parent.data.active || !parent.data.team_active) && <p>Restaure a fila e a equipe para conceder acesso ou alterar papeis. A remocao continua disponivel.</p>}
+        {parent.isSuccess && (!parent.data.active || !parent.data.team_active) && <p>Restaure a fila e a equipe para conceder acesso ou alterar papeis. A remocao e a reducao de acesso a notas continuam disponiveis.</p>}
         <p className="field-help">Somente contas existentes. O acesso aos clientes e administrado separadamente. O papel Gestor de atendimento tem escopo na fila. A configuracao exige permissao independente.</p>
         {editor ? <div className="confirmation" role="group" aria-labelledby="member-edit-heading">
           <h3 id="member-edit-heading" tabIndex={-1} ref={heading}>{editor.remove ? "Remover acesso direto?" : "Alterar papel na fila"}</h3>
@@ -113,18 +124,22 @@ export function QueueMemberDirectory({ id, api, session }: { id: string; api: Qu
           {editor.remove ? <><p>O historico sera preservado. Permissoes de configuracao e de clientes permanecem independentes.</p>{editingSelf && <p>{sessionWarning}</p>}
             <div className="action-row add-member-action"><Button disabled={blocked} onClick={() => write.submit({ kind: "change", userId: editor.member.id, role: null, version: editor.version })}>Confirmar remocao</Button><Button variant="outline" disabled={write.locked} onClick={close}>Cancelar alteracao</Button></div>
           </> : <>
-            <label htmlFor="member-role">Novo papel</label><select id="member-role" value={role} onChange={event => { setRole(event.target.value as QueueMemberRole); setSelfConfirm(false); }} disabled={blocked}><RoleOptions /></select>
-            {editingSelf && role !== editor?.member.role_name && <p>{sessionWarning}</p>}
+            <label htmlFor="member-role">Novo papel</label><select id="member-role" value={role} onChange={event => { setRole(event.target.value as QueueMemberRole); if (event.target.value === "viewer") setNoteAccess("none"); setSelfConfirm(false); }} disabled={blocked || !parent.data?.active || !parent.data?.team_active || !editor.member.active}><RoleOptions /></select>
+            <label htmlFor="member-note-access">Acesso a notas internas</label><select id="member-note-access" value={noteAccess} onChange={event => { setNoteAccess(event.target.value as NoteAccess); setSelfConfirm(false); }} disabled={blocked}><NoteAccessOptions viewer={role === "viewer"} /></select>
+            <p className="field-help">Permissao independente do papel e do responsavel pelo chamado. Escrita inclui leitura. Consulta nao permite notas.</p>
+            {editingSelf && (role !== editor.member.role_name || noteAccess !== editor.member.note_access) && <p>{sessionWarning}</p>}
             {selfConfirm && <p role="alert">Confirme a alteracao do seu proprio acesso.</p>}
-            <div className="action-row add-member-action"><Button disabled={grantBlocked} onClick={submitRole}>{selfConfirm ? "Confirmar meu novo papel" : "Salvar papel"}</Button><Button variant="outline" disabled={write.locked} onClick={close}>Cancelar alteracao</Button></div>
+            <div className="action-row add-member-action"><Button disabled={changeBlocked} onClick={submitRole}>{selfConfirm ? "Confirmar meu novo papel" : "Salvar papel"}</Button><Button variant="outline" disabled={write.locked} onClick={close}>Cancelar alteracao</Button></div>
           </>}
         </div> : creating ? <form noValidate onSubmit={form.handleSubmit(value => { if (!grantBlocked && !reviewedAdd) setReviewedAdd(Object.freeze({ kind: "add", ...value, version: addVersion, key: crypto.randomUUID() })); })}>
           <div><label htmlFor="member-email">E-mail da conta</label><input id="member-email" type="email" autoComplete="off" autoCapitalize="none" spellCheck={false} maxLength={254} {...form.register("email")} disabled={grantBlocked || !!reviewedAdd} aria-invalid={!!form.formState.errors.email} aria-describedby="member-email-help member-email-error" /><p id="member-email-error" className="field-error" role="alert">{form.formState.errors.email?.message}</p></div>
           <p id="member-email-help" className="field-help">Confira o endereco antes de confirmar. Se usar seu proprio e-mail para alterar seu acesso, sera necessario entrar novamente.</p>
-          <label htmlFor="member-new-role">Papel na fila</label><select id="member-new-role" {...form.register("role_name")} disabled={grantBlocked || !!reviewedAdd}><RoleOptions /></select>
+          <label htmlFor="member-new-role">Papel na fila</label><select id="member-new-role" {...form.register("role_name")} onChange={event => { form.setValue("role_name", event.target.value as QueueMemberRole); if (event.target.value === "viewer") form.setValue("note_access", "none"); }} disabled={grantBlocked || !!reviewedAdd}><RoleOptions /></select>
+          <label htmlFor="member-new-note-access">Acesso a notas internas</label><select id="member-new-note-access" {...form.register("note_access")} disabled={grantBlocked || !!reviewedAdd}><NoteAccessOptions viewer={newRole === "viewer"} /></select>
           {reviewedAdd ? <div className="confirmation" role="group" aria-labelledby="member-grant-heading">
             <h3 id="member-grant-heading" ref={grantHeading} tabIndex={-1}>Confirmar papel na fila?</h3>
             <p>{reviewedAdd.email} - {roles[reviewedAdd.role_name]}</p>
+            <p>{noteAccessLabels[reviewedAdd.note_access]}</p>
             <p>O papel selecionado substitui qualquer acesso direto ja existente desta conta.</p>
             <p>Se esta for sua conta, sera necessario entrar novamente. A configuracao da fila tem permissao independente.</p>
             <div className="action-row add-member-action"><Button type="button" disabled={grantBlocked} onClick={() => write.submit(reviewedAdd)}>{write.pending ? "Enviando..." : "Conceder acesso"}</Button><Button type="button" variant="outline" disabled={write.locked} onClick={close}>Cancelar cadastro</Button></div>

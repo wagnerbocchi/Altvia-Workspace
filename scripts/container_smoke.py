@@ -1032,6 +1032,74 @@ with Session(make_engine(WorkerSettings())) as db:
                                     },
                                 )
                                 assert changed_ticket.status_code == 200
+                            # A queue manager still has no private-note permission
+                            # until an independent configuration manager delegates it.
+                            assert contributor.get(ticket_path + "/notes").status_code == 403
+                            assert (
+                                contributor.post(
+                                    ticket_path + "/notes",
+                                    json={"body_text": "Denied private note"},
+                                    headers={"If-Match": '"6"', "Idempotency-Key": uuid4().hex},
+                                ).status_code
+                                == 403
+                            )
+                            delegated = client.patch(
+                                ticket_queue_path + "/members/" + reader_id,
+                                json={"role_name": "operations_manager", "note_access": "write"},
+                                headers={"If-Match": '"3"'},
+                            )
+                            assert delegated.status_code == 204
+                            assert contributor.get("/api/v1/auth/me").status_code == 401
+                            note_login = contributor.post(
+                                "/api/v1/auth/sessions",
+                                json={"email": email, "password": password},
+                            )
+                            assert note_login.status_code == 201
+                            contributor.headers["X-CSRF-Token"] = note_login.json()["csrf_token"]
+                            note_headers = {"If-Match": '"6"', "Idempotency-Key": uuid4().hex}
+                            note_body = {"body_text": "Packaged private note <literal>"}
+                            note_receipt = contributor.post(
+                                ticket_path + "/notes", json=note_body, headers=note_headers
+                            )
+                            assert note_receipt.status_code == 201
+                            assert (
+                                contributor.post(
+                                    ticket_path + "/notes", json=note_body, headers=note_headers
+                                ).json()
+                                == note_receipt.json()
+                            )
+                            ordinary = client.post(
+                                "/api/v1/users",
+                                json={
+                                    "email": "note-reader@example.test",
+                                    "display_name": "Packaged ordinary ticket reader",
+                                    "password": password,
+                                },
+                                headers={"Idempotency-Key": uuid4().hex},
+                            )
+                            assert ordinary.status_code == 201
+                            assert (
+                                client.post(
+                                    ticket_queue_path + "/members",
+                                    json={
+                                        "email": "note-reader@example.test",
+                                        "role_name": "viewer",
+                                    },
+                                    headers={"If-Match": '"4"', "Idempotency-Key": uuid4().hex},
+                                ).status_code
+                                == 201
+                            )
+                            note_reader_grant = """
+import json,sys
+from uuid import UUID
+from sqlalchemy.orm import Session
+from altvia.config import Settings
+from altvia.database import make_engine
+from altvia.client_registry import set_client_access
+with Session(make_engine(Settings())) as db,db.begin():
+    set_client_access(db,'note-reader@example.test',UUID(json.load(sys.stdin)['client']),'viewer')
+"""
+                            exec_api(note_reader_grant, {"client": customer})
                     work_body = {
                         "project_id": project_id,
                         "title": f"Packaged work {index}",
@@ -1220,7 +1288,7 @@ with Session(make_engine(Settings())) as db,db.begin():
             assert denied_queue_write.json()["code"] == "forbidden"
             print("Packaged queue/category scope and restart persistence proof passed.")
             persisted_ticket = client.get(ticket_path).json()
-            assert persisted_ticket["version"] == 6 and persisted_ticket["status"] == "open"
+            assert persisted_ticket["version"] == 7 and persisted_ticket["status"] == "open"
             assert persisted_ticket["description"] == "Persisted ticket content"
             assert isinstance(persisted_ticket["number"], str)
             assert persisted_ticket["resolved_at"] is None and persisted_ticket["closed_at"] is None
@@ -1228,7 +1296,7 @@ with Session(make_engine(Settings())) as db,db.begin():
             assert len(ticket_history) == 6 and ticket_history[0]["to_status"] == "open"
             for _ in range(60):
                 ticket_activity = client.get(ticket_path + "/activity").json()["items"]
-                if len(ticket_activity) == 7:
+                if len(ticket_activity) == 8:
                     break
                 time.sleep(0.5)
             else:
@@ -1237,9 +1305,9 @@ with Session(make_engine(Settings())) as db,db.begin():
                 json.dumps(
                     {
                         "ticket_id": persisted_ticket["id"],
-                        "version": 6,
+                        "version": 7,
                         "states": 6,
-                        "projected_events": 7,
+                        "projected_events": 8,
                         "configuration_content_denied": 404,
                         "restart_persistence": True,
                     },
@@ -1249,6 +1317,104 @@ with Session(make_engine(Settings())) as db,db.begin():
                 encoding="utf-8",
             )
             print("Packaged manual ticket lifecycle, denied scope and restart persistence passed.")
+            persisted_notes = client.get(ticket_path + "/notes").json()["items"]
+            assert len(persisted_notes) == 1
+            assert persisted_notes[0]["id"] == note_receipt.json()["note_id"]
+            assert persisted_notes[0]["body_text"] == note_body["body_text"]
+            assert persisted_notes[0]["visibility"] == "internal"
+            assert persisted_notes[0]["ticket_version"] == 7
+            with httpx.Client(
+                base_url=origin,
+                verify=str(secret_dir / "tls_cert"),
+                headers={"Origin": origin},
+                timeout=10,
+                trust_env=False,
+            ) as ordinary_reader:
+                assert (
+                    ordinary_reader.post(
+                        "/api/v1/auth/sessions",
+                        json={"email": "note-reader@example.test", "password": password},
+                    ).status_code
+                    == 201
+                )
+                ordinary_ticket = ordinary_reader.get(ticket_path)
+                assert ordinary_ticket.status_code == 200
+                assert not ordinary_ticket.json()["can_read_notes"]
+                assert ordinary_reader.get(ticket_path + "/notes").status_code == 403
+                assert (
+                    ordinary_reader.get(
+                        ticket_path + "/notes/" + note_receipt.json()["note_id"]
+                    ).status_code
+                    == 403
+                )
+                visible_events = []
+                next_page = ticket_path + "/activity?limit=2"
+                while next_page:
+                    page = ordinary_reader.get(next_page)
+                    assert page.status_code == 200
+                    visible_events.extend(page.json()["items"])
+                    cursor = page.json()["next_cursor"]
+                    next_page = (
+                        ticket_path + "/activity?limit=2&cursor=" + cursor if cursor else None
+                    )
+                assert len(visible_events) == 7
+                assert all(row["event_type"] != "ticket.note_added" for row in visible_events)
+                assert note_receipt.json()["note_id"] not in json.dumps(visible_events)
+                assert note_body["body_text"] not in json.dumps(visible_events)
+            note_event_proof = """
+import json,sys
+from uuid import UUID
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+from altvia.config import Settings
+from altvia.database import make_engine
+from altvia.models import AuditLog,OutboxEvent
+data=json.load(sys.stdin)
+with Session(make_engine(Settings())) as db:
+    events=list(db.scalars(select(OutboxEvent).where(OutboxEvent.aggregate_id==UUID(data['ticket']))))
+    notes=[event for event in events if event.event_type=='ticket.note_added']
+    assert len(events)==8 and len(notes)==1
+    assert set(notes[0].payload)=={
+        'actor_id','actor_kind','ticket_id','client_id','queue_id','note_id'}
+    assert notes[0].payload['note_id']==data['note']
+    assert data['body'] not in json.dumps([event.payload for event in events])
+    assert {event.event_type for event in events} <= {
+        'ticket.created','ticket.assigned','ticket.status_changed','ticket.note_added'}
+    audits=list(db.scalars(select(AuditLog).where(AuditLog.resource_id==UUID(data['ticket']))))
+    assert data['body'] not in json.dumps([row.details for row in audits])
+    print('Packaged private event redaction and no outbound event passed.')
+"""
+            exec_api(
+                note_event_proof,
+                {
+                    "ticket": persisted_ticket["id"],
+                    "note": note_receipt.json()["note_id"],
+                    "body": note_body["body_text"],
+                },
+            )
+            (work / "private-note-proof.json").write_text(
+                json.dumps(
+                    {
+                        "default_queue_manager_denial": 403,
+                        "explicit_delegation": True,
+                        "target_session_invalidated": True,
+                        "protected_replay": True,
+                        "immutable_private_representation": True,
+                        "restart_persistence": True,
+                        "persisted_ordinary_reader_denial": 403,
+                        "private_activity_filtered_before_paging": True,
+                        "redacted_note_event": True,
+                        "no_outbound_event": True,
+                        "notes": len(persisted_notes),
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            print(
+                "Packaged explicit note delegation, default denial and restart persistence passed."
+            )
             assert client.get("/api/v1/users").status_code == 403
             assert client.get(f"{path}/members").status_code == 200
             assert [row["id"] for row in client.get("/api/v1/clients").json()["items"]] == [

@@ -217,6 +217,39 @@ with Session(engine) as db, db.begin():
             ("READER", "viewer"),
         ]:
             set_project_access(db, work_accounts[kind][0], external_work_project.id, role)
+        note_queue = TicketQueue(team_id=queue_access_team.id, name="Notas internas - Validacao")
+        db.add(note_queue)
+        db.flush()
+        note_accounts = {}
+        for kind, role, access in [
+            ("AUTHOR", "operations_manager", "write"),
+            ("READER", "agent", "read"),
+            ("NONE", "operations_manager", "none"),
+            ("VIEWER", "viewer", "none"),
+            ("CONFIG", None, "none"),
+            ("DELEGATE", "agent", "none"),
+        ]:
+            account_email = f"browser-note-{kind.lower()}-{secrets.token_hex(8)}@example.invalid"
+            account_password = secrets.token_urlsafe(30)
+            person = create_user(db, account_email, f"Notas {kind}", account_password)
+            note_accounts[kind] = (account_email, account_password, person.id)
+            db.add(
+                ClientAccessGrant(
+                    user_id=person.id, client_id=ticket_client.id, created_at=datetime.now(UTC)
+                )
+            )
+            if role:
+                db.add(
+                    RoleBinding(
+                        user_id=person.id,
+                        scope_kind="queue",
+                        queue_id=note_queue.id,
+                        role_name=role,
+                        note_access=access,
+                    )
+                )
+            else:
+                set_team_role(db, account_email, queue_access_team.id, "operations_manager", True)
         member_accounts = {}
         for kind in ["MANAGER", "VIEWER", "HIDDEN", "SELF", "TARGET"]:
             member_email = f"browser-member-{kind.lower()}-{secrets.token_hex(8)}@example.invalid"
@@ -309,6 +342,7 @@ with Session(engine) as db, db.begin():
             target.write(f"ALTVIA_E2E_QUEUE_TEAM_ID={queue_team.id}\n")
             target.write(f"ALTVIA_E2E_QUEUE_ID={fixture_queues[0].id}\n")
             target.write(f"ALTVIA_E2E_QUEUE_ACCESS_ID={queue_access_queue.id}\n")
+            target.write(f"ALTVIA_E2E_NOTE_QUEUE_ID={note_queue.id}\n")
             target.write(
                 f"ALTVIA_E2E_TICKET_QUEUE_ID={ticket_queue.id}\n"
                 f"ALTVIA_E2E_TICKET_CLIENT_ID={ticket_client.id}\n"
@@ -334,6 +368,14 @@ if not os.environ.get("ALTVIA_E2E_EXPIRE") and not os.environ.get("ALTVIA_E2E_DI
     # Login HTTP/rate-limit acceptance remains in the identity suites; do not
     # spend that suite's single-source budget on unrelated contact setup.
     with Path(".env.browser-session").open("a", encoding="utf-8") as target:
+        for kind, (account_email, account_password, account_id) in note_accounts.items():
+            with Session(engine) as db:
+                _, _, token = login(
+                    db, account_email, account_password, "note-fixture", "note_fixture_session"
+                )
+            target.write(
+                f"ALTVIA_E2E_NOTE_{kind}_SESSION={token}\nALTVIA_E2E_NOTE_{kind}_ID={account_id}\nALTVIA_E2E_NOTE_{kind}_EMAIL={account_email}\n"
+            )
         for kind, (account_email, account_password, account_id) in ticket_accounts.items():
             with Session(engine) as db:
                 _, _, token = login(

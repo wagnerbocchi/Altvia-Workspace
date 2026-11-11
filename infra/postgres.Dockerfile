@@ -1,5 +1,5 @@
 # Rebuild the upstream privilege-drop helper with a patched, baseline Go runtime.
-FROM golang@sha256:0fd028db9bdd4f01657bc8047c209b04d8ce19b853d776bd6f1e76a41729b936 AS gosu
+FROM golang@sha256:4fa7c968ba93f1635670522dbb01a2c78150443e1385746924566079f36570ea AS gosu
 ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOAMD64=v1 GOTOOLCHAIN=local
 WORKDIR /src
 RUN wget -O /tmp/gosu.tar.gz https://codeload.github.com/tianon/gosu/tar.gz/refs/tags/1.19 \

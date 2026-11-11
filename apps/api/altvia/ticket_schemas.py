@@ -93,6 +93,35 @@ class TicketTransitionReceipt(TicketReceipt):
     history_id: UUID | None
 
 
+class TicketNoteCreate(StrictModel):
+    body_text: Annotated[str, BeforeValidator(_text), Field(min_length=1, max_length=10000)]
+
+    @field_validator("body_text", mode="before")
+    @classmethod
+    def stripped_body(cls, value: object) -> object:
+        return value.strip() if isinstance(value, str) else value
+
+
+class TicketNoteReceipt(TicketReceipt):
+    note_id: UUID
+
+
+class TicketNoteOutput(StrictModel):
+    id: UUID
+    ticket_id: UUID
+    author_id: UUID
+    author_name: str
+    body_text: str
+    visibility: Literal["internal"] = "internal"
+    ticket_version: int
+    created_at: datetime
+
+
+class TicketNotePage(StrictModel):
+    items: list[TicketNoteOutput]
+    next_cursor: str | None
+
+
 class TicketOutput(StrictModel):
     id: UUID
     number: Annotated[str, Field(pattern=r"^[1-9][0-9]{0,18}$")]
@@ -123,6 +152,8 @@ class TicketOutput(StrictModel):
     can_update: bool
     can_assign: bool
     can_claim: bool
+    can_read_notes: bool
+    can_add_note: bool
     allowed_transitions: list[Status]
 
 

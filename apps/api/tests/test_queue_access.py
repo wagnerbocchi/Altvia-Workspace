@@ -61,7 +61,13 @@ def test_queue_access_persistence_versions_sessions_and_redacted_events(admin_cl
     members = admin_client.get(path + "/members").json()
     assert members["queue_version"] == 2 and members["next_cursor"] is None
     assert members["items"] == [
-        {"id": str(target), "display_name": "Queue member", "active": True, "role_name": "agent"}
+        {
+            "id": str(target),
+            "display_name": "Queue member",
+            "active": True,
+            "role_name": "agent",
+            "note_access": "none",
+        }
     ]
     member_path = path + "/members/" + str(target)
     changed = admin_client.patch(
@@ -494,6 +500,7 @@ def test_queue_access_and_target_logout_finish_without_deadlock(
                 "display_name": "Queue member",
                 "active": True,
                 "role_name": "viewer" if operation == "change" else "agent",
+                "note_access": "none",
             }
         ]
     )

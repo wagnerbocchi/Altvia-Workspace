@@ -59,6 +59,12 @@ class RoleBinding(Base):
     __tablename__ = "role_bindings"
     __table_args__ = (
         CheckConstraint(
+            "note_access='none' OR (scope_kind='queue' "
+            "AND role_name IN ('agent','operations_manager') "
+            "AND note_access IN ('read','write'))",
+            name="ck_role_binding_note_access",
+        ),
+        CheckConstraint(
             "(scope_kind = 'global' AND team_id IS NULL AND client_id IS NULL "
             "AND project_id IS NULL AND queue_id IS NULL AND role_name = 'platform_admin') OR "
             "(scope_kind = 'team' AND team_id IS NOT NULL AND client_id IS NULL "
@@ -124,6 +130,7 @@ class RoleBinding(Base):
     queue_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("ticket_queues.id", name="fk_role_binding_queue", ondelete="RESTRICT")
     )
+    note_access: Mapped[str] = mapped_column(String(10), default="none", server_default="none")
 
 
 class AuditLog(Base):
@@ -647,6 +654,28 @@ class TicketStatusHistory(Base):
     occurred_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+class TicketNote(Base):
+    __tablename__ = "ticket_notes"
+    __table_args__ = (
+        UniqueConstraint("ticket_id", "ticket_version", name="uq_ticket_note_version"),
+        CheckConstraint("ticket_version > 1", name="ck_ticket_note_version"),
+        CheckConstraint("char_length(body_text) <= 10000", name="ck_ticket_note_length"),
+        CheckConstraint(
+            r"char_length(btrim(body_text,U&'\0009\000A\000B\000C\000D\001C\001D\001E\001F"
+            r"\0020\0085\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009"
+            r"\200A\2028\2029\202F\205F\3000')) > 0",
+            name="ck_ticket_note_body",
+        ),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    ticket_id: Mapped[UUID] = mapped_column(ForeignKey("tickets.id", ondelete="RESTRICT"))
+    author_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    body_text: Mapped[str] = mapped_column(Text)
+    ticket_version: Mapped[int]
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    author: Mapped[User] = relationship(lazy="joined", viewonly=True)
 
 
 class ActivityEvent(Base):

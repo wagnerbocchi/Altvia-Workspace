@@ -64,6 +64,7 @@ TICKET_EVENT_TYPES = {
     "ticket.updated",
     "ticket.assigned",
     "ticket.status_changed",
+    "ticket.note_added",
 }
 
 
@@ -80,6 +81,7 @@ class TicketEventPayload(BaseModel):
     from_status: Status | None = None
     to_status: Status | None = None
     history_id: UUID | None = None
+    note_id: UUID | None = None
 
     @model_validator(mode="after")
     def valid_changes(self) -> "TicketEventPayload":
@@ -98,6 +100,15 @@ class QueueAccessEventPayload(BaseModel):
     actor_kind: Literal["user"]
     member_user_id: UUID
     role_name: Literal["viewer", "agent", "operations_manager", "removed"]
+    note_access: Literal["none", "read", "write"] | None = None
+
+    @model_validator(mode="after")
+    def compatible_notes(self) -> "QueueAccessEventPayload":
+        if ("note_access" in self.model_fields_set and self.note_access is None) or (
+            self.role_name in {"viewer", "removed"} and self.note_access in {"read", "write"}
+        ):
+            raise ValueError("Invalid note access event")
+        return self
 
 
 class QueueEventPayload(BaseModel):
@@ -338,9 +349,12 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                     "ticket.updated": {"changed_fields"},
                     "ticket.assigned": {"changed_fields", "old_assignee_id", "new_assignee_id"},
                     "ticket.status_changed": {"from_status", "to_status", "history_id"},
+                    "ticket.note_added": {"note_id"},
                 }[event.event_type]
                 if payload.ticket_id != event.aggregate_id or fields != expected_ticket_fields:
                     raise ValueError("Invalid ticket event fields")
+                if event.event_type == "ticket.note_added" and payload.note_id is None:
+                    raise ValueError("Missing private note identifier")
                 if event.event_type in {"ticket.updated", "ticket.assigned"}:
                     if not payload.changed_fields:
                         raise ValueError("Missing ticket changes")

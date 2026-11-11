@@ -25,6 +25,8 @@ UPDATE, session invalidation, queue/auth versions, protected replay and atomic
 redacted event protocol. Note grants add no customer ceiling or content role.
 Queue operations_manager alone cannot delegate. Downgrade to viewer/removal
 revokes note access atomically. Explicit incompatible viewer grants return422.
+Permission-only reductions stay available on inactive accounts/parents. New
+permissions and role changes retain ADR-0027's active-reference requirements.
 
 Legacy role-only POST/PATCH preserves existing compatible writer note access.
 New bindings default none. Omitted note_access remains omitted from the POST

@@ -1821,6 +1821,15 @@
             "title": "Email",
             "type": "string"
           },
+          "note_access": {
+            "enum": [
+              "none",
+              "read",
+              "write"
+            ],
+            "title": "Note Access",
+            "type": "string"
+          },
           "role_name": {
             "enum": [
               "viewer",
@@ -1854,6 +1863,15 @@
             "title": "Id",
             "type": "string"
           },
+          "note_access": {
+            "enum": [
+              "none",
+              "read",
+              "write"
+            ],
+            "title": "Note Access",
+            "type": "string"
+          },
           "role_name": {
             "enum": [
               "viewer",
@@ -1866,6 +1884,7 @@
         },
         "required": [
           "role_name",
+          "note_access",
           "id",
           "display_name",
           "active"
@@ -1929,6 +1948,15 @@
       "QueueMemberRole": {
         "additionalProperties": false,
         "properties": {
+          "note_access": {
+            "enum": [
+              "none",
+              "read",
+              "write"
+            ],
+            "title": "Note Access",
+            "type": "string"
+          },
           "role_name": {
             "enum": [
               "viewer",
@@ -2640,6 +2668,126 @@
         "title": "TicketCreate",
         "type": "object"
       },
+      "TicketNoteCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "body_text": {
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Body Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body_text"
+        ],
+        "title": "TicketNoteCreate",
+        "type": "object"
+      },
+      "TicketNoteOutput": {
+        "additionalProperties": false,
+        "properties": {
+          "author_id": {
+            "format": "uuid",
+            "title": "Author Id",
+            "type": "string"
+          },
+          "author_name": {
+            "title": "Author Name",
+            "type": "string"
+          },
+          "body_text": {
+            "title": "Body Text",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "ticket_id": {
+            "format": "uuid",
+            "title": "Ticket Id",
+            "type": "string"
+          },
+          "ticket_version": {
+            "title": "Ticket Version",
+            "type": "integer"
+          },
+          "visibility": {
+            "const": "internal",
+            "default": "internal",
+            "title": "Visibility",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "ticket_id",
+          "author_id",
+          "author_name",
+          "body_text",
+          "ticket_version",
+          "created_at"
+        ],
+        "title": "TicketNoteOutput",
+        "type": "object"
+      },
+      "TicketNotePage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TicketNoteOutput"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "TicketNotePage",
+        "type": "object"
+      },
+      "TicketNoteReceipt": {
+        "additionalProperties": false,
+        "properties": {
+          "note_id": {
+            "format": "uuid",
+            "title": "Note Id",
+            "type": "string"
+          },
+          "ticket_id": {
+            "format": "uuid",
+            "title": "Ticket Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket_id",
+          "note_id"
+        ],
+        "title": "TicketNoteReceipt",
+        "type": "object"
+      },
       "TicketOutput": {
         "additionalProperties": false,
         "properties": {
@@ -2681,12 +2829,20 @@
             ],
             "title": "Assignee Name"
           },
+          "can_add_note": {
+            "title": "Can Add Note",
+            "type": "boolean"
+          },
           "can_assign": {
             "title": "Can Assign",
             "type": "boolean"
           },
           "can_claim": {
             "title": "Can Claim",
+            "type": "boolean"
+          },
+          "can_read_notes": {
+            "title": "Can Read Notes",
             "type": "boolean"
           },
           "can_update": {
@@ -2874,6 +3030,8 @@
           "can_update",
           "can_assign",
           "can_claim",
+          "can_read_notes",
+          "can_add_note",
           "allowed_transitions"
         ],
         "title": "TicketOutput",
@@ -8335,6 +8493,210 @@
           }
         },
         "summary": "Claim",
+        "tags": [
+          "Tickets"
+        ]
+      }
+    },
+    "/api/v1/tickets/{identifier}/notes": {
+      "get": {
+        "operationId": "notes_api_v1_tickets__identifier__notes_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identifier",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 250,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketNotePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Notes",
+        "tags": [
+          "Tickets"
+        ]
+      },
+      "post": {
+        "operationId": "append_note_api_v1_tickets__identifier__notes_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identifier",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "pattern": "^\"[1-9][0-9]{0,9}\"$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketNoteCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketNoteReceipt"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketNoteReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Append Note",
+        "tags": [
+          "Tickets"
+        ]
+      }
+    },
+    "/api/v1/tickets/{identifier}/notes/{note_id}": {
+      "get": {
+        "operationId": "note_api_v1_tickets__identifier__notes__note_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identifier",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "note_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Note Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketNoteOutput"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Note",
         "tags": [
           "Tickets"
         ]

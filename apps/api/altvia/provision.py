@@ -43,6 +43,7 @@ ROLE_PRIVILEGES = {
         "ticket_categories": {"SELECT", "INSERT", "UPDATE"},
         "tickets": {"SELECT", "INSERT", "UPDATE"},
         "ticket_status_history": {"SELECT", "INSERT"},
+        "ticket_notes": {"SELECT", "INSERT"},
         "work_item_external_participants": {"SELECT", "INSERT", "DELETE"},
         "audit_logs": {"INSERT"},
         "outbox_events": {"INSERT"},

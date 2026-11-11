@@ -34,6 +34,7 @@ from altvia.models import (
     Client,
     ClientContact,
     Ticket,
+    TicketNote,
     TicketQueue,
     TicketStatusHistory,
     User,
@@ -46,6 +47,10 @@ from altvia.ticket_schemas import (
     TicketClientChoices,
     TicketCreate,
     TicketFilters,
+    TicketNoteCreate,
+    TicketNoteOutput,
+    TicketNotePage,
+    TicketNoteReceipt,
     TicketOutput,
     TicketPage,
     TicketPatch,
@@ -84,6 +89,17 @@ def _scope(request: Request, filters: TicketFilters, actor_id: UUID) -> str:
 def _version(item: Ticket, request: Request) -> None:
     if item.version != _expected_version(request):
         raise identity.IdentityError(409, "version_conflict")
+
+
+def _version_cursor(value: str | None, scope: str) -> int | None:
+    if value is None:
+        return None
+    if not value.startswith(scope) or not re.fullmatch(r"[1-9][0-9]{0,9}", value[len(scope) :]):
+        raise identity.IdentityError(422, "invalid_cursor")
+    version = int(value[len(scope) :])
+    if version > 2147483647:
+        raise identity.IdentityError(422, "invalid_cursor")
+    return version
 
 
 def _event(
@@ -142,9 +158,11 @@ def create_ticket_router(engine: Engine, settings: Settings) -> APIRouter:
             return TicketPage(
                 items=[
                     registry.output(
-                        item, registry.Access(item.client, item.queue, role, active), actor.id
+                        item,
+                        registry.Access(item.client, item.queue, role, active, note_access),
+                        actor.id,
                     )
-                    for item, role, active in rows[: filters.limit]
+                    for item, role, active, note_access in rows[: filters.limit]
                 ],
                 next_cursor=_next_time_cursor(
                     scope, rows[filters.limit - 1][0].created_at, rows[filters.limit - 1][0].id
@@ -327,6 +345,89 @@ def create_ticket_router(engine: Engine, settings: Settings) -> APIRouter:
             _remember(db, actor, route, key, fingerprint, receipt, 200)
             return receipt
 
+    @router.get("/tickets/{identifier}/notes", response_model=TicketNotePage)
+    def notes(
+        identifier: UUID,
+        request: Request,
+        limit: Annotated[int, Query(ge=1, le=100)] = 50,
+        cursor: Annotated[str | None, Query(max_length=250)] = None,
+    ) -> TicketNotePage:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings)
+            _, access = registry.scoped_ticket(db, actor.id, identifier)
+            registry.require_notes(access)
+            _collection(request)
+            scope = f"v1|ticket-notes:{actor.id}:{identifier}|"
+            last = _version_cursor(cursor, scope)
+            query = (
+                select(TicketNote)
+                .where(TicketNote.ticket_id == identifier)
+                .order_by(TicketNote.ticket_version)
+                .limit(limit + 1)
+            )
+            if last is not None:
+                query = query.where(TicketNote.ticket_version > last)
+            rows = list(db.scalars(query))
+            return TicketNotePage(
+                items=[registry.note_output(row) for row in rows[:limit]],
+                next_cursor=scope + str(rows[limit - 1].ticket_version)
+                if len(rows) > limit
+                else None,
+            )
+
+    @router.get("/tickets/{identifier}/notes/{note_id}", response_model=TicketNoteOutput)
+    def note(identifier: UUID, note_id: UUID, request: Request) -> TicketNoteOutput:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings)
+            _, access = registry.scoped_ticket(db, actor.id, identifier)
+            registry.require_notes(access)
+            row = db.scalar(
+                select(TicketNote).where(
+                    TicketNote.id == note_id, TicketNote.ticket_id == identifier
+                )
+            )
+            if row is None:
+                raise identity.IdentityError(404, "not_found")
+            return registry.note_output(row)
+
+    @router.post(
+        "/tickets/{identifier}/notes",
+        response_model=TicketNoteReceipt,
+        status_code=201,
+        responses={200: {"model": TicketNoteReceipt}},
+        openapi_extra={"parameters": [IF_MATCH, IDEMPOTENCY_KEY]},
+    )
+    def append_note(
+        identifier: UUID, body: TicketNoteCreate, request: Request, response: Response
+    ) -> TicketNoteReceipt:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings, write=True)
+            item, access = registry.scoped_ticket(db, actor.id, identifier, write=True)
+            registry.require_notes(access, write=True)
+            version = _expected_version(request)
+            route = f"ticket-note:{identifier}"
+            key, fingerprint, saved = _operation(db, actor, request, route, body.model_dump())
+            if saved is not None:
+                response.status_code = 200
+                return TicketNoteReceipt.model_validate(saved.result)
+            if item.version != version:
+                raise identity.IdentityError(409, "version_conflict")
+            registry.require_active(access, item)
+            registry.advance(item)
+            note = TicketNote(
+                ticket_id=item.id,
+                author_id=actor.id,
+                body_text=body.body_text,
+                ticket_version=item.version,
+                created_at=item.updated_at,
+            )
+            db.add(note)
+            db.flush()
+            _event(db, actor, item, request, "note_added", note_id=str(note.id))
+            receipt = TicketNoteReceipt(ticket_id=item.id, note_id=note.id)
+            _remember(db, actor, route, key, fingerprint, receipt, 201)
+            return receipt
+
     @router.get("/tickets/{identifier}/status-history", response_model=TicketStates)
     def states(
         identifier: UUID,
@@ -345,14 +446,8 @@ def create_ticket_router(engine: Engine, settings: Settings) -> APIRouter:
                 .order_by(TicketStatusHistory.version.desc())
                 .limit(limit + 1)
             )
-            if cursor is not None:
-                if not cursor.startswith(scope) or not re.fullmatch(
-                    r"[1-9][0-9]{0,9}", cursor[len(scope) :]
-                ):
-                    raise identity.IdentityError(422, "invalid_cursor")
-                version = int(cursor[len(scope) :])
-                if version > 2147483647:
-                    raise identity.IdentityError(422, "invalid_cursor")
+            version = _version_cursor(cursor, scope)
+            if version is not None:
                 query = query.where(TicketStatusHistory.version < version)
             rows = list(db.scalars(query))
             return TicketStates(
@@ -369,13 +464,16 @@ def create_ticket_router(engine: Engine, settings: Settings) -> APIRouter:
     ) -> ActivityPage:
         with Session(engine) as db, db.begin():
             actor = authenticate_request(db, request, settings)
-            registry.scoped_ticket(db, actor.id, identifier)
+            _, access = registry.scoped_ticket(db, actor.id, identifier)
             _collection(request)
+            query = select(ActivityEvent).where(
+                ActivityEvent.resource_type == "ticket", ActivityEvent.resource_id == identifier
+            )
+            if not registry.can_read_notes(access):
+                query = query.where(ActivityEvent.event_type != "ticket.note_added")
             return activity_page(
                 db,
-                select(ActivityEvent).where(
-                    ActivityEvent.resource_type == "ticket", ActivityEvent.resource_id == identifier
-                ),
+                query,
                 f"ticket-activity:{actor.id}:{identifier}",
                 limit,
                 cursor,

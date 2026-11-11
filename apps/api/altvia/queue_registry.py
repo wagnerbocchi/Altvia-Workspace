@@ -11,6 +11,7 @@ from sqlalchemy.sql.selectable import Exists
 from altvia import identity
 from altvia.management import _invalidate_sessions, lock_identity_writes
 from altvia.models import Role, RoleBinding, Team, TicketCategory, TicketQueue, User
+from altvia.queue_schemas import NoteAccess
 
 QUEUE_ROLES = frozenset({"viewer", "agent", "operations_manager"})
 
@@ -133,6 +134,8 @@ def change_queue_access(
     role: str | None,
     actor_id: UUID,
     correlation_id: str,
+    *,
+    note_access: NoteAccess | None = None,
 ) -> bool:
     """Caller holds configuration authority and the team/queue write locks."""
     lock_identity_writes(db)
@@ -145,21 +148,42 @@ def change_queue_access(
             RoleBinding.queue_id == queue.id,
         )
     )
-    if (binding is None and role is None) or (binding is not None and binding.role_name == role):
+    previous_notes = binding.note_access if binding is not None else "none"
+    selected_notes = previous_notes if note_access is None else note_access
+    if role in {None, "viewer"}:
+        if note_access in {"read", "write"}:
+            raise identity.IdentityError(422, "invalid_note_access")
+        selected_notes = "none"
+    if (binding is None and role is None) or (
+        binding is not None and binding.role_name == role and previous_notes == selected_notes
+    ):
         return False
     if role is not None:
-        require_active(team_active, queue.active)
-        if not target.active:
-            raise identity.IdentityError(422, "invalid_queue_member")
+        reducing_notes = (
+            binding is not None
+            and binding.role_name == role
+            and (
+                selected_notes == "none" or (previous_notes == "write" and selected_notes == "read")
+            )
+        )
+        if not reducing_notes:
+            require_active(team_active, queue.active)
+            if not target.active:
+                raise identity.IdentityError(422, "invalid_queue_member")
         db.execute(insert(Role).values(name=role).on_conflict_do_nothing())
         if binding is None:
             db.add(
                 RoleBinding(
-                    user_id=target.id, scope_kind="queue", queue_id=queue.id, role_name=role
+                    user_id=target.id,
+                    scope_kind="queue",
+                    queue_id=queue.id,
+                    role_name=role,
+                    note_access=selected_notes,
                 )
             )
         else:
             binding.role_name = role
+            binding.note_access = selected_notes
     elif binding is not None:
         db.delete(binding)
     advance(queue)
@@ -174,7 +198,11 @@ def change_queue_access(
         correlation_id,
         queue.version,
         aggregate_type="ticket_queue",
-        details={"member_user_id": str(target.id), "role_name": role or "removed"},
+        details={
+            "member_user_id": str(target.id),
+            "role_name": role or "removed",
+            **({"note_access": selected_notes} if previous_notes != selected_notes else {}),
+        },
     )
     return True
 

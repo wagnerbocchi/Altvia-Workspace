@@ -740,6 +740,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tickets/{identifier}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Notes */
+        get: operations["notes_api_v1_tickets__identifier__notes_get"];
+        put?: never;
+        /** Append Note */
+        post: operations["append_note_api_v1_tickets__identifier__notes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/{identifier}/notes/{note_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Note */
+        get: operations["note_api_v1_tickets__identifier__notes__note_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tickets/{identifier}/status-history": {
         parameters: {
             query?: never;
@@ -1731,6 +1766,11 @@ export interface components {
             /** Email */
             email: string;
             /**
+             * Note Access
+             * @enum {string}
+             */
+            note_access?: "none" | "read" | "write";
+            /**
              * Role Name
              * @enum {string}
              */
@@ -1747,6 +1787,11 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /**
+             * Note Access
+             * @enum {string}
+             */
+            note_access: "none" | "read" | "write";
             /**
              * Role Name
              * @enum {string}
@@ -1777,6 +1822,11 @@ export interface components {
         };
         /** QueueMemberRole */
         QueueMemberRole: {
+            /**
+             * Note Access
+             * @enum {string}
+             */
+            note_access?: "none" | "read" | "write";
             /**
              * Role Name
              * @enum {string}
@@ -2071,6 +2121,66 @@ export interface components {
             /** Subject */
             subject: string;
         };
+        /** TicketNoteCreate */
+        TicketNoteCreate: {
+            /** Body Text */
+            body_text: string;
+        };
+        /** TicketNoteOutput */
+        TicketNoteOutput: {
+            /**
+             * Author Id
+             * Format: uuid
+             */
+            author_id: string;
+            /** Author Name */
+            author_name: string;
+            /** Body Text */
+            body_text: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
+            /** Ticket Version */
+            ticket_version: number;
+            /**
+             * Visibility
+             * @default internal
+             * @constant
+             */
+            visibility: "internal";
+        };
+        /** TicketNotePage */
+        TicketNotePage: {
+            /** Items */
+            items: components["schemas"]["TicketNoteOutput"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** TicketNoteReceipt */
+        TicketNoteReceipt: {
+            /**
+             * Note Id
+             * Format: uuid
+             */
+            note_id: string;
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
+        };
         /** TicketOutput */
         TicketOutput: {
             /** Allowed Transitions */
@@ -2079,10 +2189,14 @@ export interface components {
             assignee_id: string | null;
             /** Assignee Name */
             assignee_name: string | null;
+            /** Can Add Note */
+            can_add_note: boolean;
             /** Can Assign */
             can_assign: boolean;
             /** Can Claim */
             can_claim: boolean;
+            /** Can Read Notes */
+            can_read_notes: boolean;
             /** Can Update */
             can_update: boolean;
             /** Category Id */
@@ -4803,6 +4917,119 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TicketReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    notes_api_v1_tickets__identifier__notes_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketNotePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    append_note_api_v1_tickets__identifier__notes_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TicketNoteCreate"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketNoteReceipt"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketNoteReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    note_api_v1_tickets__identifier__notes__note_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+                note_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketNoteOutput"];
                 };
             };
             /** @description Validation Error */

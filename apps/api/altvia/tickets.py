@@ -17,12 +17,19 @@ from altvia.models import (
     Team,
     Ticket,
     TicketCategory,
+    TicketNote,
     TicketQueue,
     TicketStatusHistory,
     User,
 )
 from altvia.queue_registry import QUEUE_ROLES
-from altvia.ticket_schemas import TICKET_TRANSITIONS, TicketFilters, TicketOutput, TicketTransition
+from altvia.ticket_schemas import (
+    TICKET_TRANSITIONS,
+    TicketFilters,
+    TicketNoteOutput,
+    TicketOutput,
+    TicketTransition,
+)
 
 SEARCH_DOCUMENT = (
     "to_tsvector('portuguese'::regconfig, "
@@ -36,6 +43,7 @@ class Access:
     queue: TicketQueue
     role: str
     team_active: bool
+    note_access: str = "none"
 
     @property
     def manage(self) -> bool:
@@ -134,9 +142,9 @@ def creation_access(
     return Access(client, queue, role, team_active)
 
 
-def visible(user_id: UUID) -> Select[tuple[Ticket, str, bool]]:
+def visible(user_id: UUID) -> Select[tuple[Ticket, str, bool, str]]:
     return (
-        select(Ticket, RoleBinding.role_name, Team.active)
+        select(Ticket, RoleBinding.role_name, Team.active, RoleBinding.note_access)
         .join(
             RoleBinding,
             and_(
@@ -167,13 +175,34 @@ def scoped_ticket(
     row = db.execute(query).one_or_none()
     if row is None:
         raise identity.IdentityError(404, "not_found")
-    item, role, team_active = row
+    item, role, team_active, note_access = row
     if write:
         _lock_parents(db, item.client, item.queue)
-        item, role, team_active = db.execute(
+        item, role, team_active, note_access = db.execute(
             query.with_for_update(of=Ticket).execution_options(populate_existing=True)
         ).one()
-    return item, Access(item.client, item.queue, role, team_active)
+    return item, Access(item.client, item.queue, role, team_active, note_access)
+
+
+def can_read_notes(access: Access) -> bool:
+    return access.contribute and access.note_access in {"read", "write"}
+
+
+def require_notes(access: Access, *, write: bool = False) -> None:
+    if not can_read_notes(access) or (write and access.note_access != "write"):
+        raise identity.IdentityError(403, "forbidden")
+
+
+def note_output(note: TicketNote) -> TicketNoteOutput:
+    return TicketNoteOutput(
+        id=note.id,
+        ticket_id=note.ticket_id,
+        author_id=note.author_id,
+        author_name=note.author.display_name,
+        body_text=note.body_text,
+        ticket_version=note.ticket_version,
+        created_at=note.created_at,
+    )
 
 
 def can_update(item: Ticket, access: Access, actor_id: UUID) -> bool:
@@ -318,6 +347,8 @@ def output(item: Ticket, access: Access, actor_id: UUID) -> TicketOutput:
             "can_update": writable and can_update(item, access, actor_id),
             "can_assign": writable and access.manage,
             "can_claim": writable and access.contribute and item.assignee_id is None,
+            "can_read_notes": can_read_notes(access),
+            "can_add_note": writable and access.contribute and access.note_access == "write",
             "allowed_transitions": targets(item, access, actor_id),
         }
     )

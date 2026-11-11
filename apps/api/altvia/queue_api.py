@@ -350,7 +350,7 @@ def create_queue_router(engine: Engine, settings: Settings) -> APIRouter:
             scope = f"queue-members:{actor.id}:{queue_id}"
             last = _cursor(cursor, scope)
             query = (
-                select(User, RoleBinding.role_name)
+                select(User, RoleBinding.role_name, RoleBinding.note_access)
                 .join(RoleBinding, RoleBinding.user_id == User.id)
                 .where(RoleBinding.scope_kind == "queue", RoleBinding.queue_id == queue_id)
                 .order_by(User.id)
@@ -372,8 +372,9 @@ def create_queue_router(engine: Engine, settings: Settings) -> APIRouter:
                         display_name=user.display_name,
                         active=user.active,
                         role_name=role,
+                        note_access=note_access,
                     )
-                    for user, role in rows[:limit]
+                    for user, role, note_access in rows[:limit]
                 ],
                 next_cursor=_next_cursor(scope, rows[limit - 1][0].id)
                 if len(rows) > limit
@@ -395,7 +396,10 @@ def create_queue_router(engine: Engine, settings: Settings) -> APIRouter:
             queue, _, team_active, _ = registry.scoped_queue(db, actor.id, queue_id, write=True)
             version = _expected_version(request)
             route = f"/api/v1/ticket-queues/{queue_id}/members"
-            key, digest, saved = _operation(db, actor, request, route, body.model_dump(mode="json"))
+            fingerprint = body.model_dump(mode="json", exclude={"note_access"})
+            if "note_access" in body.model_fields_set:
+                fingerprint["note_access"] = body.note_access
+            key, digest, saved = _operation(db, actor, request, route, fingerprint)
             if saved is not None:
                 response.status_code = 200
                 return QueueMemberReceipt.model_validate(saved.result)
@@ -416,6 +420,7 @@ def create_queue_router(engine: Engine, settings: Settings) -> APIRouter:
                 body.role_name,
                 actor.id,
                 request.state.correlation_id,
+                note_access=body.note_access,
             )
             result = QueueMemberReceipt(queue_id=queue.id, user_id=target.id)
             _remember(db, actor, route, key, digest, result, 201)
@@ -445,6 +450,7 @@ def create_queue_router(engine: Engine, settings: Settings) -> APIRouter:
                 body.role_name,
                 actor.id,
                 request.state.correlation_id,
+                note_access=body.note_access,
             )
             response = Response(status_code=204)
             _etag(response, queue.version)

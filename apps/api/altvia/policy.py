@@ -9,6 +9,7 @@ class Binding:
     role: str
     scope_kind: str
     scope_id: UUID | None
+    note_access: str = "none"
 
 
 @dataclass(frozen=True)
@@ -51,6 +52,17 @@ def can(principal: Principal, action: str, resource: Resource) -> bool:
         )
     if resource.client_id is not None and resource.client_id not in principal.client_ids:
         return False
+    if action in {"note.read", "note.write"}:
+        return can(principal, "ticket.read", resource) and any(
+            binding.scope_kind == "queue"
+            and binding.scope_id == resource.queue_id
+            and binding.role in {"agent", "operations_manager"}
+            and (
+                binding.note_access == "write"
+                or (action == "note.read" and binding.note_access == "read")
+            )
+            for binding in principal.bindings
+        )
     if action in {"project.read", "project.manage"}:
         if resource.project_id is None:
             return False

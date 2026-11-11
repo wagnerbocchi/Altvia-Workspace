@@ -123,9 +123,26 @@ class CategoryReceipt(QueueReceipt):
     category_id: UUID
 
 
+NoteAccess = Literal["none", "read", "write"]
+
+
 class QueueMemberRole(BaseModel):
     model_config = ConfigDict(extra="forbid")
     role_name: Literal["viewer", "agent", "operations_manager"]
+    note_access: NoteAccess | SkipJsonSchema[None] = None
+
+    @field_validator("note_access")
+    @classmethod
+    def non_null_notes(cls, value: NoteAccess | None) -> NoteAccess:
+        if value is None:
+            raise ValueError("A non-null note permission is required")
+        return value
+
+    @model_validator(mode="after")
+    def compatible_notes(self) -> "QueueMemberRole":
+        if self.role_name == "viewer" and self.note_access in {"read", "write"}:
+            raise ValueError("Viewer cannot hold internal-note authority")
+        return self
 
 
 class QueueMemberAdd(QueueMemberRole):
@@ -138,6 +155,7 @@ class QueueMemberAdd(QueueMemberRole):
 
 
 class QueueMemberOutput(QueueMemberRole):
+    note_access: NoteAccess
     id: UUID
     display_name: str
     active: bool

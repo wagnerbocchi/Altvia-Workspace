@@ -406,3 +406,14 @@ def test_imap_aggregate_literal_budget_precedes_buffering(
         poll(db_engine, server, imap_cert)
     assert returned == ([] if during_search else [2097152])
     assert cursor(db_engine, source)[1:] == (0, None)
+
+
+def test_imap_metadata_budget_spans_commands_and_keeps_prior_captures(
+    db_engine, source, server, imap_cert
+):
+    server.state.update(
+        messages={uid: b"opaque" for uid in range(1, 26)}, next=26, header_burst=True
+    )
+    with pytest.raises(imap_poll.PollError, match="budget"):
+        poll(db_engine, server, imap_cert)
+    assert 0 < cursor(db_engine, source)[1] < 25

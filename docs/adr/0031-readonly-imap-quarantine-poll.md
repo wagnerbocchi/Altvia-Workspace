@@ -18,7 +18,7 @@ the server. Raw bytes still go to ADR-0030 quarantine, with no MIME display,
 customer/participant proof, correlation, ticket promotion or SMTP side effect.
 
 Settings inherit DatabaseSettings: imap_host (bounded ASCII DNS name/IP), port
-1..65535/default993, secret username/password (bounded printable ASCII), optional
+1..65535/default 993, secret username/password (bounded printable ASCII), optional
 imap_ca_file. Secrets use existing protected environment/secret files, never CLI
 arguments or logs. Quote LOGIN fields safely. CLI requires explicit
 ALTVIA_ALLOW_IMAP_POLL=1 and --source-key only. Output source/UID/counter metadata;
@@ -45,14 +45,14 @@ DNS remains subject to the platform resolver. Expired leases fail closed even
 when a platform connection operation outlasts its normal timeout.
 
 Strictly parse uint32 UIDVALIDITY/UIDNEXT. On a changed UIDVALIDITY, atomically
-reset last_uid to0 and record the epoch change; preserve all previous raw variants.
+reset last_uid to 0 and record the epoch change; preserve all previous raw variants.
 No content/Message-ID deduplication across epochs. Do not silently rewind a cursor
 when UIDNEXT contradicts its current epoch. Session epoch changes stop the poll.
 
 ## Bounded scan and atomic progress
 
 Scan at most one UID window of 1000 positions per command, ending no later than
-the selected UIDNEXT-1. Fetch at most25 returned UIDs. Validate SEARCH identities
+the selected UIDNEXT-1. Fetch at most 25 returned UIDs. Validate SEARCH identities
 as distinct uint32s inside that exact range. Filter no reversed star range: use
 explicit numeric endpoints. Fixed bounds remain provisional under Q-21.
 
@@ -60,11 +60,13 @@ For each FETCH require exactly one bounded literal and the requested UID, allowi
 UID before/after BODY[] metadata. Reject extra/missing fields, mismatched identity,
 oversize/truncated literals, malformed lines and unexpected responses. Enforce the
 2 MiB raw limit before imaplib allocates/reads the literal, not from a trusted
-RFC822.SIZE claim. Bound wire lines to16384 bytes and buffered reads as well.
-Cap aggregate control responses at65536 bytes with no literals; FETCH permits one
-literal and at most2097152+32768 total response bytes. Enforce these budgets in
+RFC822.SIZE claim. Bound wire lines to 16384 bytes and buffered reads as well.
+Cap aggregate control responses at 65536 bytes with no literals; FETCH permits one
+literal and at most 2097152+32768 total response bytes. Enforce these budgets in
 the wire reader before imaplib retains unsolicited frames. Check session epoch
 immediately after SEARCH, including empty results, and after each FETCH.
+The entire poll also limits non-literal wire metadata to65536 bytes, since
+imaplib can retain other unsolicited response classes across command boundaries.
 
 Capture raw receipt and advance its checkpoint in one transaction, reusing the
 existing source lock, replay/collision rules and audit/outbox owner. A failure
@@ -88,7 +90,7 @@ Read-only finite polling is selected before scheduling/OAuth/folder routing;
 provider-specific operations remain subsequent configuration work. Namespace
 binding prevents silent mailbox remapping; legitimate endpoint migration costs
 a reviewed new source/resync. Leases plus fencing avoid holding DB locks over
-remote I/O; crash recovery may wait120 seconds. Bounded raw/window/batch handling
+remote I/O; crash recovery may wait 120 seconds. Bounded raw/window/batch handling
 limits resource use; production sizing needs Q-21 approval. UID resets preserve
 separate quarantine data rather than guessing deduplication; later verified
 promotion must reconcile it without silently deleting receipts.
@@ -104,4 +106,4 @@ literal/line/UID bounds, partial failure, event rollback, expired-token fencing,
 no DB locks during network reads, runtime denial, strict private events and
 guarded migration. Complete independent source review and exact-source hosted
 API/browser/container/security gates, with synthetic packaged persistence proof.
-No frontend is introduced; full native email and Phase3/MVP acceptance remain open.
+No frontend is introduced; full native email and Phase 3/MVP acceptance remain open.

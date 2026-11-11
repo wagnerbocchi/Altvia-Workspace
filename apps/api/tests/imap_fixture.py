@@ -57,6 +57,8 @@ def imap_server(cert, key, messages=None):
                             f"* OK [UIDVALIDITY {state['search_epoch']}] reset\r\n".encode()
                         )
                 elif command == "UID" and words[2] == "FETCH":
+                    if state.get("header_burst"):
+                        self.wfile.write((b"* OK " + b"a" * 150 + b"\r\n") * 100)
                     uid = int(words[3])
                     assert "BODY.PEEK[]" in line.decode()
                     if state.get("fetch_hook"):

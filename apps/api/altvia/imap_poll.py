@@ -211,6 +211,7 @@ class _BoundedIMAPS(imaplib.IMAP4_SSL):
     def __init__(self, settings: IMAPPollSettings):
         self._bounded_buffer = bytearray()
         self._wire_deadline = monotonic() + WIRE_SECONDS
+        self._metadata_bytes = CONTROL_BYTES
         self.response_budget(CONTROL_BYTES, 0)
         context = ssl.create_default_context(cafile=settings.imap_ca_file)
         try:
@@ -258,6 +259,11 @@ class _BoundedIMAPS(imaplib.IMAP4_SSL):
             if newline >= 0:
                 if newline + 1 > MAX_LINE:
                     raise PollError("mail_poll_line_limit")
+                # Other untagged response classes can survive command boundaries
+                # inside imaplib. Cap retained metadata across the entire poll.
+                if newline + 1 > self._metadata_bytes:
+                    raise PollError("mail_poll_response_budget")
+                self._metadata_bytes -= newline + 1
                 value = bytes(self._bounded_buffer[: newline + 1])
                 del self._bounded_buffer[: newline + 1]
                 return value

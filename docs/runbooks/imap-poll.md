@@ -11,7 +11,7 @@ Apply migration b46087000018 with the existing owner. API/worker roles have no
 poll-state/raw-table privileges. Supply ALTVIA_DATABASE_URL, ALTVIA_IMAP_HOST,
 ALTVIA_IMAP_USERNAME and ALTVIA_IMAP_PASSWORD through protected secret files or
 environment injection, outside Git and command history. Optional settings are
-ALTVIA_IMAP_PORT (default993) and ALTVIA_IMAP_CA_FILE for an approved private CA.
+ALTVIA_IMAP_PORT (default 993) and ALTVIA_IMAP_CA_FILE for an approved private CA.
 Certificate/hostname verification and implicit TLS are mandatory, without a
 plaintext/STARTTLS fallback. Only INBOX and printable ASCII login values are
 supported initially; actual provider/authentication policy remains Q-03/Q-16.
@@ -36,22 +36,23 @@ TLS login/selection. First failed authentication cannot bind it. Password rotati
 preserves identity; endpoint/account changes require a reviewed new source/resync.
 No connection identity or header proves a customer participant.
 
-A120-second lease and token/expiry checks fence every state write. Late callers
+A 120-second lease and token/expiry checks fence every state write. Late callers
 cannot advance/rewind progress or release a newer lease. Crash recovery may wait
 for expiry. Do not clear tokens manually. Network I/O holds no DB transaction.
 
-Each poll scans at most1000 UID positions and fetches25 messages, bounded by
+Each poll scans at most 1000 UID positions and fetches 25 messages, bounded by
 observed UIDNEXT-1. Partial batches resume after the last durable capture. Gaps
 advance only after a valid epoch-checked SEARCH. Missing/malformed/oversize FETCH
 stops without skipping that UID; fresh SEARCH may establish its later absence.
 Changed UIDVALIDITY resets progress with audit and retains every old receipt.
 Body equality never deduplicates across epochs or sources.
 
-Raw literals are limited to2 MiB and lines to16384 bytes. Aggregate control
-responses allow65536 bytes/no literals; FETCH permits one literal and at most
+Raw literals are limited to 2 MiB and lines to 16384 bytes. Aggregate control
+responses allow 65536 bytes/no literals; FETCH permits one literal and at most
 2097152+32768 response bytes before imaplib can retain unsolicited data. Epoch
-validation follows SEARCH, including empty results, and every FETCH. Socket
-operations use10 seconds; wire reads/writes share a90-second monotonic budget.
+validation follows SEARCH, including empty results, and every FETCH. Non-literal
+metadata also has a 65536-byte total poll budget across commands. Socket operations
+use 10 seconds; wire reads/writes share a 90-second monotonic budget.
 DNS uses the platform resolver; expired tokens still reject late writes. Actual
 production traffic/size/storage bounds need Q-21 approval.
 

@@ -138,6 +138,18 @@ five nonempty image inventories. See docs/phase-3d-note-evidence.md. Public
 replies, files and native email are not delivered by this note increment; Phase 3,
 full MVP acceptance and deferred integrated actual-target qualification stay open.
 
+Phase 3E-a adds the durable quarantine foundation of FR-007/012 under ADR-0030.
+Owner-only binary-stdin capture preserves opaque mail, explicit UID identities,
+immutable raw variants and collision state on retry without granting customer
+identity or exposing shared activity. Contracts 489b3fc preceded source 118d99f.
+Final 72116da passed all five hosted gates with 646 API/116 browser tests, actual
+packaged restart/replay/runtime-denial proof, zero blocking source findings and
+five nonempty zero-vulnerability image inventories. See
+docs/phase-3e-a-mail-intake-evidence.md. No live IMAP polling, MIME display,
+verified promotion or SMTP/public conversation is delivered by this boundary.
+Native end-to-end email, Phase 3/MVP acceptance and final actual-target
+qualification remain open.
+
 Non-goals: SaaS billing/subscriptions, marketplace, local AI/embeddings, external
 search cluster, advanced ITIL/CMDB, advanced Gantt and native mobile applications.
 No speculative scaffolding for these capabilities.

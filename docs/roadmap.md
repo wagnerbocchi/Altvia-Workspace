@@ -60,12 +60,20 @@ entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
-Phase 3E-a selects ADR-0030 before implementation: owner-only durable native mail
-quarantine intake, explicit source/UID identity, immutable raw variants and strict
-private event receipts. No sender verification, ticket promotion, MIME rendering,
-live mailbox connection or outbound delivery is inferred. Q-03/Q-16 remain open.
-The restricted operator flow is tested only with synthetic messages. Native IMAP,
-MIME triage and verified public conversation retain subsequent increments.
+Phase 3E-a development is complete under ADR-0030: owner-only durable native mail
+quarantine intake, explicit source/UID identity, immutable raw variants, permanent
+collision replay and strictly private event receipts. Contracts 489b3fc preceded
+implementation 118d99f. Final 72116da passed all five hosted gates with 646 API/
+116 browser tests, actual packaged command/restart/replay and both runtime roles'
+raw-table denial. Five nonempty image inventories report zero vulnerabilities;
+source security has zero blockers/secrets and four existing LOW findings. A test
+probe's API-versus-worker settings error has a reproduced correction and actual
+packaged GREEN. Independent source review found no Critical/Important/Minor issue.
+See docs/phase-3e-a-mail-intake-evidence.md. No sender verification, ticket
+promotion, MIME rendering, live mailbox connection or outbound delivery is
+inferred. Q-03/Q-09/Q-16/Q-21 remain open. Native IMAP, MIME triage and verified
+public conversation retain subsequent increments. Phase 3/MVP and consolidated
+actual-target qualification stay open; only synthetic mail was used.
 
 Phase 3D development is complete under ADR-0029: immutable private ticket notes,
 independently delegated note_access none/read/write, scoped private activity and

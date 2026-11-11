@@ -33,11 +33,11 @@ migrations/versions/b46087000017_mail_quarantine.py, tests/test_mail_intake.py.
 capture_message(db,key,uid_validity,uid,raw)->CaptureReceipt with source_id,
 envelope_id,variant_id,state,replayed; validate_intake_event(event)->bool.
 
-- [ ] Write/run failing real PostgreSQL tests for all review-focus inputs,
+- [x] Write/run failing real PostgreSQL tests for all review-focus inputs,
   source/UID scope, collision/replay, raw limits, atomicity and concurrency.
-- [ ] Implement the three constrained tables, append-only variants and owner-side
+- [x] Implement the three constrained tables, append-only variants and owner-side
   functions, strict redacted events and intentional private consumer acknowledgement.
-- [ ] Prove SQL hash/length/FKs/immutability, runtime denial and guarded migration;
+- [x] Prove SQL hash/length/FKs/immutability, runtime denial and guarded migration;
   run focused API, Ruff/format/mypy, migration consistency and full API. Commit.
 
 ### Task 2 Restricted binary-stdin operator command
@@ -46,10 +46,10 @@ envelope_id,variant_id,state,replayed; validate_intake_event(event)->bool.
 **Interfaces:** register-source/capture commands from ADR-0030; opt-in env guard,
 DatabaseSettings, generic safe error, minimal JSON metadata receipt.
 
-- [ ] Write/run failing CLI guard/input/error tests and actual isolated capture.
-- [ ] Implement bounded binary stdin, sanitized argument failures, owner transaction
+- [x] Write/run failing CLI guard/input/error tests and actual isolated capture.
+- [x] Implement bounded binary stdin, sanitized argument failures, owner transaction
   and minimal output with no raw bytes/hash/header/addresses or credentials.
-- [ ] Run relevant checks and actual persisted command proof; document rollback
+- [x] Run relevant checks and actual persisted command proof; document rollback
   and limitations; commit the checked batch.
 
 ### Task 3 Packaged proof, independent review and publication
@@ -58,9 +58,9 @@ DatabaseSettings, generic safe error, minimal JSON metadata receipt.
 **Interfaces:** exact reviewed source, synthetic packaged intake/restart/denial,
 five hosted gates and nonempty image inventories.
 
-- [ ] Add real owner-side packaged synthetic capture/replay/restart proof with
+- [x] Add real owner-side packaged synthetic capture/replay/restart proof with
   runtime denial; complete one fresh whole-increment source review and fix Important.
-- [ ] Publish checked commits, inspect complete hosted results/artifacts and scan
+- [x] Publish checked commits, inspect complete hosted results/artifacts and scan
   severities. Freeze sanitized evidence before any permitted scratch cleanup.
-- [ ] Record bounded completion and remaining native email work; publish Markdown
+- [x] Record bounded completion and remaining native email work; publish Markdown
   closure and verify clean actual remote main with unchanged tested product source.

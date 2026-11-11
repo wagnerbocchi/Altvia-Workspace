@@ -212,6 +212,8 @@ currently covers this GitHub repository's main only, not production services.
 | Q-17 | Engineering should diagnose remaining browser intermittency. Earlier Windows task/axe observations and the initial Phase 3A contact timeout remain unexplained | Phase 3B confirmed separate project-test interference through a shared-reader selection capture. Dedicated target 9e183ef plus preserved reader-session assertions passed local/hosted 96. Preserve failed logs and existing caps/timeouts/retries. The earlier contact cause remains unestablished | Remaining runner reliability branches and final integrated acceptance |
 | Q-18 | Product/security: whether task-owned external labels should later associate with client contacts, and how to preserve their distinct read scopes | Bounded supplied labels only, including internal projects; no contact lookup, matching, account creation or content grant | Future association policy only; Phase 2H can proceed |
 
+| Q-19 | Support owner should select actual manual-close/reopen policy and any future automatic grace period | Phase 3C fixed queue flags default false. Synthetic tests explicitly enable manual behavior. Keep real calendars, SLA hours and automatic closure outside this manual setting | Production workflow policy and later SLA/automation acceptance |
+
 ## Backlog after core
 
 Account/status/password/role browser administration is implemented in30c577d,

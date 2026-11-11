@@ -1,7 +1,7 @@
 """Queue configuration DTOs, independent of customer ticket content."""
 
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import (
@@ -14,6 +14,8 @@ from pydantic import (
     model_validator,
 )
 from pydantic.json_schema import SkipJsonSchema
+
+from altvia import identity
 
 
 def _name(value: object) -> object:
@@ -105,3 +107,33 @@ class QueueReceipt(BaseModel):
 
 class CategoryReceipt(QueueReceipt):
     category_id: UUID
+
+
+class QueueMemberRole(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    role_name: Literal["viewer", "agent", "operations_manager"]
+
+
+class QueueMemberAdd(QueueMemberRole):
+    email: str = Field(min_length=3, max_length=254)
+
+    @field_validator("email")
+    @classmethod
+    def normalized_email(cls, value: str) -> str:
+        return identity.normalize_email(value)
+
+
+class QueueMemberOutput(QueueMemberRole):
+    id: UUID
+    display_name: str
+    active: bool
+
+
+class QueueMemberPage(BaseModel):
+    items: list[QueueMemberOutput]
+    next_cursor: str | None
+    queue_version: int
+
+
+class QueueMemberReceipt(QueueReceipt):
+    user_id: UUID

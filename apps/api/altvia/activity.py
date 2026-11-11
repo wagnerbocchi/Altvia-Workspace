@@ -56,7 +56,16 @@ QUEUE_EVENT_TYPES = {
     "ticket_queue.updated",
     "ticket_queue.category_created",
     "ticket_queue.category_updated",
+    "ticket_queue.access_changed",
 }
+
+
+class QueueAccessEventPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
+    actor_id: UUID
+    actor_kind: Literal["user"]
+    member_user_id: UUID
+    role_name: Literal["viewer", "agent", "operations_manager", "removed"]
 
 
 class QueueEventPayload(BaseModel):
@@ -277,8 +286,11 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                 | WorkEventPayload
                 | MilestoneEventPayload
                 | QueueEventPayload
+                | QueueAccessEventPayload
             )
-            if event.event_type in QUEUE_EVENT_TYPES:
+            if event.event_type == "ticket_queue.access_changed":
+                payload = QueueAccessEventPayload.model_validate(event.payload)
+            elif event.event_type in QUEUE_EVENT_TYPES:
                 payload = QueueEventPayload.model_validate(event.payload)
                 if (payload.category_id is not None) != (
                     event.event_type

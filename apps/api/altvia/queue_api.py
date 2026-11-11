@@ -24,13 +24,18 @@ from altvia.admin_http import (
     authenticate_request,
 )
 from altvia.config import Settings
-from altvia.models import ActivityEvent, Team, TicketCategory, TicketQueue, User
+from altvia.models import ActivityEvent, RoleBinding, Team, TicketCategory, TicketQueue, User
 from altvia.queue_schemas import (
     CategoryCreate,
     CategoryOutput,
     CategoryPage,
     CategoryReceipt,
     QueueCreate,
+    QueueMemberAdd,
+    QueueMemberOutput,
+    QueueMemberPage,
+    QueueMemberReceipt,
+    QueueMemberRole,
     QueueOutput,
     QueuePage,
     QueuePatch,
@@ -327,5 +332,137 @@ def create_queue_router(engine: Engine, settings: Settings) -> APIRouter:
                 )
             _etag(response, row.version)
             return CategoryOutput.model_validate(row)
+
+    @router.get("/ticket-queues/{queue_id}/members", response_model=QueueMemberPage)
+    def members(
+        queue_id: UUID,
+        request: Request,
+        limit: Annotated[int, Query(ge=1, le=100)] = 50,
+        cursor: Annotated[str | None, Query(max_length=250)] = None,
+    ) -> QueueMemberPage:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings)
+            queue, _, _, _ = registry.scoped_queue(db, actor.id, queue_id)
+            _collection(request)
+            scope = f"queue-members:{actor.id}:{queue_id}"
+            last = _cursor(cursor, scope)
+            query = (
+                select(User, RoleBinding.role_name)
+                .join(RoleBinding, RoleBinding.user_id == User.id)
+                .where(RoleBinding.scope_kind == "queue", RoleBinding.queue_id == queue_id)
+                .order_by(User.id)
+                .limit(limit + 1)
+            )
+            if last is not None:
+                query = query.where(User.id > last)
+            rows = list(db.execute(query))
+            if (
+                db.scalar(select(TicketQueue.version).where(TicketQueue.id == queue_id))
+                != queue.version
+            ):
+                raise identity.IdentityError(409, "version_conflict")
+            return QueueMemberPage(
+                queue_version=queue.version,
+                items=[
+                    QueueMemberOutput(
+                        id=user.id,
+                        display_name=user.display_name,
+                        active=user.active,
+                        role_name=role,
+                    )
+                    for user, role in rows[:limit]
+                ],
+                next_cursor=_next_cursor(scope, rows[limit - 1][0].id)
+                if len(rows) > limit
+                else None,
+            )
+
+    @router.post(
+        "/ticket-queues/{queue_id}/members",
+        response_model=QueueMemberReceipt,
+        status_code=201,
+        responses={200: {"model": QueueMemberReceipt}},
+        openapi_extra={"parameters": [IF_MATCH, IDEMPOTENCY_KEY]},
+    )
+    def add_member(
+        queue_id: UUID, body: QueueMemberAdd, request: Request, response: Response
+    ) -> QueueMemberReceipt:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings, write=True)
+            queue, _, team_active, _ = registry.scoped_queue(db, actor.id, queue_id, write=True)
+            version = _expected_version(request)
+            route = f"/api/v1/ticket-queues/{queue_id}/members"
+            key, digest, saved = _operation(db, actor, request, route, body.model_dump(mode="json"))
+            if saved is not None:
+                response.status_code = 200
+                return QueueMemberReceipt.model_validate(saved.result)
+            if queue.version != version:
+                raise identity.IdentityError(409, "version_conflict")
+            target = db.scalar(
+                select(User).where(User.email_normalized == body.email).with_for_update()
+            )
+            if target is None:
+                raise identity.IdentityError(422, "invalid_queue_member")
+            registry.change_queue_access(
+                db,
+                target,
+                queue,
+                team_active,
+                body.role_name,
+                actor.id,
+                request.state.correlation_id,
+            )
+            result = QueueMemberReceipt(queue_id=queue.id, user_id=target.id)
+            _remember(db, actor, route, key, digest, result, 201)
+            return result
+
+    @router.patch(
+        "/ticket-queues/{queue_id}/members/{user_id}",
+        status_code=204,
+        openapi_extra={"parameters": [IF_MATCH]},
+    )
+    def change_member(
+        queue_id: UUID, user_id: UUID, body: QueueMemberRole, request: Request
+    ) -> Response:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings, write=True)
+            queue, _, team_active, _ = registry.scoped_queue(db, actor.id, queue_id, write=True)
+            if queue.version != _expected_version(request):
+                raise identity.IdentityError(409, "version_conflict")
+            target = registry.queue_access_user(db, queue.id, user_id)
+            if target is None:
+                raise identity.IdentityError(404, "not_found")
+            registry.change_queue_access(
+                db,
+                target,
+                queue,
+                team_active,
+                body.role_name,
+                actor.id,
+                request.state.correlation_id,
+            )
+            response = Response(status_code=204)
+            _etag(response, queue.version)
+            return response
+
+    @router.delete(
+        "/ticket-queues/{queue_id}/members/{user_id}",
+        status_code=204,
+        openapi_extra={"parameters": [IF_MATCH]},
+    )
+    def remove_member(queue_id: UUID, user_id: UUID, request: Request) -> Response:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings, write=True)
+            queue, _, team_active, _ = registry.scoped_queue(db, actor.id, queue_id, write=True)
+            if queue.version != _expected_version(request):
+                raise identity.IdentityError(409, "version_conflict")
+            target = registry.queue_access_user(db, queue.id, user_id)
+            if target is not None:
+                registry.change_queue_access(
+                    db, target, queue, team_active, None, actor.id, request.state.correlation_id
+                )
+            response = Response(status_code=204)
+            _etag(response, queue.version)
+            return response
 
     return router

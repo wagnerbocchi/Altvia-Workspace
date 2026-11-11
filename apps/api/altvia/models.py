@@ -59,13 +59,19 @@ class RoleBinding(Base):
     __table_args__ = (
         CheckConstraint(
             "(scope_kind = 'global' AND team_id IS NULL AND client_id IS NULL "
-            "AND project_id IS NULL AND role_name = 'platform_admin') OR "
+            "AND project_id IS NULL AND queue_id IS NULL AND role_name = 'platform_admin') OR "
             "(scope_kind = 'team' AND team_id IS NOT NULL AND client_id IS NULL "
-            "AND project_id IS NULL AND role_name IN ('viewer','operations_manager')) OR "
+            "AND project_id IS NULL AND queue_id IS NULL "
+            "AND role_name IN ('viewer','operations_manager')) OR "
             "(scope_kind = 'client' AND client_id IS NOT NULL AND team_id IS NULL "
-            "AND project_id IS NULL AND role_name IN ('viewer','operations_manager')) OR "
+            "AND project_id IS NULL AND queue_id IS NULL "
+            "AND role_name IN ('viewer','operations_manager')) OR "
             "(scope_kind = 'project' AND project_id IS NOT NULL AND team_id IS NULL "
-            "AND client_id IS NULL AND role_name IN ('viewer','agent','project_manager'))",
+            "AND client_id IS NULL AND queue_id IS NULL "
+            "AND role_name IN ('viewer','agent','project_manager')) OR "
+            "(scope_kind = 'queue' AND queue_id IS NOT NULL AND team_id IS NULL "
+            "AND client_id IS NULL AND project_id IS NULL "
+            "AND role_name IN ('viewer','agent','operations_manager'))",
             name="ck_role_binding_scope",
         ),
         Index(
@@ -97,6 +103,13 @@ class RoleBinding(Base):
             unique=True,
             postgresql_where=text("scope_kind = 'project'"),
         ),
+        Index(
+            "uq_role_bindings_queue",
+            "user_id",
+            "queue_id",
+            unique=True,
+            postgresql_where=text("scope_kind = 'queue'"),
+        ),
     )
     id: Mapped[UUID] = mapped_column(
         primary_key=True, default=uuid4, server_default=func.gen_random_uuid()
@@ -107,6 +120,9 @@ class RoleBinding(Base):
     team_id: Mapped[UUID | None] = mapped_column(ForeignKey("teams.id"))
     client_id: Mapped[UUID | None] = mapped_column(ForeignKey("clients.id"))
     project_id: Mapped[UUID | None] = mapped_column(ForeignKey("projects.id"))
+    queue_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("ticket_queues.id", name="fk_role_binding_queue", ondelete="RESTRICT")
+    )
 
 
 class AuditLog(Base):

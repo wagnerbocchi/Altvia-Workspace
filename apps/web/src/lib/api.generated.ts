@@ -566,6 +566,42 @@ export interface paths {
         patch: operations["patch_category_api_v1_ticket_queues__queue_id__categories__category_id__patch"];
         trace?: never;
     };
+    "/api/v1/ticket-queues/{queue_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Members */
+        get: operations["members_api_v1_ticket_queues__queue_id__members_get"];
+        put?: never;
+        /** Add Member */
+        post: operations["add_member_api_v1_ticket_queues__queue_id__members_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ticket-queues/{queue_id}/members/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Member */
+        delete: operations["remove_member_api_v1_ticket_queues__queue_id__members__user_id__delete"];
+        options?: never;
+        head?: never;
+        /** Change Member */
+        patch: operations["change_member_api_v1_ticket_queues__queue_id__members__user_id__patch"];
+        trace?: never;
+    };
     "/api/v1/users": {
         parameters: {
             query?: never;
@@ -1510,6 +1546,63 @@ export interface components {
              * Format: uuid
              */
             team_id: string;
+        };
+        /** QueueMemberAdd */
+        QueueMemberAdd: {
+            /** Email */
+            email: string;
+            /**
+             * Role Name
+             * @enum {string}
+             */
+            role_name: "viewer" | "agent" | "operations_manager";
+        };
+        /** QueueMemberOutput */
+        QueueMemberOutput: {
+            /** Active */
+            active: boolean;
+            /** Display Name */
+            display_name: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Role Name
+             * @enum {string}
+             */
+            role_name: "viewer" | "agent" | "operations_manager";
+        };
+        /** QueueMemberPage */
+        QueueMemberPage: {
+            /** Items */
+            items: components["schemas"]["QueueMemberOutput"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /** Queue Version */
+            queue_version: number;
+        };
+        /** QueueMemberReceipt */
+        QueueMemberReceipt: {
+            /**
+             * Queue Id
+             * Format: uuid
+             */
+            queue_id: string;
+            /**
+             * User Id
+             * Format: uuid
+             */
+            user_id: string;
+        };
+        /** QueueMemberRole */
+        QueueMemberRole: {
+            /**
+             * Role Name
+             * @enum {string}
+             */
+            role_name: "viewer" | "agent" | "operations_manager";
         };
         /** QueueOutput */
         QueueOutput: {
@@ -3733,6 +3826,155 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CategoryOutput"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    members_api_v1_ticket_queues__queue_id__members_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                queue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueMemberPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_member_api_v1_ticket_queues__queue_id__members_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                queue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QueueMemberAdd"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueMemberReceipt"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueMemberReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_member_api_v1_ticket_queues__queue_id__members__user_id__delete: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+            };
+            path: {
+                queue_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_member_api_v1_ticket_queues__queue_id__members__user_id__patch: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+            };
+            path: {
+                queue_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QueueMemberRole"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

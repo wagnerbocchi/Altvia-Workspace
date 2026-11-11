@@ -76,7 +76,7 @@ round trip. Production rollback preserves all expanded data and event support.
 
 Extend the incumbent Operate design with /service-desk/queues/{id}/members.
 Use existing protected-intent and reviewed-version patterns. Add by known email,
-freeze exact normalized email/role/version/key for explicit review, then submit.
+freeze exact submitted email/role/version/key for explicit review, then submit.
 Uncertain retries preserve the original intent through parent/list failures.
 After a receipt, refresh authoritative queue and roster before enabling edits.
 Conflicts require explicit reload/review. Removal is confirmed. Explain that

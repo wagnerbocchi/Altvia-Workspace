@@ -423,3 +423,77 @@ def test_queue_roster_cursors_bind_actor_and_parent(admin_client, db_engine, see
         admin_client.get(path + "/members", params={"cursor": page["next_cursor"]}).status_code
         == 422
     )
+
+
+@pytest.mark.parametrize("operation", ["add", "change", "remove"])
+def test_queue_access_and_target_logout_finish_without_deadlock(
+    admin_client, db_engine, monkeypatch, operation
+):
+    from altvia import queue_registry
+
+    path, target_id = setup(admin_client, db_engine)
+    version = 1
+    if operation != "add":
+        assert add(admin_client, path).status_code == 201
+        version = 2
+    member_path = path + "/members/" + str(target_id)
+    logout_authenticated, target_locked, allow_logout = Event(), Event(), Event()
+    real_record = identity.record_event
+    real_invalidate = queue_registry._invalidate_sessions
+
+    def record(db, actor_id, resource_id, event, *args, **kwargs):
+        if event == "identity.session_revoked" and actor_id == target_id:
+            logout_authenticated.set()
+            assert allow_logout.wait(10)
+        return real_record(db, actor_id, resource_id, event, *args, **kwargs)
+
+    def invalidate(db, user, now):
+        if user.id == target_id:
+            target_locked.set()
+        return real_invalidate(db, user, now)
+
+    def mutate():
+        if operation == "add":
+            return add(admin_client, path)
+        if operation == "change":
+            return admin_client.patch(
+                member_path, json={"role_name": "viewer"}, headers=preconditions(version)
+            )
+        return admin_client.delete(member_path, headers=preconditions(version))
+
+    with TestClient(
+        admin_client.app,
+        base_url=str(admin_client.base_url),
+        headers={"Origin": str(admin_client.base_url).rstrip("/")},
+    ) as target:
+        sign_in(target, "member@example.test")
+        monkeypatch.setattr(identity, "record_event", record)
+        monkeypatch.setattr(queue_registry, "_invalidate_sessions", invalidate)
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            logout = pool.submit(target.delete, "/api/v1/auth/sessions/current")
+            try:
+                assert logout_authenticated.wait(5)
+                mutation = pool.submit(mutate)
+                assert target_locked.wait(5)
+            finally:
+                allow_logout.set()
+            assert logout.result(timeout=15).status_code == 204
+            assert mutation.result(timeout=15).status_code == (201 if operation == "add" else 204)
+        assert target.get("/api/v1/auth/me").status_code == 401
+    assert admin_client.get(path).json()["version"] == version + 1
+    changes = events(db_engine, path)
+    assert len(changes) == (1 if operation == "add" else 2)
+    assert changes[-1].payload["role_name"] in {"agent", "viewer", "removed"}
+    members = admin_client.get(path + "/members").json()["items"]
+    assert members == (
+        []
+        if operation == "remove"
+        else [
+            {
+                "id": str(target_id),
+                "display_name": "Queue member",
+                "active": True,
+                "role_name": "viewer" if operation == "change" else "agent",
+            }
+        ]
+    )

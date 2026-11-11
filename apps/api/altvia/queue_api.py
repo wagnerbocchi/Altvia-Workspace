@@ -399,7 +399,9 @@ def create_queue_router(engine: Engine, settings: Settings) -> APIRouter:
             if queue.version != version:
                 raise identity.IdentityError(409, "version_conflict")
             target = db.scalar(
-                select(User).where(User.email_normalized == body.email).with_for_update()
+                select(User)
+                .where(User.email_normalized == body.email)
+                .with_for_update(key_share=True)
             )
             if target is None:
                 raise identity.IdentityError(422, "invalid_queue_member")

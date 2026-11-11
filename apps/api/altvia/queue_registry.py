@@ -121,7 +121,7 @@ def queue_access_user(db: Session, queue_id: UUID, user_id: UUID) -> User | None
         .where(
             User.id == user_id, RoleBinding.scope_kind == "queue", RoleBinding.queue_id == queue_id
         )
-        .with_for_update(of=User)
+        .with_for_update(of=User, key_share=True)
     )
 
 

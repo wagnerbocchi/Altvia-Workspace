@@ -30,7 +30,9 @@ cannot operate queue grants, so preserve the expanded schema and compatible work
 ## Transaction and failure invariants
 
 Take the existing identity write lock before authentication, then owning team,
-queue and target account. Recheck current configuration authority before protected
+queue and target account. Target account locks use PostgreSQL FOR NO KEY UPDATE,
+matching existing management/project writes and permitting concurrent logout audit
+FK key-share locks. Recheck current configuration authority before protected
 replay. Actual changes invalidate all target sessions and advance auth_version,
 advance the queue aggregate once and atomically emit ticket_queue.access_changed
 audit/outbox. No-op writes preserve versions, sessions and events. Actual grants

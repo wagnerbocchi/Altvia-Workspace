@@ -60,10 +60,17 @@ entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
-Phase 3E-b selects ADR-0031 before code: bounded read-only IMAPS into existing
-quarantine, namespace binding, fenced leases and atomic durable checkpoints.
-Tests use controlled synthetic TLS only; Q-03/Q-16/Q-21 and live mailbox acceptance
-remain open. MIME verification/promotion/public replies retain later contracts.
+Phase 3E-b development is complete under ADR-0031: bounded read-only IMAPS into
+existing quarantine, authenticated namespace binding, fenced leases and atomic
+durable checkpoints. Contracts add42e6 preceded implementation. Final 426d4b8
+passed all five hosted gates: 682 API/116 browser tests, actual packaged TLS poll,
+restart/cursor persistence and runtime denial. Both Important review findings
+have executed RED/GREEN regressions; no deferred Minor remains. Source security
+has four existing LOW findings, zero blockers/secrets; five nonempty image
+inventories have zero vulnerabilities. See docs/phase-3e-b-imap-evidence.md.
+Only controlled synthetic TLS was used. Q-03/Q-09/Q-16/Q-21, live mailbox acceptance,
+MIME verification/promotion, public replies/SMTP and private files remain open.
+Phase 3/MVP and consolidated actual-target qualification remain open.
 
 Phase 3E-a development is complete under ADR-0030: owner-only durable native mail
 quarantine intake, explicit source/UID identity, immutable raw variants, permanent

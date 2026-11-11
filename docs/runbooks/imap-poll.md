@@ -70,3 +70,8 @@ Validation uses actual controlled TLS, disposable PostgreSQL, malicious frame/
 epoch/partial failure tests, lease fencing, runtime denial, SQL/migration checks,
 actual command output and rebuilt packaged persistence. All five hosted gates
 remain required. Actual x86-64-v1 qualification follows remaining MVP development.
+
+Backend TLS tests issue synthetic certificates with the installed OpenSSL CLI
+(system executable or Git for Windows). They need no frontend packages. The
+container/browser fixture reuses its existing Node/selfsigned issuer. Neither
+test issuer becomes a production runtime dependency or changes system trust.

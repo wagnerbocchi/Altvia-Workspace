@@ -150,6 +150,18 @@ verified promotion or SMTP/public conversation is delivered by this boundary.
 Native end-to-end email, Phase 3/MVP acceptance and final actual-target
 qualification remain open.
 
+Phase 3E-b delivers the read-only IMAPS increment of FR-007/012 under ADR-0031:
+owner-only verified TLS polling into private opaque quarantine, authenticated
+source binding, bounded protocol buffering and fenced durable epoch/cursor resume.
+Contracts add42e6 preceded implementation; final 426d4b8 passed all five hosted
+gates with 682 API/116 browser tests, actual packaged TLS and restarted checkpoint
+persistence/runtime-denial proof. Five nonempty image inventories have zero
+vulnerabilities; source checks have zero blockers/secrets and four existing LOW
+findings. See docs/phase-3e-b-imap-evidence.md. No real mailbox was contacted.
+MIME display, sender/thread verification, ticket promotion, public replies/SMTP,
+private files, complete native email and final actual-target qualification remain
+outside this increment. Phase 3 and full MVP acceptance remain open.
+
 Non-goals: SaaS billing/subscriptions, marketplace, local AI/embeddings, external
 search cluster, advanced ITIL/CMDB, advanced Gantt and native mobile applications.
 No speculative scaffolding for these capabilities.

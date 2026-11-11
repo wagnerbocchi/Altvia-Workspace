@@ -29,11 +29,11 @@ migrations/versions/b46087000018_imap_poll_states.py, tests/test_imap_poll.py.
 **Interfaces:** acquire/release fenced lease; initialize selected epoch; atomic
 capture_checkpoint and scan_checkpoint; record_intake_event extends current owner.
 
-- [ ] Write/run failing real PostgreSQL tests for leases/fencing, namespace/reset,
+- [x] Write/run failing real PostgreSQL tests for leases/fencing, namespace/reset,
   atomic capture/checkpoint/event failure, cursor bounds and legacy event compatibility.
-- [ ] Implement constrained private state, guarded migration and existing private
+- [x] Implement constrained private state, guarded migration and existing private
   audit/outbox integration with strict new payloads and unchanged old envelopes.
-- [ ] Run focused persistence/runtime/migration and static checks; commit checked source.
+- [x] Run focused persistence/runtime/migration and static checks; commit checked source.
 
 ### Task 2 Bounded read-only TLS collector and restricted CLI
 
@@ -42,12 +42,12 @@ scripts/imap_test_certificate.mjs, runbooks/imap-poll.md.
 **Interfaces:** IMAPPollSettings, poll_once(engine,settings,key)->PollReceipt;
 python -m altvia.imap_poll --source-key KEY with explicit opt-in/external secrets.
 
-- [ ] Write/run actual controlled TLS protocol RED for capture/resume and dangerous
+- [x] Write/run actual controlled TLS protocol RED for capture/resume and dangerous
   responses: oversized/truncated literal, wrong UID/epoch, bad certificates/auth,
   malformed SEARCH/lines, partial/batch/gap behavior and source locks during I/O.
-- [ ] Implement certificate-verified IMAPS/EXAMINE/PEEK with bounded wire parsing,
+- [x] Implement certificate-verified IMAPS/EXAMINE/PEEK with bounded wire parsing,
   monotonic read/write budget and network outside transactions. Keep data opaque.
-- [ ] Prove command guard/redaction and real persisted operator flow. Run local
+- [x] Prove command guard/redaction and real persisted operator flow. Run local
   affected suites, Ruff/format/mypy, generated-contract comparison and package build.
 
 ### Task 3 Independent review, packaged proof and publication
@@ -56,9 +56,13 @@ python -m altvia.imap_poll --source-key KEY with explicit opt-in/external secret
 **Interfaces:** exact reviewed source, synthetic TLS packaged receipt/checkpoint
 persistence after recreation, runtime denial and complete hosted scan inventories.
 
-- [ ] Add actual synthetic owner-side TLS poll proof and restarted PostgreSQL cursor
+- [x] Add actual synthetic owner-side TLS poll proof and restarted PostgreSQL cursor
   check. Complete one fresh whole-increment source review and fix Important findings.
-- [ ] Publish coherent checked commits; inspect all five exact-source hosted gates,
+- [x] Publish coherent checked commits; inspect all five exact-source hosted gates,
   complete logs/artifacts, severity metadata and nonempty image inventories.
-- [ ] Preserve hashed evidence, publish bounded Markdown closure, verify actual
+- [x] Preserve hashed evidence, publish bounded Markdown closure, verify actual
   remote main/clean tree and unchanged tested product source. Keep Phase3/MVP open.
+
+Acceptance: docs/phase-3e-b-imap-evidence.md records exact-source 426d4b8, all five
+successful hosted runs, local RED/GREEN, image inventories and immutable evidence.
+The closure commit contains Markdown only; Phase 3/MVP and final VM remain open.

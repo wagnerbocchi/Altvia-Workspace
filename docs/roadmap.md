@@ -60,6 +60,11 @@ entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
+Phase 3D implements ADR-0029's private ticket notes and separately delegated queue
+note_access. Contracts precede code, with old bindings default none. Complete the
+scoped persisted notes/browser path and privacy/replay tests before acceptance.
+Public replies, files, native email and later phases retain their own contracts.
+
 Phase 3C manual ticket development is complete under ADR-0028 and
 docs/plans/2026-11-10-manual-tickets.md. Contracts 22befa4 preceded backend 1751269
 and browser/packaged da7999c. Exact da7999c passed all five hosted gates with
@@ -230,6 +235,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-18 | Product/security: whether task-owned external labels should later associate with client contacts, and how to preserve their distinct read scopes | Bounded supplied labels only, including internal projects; no contact lookup, matching, account creation or content grant | Future association policy only; Phase 2H can proceed |
 
 | Q-19 | Support owner should select actual manual-close/reopen policy and any future automatic grace period | Phase 3C fixed queue flags default false. Synthetic tests explicitly enable manual behavior. Keep real calendars, SLA hours and automatic closure outside this manual setting | Production workflow policy and later SLA/automation acceptance |
+| Q-20 | Support/security owners should identify real internal-note readers and writers per queue | ADR-0029 defaults every old binding to none. Configuration managers can explicitly delegate read/write with current customer ceilings. Synthetic fixtures alone receive test grants | Real organizational note delegation and production privacy policy |
 
 ## Backlog after core
 

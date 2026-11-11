@@ -18,6 +18,10 @@
   managers alone delegate queue roles. Reuse identity-before-auth, reviewed queue
   versions, protected receipts, session invalidation and audit/outbox. Target
   account locks must use FOR NO KEY UPDATE so concurrent logout audit FKs proceed.
+- Private ticket notes use ADR-0029's explicit note_access none/read/write on the
+  existing queue binding, default none. Queue/customer authority remains required.
+  Preserve old omitted-field POST fingerprints and event envelopes. Notes are
+  immutable; denied callers receive no note body/ID/count or activity event.
 - Administrative account/role mutations must reuse altvia.management's lock protocol,
   last-active-admin guard, session invalidation and audit/outbox. A profile edit
   never grants roles; platform administration never bypasses customer scope.

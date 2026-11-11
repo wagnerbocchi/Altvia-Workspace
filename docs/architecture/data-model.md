@@ -1,5 +1,11 @@
 # Data model and planned migrations
 
+Phase3D ADR-0029 adds queue-bound note_access none|read|write with default none
+and SQL scope/role checks. Private ticket_notes stores immutable author/text,
+ticket version and UTC creation, with RESTRICT FKs and unique ticket/version.
+API receives SELECT/INSERT; worker projects redacted IDs without note table grants.
+Downgrade preserves note data, permission history and prior queue/ticket receipts.
+
 Design contract for the complete product. Applied development schema is limited
 to identity, team/idempotency and ADR-0017 activity migrations; other tables below
 remain planned. Execution evidence is in the Phase 1/1C reports, not this ERD.

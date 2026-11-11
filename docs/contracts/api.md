@@ -406,6 +406,14 @@ ingestion endpoint; mailbox adapters run as restricted worker jobs.
 
 ## State transitions and temporal semantics
 
+Phase3D private-note and queue note_access contracts are defined by ADR-0029.
+GET/POST `/tickets/{id}/notes` and scoped GET `/tickets/{id}/notes/{note_id}`
+enforce note.read/write independently of ticket scope. Strict plain-text protected
+writes return immutable ticket/note IDs. Member writes accept optional note_access
+none|read|write, preserving legacy omission/fingerprints and compatible grants.
+Ticket output adds can_read_notes/can_add_note. Ordinary activity filters private
+note events before pagination. Public reply/transport contracts follow separately.
+
 Work: todo -> in_progress/blocked/cancelled; in_progress -> blocked/done/cancelled;
 blocked -> todo/in_progress/cancelled; done -> in_progress (explicit reopen);
 cancelled -> todo (manager restore). Initial ongoing work enters in_progress;

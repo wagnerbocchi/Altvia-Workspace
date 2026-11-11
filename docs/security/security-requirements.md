@@ -58,6 +58,14 @@ approved and audited emergency grant. Never implement blanket `is_admin` bypass.
 | Analytics/export | explicit analytics grant | permitted team/client | permitted projects | own My Work only by default | explicit read/export grant |
 | Import/raw payload/audit | explicit import/audit role | explicit delegated role | deny | deny | deny |
 
+ADR-0029 implements private note authority as explicit queue note_access
+none|read|write, default none, restricted to agent/operations_manager bindings.
+Current queue role and customer ceiling also apply. Configuration managers
+delegate the capability through reviewed grants with session invalidation.
+Viewer downgrade/removal revokes it. Private notes use immutable plain text and
+privacy-filtered activity before paging. Public transport remains independently
+contracted under ADR-0005.
+
 Public messages mean requester-visible conversation, not anonymous internet
 readability. No external login in MVP. A public reply's recipients must be
 verified participants of that ticket/client; no arbitrary Reply-To passthrough.

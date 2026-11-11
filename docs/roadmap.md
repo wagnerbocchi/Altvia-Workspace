@@ -60,6 +60,13 @@ entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
+Phase 3E-a selects ADR-0030 before implementation: owner-only durable native mail
+quarantine intake, explicit source/UID identity, immutable raw variants and strict
+private event receipts. No sender verification, ticket promotion, MIME rendering,
+live mailbox connection or outbound delivery is inferred. Q-03/Q-16 remain open.
+The restricted operator flow is tested only with synthetic messages. Native IMAP,
+MIME triage and verified public conversation retain subsequent increments.
+
 Phase 3D development is complete under ADR-0029: immutable private ticket notes,
 independently delegated note_access none/read/write, scoped private activity and
 browser draft/uncertainty recovery. Contracts 4a5267a preceded backend 089bf39
@@ -246,6 +253,7 @@ currently covers this GitHub repository's main only, not production services.
 
 | Q-19 | Support owner should select actual manual-close/reopen policy and any future automatic grace period | Phase 3C fixed queue flags default false. Synthetic tests explicitly enable manual behavior. Keep real calendars, SLA hours and automatic closure outside this manual setting | Production workflow policy and later SLA/automation acceptance |
 | Q-20 | Support/security owners should identify real internal-note readers and writers per queue | ADR-0029 defaults every old binding to none. Configuration managers can explicitly delegate read/write with current customer ceilings. Synthetic fixtures alone receive test grants | Real organizational note delegation and production privacy policy |
+| Q-21 | Support/infrastructure owners should approve actual inbound mail sizes, traffic and quarantine storage budget | Phase 3E-a bounds opaque raw intake to 2 MiB and 16 distinct variants per UID identity; refuse acknowledgement on overflow and never advance a mailbox checkpoint | Production connector/storage sizing; controlled synthetic intake can proceed |
 
 ## Backlog after core
 

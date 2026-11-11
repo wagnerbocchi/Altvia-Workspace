@@ -134,6 +134,16 @@ test("@projects lost creation reply reuses original intent through independent r
   }, headers: { Origin: origin } });
   expect(provisioningLogin.status()).toBe(201);
   const provisioningHeaders = { Origin: origin, "X-CSRF-Token": (await provisioningLogin.json()).csrf_token };
+  // Project creation revokes the selected manager's sessions. This account
+  // belongs only to this test, so unrelated seeded sessions remain valid.
+  const delegateResponse = await request.post("/api/v1/users", { data: {
+    email: `project-delegate-${crypto.randomUUID()}@example.invalid`,
+    display_name: "Gestor exclusivo da recuperacao", password,
+  }, headers: { ...provisioningHeaders, "Idempotency-Key": crypto.randomUUID() } });
+  expect(delegateResponse.status()).toBe(201);
+  const delegate = await delegateResponse.json() as { id: string };
+  const readerSession = { Cookie: `__Host-altvia_session=${process.env.ALTVIA_E2E_WORK_READER_SESSION!}` };
+  expect((await request.get("/api/v1/auth/me", { headers: readerSession })).status()).toBe(200);
   const people = (await (await request.get("/api/v1/users?limit=100")).json()).items;
   const owner = people.find((row: { email: string }) => row.email === email);
   const seededTeam = await request.post("/api/v1/teams", { data: { name: "Equipe para paginação" }, headers: { ...provisioningHeaders, "Idempotency-Key": crypto.randomUUID() } });
@@ -142,7 +152,7 @@ test("@projects lost creation reply reuses original intent through independent r
   for (let index = 0; index < 11; index++) {
     expect((await request.post("/api/v1/projects", { data: { name: `Projeto paginado ${index}`, scope_kind: "internal", team_id: seededTeamId, manager_user_id: owner.id }, headers: { ...provisioningHeaders, "Idempotency-Key": crypto.randomUUID() } })).status()).toBe(201);
   }
-  const me = await login(page);
+  await login(page);
   const team = await page.request.post("/api/v1/teams", { data: { name: "Equipe da resposta perdida" }, headers: await headers(page) });
   const teamId = (await team.json()).id;
   await page.goto("/projects");
@@ -150,12 +160,23 @@ test("@projects lost creation reply reuses original intent through independent r
   await selectTeam(page, teamId);
   const manager = page.getByLabel("Gestor inicial", { exact: true });
   await expect.poll(() => manager.locator("option").count()).toBeGreaterThan(2);
-  const other = await manager.locator("option").evaluateAll((nodes, self) => nodes.map(node => (node as HTMLOptionElement).value).find(value => value && value !== self)!, me.id);
-  await manager.selectOption(other);
+  const managerPages = page.getByRole("navigation", { name: "Páginas de gestor inicial", exact: true });
+  for (let attempt = 0; attempt < 10; attempt++) {
+    if (await manager.locator(`option[value="${delegate.id}"]`).count()) {
+      await manager.selectOption(delegate.id);
+      break;
+    }
+    const response = page.waitForResponse(result => result.url().includes("/api/v1/users?") && result.ok());
+    await managerPages.getByRole("button", { name: "Próximas contas", exact: true }).click();
+    const rows = (await (await response).json()).items;
+    await expect(manager.locator(`option[value="${rows[0].id}"]`)).toHaveCount(1);
+  }
+  await expect(manager).toHaveValue(delegate.id);
   const intents: { key: string | undefined; body: string | null }[] = [];
   let first = true;
   await page.route("**/api/v1/projects", async route => {
     if (route.request().method() !== "POST") return route.continue();
+    expect(route.request().postDataJSON().manager_user_id).toBe(delegate.id);
     intents.push({ key: route.request().headers()["idempotency-key"], body: route.request().postData() });
     const response = await route.fetch();
     expect(response.status()).toBe(first ? 201 : 200);
@@ -184,6 +205,7 @@ test("@projects lost creation reply reuses original intent through independent r
   await expect(page.getByRole("button", { name: "Cadastrar projeto", exact: true })).toBeEnabled();
   expect(intents).toHaveLength(2);
   expect(intents[1]).toEqual(intents[0]);
+  expect((await request.get("/api/v1/auth/me", { headers: readerSession })).status()).toBe(200);
 });
 
 test("@projects version conflict preserves original edit until deliberate discard", async ({ page }) => {

@@ -62,27 +62,35 @@ ticket, enforced by SQL uniqueness. Worker pre-DATA checks reuse ticket visibili
 and current writer authority, active author account, parents/contact/participant;
 only required eligibility columns may be granted, never password/session hashes.
 
-- [ ] Write/run actual PostgreSQL/API RED for missing delivery routes and models.
+- [x] Write/run actual PostgreSQL/API RED for missing delivery routes and models.
   Include hidden/mismatched message parents, note ID rejection, no contact proof,
   changed/archived requester, revoked participant, source/queue mismatch, actor
   denial, protocol/replay/stale/unique/race and atomic event failure.
-- [ ] Implement additive FKs/checks/indexes, frozen snapshots and guarded rollback.
+- [x] Implement additive FKs/checks/indexes, frozen snapshots and guarded rollback.
   Keep API attestation/sender writes denied. Existing worker may update only
   delivery attempt columns; public eligibility checks get explicit column reads,
   never user credential fields, raw/preview tables or note content. Reuse existing
   ticket visibility/assignment query ownership in the pre-DATA check.
-- [ ] Add lease/state tests for expired preparing versus transmitting, exact token
+- [x] Add lease/state tests for expired preparing versus transmitting, exact token
   fences, revoked eligibility, safe failures/retry8/backoff cap, no transaction
   around network I/O, accepted timestamp and drained owner reconciliation.
-- [ ] Run `uv run pytest apps/api/tests/test_mail_delivery.py` against a guarded
+- [x] Run `uv run pytest apps/api/tests/test_mail_delivery.py` against a guarded
   actual PostgreSQL DB. Expected: all protocol/state/security assertions pass.
   Run affected ticket/activity/provision tests, Ruff/mypy, exporter comparison and
   actual package build. Commit the coherent persisted delivery owner.
+
+Task1 local completion2026-11-12:5c6da0d,132 affected tests in502.50s, static/mypy45/
+Bandit/package/generated contracts passed. Actual long-domain and ORM/migration
+drift regressions corrected; original static review plus scoped correction review
+passed. Network/browser/hosted/integrated target proof remains separate.
 
 ### Task 2: Bounded TLS SMTP transport and actual worker integration
 
 **Files:** Create altvia/smtp_transport.py and tests/test_smtp_transport.py;
 modify worker.py, config.py, provision.py and runtime tests only as required.
+Add infra/compose.smtp.yaml, safe example configuration and delivery runbook for
+optional SMTP file mounting/egress; preserve the base stack's private networks,
+resource limits, users and secrets. No provider/production configuration is run.
 
 **Interfaces:** Consume a claimed frozen delivery/attempt token and trusted
 source configuration. Return only an accepted/safe-retry/permanent/uncertain
@@ -90,6 +98,13 @@ outcome and fixed error code. `deliver_once(engine, delivery_id, settings)`
 coordinates persisted stage transitions outside network transactions. The worker
 mail actor receives a delivery UUID; SQL is authoritative and Redis is only a
 duplicate-tolerant wake-up. Absent/mismatched configuration performs no send.
+Consume Task1's actual signatures from its report. WorkerSettings adds optional
+smtp_accounts_file (ALTVIA_SMTP_ACCOUNTS_FILE), default None; load the bounded
+owner-selected account map once at startup. Existing identity processing must
+continue normally with SMTP absent. Preserve bounded worker shutdown even with
+active SMTP; handle DNS/TLS/greeting/read/cleanup within an actual finite budget.
+After positive final DATA250, QUIT/cleanup failure never undoes acceptance.
+Unexpected positive/malformed final DATA replies are uncertain, never safe retry.
 
 - [ ] Write/run RED with a real controlled local TLS SMTP server: exact envelope
   and stable plain-text MIME, implicit TLS, required STARTTLS/re-EHLO, certificate

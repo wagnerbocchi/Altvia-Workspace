@@ -11,6 +11,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import httpx
+from packaged_smtp_proof import prepare_packaged_smtp, verify_packaged_smtp_restart
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -1152,6 +1153,9 @@ with Session(make_engine(Settings())) as db,db.begin():
     set_client_access(db,'note-reader@example.test',UUID(json.load(sys.stdin)['client']),'viewer')
 """
                             exec_api(note_reader_grant, {"client": customer})
+                            delivery_proof = prepare_packaged_smtp(
+                                contributor, ticket_body, run, compose, ROOT, secret_dir
+                            )
                     work_body = {
                         "project_id": project_id,
                         "title": f"Packaged work {index}",
@@ -1521,6 +1525,8 @@ with Session(make_engine(Settings())) as db,db.begin():
             assert persisted_messages[0]["delivery_status"] == "draft"
             assert persisted_messages[0]["ticket_version"] == 2
             assert client.get(message_ticket_path).json()["status"] == "new"
+            verify_packaged_smtp_restart(client, delivery_proof, run, compose, work)
+            print("Packaged verified SMTP acceptance, uncertainty, SIGTERM and restart passed.")
             (work / "public-message-proof.json").write_text(
                 json.dumps(
                     {

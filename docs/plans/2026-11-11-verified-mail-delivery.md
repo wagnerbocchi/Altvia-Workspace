@@ -137,14 +137,22 @@ apps/web/tests/ticket-delivery.spec.ts; update the task-owned surface brief.
 delivery intent freezes message_id/participant_id/source_id/key/ticket version.
 Display persisted state from the API; no local optimistic accepted/delivered state.
 
-- [ ] Load Impeccable context/craft floor and preserve the incumbent ticket layout.
+- [x] Load Impeccable context/craft floor and preserve the incumbent ticket layout.
   Add exact saved-body/recipient/sender review and explicit queue-send action;
   never prefill from notes. Show accepted/failed/uncertain wording and real errors.
-- [ ] Write/run real browser persistence, readonly/unverified denial, private-note
+- [x] Write/run real browser persistence, readonly/unverified denial, private-note
   separation, HTTP lost-result original replay, ownership changes and acknowledged
   read recovery. Check keyboard/axe/overflow, desktop/mobile and both themes.
-- [ ] Run web check/build/generated comparison and full browser suite; obtain
+- [x] Run web check/build/generated comparison and full browser suite; obtain
   required rendered review/documentation. Commit the checked UI slice.
+
+Task3 development completion2026-11-12:e58c786,142 full browser cases in7.5m,
+11 focused in1.4m, check/build/generated comparison and fixture lint/format passed.
+Source specification/quality review PASS with no findings. The visual review's
+pending-confirmation wording defect has executed RED/GREEN and independent
+ship scoring of12 recaptures. Documenter preserved the incumbent system. Raw
+nine-file freeze matched before/after full regression and review. Published
+directly to main; exact-source hosted and packaged SMTP gates remain Task4.
 
 ### Task 4: Integrated acceptance and immediate next stage
 

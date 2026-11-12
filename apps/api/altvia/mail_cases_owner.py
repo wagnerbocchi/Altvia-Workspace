@@ -69,7 +69,7 @@ def _event(db: Session, case: MailTriageCase, event_type: str) -> None:
         "state": case.state,
     }
     event = OutboxEvent(
-        schema_version=1,
+        schema_version=2 if event_type == "mail.case_aliased" and case.state == "promoted" else 1,
         aggregate_type="mail_case",
         aggregate_id=case.id,
         aggregate_version=case.version,
@@ -233,7 +233,7 @@ def attest_case(
             assert primary is not None
             equivalent = primary.raw_sha256 == variant.raw_sha256 and primary.raw_message == raw
             disposition = "alias" if equivalent else "collision"
-            if equivalent and case.state != "ready":
+            if equivalent and case.state not in {"ready", "promoted"}:
                 raise CaseError("case_invalidated")
             _advance(source, case)
             if not equivalent:
@@ -311,7 +311,7 @@ def revoke_case(engine: Engine, case_id: UUID, expected_version: int) -> None:
         db.execute(
             select(ClientContact.id).where(ClientContact.id == case.contact_id).with_for_update()
         ).one()
-        if case.version != expected_version or case.state != "ready":
+        if case.version != expected_version or case.state not in {"ready", "promoted"}:
             raise CaseError("case_version_conflict")
         _advance(source, case)
         case.state = "revoked"

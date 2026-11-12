@@ -14,7 +14,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from altvia.config import Settings
 from altvia.database import make_engine
-from altvia.mail_cases import READ_COLUMNS
+from altvia.mail_cases import READ_COLUMNS, ROUTING_COLUMNS
 
 CRUD_TABLES = (
     "users",
@@ -46,6 +46,7 @@ ROLE_PRIVILEGES = {
         "ticket_status_history": {"SELECT", "INSERT"},
         "ticket_notes": {"SELECT", "INSERT"},
         "ticket_messages": {"SELECT", "INSERT"},
+        "ticket_incoming_messages": {"SELECT", "INSERT"},
         "mail_senders": {"SELECT"},
         "ticket_mail_threads": {"SELECT", "INSERT"},
         "outbound_messages": {"SELECT", "INSERT"},
@@ -68,9 +69,10 @@ ROLE_PRIVILEGES = {
 
 
 APP_COLUMN_READS = {
-    "mail_triage_cases": READ_COLUMNS,
+    "mail_triage_cases": READ_COLUMNS | ROUTING_COLUMNS,
     "ticket_participants": {"id", "ticket_id", "contact_id", "email", "active", "version"},
 }
+APP_COLUMN_UPDATES = {"mail_triage_cases": {"state", "version", "ticket_id", "incoming_message_id"}}
 WORKER_COLUMN_READS = {
     "users": {"id", "active"},
     "tickets": {"id", "client_id", "queue_id", "requester_id", "assignee_id", "status"},
@@ -177,8 +179,16 @@ def _provision_role(connection: Connection, engine: Engine, login_url: str, name
             g.privilege_type in privileges.get(g.relname, set())
             or (
                 name == "altvia_app"
-                and g.privilege_type == "SELECT"
-                and g.column_name in APP_COLUMN_READS.get(g.relname, set())
+                and (
+                    (
+                        g.privilege_type == "SELECT"
+                        and g.column_name in APP_COLUMN_READS.get(g.relname, set())
+                    )
+                    or (
+                        g.privilege_type == "UPDATE"
+                        and g.column_name in APP_COLUMN_UPDATES.get(g.relname, set())
+                    )
+                )
             )
             or (
                 name == "altvia_worker"
@@ -237,6 +247,14 @@ def _provision_role(connection: Connection, engine: Engine, login_url: str, name
         for table, columns in APP_COLUMN_READS.items():
             raw.execute(
                 sql.SQL("GRANT SELECT ({}) ON {} TO altvia_app").format(
+                    sql.SQL(",").join(sql.Identifier(c) for c in sorted(columns)),
+                    sql.Identifier("public", table),
+                )
+            )
+    if name == "altvia_app":
+        for table, columns in APP_COLUMN_UPDATES.items():
+            raw.execute(
+                sql.SQL("GRANT UPDATE ({}) ON {} TO altvia_app").format(
                     sql.SQL(",").join(sql.Identifier(c) for c in sorted(columns)),
                     sql.Identifier("public", table),
                 )

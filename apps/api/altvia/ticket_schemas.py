@@ -176,7 +176,7 @@ class TicketOutput(StrictModel):
     description: str
     priority: Priority
     status: Status
-    source: Literal["manual"]
+    source: Literal["manual", "email"]
     resolved_at: datetime | None
     closed_at: datetime | None
     version: int

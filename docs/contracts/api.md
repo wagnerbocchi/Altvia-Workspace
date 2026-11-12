@@ -549,21 +549,21 @@ runtime roles. No sender proof, ticket promotion, MIME display or SMTP is inferr
 ## ADR-0036 classified mail case reads (Task 1)
 
 GET /mail-cases accepts unique limit/cursor/queue_id/client_id/state. Limit1..100,
-default25; state is ready|collision|revoked. Cursor binds the current actor and
+default25; state is ready|promoted|collision|revoked. Cursor binds the current actor and
 all filters. Results are newest publication first (created_at/id), no total count.
-Each summary includes id, queue_id, client_id, contact_id, contact_name, subject,
+Each summary includes id, queue_id, queue_name, client_id, client_name, contact_id, contact_name, subject,
 received_at, created_at, state and version. No body, address, routing or provenance
 appears in the list. GET /mail-cases/{case_id} adds the exact immutable parser2
 body_text and email_snapshot and returns ETag. Subject may be empty and full
 normalized body may reach65536 UTF8 bytes. Both require current explicit client
 ceiling plus a queue viewer/agent/operations_manager role, including for platform
 administrators; hidden resources return404. Unsupported/repeated/invalid queries
-return422. These routes expose actual owner publications, with no promotion
-capability fields or mutation endpoint until Task2 implements that behavior.
+return422. These routes expose actual owner publications. Task2 adds the capabilities and
+protected mutation specified below.
 
 mail_triage_cases is the explicit immutable text publication boundary; it never
-joins private previews for API content. Narrow API column grants exclude source,
-variant and routing identifiers. The worker receives no case-content grant. Both
+joins private previews for API content. Narrow API column grants exclude source and
+variant; bounded routing columns are internal service inputs, never response fields. The worker receives no case-content grant. Both
 runtime roles remain denied raw/source/poll/preview/origin/evidence access.
 
 The owner-only module altvia.mail_cases_owner requires ALTVIA_ALLOW_MAIL_CASES=1
@@ -597,3 +597,63 @@ mail.case_published/aliased/collided/revoked metadata is acknowledged by the wor
 without projecting shared activity. Old intake and normalization envelopes remain
 exact. Migration00023 contraction refuses case/origin/private history;00024 adds
 actual promotion state/receipts/FKs with its real incoming-message table.
+
+
+## ADR-0036 protected promotion and conversation (Task 2)
+
+POST /mail-cases/{case_id}/promotion requires If-Match (the reviewed case version)
+and Idempotency-Key. Strict discriminated bodies are:
+
+- create: action=create, subject1..300, priority, optional category_id/assignee_id.
+  Client, queue and requester come from the case; description is empty and source
+  is internal email. It creates ticket/history version1 then incoming version2.
+- append: action=append, ticket_id, ticket_version1..2147483647, strict boolean
+  reopen and optional reopen_reason<=2000|null. A real nonblank reason is required
+  for explicit reopen; a reason without reopen is rejected. Closed append needs
+  permitted explicit reopen. Resolved append without reopen retains status.
+
+A fresh effect returns201; a protected replay returns200 with only case_id,
+ticket_id,incoming_message_id. The full validated body and original case version
+form the fingerprint. Replays check current case scope and creation/self-assignee
+plus resulting ticket read authority, or current append write authority. They do
+not repeat fresh eligibility after a recorded promotion/invalidation. A new key
+cannot duplicate the same case. Missing protocol428, invalid422, conflict/stale409,
+readable action denial403, hidden or mismatched resources404.
+
+All contextual known incoming and accepted outbound anchors resolve before current
+eligibility. Own ambiguity or an invalid own incoming anchor fails closed; foreign
+and unknown ancestors confer no authority or special error. Subject/token never
+route. A supplied token corroborates the already selected target. Append requires
+current same-context requester/contact/mailbox, an active owner-attested requester
+participant and manager/assigned-agent authority. No promotion creates a participant.
+
+Case detail adds actual can_create/can_append; candidate_ticket_id/number/version/
+status (nullable) and candidate_can_reopen. Candidate identity is present only when
+the current actor can perform that append/reopen under current eligibility. List
+and detail use current authorized client/queue names, including for viewers with
+no client-registry role. No routing token, raw/provenance or evidence is returned.
+
+GET /tickets/{id}/conversation returns items ascending ticket version with
+limit1..100/default50 and actor/ticket-bound cursor. kind=incoming has id,case_id,
+ticket_id,ticket_version,actor_id (staff recording actor), immutable contact_name,
+email_snapshot,subject,body_text,received_at,recorded_at and invalidation_warning.
+That warning is null or the fixed incoming_attestation_invalidated after collision/
+revocation. kind=outbound wraps unchanged TicketMessageOutput as message and adds
+ticket_version. GET /tickets/{id}/incoming-messages/{incoming_id} checks current
+parent scope and exact parent matching, independently of pagination. Existing
+/messages stays outbound-only; private notes remain separately authorized.
+
+New SMTP freezes select only eligible promoted incoming IDs and accepted outgoing
+IDs in the current contact/frozen-recipient context. References stay chronological,
+max16; the first reply retains the earliest eligible incoming root plus the latest
+other15, later replies use latest16. Missing IDs stay absent. Existing eligible
+outbound-only ordering and all frozen bytes remain exact. Invalidated incoming and
+previous-requester ancestors never enter a new wire.
+
+Migration00024 adds immutable same-case/ticket/client/queue incoming ownership,
+unique case/version, immutable case receipt and email source. Only the API gains
+incoming SELECT/INSERT and column-only case receipt/state/version UPDATE; worker
+gets no case text/routing/history grants. Promoted identical aliases retain the
+same case/receipt/incoming row and use explicit private mail.case_aliased schema2;
+ready schema1 aliases remain exact. Collision/revocation preserves receipt/history.
+Contraction refuses durable cases/origins/incoming/email tickets or related history.

@@ -214,7 +214,7 @@ def test_paged_filter_cursors_hidden_ids_and_query_validation(db_engine, context
     for query in (
         "limit=0",
         "limit=101",
-        "state=promoted",
+        "state=invalid",
         "unknown=1",
         "limit=2&limit=3",
         "cursor=hostile",
@@ -284,7 +284,6 @@ def test_runtime_api_reads_narrow_projection_no_private_or_owner_access(
             for statement in (
                 "SELECT * FROM mail_case_origins",
                 "SELECT source_id FROM mail_triage_cases",
-                "SELECT message_id FROM mail_triage_cases",
                 "SELECT * FROM inbound_mail_previews",
                 "SELECT * FROM inbound_mail_variants",
                 "SELECT * FROM mailbox_sources",
@@ -301,6 +300,8 @@ def test_runtime_api_reads_narrow_projection_no_private_or_owner_access(
                     engine, first.case_id, UUID(context["requester_id"]), 1, "synthetic:proof"
                 )
             if url.username == "altvia_worker":
+                with pytest.raises(DBAPIError), engine.begin() as connection:
+                    connection.execute(text("SELECT message_id FROM mail_triage_cases"))
                 from altvia.activity import consume_event
 
                 with Session(db_engine) as db:

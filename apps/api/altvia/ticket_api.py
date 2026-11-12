@@ -4,11 +4,11 @@ import hashlib
 import json
 import re
 from datetime import UTC, datetime
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Request, Response
-from sqlalchemy import Engine, select, tuple_
+from sqlalchemy import Engine, literal, select, tuple_, union_all
 from sqlalchemy.orm import Session
 
 from altvia import identity
@@ -29,11 +29,18 @@ from altvia.admin_http import (
     authenticate_request,
 )
 from altvia.config import Settings
+from altvia.mail_case_schemas import (
+    ConversationPage,
+    IncomingMessageOutput,
+    OutboundConversationOutput,
+)
+from altvia.mail_promotion import incoming_output, incoming_outputs
 from altvia.models import (
     ActivityEvent,
     Client,
     ClientContact,
     Ticket,
+    TicketIncomingMessage,
     TicketMessage,
     TicketNote,
     TicketQueue,
@@ -136,7 +143,14 @@ def _event(
 
 
 def _assigned(
-    db: Session, actor: User, item: Ticket, old: UUID | None, request: Request, fields: list[str]
+    db: Session,
+    actor: User,
+    item: Ticket,
+    old: UUID | None,
+    request: Request,
+    fields: list[str],
+    *,
+    now: datetime | None = None,
 ) -> None:
     _event(
         db,
@@ -144,10 +158,56 @@ def _assigned(
         item,
         request,
         "assigned",
+        now=now,
         old_assignee_id=str(old) if old else None,
         new_assignee_id=str(item.assignee_id),
         changed_fields=",".join(fields),
     )
+
+
+def create_record(
+    db: Session,
+    actor: User,
+    access: registry.Access,
+    body: TicketCreate,
+    request: Request,
+    *,
+    source: Literal["manual", "email"] = "manual",
+    now: datetime | None = None,
+) -> Ticket:
+    """Shared creation/history owner; caller authorizes and checks replay first."""
+    registry.require_active(access)
+    registry.validate_requester(db, access, body.requester_id)
+    registry.validate_category(db, access, body.category_id)
+    registry.validate_assignee(db, access, body.assignee_id)
+    now = now if now is not None else datetime.now(UTC)
+    item = Ticket(
+        **body.model_dump(),
+        status="new",
+        source=source,
+        version=1,
+        created_at=now,
+        updated_at=now,
+    )
+    db.add(item)
+    db.flush()
+    db.add(
+        TicketStatusHistory(
+            ticket_id=item.id,
+            actor_id=actor.id,
+            from_status=None,
+            to_status="new",
+            reason=None,
+            version=1,
+            occurred_at=now,
+        )
+    )
+    _event(db, actor, item, request, "created", now=now if source == "email" else None)
+    if item.assignee_id is not None:
+        _assigned(
+            db, actor, item, None, request, ["assignee_id"], now=now if source == "email" else None
+        )
+    return item
 
 
 def create_ticket_router(engine: Engine, settings: Settings) -> APIRouter:
@@ -206,35 +266,7 @@ def create_ticket_router(engine: Engine, settings: Settings) -> APIRouter:
             if saved is not None:
                 response.status_code = 200
                 return TicketReceipt.model_validate(saved.result)
-            registry.require_active(access)
-            registry.validate_requester(db, access, body.requester_id)
-            registry.validate_category(db, access, body.category_id)
-            registry.validate_assignee(db, access, body.assignee_id)
-            now = datetime.now(UTC)
-            item = Ticket(
-                **body.model_dump(),
-                status="new",
-                source="manual",
-                version=1,
-                created_at=now,
-                updated_at=now,
-            )
-            db.add(item)
-            db.flush()
-            db.add(
-                TicketStatusHistory(
-                    ticket_id=item.id,
-                    actor_id=actor.id,
-                    from_status=None,
-                    to_status="new",
-                    reason=None,
-                    version=1,
-                    occurred_at=now,
-                )
-            )
-            _event(db, actor, item, request, "created")
-            if item.assignee_id is not None:
-                _assigned(db, actor, item, None, request, ["assignee_id"])
+            item = create_record(db, actor, access, body, request)
             receipt = TicketReceipt(ticket_id=item.id)
             _remember(db, actor, route, key, fingerprint, receipt, 201)
             return receipt
@@ -385,6 +417,93 @@ def create_ticket_router(engine: Engine, settings: Settings) -> APIRouter:
                 if len(rows) > limit
                 else None,
             )
+
+    @router.get("/tickets/{identifier}/conversation", response_model=ConversationPage)
+    def conversation(
+        identifier: UUID,
+        request: Request,
+        limit: Annotated[int, Query(ge=1, le=100)] = 50,
+        cursor: Annotated[str | None, Query(max_length=250)] = None,
+    ) -> ConversationPage:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings)
+            registry.scoped_ticket(db, actor.id, identifier)
+            _collection(request)
+            scope = f"v1|ticket-conversation:{actor.id}:{identifier}|"
+            last = _version_cursor(cursor, scope) or 0
+            query = union_all(
+                select(
+                    TicketIncomingMessage.id,
+                    TicketIncomingMessage.ticket_version,
+                    literal("incoming").label("kind"),
+                ).where(
+                    TicketIncomingMessage.ticket_id == identifier,
+                    TicketIncomingMessage.ticket_version > last,
+                ),
+                select(
+                    TicketMessage.id,
+                    TicketMessage.ticket_version,
+                    literal("outbound").label("kind"),
+                ).where(TicketMessage.ticket_id == identifier, TicketMessage.ticket_version > last),
+            ).subquery()
+            rows = list(db.execute(select(query).order_by(query.c.ticket_version).limit(limit + 1)))
+            incoming = {
+                row.id: row
+                for row in db.scalars(
+                    select(TicketIncomingMessage).where(
+                        TicketIncomingMessage.ticket_id == identifier,
+                        TicketIncomingMessage.id.in_(
+                            [row.id for row in rows[:limit] if row.kind == "incoming"]
+                        ),
+                    )
+                )
+            }
+            outbound = {
+                row.id: row
+                for row in db.scalars(
+                    select(TicketMessage).where(
+                        TicketMessage.ticket_id == identifier,
+                        TicketMessage.id.in_(
+                            [row.id for row in rows[:limit] if row.kind == "outbound"]
+                        ),
+                    )
+                )
+            }
+            incoming_values = incoming_outputs(db, list(incoming.values()))
+            return ConversationPage(
+                items=[
+                    incoming_values[row.id]
+                    if row.kind == "incoming"
+                    else OutboundConversationOutput(
+                        ticket_version=row.ticket_version,
+                        message=registry.message_output(outbound[row.id]),
+                    )
+                    for row in rows[:limit]
+                ],
+                next_cursor=scope + str(rows[limit - 1].ticket_version)
+                if len(rows) > limit
+                else None,
+            )
+
+    @router.get(
+        "/tickets/{identifier}/incoming-messages/{incoming_id}",
+        response_model=IncomingMessageOutput,
+    )
+    def incoming_message(
+        identifier: UUID, incoming_id: UUID, request: Request
+    ) -> IncomingMessageOutput:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings)
+            registry.scoped_ticket(db, actor.id, identifier)
+            row = db.scalar(
+                select(TicketIncomingMessage).where(
+                    TicketIncomingMessage.ticket_id == identifier,
+                    TicketIncomingMessage.id == incoming_id,
+                )
+            )
+            if row is None:
+                raise identity.IdentityError(404, "not_found")
+            return incoming_output(db, row)
 
     @router.get("/tickets/{identifier}/messages/{message_id}", response_model=TicketMessageOutput)
     def message(identifier: UUID, message_id: UUID, request: Request) -> TicketMessageOutput:

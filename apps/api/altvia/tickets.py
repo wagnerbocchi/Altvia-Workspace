@@ -305,11 +305,11 @@ def validate_category(db: Session, access: Access, identifier: UUID | None) -> N
         raise identity.IdentityError(422, "invalid_ticket_category")
 
 
-def advance(item: Ticket) -> None:
+def advance(item: Ticket, *, now: datetime | None = None) -> None:
     if item.version >= 2147483647:
         raise identity.IdentityError(409, "version_exhausted")
     item.version += 1
-    item.updated_at = datetime.now(UTC)
+    item.updated_at = now if now is not None else datetime.now(UTC)
 
 
 def targets(item: Ticket, access: Access, actor_id: UUID) -> list[str]:
@@ -373,7 +373,13 @@ def output(item: Ticket, access: Access, actor_id: UUID) -> TicketOutput:
 
 
 def transition(
-    db: Session, item: Ticket, access: Access, actor_id: UUID, body: TicketTransition
+    db: Session,
+    item: Ticket,
+    access: Access,
+    actor_id: UUID,
+    body: TicketTransition,
+    *,
+    now: datetime | None = None,
 ) -> TicketStatusHistory | None:
     if item.status == body.target_status:
         return None
@@ -388,7 +394,7 @@ def transition(
         if not body.reason:
             raise identity.IdentityError(422, "ticket_reason_required")
     old = item.status
-    advance(item)
+    advance(item, now=now)
     item.status = body.target_status
     if item.status == "resolved":
         item.resolved_at = item.updated_at

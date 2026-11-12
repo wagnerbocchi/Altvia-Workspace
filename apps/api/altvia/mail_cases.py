@@ -7,7 +7,14 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import Select, and_, select
 
-from altvia.models import ClientAccessGrant, MailTriageCase, OutboxEvent, RoleBinding
+from altvia.models import (
+    Client,
+    ClientAccessGrant,
+    MailTriageCase,
+    OutboxEvent,
+    RoleBinding,
+    TicketQueue,
+)
 from altvia.queue_registry import QUEUE_ROLES
 
 CASE_EVENTS = {
@@ -30,6 +37,14 @@ READ_COLUMNS = {
     "state",
     "version",
 }
+ROUTING_COLUMNS = {
+    "message_id",
+    "in_reply_to",
+    "references_ids",
+    "thread_token",
+    "ticket_id",
+    "incoming_message_id",
+}
 
 
 class CaseEventPayload(BaseModel):
@@ -38,7 +53,7 @@ class CaseEventPayload(BaseModel):
     actor_kind: Literal["management_command", "source_capture"]
     case_id: UUID
     source_id: UUID
-    state: Literal["ready", "collision", "revoked"]
+    state: Literal["ready", "promoted", "collision", "revoked"]
 
 
 def validate_case_event(event: OutboxEvent) -> None:
@@ -53,9 +68,15 @@ def validate_case_event(event: OutboxEvent) -> None:
         event.event_type not in CASE_EVENTS
         or event.aggregate_type != "mail_case"
         or event.aggregate_id != payload.case_id
-        or event.schema_version != 1
+        or (
+            event.schema_version
+            != (2 if event.event_type == "mail.case_aliased" and payload.state == "promoted" else 1)
+        )
         or event.aggregate_version < 1
-        or payload.state != expected[event.event_type]
+        or (
+            payload.state != expected[event.event_type]
+            and not (event.event_type == "mail.case_aliased" and payload.state == "promoted")
+        )
         or payload.actor_kind == "source_capture"
         and event.event_type != "mail.case_collided"
         or not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", event.correlation_id)
@@ -66,7 +87,13 @@ def validate_case_event(event: OutboxEvent) -> None:
 def visible(actor_id: UUID, *, detail: bool = False) -> Select[tuple[object, ...]]:
     columns = sorted(READ_COLUMNS - (set() if detail else {"body_text", "email_snapshot"}))
     return (
-        select(*(getattr(MailTriageCase, name) for name in columns))
+        select(
+            *(getattr(MailTriageCase, name) for name in columns),
+            Client.name.label("client_name"),
+            TicketQueue.name.label("queue_name"),
+        )
+        .join(Client, Client.id == MailTriageCase.client_id)
+        .join(TicketQueue, TicketQueue.id == MailTriageCase.queue_id)
         .join(
             RoleBinding,
             and_(

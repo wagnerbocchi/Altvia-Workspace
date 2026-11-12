@@ -20,10 +20,12 @@ from altvia.models import (
     Client,
     ClientContact,
     MailSender,
+    MailTriageCase,
     OutboundMessage,
     RoleBinding,
     Team,
     Ticket,
+    TicketIncomingMessage,
     TicketMailThread,
     TicketMessage,
     TicketParticipant,
@@ -113,6 +115,57 @@ def build_wire(
     return wire
 
 
+def reference_ids(db: Session, item: Ticket, participant: TicketParticipant) -> list[str]:
+    """Current recipient context only; preserve existing outbound ordering exactly."""
+    outgoing = list(
+        db.execute(
+            select(OutboundMessage.created_at, OutboundMessage.id, OutboundMessage.smtp_message_id)
+            .join(TicketParticipant, TicketParticipant.id == OutboundMessage.participant_id)
+            .where(
+                OutboundMessage.ticket_id == item.id,
+                OutboundMessage.state == "accepted",
+                TicketParticipant.contact_id == participant.contact_id,
+                OutboundMessage.envelope_to == participant.email,
+            )
+            .order_by(OutboundMessage.created_at.desc(), OutboundMessage.id.desc())
+            .limit(16)
+        )
+    )
+    query = (
+        select(
+            TicketIncomingMessage.recorded_at, TicketIncomingMessage.id, MailTriageCase.message_id
+        )
+        .join(MailTriageCase, MailTriageCase.id == TicketIncomingMessage.case_id)
+        .where(
+            TicketIncomingMessage.ticket_id == item.id,
+            MailTriageCase.state == "promoted",
+            MailTriageCase.ticket_id == item.id,
+            MailTriageCase.queue_id == item.queue_id,
+            MailTriageCase.client_id == item.client_id,
+            MailTriageCase.contact_id == participant.contact_id,
+            MailTriageCase.email_snapshot == participant.email,
+            MailTriageCase.message_id.is_not(None),
+        )
+    )
+    incoming = list(
+        db.execute(
+            query.order_by(
+                TicketIncomingMessage.recorded_at.desc(), TicketIncomingMessage.id.desc()
+            ).limit(16)
+        )
+    )
+    # created_at/id descending, then reverse, remains exact for outbound-only.
+    combined = sorted([tuple(row) for row in outgoing] + [tuple(row) for row in incoming])
+    selected = combined[-16:]
+    if not outgoing and incoming:
+        root = db.execute(
+            query.order_by(TicketIncomingMessage.recorded_at, TicketIncomingMessage.id).limit(1)
+        ).one()
+        if tuple(root) not in selected:
+            selected = [tuple(root), *selected[-15:]]
+    return [row[2] for row in selected]
+
+
 def freeze(
     db: Session,
     item: Ticket,
@@ -126,15 +179,7 @@ def freeze(
         thread = TicketMailThread(ticket_id=item.id, token=secrets.token_hex(32))
         db.add(thread)
         db.flush()
-    references = list(
-        db.scalars(
-            select(OutboundMessage.smtp_message_id)
-            .where(OutboundMessage.ticket_id == item.id, OutboundMessage.state == "accepted")
-            .order_by(OutboundMessage.created_at.desc(), OutboundMessage.id.desc())
-            .limit(16)
-        )
-    )
-    references.reverse()
+    references = reference_ids(db, item, participant)
     # The API caller already holds the identity/parent/ticket write locks.
     now = _clock(db)
     smtp_id = f"<{uuid4().hex}@{sender.from_email.rsplit('@', 1)[1]}>"

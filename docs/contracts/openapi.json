@@ -281,9 +281,78 @@
             "title": "Body Text",
             "type": "string"
           },
+          "can_append": {
+            "title": "Can Append",
+            "type": "boolean"
+          },
+          "can_create": {
+            "title": "Can Create",
+            "type": "boolean"
+          },
+          "candidate_can_reopen": {
+            "title": "Candidate Can Reopen",
+            "type": "boolean"
+          },
+          "candidate_ticket_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Ticket Id"
+          },
+          "candidate_ticket_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Ticket Number"
+          },
+          "candidate_ticket_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "new",
+                  "open",
+                  "pending_customer",
+                  "pending_third_party",
+                  "resolved",
+                  "closed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Ticket Status"
+          },
+          "candidate_ticket_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Ticket Version"
+          },
           "client_id": {
             "format": "uuid",
             "title": "Client Id",
+            "type": "string"
+          },
+          "client_name": {
+            "title": "Client Name",
             "type": "string"
           },
           "contact_id": {
@@ -314,6 +383,10 @@
             "title": "Queue Id",
             "type": "string"
           },
+          "queue_name": {
+            "title": "Queue Name",
+            "type": "string"
+          },
           "received_at": {
             "format": "date-time",
             "title": "Received At",
@@ -322,6 +395,7 @@
           "state": {
             "enum": [
               "ready",
+              "promoted",
               "collision",
               "revoked"
             ],
@@ -340,7 +414,9 @@
         "required": [
           "id",
           "queue_id",
+          "queue_name",
           "client_id",
+          "client_name",
           "contact_id",
           "contact_name",
           "subject",
@@ -349,7 +425,14 @@
           "state",
           "version",
           "email_snapshot",
-          "body_text"
+          "body_text",
+          "can_create",
+          "can_append",
+          "candidate_ticket_id",
+          "candidate_ticket_number",
+          "candidate_ticket_version",
+          "candidate_ticket_status",
+          "candidate_can_reopen"
         ],
         "title": "CaseDetail",
         "type": "object"
@@ -390,6 +473,10 @@
             "title": "Client Id",
             "type": "string"
           },
+          "client_name": {
+            "title": "Client Name",
+            "type": "string"
+          },
           "contact_id": {
             "format": "uuid",
             "title": "Contact Id",
@@ -414,6 +501,10 @@
             "title": "Queue Id",
             "type": "string"
           },
+          "queue_name": {
+            "title": "Queue Name",
+            "type": "string"
+          },
           "received_at": {
             "format": "date-time",
             "title": "Received At",
@@ -422,6 +513,7 @@
           "state": {
             "enum": [
               "ready",
+              "promoted",
               "collision",
               "revoked"
             ],
@@ -440,7 +532,9 @@
         "required": [
           "id",
           "queue_id",
+          "queue_name",
           "client_id",
+          "client_name",
           "contact_id",
           "contact_name",
           "subject",
@@ -972,6 +1066,49 @@
         "title": "ContactPatch",
         "type": "object"
       },
+      "ConversationPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "incoming": "#/components/schemas/IncomingMessageOutput",
+                  "outbound": "#/components/schemas/OutboundConversationOutput"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/IncomingMessageOutput"
+                },
+                {
+                  "$ref": "#/components/schemas/OutboundConversationOutput"
+                }
+              ]
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "ConversationPage",
+        "type": "object"
+      },
       "DateDue": {
         "additionalProperties": false,
         "properties": {
@@ -1167,6 +1304,95 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "IncomingMessageOutput": {
+        "additionalProperties": false,
+        "properties": {
+          "actor_id": {
+            "format": "uuid",
+            "title": "Actor Id",
+            "type": "string"
+          },
+          "body_text": {
+            "title": "Body Text",
+            "type": "string"
+          },
+          "case_id": {
+            "format": "uuid",
+            "title": "Case Id",
+            "type": "string"
+          },
+          "contact_name": {
+            "title": "Contact Name",
+            "type": "string"
+          },
+          "email_snapshot": {
+            "title": "Email Snapshot",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "invalidation_warning": {
+            "anyOf": [
+              {
+                "const": "incoming_attestation_invalidated",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invalidation Warning"
+          },
+          "kind": {
+            "const": "incoming",
+            "default": "incoming",
+            "title": "Kind",
+            "type": "string"
+          },
+          "received_at": {
+            "format": "date-time",
+            "title": "Received At",
+            "type": "string"
+          },
+          "recorded_at": {
+            "format": "date-time",
+            "title": "Recorded At",
+            "type": "string"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          },
+          "ticket_id": {
+            "format": "uuid",
+            "title": "Ticket Id",
+            "type": "string"
+          },
+          "ticket_version": {
+            "title": "Ticket Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "case_id",
+          "ticket_id",
+          "ticket_version",
+          "actor_id",
+          "contact_name",
+          "email_snapshot",
+          "subject",
+          "body_text",
+          "received_at",
+          "recorded_at",
+          "invalidation_warning"
+        ],
+        "title": "IncomingMessageOutput",
         "type": "object"
       },
       "InstantDue": {
@@ -1728,6 +1954,30 @@
         "title": "MyWorkPage",
         "type": "object"
       },
+      "OutboundConversationOutput": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "outbound",
+            "default": "outbound",
+            "title": "Kind",
+            "type": "string"
+          },
+          "message": {
+            "$ref": "#/components/schemas/TicketMessageOutput"
+          },
+          "ticket_version": {
+            "title": "Ticket Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ticket_version",
+          "message"
+        ],
+        "title": "OutboundConversationOutput",
+        "type": "object"
+      },
       "ParticipantChoice": {
         "properties": {
           "display_name": {
@@ -2146,6 +2396,135 @@
           }
         },
         "title": "ProjectPatch",
+        "type": "object"
+      },
+      "PromotionAppend": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "append",
+            "title": "Action",
+            "type": "string"
+          },
+          "reopen": {
+            "title": "Reopen",
+            "type": "boolean"
+          },
+          "reopen_reason": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reopen Reason"
+          },
+          "ticket_id": {
+            "format": "uuid",
+            "title": "Ticket Id",
+            "type": "string"
+          },
+          "ticket_version": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 2147483647.0,
+            "title": "Ticket Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "action",
+          "ticket_id",
+          "ticket_version",
+          "reopen"
+        ],
+        "title": "PromotionAppend",
+        "type": "object"
+      },
+      "PromotionCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "const": "create",
+            "title": "Action",
+            "type": "string"
+          },
+          "assignee_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee Id"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "priority": {
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
+            "title": "Priority",
+            "type": "string"
+          },
+          "subject": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Subject",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "subject",
+          "priority"
+        ],
+        "title": "PromotionCreate",
+        "type": "object"
+      },
+      "PromotionReceipt": {
+        "additionalProperties": false,
+        "properties": {
+          "case_id": {
+            "format": "uuid",
+            "title": "Case Id",
+            "type": "string"
+          },
+          "incoming_message_id": {
+            "format": "uuid",
+            "title": "Incoming Message Id",
+            "type": "string"
+          },
+          "ticket_id": {
+            "format": "uuid",
+            "title": "Ticket Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "case_id",
+          "ticket_id",
+          "incoming_message_id"
+        ],
+        "title": "PromotionReceipt",
         "type": "object"
       },
       "QueueCreate": {
@@ -3487,7 +3866,10 @@
             "title": "Resolved At"
           },
           "source": {
-            "const": "manual",
+            "enum": [
+              "manual",
+              "email"
+            ],
             "title": "Source",
             "type": "string"
           },
@@ -5585,6 +5967,7 @@
                 {
                   "enum": [
                     "ready",
+                    "promoted",
                     "collision",
                     "revoked"
                   ],
@@ -5664,6 +6047,102 @@
           }
         },
         "summary": "Detail",
+        "tags": [
+          "Mail cases"
+        ]
+      }
+    },
+    "/api/v1/mail-cases/{case_id}/promotion": {
+      "post": {
+        "operationId": "promote_api_v1_mail_cases__case_id__promotion_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Case Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "pattern": "^\"[1-9][0-9]{0,9}\"$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "discriminator": {
+                  "mapping": {
+                    "append": "#/components/schemas/PromotionAppend",
+                    "create": "#/components/schemas/PromotionCreate"
+                  },
+                  "propertyName": "action"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/PromotionCreate"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PromotionAppend"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionReceipt"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromotionReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Promote",
         "tags": [
           "Mail cases"
         ]
@@ -9180,6 +9659,78 @@
         ]
       }
     },
+    "/api/v1/tickets/{identifier}/conversation": {
+      "get": {
+        "operationId": "conversation_api_v1_tickets__identifier__conversation_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identifier",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 250,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversationPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Conversation",
+        "tags": [
+          "Tickets"
+        ]
+      }
+    },
     "/api/v1/tickets/{identifier}/delivery-choices": {
       "get": {
         "operationId": "delivery_choices_api_v1_tickets__identifier__delivery_choices_get",
@@ -9220,6 +9771,59 @@
         "summary": "Delivery Choices",
         "tags": [
           "mail-delivery"
+        ]
+      }
+    },
+    "/api/v1/tickets/{identifier}/incoming-messages/{incoming_id}": {
+      "get": {
+        "operationId": "incoming_message_api_v1_tickets__identifier__incoming_messages__incoming_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identifier",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "incoming_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Incoming Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IncomingMessageOutput"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Incoming Message",
+        "tags": [
+          "Tickets"
         ]
       }
     },

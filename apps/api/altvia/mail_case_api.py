@@ -9,10 +9,24 @@ from fastapi import APIRouter, Query, Request, Response
 from sqlalchemy import Engine, tuple_
 from sqlalchemy.orm import Session
 
-from altvia import identity, mail_cases
-from altvia.admin_http import _etag, _next_time_cursor, _time_cursor, authenticate_request
+from altvia import identity, mail_cases, mail_promotion
+from altvia.admin_http import (
+    IDEMPOTENCY_KEY,
+    IF_MATCH,
+    _etag,
+    _next_time_cursor,
+    _time_cursor,
+    authenticate_request,
+)
 from altvia.config import Settings
-from altvia.mail_case_schemas import CaseDetail, CaseFilters, CasePage, CaseSummary
+from altvia.mail_case_schemas import (
+    CaseDetail,
+    CaseFilters,
+    CasePage,
+    CaseSummary,
+    PromotionIntent,
+    PromotionReceipt,
+)
 from altvia.models import MailTriageCase
 
 
@@ -56,16 +70,31 @@ def create_mail_case_router(engine: Engine, settings: Settings) -> APIRouter:
     def detail(case_id: UUID, request: Request, response: Response) -> CaseDetail:
         with Session(engine) as db, db.begin():
             actor = authenticate_request(db, request, settings)
-            row = (
-                db.execute(
-                    mail_cases.visible(actor.id, detail=True).where(MailTriageCase.id == case_id)
-                )
-                .mappings()
-                .one_or_none()
-            )
-            if row is None:
-                raise identity.IdentityError(404, "not_found")
+            row = mail_promotion.scoped_case(db, actor.id, case_id)
             _etag(response, row["version"])
-            return CaseDetail.model_validate(row)
+            fields = set(CaseDetail.model_fields)
+            return CaseDetail.model_validate(
+                {
+                    **{key: value for key, value in row.items() if key in fields},
+                    **mail_promotion.capabilities(db, actor.id, row),
+                }
+            )
+
+    @router.post(
+        "/{case_id}/promotion",
+        response_model=PromotionReceipt,
+        status_code=201,
+        responses={200: {"model": PromotionReceipt}},
+        openapi_extra={"parameters": [IF_MATCH, IDEMPOTENCY_KEY]},
+    )
+    def promote(
+        case_id: UUID, body: PromotionIntent, request: Request, response: Response
+    ) -> PromotionReceipt:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings, write=True)
+            receipt, replayed = mail_promotion.promote(db, actor, case_id, body, request)
+            if replayed:
+                response.status_code = 200
+            return receipt
 
     return router

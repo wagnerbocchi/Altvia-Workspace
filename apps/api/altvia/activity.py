@@ -68,6 +68,7 @@ TICKET_EVENT_TYPES = {
     "ticket.status_changed",
     "ticket.note_added",
     "ticket.message_drafted",
+    "ticket.message_received",
     "ticket.delivery_queued",
 }
 
@@ -88,6 +89,7 @@ class TicketEventPayload(BaseModel):
     note_id: UUID | None = None
     message_id: UUID | None = None
     delivery_id: UUID | None = None
+    incoming_message_id: UUID | None = None
 
     @model_validator(mode="after")
     def valid_changes(self) -> "TicketEventPayload":
@@ -382,10 +384,16 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                     "ticket.status_changed": {"from_status", "to_status", "history_id"},
                     "ticket.note_added": {"note_id"},
                     "ticket.message_drafted": {"message_id"},
+                    "ticket.message_received": {"incoming_message_id"},
                     "ticket.delivery_queued": {"message_id", "delivery_id"},
                 }[event.event_type]
                 if payload.ticket_id != event.aggregate_id or fields != expected_ticket_fields:
                     raise ValueError("Invalid ticket event fields")
+                if (
+                    event.event_type == "ticket.message_received"
+                    and payload.incoming_message_id is None
+                ):
+                    raise ValueError("Missing incoming identifier")
                 if event.event_type == "ticket.note_added" and payload.note_id is None:
                     raise ValueError("Missing private note identifier")
                 if event.event_type == "ticket.message_drafted" and payload.message_id is None:

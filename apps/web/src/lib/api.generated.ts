@@ -229,6 +229,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/mail-cases/{case_id}/promotion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Promote */
+        post: operations["promote_api_v1_mail_cases__case_id__promotion_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/my-work": {
         parameters: {
             query?: never;
@@ -774,6 +791,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tickets/{identifier}/conversation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Conversation */
+        get: operations["conversation_api_v1_tickets__identifier__conversation_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tickets/{identifier}/delivery-choices": {
         parameters: {
             query?: never;
@@ -783,6 +817,23 @@ export interface paths {
         };
         /** Delivery Choices */
         get: operations["delivery_choices_api_v1_tickets__identifier__delivery_choices_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/{identifier}/incoming-messages/{incoming_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Incoming Message */
+        get: operations["incoming_message_api_v1_tickets__identifier__incoming_messages__incoming_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1236,11 +1287,27 @@ export interface components {
         CaseDetail: {
             /** Body Text */
             body_text: string;
+            /** Can Append */
+            can_append: boolean;
+            /** Can Create */
+            can_create: boolean;
+            /** Candidate Can Reopen */
+            candidate_can_reopen: boolean;
+            /** Candidate Ticket Id */
+            candidate_ticket_id: string | null;
+            /** Candidate Ticket Number */
+            candidate_ticket_number: string | null;
+            /** Candidate Ticket Status */
+            candidate_ticket_status: ("new" | "open" | "pending_customer" | "pending_third_party" | "resolved" | "closed") | null;
+            /** Candidate Ticket Version */
+            candidate_ticket_version: number | null;
             /**
              * Client Id
              * Format: uuid
              */
             client_id: string;
+            /** Client Name */
+            client_name: string;
             /**
              * Contact Id
              * Format: uuid
@@ -1265,6 +1332,8 @@ export interface components {
              * Format: uuid
              */
             queue_id: string;
+            /** Queue Name */
+            queue_name: string;
             /**
              * Received At
              * Format: date-time
@@ -1274,7 +1343,7 @@ export interface components {
              * State
              * @enum {string}
              */
-            state: "ready" | "collision" | "revoked";
+            state: "ready" | "promoted" | "collision" | "revoked";
             /** Subject */
             subject: string;
             /** Version */
@@ -1294,6 +1363,8 @@ export interface components {
              * Format: uuid
              */
             client_id: string;
+            /** Client Name */
+            client_name: string;
             /**
              * Contact Id
              * Format: uuid
@@ -1316,6 +1387,8 @@ export interface components {
              * Format: uuid
              */
             queue_id: string;
+            /** Queue Name */
+            queue_name: string;
             /**
              * Received At
              * Format: date-time
@@ -1325,7 +1398,7 @@ export interface components {
              * State
              * @enum {string}
              */
-            state: "ready" | "collision" | "revoked";
+            state: "ready" | "promoted" | "collision" | "revoked";
             /** Subject */
             subject: string;
             /** Version */
@@ -1568,6 +1641,13 @@ export interface components {
             /** Email */
             email?: string;
         };
+        /** ConversationPage */
+        ConversationPage: {
+            /** Items */
+            items: (components["schemas"]["IncomingMessageOutput"] | components["schemas"]["OutboundConversationOutput"])[];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
         /** DateDue */
         DateDue: {
             /**
@@ -1656,6 +1736,56 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** IncomingMessageOutput */
+        IncomingMessageOutput: {
+            /**
+             * Actor Id
+             * Format: uuid
+             */
+            actor_id: string;
+            /** Body Text */
+            body_text: string;
+            /**
+             * Case Id
+             * Format: uuid
+             */
+            case_id: string;
+            /** Contact Name */
+            contact_name: string;
+            /** Email Snapshot */
+            email_snapshot: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Invalidation Warning */
+            invalidation_warning: "incoming_attestation_invalidated" | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "incoming";
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /**
+             * Recorded At
+             * Format: date-time
+             */
+            recorded_at: string;
+            /** Subject */
+            subject: string;
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
+            /** Ticket Version */
+            ticket_version: number;
         };
         /** InstantDue */
         InstantDue: {
@@ -1862,6 +1992,17 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** OutboundConversationOutput */
+        OutboundConversationOutput: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "outbound";
+            message: components["schemas"]["TicketMessageOutput"];
+            /** Ticket Version */
+            ticket_version: number;
+        };
         /** ParticipantChoice */
         ParticipantChoice: {
             /** Display Name */
@@ -2034,6 +2175,62 @@ export interface components {
             name?: string;
             /** Operational Area Id */
             operational_area_id?: string | null;
+        };
+        /** PromotionAppend */
+        PromotionAppend: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            action: "append";
+            /** Reopen */
+            reopen: boolean;
+            /** Reopen Reason */
+            reopen_reason?: string | null;
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
+            /** Ticket Version */
+            ticket_version: number;
+        };
+        /** PromotionCreate */
+        PromotionCreate: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            action: "create";
+            /** Assignee Id */
+            assignee_id?: string | null;
+            /** Category Id */
+            category_id?: string | null;
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "low" | "medium" | "high" | "critical";
+            /** Subject */
+            subject: string;
+        };
+        /** PromotionReceipt */
+        PromotionReceipt: {
+            /**
+             * Case Id
+             * Format: uuid
+             */
+            case_id: string;
+            /**
+             * Incoming Message Id
+             * Format: uuid
+             */
+            incoming_message_id: string;
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
         };
         /** QueueCreate */
         QueueCreate: {
@@ -2626,9 +2823,9 @@ export interface components {
             resolved_at: string | null;
             /**
              * Source
-             * @constant
+             * @enum {string}
              */
-            source: "manual";
+            source: "manual" | "email";
             /**
              * Status
              * @enum {string}
@@ -3510,7 +3707,7 @@ export interface operations {
                 cursor?: string | null;
                 queue_id?: string | null;
                 client_id?: string | null;
-                state?: ("ready" | "collision" | "revoked") | null;
+                state?: ("ready" | "promoted" | "collision" | "revoked") | null;
             };
             header?: never;
             path?: never;
@@ -3556,6 +3753,53 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CaseDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    promote_api_v1_mail_cases__case_id__promotion_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PromotionCreate"] | components["schemas"]["PromotionAppend"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromotionReceipt"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PromotionReceipt"];
                 };
             };
             /** @description Validation Error */
@@ -5364,6 +5608,40 @@ export interface operations {
             };
         };
     };
+    conversation_api_v1_tickets__identifier__conversation_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversationPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     delivery_choices_api_v1_tickets__identifier__delivery_choices_get: {
         parameters: {
             query?: never;
@@ -5382,6 +5660,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DeliveryChoices"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    incoming_message_api_v1_tickets__identifier__incoming_messages__incoming_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+                incoming_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomingMessageOutput"];
                 };
             };
             /** @description Validation Error */

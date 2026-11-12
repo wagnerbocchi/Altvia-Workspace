@@ -641,6 +641,7 @@ class ProcessedEvent(Base):
 class Ticket(Base):
     __tablename__ = "tickets"
     __table_args__ = (
+        UniqueConstraint("id", "client_id", "queue_id", name="uq_ticket_context"),
         UniqueConstraint("number", name="uq_ticket_number"),
         ForeignKeyConstraint(
             ["requester_id", "client_id"],
@@ -670,7 +671,7 @@ class Ticket(Base):
         CheckConstraint(
             "priority IN ('low','medium','high','critical')", name="ck_ticket_priority"
         ),
-        CheckConstraint("source='manual'", name="ck_ticket_source"),
+        CheckConstraint("source IN ('manual','email')", name="ck_ticket_source"),
         CheckConstraint(
             "status IN ('new','open','pending_customer','pending_third_party','resolved','closed')",
             name="ck_ticket_status",
@@ -933,6 +934,22 @@ class OutboundMessage(Base):
 class MailTriageCase(Base):
     __tablename__ = "mail_triage_cases"
     __table_args__ = (
+        UniqueConstraint("id", "client_id", "queue_id", name="uq_case_ticket_context"),
+        ForeignKeyConstraint(
+            ["incoming_message_id", "ticket_id", "id"],
+            [
+                "ticket_incoming_messages.id",
+                "ticket_incoming_messages.ticket_id",
+                "ticket_incoming_messages.case_id",
+            ],
+            name="fk_case_receipt",
+            use_alter=True,
+        ),
+        CheckConstraint(
+            "(ticket_id IS NULL)=(incoming_message_id IS NULL) AND "
+            "(state<>'promoted' OR ticket_id IS NOT NULL)",
+            name="ck_case_receipt",
+        ),
         ForeignKeyConstraint(
             ["source_id", "queue_id"], ["mailbox_sources.id", "mailbox_sources.queue_id"]
         ),
@@ -953,8 +970,18 @@ class MailTriageCase(Base):
             postgresql_where=text("message_id IS NOT NULL"),
         ),
         Index("ix_mail_cases_page", "created_at", "id"),
+        Index(
+            "ix_case_anchor_context",
+            "queue_id",
+            "client_id",
+            "contact_id",
+            "email_snapshot",
+            "message_id",
+            postgresql_where=text("message_id IS NOT NULL AND ticket_id IS NOT NULL"),
+        ),
         CheckConstraint(
-            "state IN ('ready','collision','revoked') AND version > 0", name="ck_case_state"
+            "state IN ('ready','promoted','collision','revoked') AND version > 0",
+            name="ck_case_state",
         ),
         CheckConstraint("routing_version=1", name="ck_case_routing"),
         CheckConstraint(
@@ -989,6 +1016,38 @@ class MailTriageCase(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     state: Mapped[str] = mapped_column(String(20), default="ready")
     version: Mapped[int] = mapped_column(default=1)
+    ticket_id: Mapped[UUID | None]
+    incoming_message_id: Mapped[UUID | None]
+
+
+class TicketIncomingMessage(Base):
+    __tablename__ = "ticket_incoming_messages"
+    __table_args__ = (
+        UniqueConstraint("case_id", name="uq_incoming_case"),
+        UniqueConstraint("ticket_id", "ticket_version", name="uq_incoming_version"),
+        UniqueConstraint("id", "ticket_id", "case_id", name="uq_incoming_receipt"),
+        ForeignKeyConstraint(
+            ["ticket_id", "client_id", "queue_id"],
+            ["tickets.id", "tickets.client_id", "tickets.queue_id"],
+            name="fk_incoming_ticket_context",
+        ),
+        ForeignKeyConstraint(
+            ["case_id", "client_id", "queue_id"],
+            ["mail_triage_cases.id", "mail_triage_cases.client_id", "mail_triage_cases.queue_id"],
+            name="fk_incoming_case_context",
+        ),
+        CheckConstraint("ticket_version>1", name="ck_incoming_version"),
+        Index("ix_incoming_ticket_page", "ticket_id", "ticket_version"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    case_id: Mapped[UUID]
+    ticket_id: Mapped[UUID]
+    client_id: Mapped[UUID]
+    queue_id: Mapped[UUID]
+    ticket_version: Mapped[int]
+    actor_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
 class MailCaseOrigin(Base):

@@ -90,11 +90,23 @@ independent spec/quality review with zero findings. Bandit15LOW/zero blockers.
 All282 raw source hashes matched;22-entry local evidence archive SHA256
 d07400f82078e385d9ea63151ff950580a58fa0ab688638678deb47768fc9355 is retained at
 the private workstation evidence path attested-inbound-task1-711d4b0/acceptance.zip.
-Hosted acceptance remains pending publication. No
-promotion/UI or full incoming-mail completion is claimed at this boundary.
+Published Task1 sourceff71101 passed all five hosted gates: API959 in563.96s,
+browser142 in4.9m, source security, images and packaged containers. Runs:
+Source43176945766, Images43176945880, Containers43176945836,
+Browser43176945842, API43176945922. No full incoming-mail completion is claimed
+at that owner/read boundary.
 No new unresolved engineering policy was needed: Q03/Q16 still own real receiving
 and per-variant identity evidence; conservative routing compatibility is documented
-in docs/contracts/api.md. Task2 remains the actual promotion/conversation stage.
+in docs/contracts/api.md. Task2 adds protected persisted create/append/explicit reopen, scoped incoming/
+outbound conversation and authoritative incoming receipt reads. It reuses current
+creation/action authority, preserves legacy envelopes, locks contextual anchors
+before the ticket and keeps invalidated history immutable. Final local frozen acceptance passed484 affected tests in1397.78s, including actual
+runtime-role promotion/read/freeze and worker schema2/private denials. All13
+static/security/package/native/generated/web-check/production-build gates passed;
+OpenAPI/TypeScript reproduce exactly, Bandit17LOW/zero blockers, all288 raw sources
+unchanged (aggregate3b92c48ea3e0430a741d34edd0ef462edf86e6017a874d4f78b9dd80c18d4e18).
+Independent controller review/publication/full hosted acceptance remain required
+before Task2 acceptance. Its UI and packaged incoming workflow remain Tasks3/4.
 Its clarified ADR0036 contract retains the first eligible incoming root when
 more than16 precede the first reply, excludes previous-requester references from
 new wires, and preserves receipts/history for promoted aliases and invalidation.

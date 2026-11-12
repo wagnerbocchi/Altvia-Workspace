@@ -317,6 +317,7 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
             try:
                 if event.event_type == "mail.delivery_changed":
                     from altvia.mail_delivery import validate_delivery_event
+
                     validate_delivery_event(event)
                 else:
                     validate_intake_event(event)

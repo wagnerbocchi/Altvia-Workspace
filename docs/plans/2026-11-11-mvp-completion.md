@@ -5,6 +5,13 @@ ending work after each slice to ask whether to continue. Direct commits/pushes t
 main remain authorized; no PR, production deployment, real import or Zammad
 retirement. Record questions in roadmap and continue independent safe work.
 
+Latest user stop point2026-11-12: continue backend development and validation,
+but STOP BEFORE starting any design, UI or UX work. Complete the current private-
+files Task3 backend, its relevant checks, independent review and authorized
+publication; then stop before Task4's browser/interface work. API contract
+generation is backend validation, not permission to change interface behavior.
+This explicit boundary supersedes continuous execution across the frontend stage.
+
 The master specification was reread completely for this sequence. Its Phase0
 example stop point was superseded by the user's later development authorization.
 Keep contracts before code, small coherent commits and real persisted vertical
@@ -18,7 +25,7 @@ target-VM qualification follows development, not each slice.
 | Service Desk conversation | Public response drafts separate from private notes; protected review/replay and real browser conversation | Development/CI complete558f4ee;796 API/131 browser, packaged proof; final target deferred |
 | Outbound mail | Explicit verified participant boundary, durable public-only queue, verified TLS SMTP, stable IDs, retry/uncertain reconciliation and browser delivery states | Development/CI complete c47fd8a;894 API/142 browser,201 affected, actual packaged SMTP/restart/privacy/active shutdown; final target deferred |
 | Inbound mail | Restricted authorized triage, explicit verified sender/thread evidence, safe creation/append/reopen, no subject/From-only trust | Development/CI complete36e4642:1040 API/154 browser, all five gates; actual IMAPS/HTTPS/TLS reply/append/reopen/alias/privacy/recreation; R1 proof gap corrected/re-reviewed; MIME files follow the private-files stage; final target deferred |
-| Private files | Private object storage, bounded streaming, fail-closed scanning, authorized ticket/work links and downloads | ADR0037 selected: S3/ClamAV staff/outbound core planned; owner-bounded incoming-MIME files follow separately, neither implemented yet |
+| Private files | Private object storage, bounded streaming, fail-closed scanning, authorized ticket/work links and downloads | Infrastructure/assets/scans accepted65e3712: all five hosted gates,1173 API/154 browser; Task3 content links/reviewed MIME backend in progress after contractfaf705a. Stop before Task4 design/UI/UX; incoming-MIME files and integrated qualification remain pending |
 | Ticket/work links | Same-client N:N authorization of both endpoints, independent state, real browser links | Pending |
 | Automation/unified work | Structured durable rules, idempotent assignment/reopen/race behavior, visible failures, consolidated scoped My Work | Pending |
 | SLA | Versioned configurable calendars/holidays/timezone/pause/reopen, first accepted public response and resolution/breach proof | Pending; actual policy Q07 |
@@ -40,7 +47,8 @@ never invent the company's real hours/holidays/targets. Q05/Q06: preserve workbo
 facts, require approved mappings before real import. Q09/Q11/Q21: no destructive
 retention; fail closed for files; bound mail/storage and qualify selected CPU builds.
 
-After each slice record evidence and move to the next independent stage. Do not
-send a final completion reply merely because a slice is green. Only claim the
+After each slice record evidence and move to the next independent stage within
+the latest user stop point. Stop before design/UI/UX and report that boundary,
+without claiming the whole MVP complete. Only claim the
 whole MVP complete after integrated gates and actual target proof; clearly retain
 external policy/production/pilot gates that require the user's real information.

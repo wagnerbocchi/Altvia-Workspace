@@ -4,6 +4,17 @@ Updated 2026-11-12. User authorized incremental development after contracts,
 direct pushes to main and no PR. Continue safe independent work while questions
 await answers. This does not authorize production deployment or real data import.
 
+## Current user stop point
+
+User instruction2026-11-12: continue backend development and validation, but stop
+before beginning any design, UI or UX. Finish the current private-files Task3
+backend (immutable content links and explicitly reviewed MIME delivery), its
+relevant checks, independent review and authorized publication. Stop before the
+next planned Task4 browser/interface work; do not dispatch frontend/design work.
+Generated API contracts remain permitted backend validation. This boundary
+supersedes the earlier instruction to continue across every remaining MVP stage.
+The MVP and final target qualification remain incomplete at this stop point.
+
 ## Current validation cadence
 
 User instruction on 2026-11-10 supersedes the earlier per-slice VM cadence:

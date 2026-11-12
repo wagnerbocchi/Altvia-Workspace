@@ -193,6 +193,17 @@ a historical evidence defect, with zero differences after newline normalization.
 No file HTTP route/table/UI or full attachment functionality is claimed here.
 See docs/phase-3i-private-file-evidence.md.
 
+First hosted sourcef171dfa passed1098 API/154 browser, source security and all-seven
+nonempty zero-vulnerability inventories. Existing packaged regressions also passed.
+The required new private-file job failed native freshclam log initialization at
+/dev/stderr; it did not load definitions or prove a scan. Its56 focused Linux tests,
+52 real storage checks/restart and Docker storage cgroups passed, with18 exact
+source and50 exact stream hashes verified. H1 is corrected in5c722da using native
+foreground console logging; final15 focused/native checks passed and independent
+re-review marked H1 ADDRESSED/no new breakage. Full signed-definition/reload stays
+OPEN; all failed artifacts/full logs are preserved in the hash-bound public
+Phase3I evidence record. No target qualification or full attachment claim.
+
 The accepted incoming increment used ADR-0036 and
 docs/plans/2026-11-12-attested-inbound-conversation.md: owner-attested classified
 cases, existing queue/customer scope, protected staff promotion, contextual

@@ -56,6 +56,51 @@ stream-capture limitations and reports/reviews. Durable archive/hosted identitie
 will be recorded after those gates. No raw workbook, secret directory or production
 log enters Git.
 
+## First hosted attempt: f171dfa
+
+Source43228875977, images43228875927, browser43228875840 and API43228877537
+passed. Results:1098 API in653.43s,154 browser in4.7m,18 LOW source findings/
+zero blockers/secrets and seven nonempty zero-vulnerability inventories. Inventory
+sizes are API72/PostgreSQL49/ingress70/web43/Redis16/storage107/ClamAV38. The
+image-security build identities are separate from packaged runtime identities.
+
+Container run43228876420 failed in the new private-file-runtime job131219039655;
+the existing api-runtime job131219040043 passed all its packaged regressions.
+The new job passed56 focused tests in6.20s and52 actual storage checks/restart/
+Docker storage cgroups. All18 source hashes matched immutable f171dfa Git bytes;
+all50 command-stream hashes matched saved artifact bytes. The earlier byte-capture
+correction therefore has actual hosted evidence, while AV acceptance failed.
+
+Freshclam command22 exited2 because native log-file opening refuses the configured
+/dev/stderr symlink: Symbolic link loop. The corresponding clamd log configuration
+requires the same native foreground-console correction. No complete definitions
+or actual scan/reload succeeded in this attempt. The intentional pre-bootstrap
+command9 exit1 was expected; cleanup commands succeeded.
+
+All six full decoded job logs were inspected and sanitized before persistence.
+Action deprecation/cache-reservation and disposable local-initdb diagnostics are
+nonblocking runner conditions. All four downloaded artifacts matched GitHub ZIP
+digests; original incoming/outgoing proof JSON remains retained. The complete
+13-entry hosted archive ci-f171dfa.zip is1916945 bytes, SHA256
+bf1ffa39668ff1d4d4a395f5cb3b0cdefa9396af29706d8ce83af6cc94c5c081,
+at C:/Users/wagne/.codex/state/evidence/private-file-task1-f171dfa/. Its manifest
+explicitly records NOT ACCEPTED/H1. Earlier immutable local archives there are
+source-f171dfa.zip551 entries/SHA256
+cbc3f3105a1eb7338d0aeb79b438d41ba1a5c3c257af945755f4a45c0cbbfd92
+and local-evidence.zip376 entries/SHA256
+851d4936e031ad552c214eb9a20d776b2408a033ff45a516d6f0e65c44d2fef7.
+
+H1 is corrected in5c722da by leaving the native file log unset and retaining
+foreground console logging. Actual pinned-image offline negatives reproduced both
+logger failures before the fix. Final15 focused checks, including three native
+cases with mounted corrected configuration, passed. Updater initialization reaches
+the expected refused loopback download; clamd reaches the expected missing-
+definitions refusal; the foreground updater handles bounded TERM. No AV positive
+is inferred. Scoped independent re-review marked H1 ADDRESSED/no new breakage.
+The controller verified52 supplemental artifacts and three source hashes/Git blobs;
+the reviewer independently verified52 artifact hashes. Existing failed hosted
+evidence remains immutable. New actual hosted full-profile acceptance is required.
+
 ## Outstanding acceptance and continuation
 
 Actual hosted full/current signed ClamAV definitions, clean/EICAR/encryption/

@@ -38,7 +38,12 @@ export function TaskFilters({ actor, onApply, personal = false }: { actor: strin
 }
 
 function WorkRows({ rows, label }: { rows: WorkRecord[]; label: string }) {
-  return <ul className="record-list" aria-label={label}>{rows.map(row => <li className="team-row" key={row.id}><div className="record-text"><Link className="text-link" href={`/work-items/${encodeURIComponent(row.id)}`}>{row.title}</Link><span className="record-meta">{workStatuses[row.status]} · Prioridade {workPriorities[row.priority].toLocaleLowerCase("pt-BR")}{row.parent_id ? " · Subtarefa" : ""}</span><span className="record-meta">{row.owner_name ?? "Sem responsável"} · {dueLabel(row)}</span>{row.work_type === "ongoing" && <span className="record-meta">Trabalho contínuo</span>}</div></li>)}</ul>;
+  return <ul className="record-list work-records" aria-label={label}>{rows.map(row => <li className="team-row work-row" key={row.id}>
+    <div className="record-text"><Link className="text-link" href={`/work-items/${encodeURIComponent(row.id)}`}>{row.title}</Link>
+      <span className="record-meta">Prioridade {workPriorities[row.priority].toLocaleLowerCase("pt-BR")}{row.parent_id ? " · Subtarefa" : ""}{row.work_type === "ongoing" ? " · Trabalho contínuo" : ""}</span></div>
+    <div className="record-cell"><span className="record-status" data-state={row.status}>{workStatuses[row.status]}</span></div>
+    <div className="record-cell"><span>{row.owner_name ?? "Sem responsável"}</span><span className="record-meta">{dueLabel(row)}</span></div>
+  </li>)}</ul>;
 }
 function ProjectResults({ project, api, filters, status, refresh }: { project: string; api: WorkApi; filters: WorkFilters; status?: NonNullable<WorkFilters["status"]>; refresh: () => void }) {
   const paging = usePaging();
@@ -68,9 +73,12 @@ export function ProjectDiscovery({ project, api, actor, refresh }: { project: st
 function PersonalResults({ api, filters }: { api: WorkApi; filters: WorkFilters }) {
   const paging = usePaging();
   const query = useQuery({ queryKey: ["my-work", filters, paging.cursor], queryFn: ({ signal }) => api.mine(paging.cursor, signal, filters) });
-  return <section aria-labelledby="personal-results-heading"><h2 id="personal-results-heading">Minhas tarefas</h2>
-    <Button variant="outline" disabled={query.isFetching} onClick={() => { paging.reset(); void query.refetch(); }}>Atualizar tarefas</Button>
-    {query.isPending ? <LoadingRows label="Carregando minhas tarefas..." /> : query.isError ? <ReadError retry={() => void query.refetch()} /> : query.data.items.length ? <ul className="record-list" aria-label="Minhas tarefas">{query.data.items.map(row => <li className="team-row" key={row.id}><div className="record-text"><Link className="text-link" href={`/work-items/${encodeURIComponent(row.id)}`}>{row.title}</Link><span className="record-meta">{workStatuses[row.status]} · Prioridade {workPriorities[row.priority].toLocaleLowerCase("pt-BR")}{row.work_type === "ongoing" ? " · Trabalho contínuo" : ""}</span><span className="record-meta">{dueLabel(row)}</span><Link className="text-link record-meta" href={`/projects/${encodeURIComponent(row.project_id)}`}>{row.project_name}</Link></div></li>)}</ul> : <p>Nenhuma tarefa sua corresponde aos filtros. Tarefas em que você é responsável ou envolvido aparecem aqui quando o projeto está liberado para sua conta.</p>}
+  return <section aria-labelledby="personal-results-heading"><div className="section-heading"><h2 id="personal-results-heading">Minhas tarefas</h2>
+    <Button variant="outline" disabled={query.isFetching} onClick={() => { paging.reset(); void query.refetch(); }}>Atualizar tarefas</Button></div>
+    {query.isPending ? <LoadingRows label="Carregando minhas tarefas..." /> : query.isError ? <ReadError retry={() => void query.refetch()} /> : query.data.items.length ? <ul className="record-list work-records" aria-label="Minhas tarefas">{query.data.items.map(row => <li className="team-row work-row" key={row.id}>
+      <div className="record-text"><Link className="text-link" href={`/work-items/${encodeURIComponent(row.id)}`}>{row.title}</Link><Link className="text-link record-meta" href={`/projects/${encodeURIComponent(row.project_id)}`}>{row.project_name}</Link></div>
+      <div className="record-cell"><span className="record-status" data-state={row.status}>{workStatuses[row.status]}</span><span className="record-meta">Prioridade {workPriorities[row.priority].toLocaleLowerCase("pt-BR")}{row.work_type === "ongoing" ? " · Trabalho contínuo" : ""}</span></div>
+      <div className="record-cell">{dueLabel(row)}</div></li>)}</ul> : <p>Nenhuma tarefa sua corresponde aos filtros. Tarefas em que você é responsável ou envolvido aparecem aqui quando o projeto está liberado para sua conta.</p>}
     {!query.isError && <Paging paging={paging} next={query.data?.next_cursor} label="tarefas" disabled={query.isFetching} />}
   </section>;
 }

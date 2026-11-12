@@ -271,3 +271,32 @@ footer { display: flex; justify-content: space-between; gap: 16px; padding: 20px
 .incoming-text .work-prose { max-width: 72ch; margin: 0; }
 
 .read-notice .text-link { text-decoration: underline; }
+
+/* Operational rows share a readable column rhythm; narrow screens name fields. */
+.page-heading, .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.page-heading { margin-top: 20px; }
+.page-heading h1, .section-heading h2 { margin: 0; }
+.section-heading { margin-bottom: 20px; }
+.filter-toolbar { display: flex; align-items: start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 12px; }
+.filter-toolbar .ticket-filter-extra { margin-top: 0; flex: 1; min-width: 180px; }
+.filter-toolbar .ticket-filter-extra[open] { flex-basis: 100%; }
+.ticket-row, .ticket-table-heading { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.4fr) minmax(0, 1fr) minmax(96px, .7fr); gap: 20px; align-items: start; }
+.ticket-table-heading { border-bottom: 1px solid var(--line); padding: 10px 0; color: var(--muted); font-size: 12px; }
+.ticket-row > .record-status { justify-self: start; }
+.record-cell { min-width: 0; overflow-wrap: anywhere; font-size: 14px; }
+.client-filter.button { display: flex; justify-content: start; text-align: left; color: var(--muted); padding: 4px 0; font-weight: 400; min-height: 32px; font-size: 13px; }
+.mobile-label { display: none; }
+.work-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); }
+.task-column .work-row { display: flex; flex-direction: column; gap: 8px; }
+.task-column .record-cell { font-size: 13px; }
+.task-column .record-cell .record-status { font-size: 12px; }
+@media (max-width: 900px) {
+  .ticket-row, .work-row { grid-template-columns: minmax(0, 1fr) auto; gap: 12px 16px; }
+  .ticket-row > .record-text { grid-column: 1 / -1; }
+  .ticket-row > .record-status { grid-column: 2; grid-row: 2; }
+  .ticket-row > .record-cell { grid-column: 1; }
+  .ticket-table-heading { display: none; }
+  .mobile-label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 2px; }
+  .work-row > .record-text { grid-column: 1 / -1; }
+  .client-filter.button { min-height: 44px; }
+}

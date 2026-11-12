@@ -22,15 +22,15 @@ export function TicketDirectory({ api, actor }: { api: TicketApi; actor: string 
   const query = useQuery({ queryKey: ["tickets", filters, paging.cursor], queryFn: ({ signal }) => api.list(filters, paging.cursor, signal) });
   return <div className="admin-workspace ticket-workspace">
     <Link className="text-link" href="/">Voltar a minha conta</Link>
-    <h1 id="tickets-heading" tabIndex={-1}>Chamados</h1>
+    <div className="page-heading"><h1 id="tickets-heading" tabIndex={-1}>Chamados</h1>
     <div className="action-row">
       {authority.data?.can_create && <Button asChild><Link href="/service-desk/tickets/new">Novo chamado</Link></Button>}
       <Link className="text-link" href="/service-desk/mail-cases">Mensagens recebidas</Link>
       <Link className="text-link" href="/service-desk/queues">Filas de atendimento</Link>
-    </div>
+    </div></div>
     <div className="admin-plane">
       <section className="admin-section" aria-labelledby="ticket-filters-heading">
-        <h2 id="ticket-filters-heading">Filtrar chamados</h2>
+        <h2 id="ticket-filters-heading" className="sr-only">Filtrar chamados</h2>
         <form className="ticket-filters" onSubmit={event => {
           event.preventDefault(); paging.reset();
           setFilters({ q: search.trim(), status: status as TicketFilters["status"], priority: priority as TicketFilters["priority"], queue_id: queue || undefined,
@@ -45,7 +45,7 @@ export function TicketDirectory({ api, actor }: { api: TicketApi; actor: string 
               <option value="">Todas as prioridades</option>{Object.entries(ticketPriorities).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </select></div>
           </div>
-          <details className="ticket-filter-extra"><summary>Mais filtros de chamados</summary>
+          <div className="filter-toolbar"><details className="ticket-filter-extra"><summary>Mais filtros de chamados</summary>
           <div className="account-form-grid">
             <div><label htmlFor="ticket-assignment-filter">Atribuicao</label><select id="ticket-assignment-filter" value={assignment} onChange={event => setAssignment(event.target.value)}>
               <option value="">Todos os responsaveis</option><option value="mine">Atribuidos a mim</option><option value="unassigned">Sem responsavel</option>
@@ -60,21 +60,22 @@ export function TicketDirectory({ api, actor }: { api: TicketApi; actor: string 
             </div>
           </div>
           </details>
+          <Button type="submit" disabled={query.isFetching}>Aplicar filtros</Button></div>
           {client && <p>Cliente selecionado {client.name} <Button type="button" variant="outline" onClick={() => setClient(null)}>Remover filtro de cliente</Button></p>}
-          <Button type="submit" className="work-transition-action" disabled={query.isFetching}>Aplicar filtros</Button>
         </form>
       </section>
       <section className="admin-section" aria-labelledby="ticket-list-heading">
-        <h2 id="ticket-list-heading">Chamados disponiveis</h2>
-        <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>Atualizar chamados</Button>
+        <div className="section-heading"><h2 id="ticket-list-heading">Chamados disponiveis</h2>
+        <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>Atualizar chamados</Button></div>
+        <div className="ticket-table-heading" aria-hidden="true"><span>Assunto / cliente</span><span>Fila / prioridade</span><span>Responsavel</span><span>Estado</span></div>
         {query.isPending ? <LoadingRows label="Carregando chamados..." /> : query.isError ? <ReadError retry={() => void query.refetch()} /> : query.data.items.length ?
-          <ul className="record-list" aria-label="Chamados disponiveis">{query.data.items.map(row => <li className="team-row" key={row.id}>
+          <ul className="record-list" aria-label="Chamados disponiveis">{query.data.items.map(row => <li className="team-row ticket-row" key={row.id}>
             <div className="record-text">
               <Link className="text-link" href={`/service-desk/tickets/${encodeURIComponent(row.id)}`}>{row.number} - {row.subject}</Link>
-              <span className="record-meta">{row.queue_name} - {ticketPriorities[row.priority]}</span>
-              <span className="record-meta">{row.assignee_name ?? "Sem responsavel"}</span>
-              <Button variant="ghost" aria-label={`Filtrar por ${row.client_name}`} onClick={() => { setClient({ id: row.client_id, name: row.client_name }); setFilters(current => ({ ...current, client_id: row.client_id })); paging.reset(); }}>{row.client_name}</Button>
-            </div><span className="record-status" data-state={row.status}>{ticketStatuses[row.status]}</span>
+              <Button className="client-filter" variant="ghost" aria-label={`Filtrar por ${row.client_name}`} onClick={() => { setClient({ id: row.client_id, name: row.client_name }); setFilters(current => ({ ...current, client_id: row.client_id })); paging.reset(); }}>{row.client_name}</Button>
+            </div><div className="record-cell"><span className="mobile-label">Fila</span>{row.queue_name}<span className="record-meta">Prioridade {ticketPriorities[row.priority]}</span></div>
+            <div className="record-cell"><span className="mobile-label">Responsavel</span>{row.assignee_name ?? "Sem responsavel"}</div>
+            <span className="record-status" data-state={row.status}>{ticketStatuses[row.status]}</span>
           </li>)}</ul> : <p>Nenhum chamado disponivel nesta pagina com estes filtros.</p>}
         <Paging paging={paging} next={query.data?.next_cursor} label="chamados" disabled={query.isFetching} />
       </section>

@@ -7,7 +7,7 @@ import secrets
 import tempfile
 from collections.abc import Callable, Iterator
 from threading import BoundedSemaphore
-from typing import Annotated, BinaryIO, cast
+from typing import Annotated, Any, BinaryIO, cast
 from urllib.parse import parse_qsl, quote
 from uuid import UUID
 
@@ -38,7 +38,9 @@ from altvia.attachment_schemas import (
     Purpose,
     RetryReceipt,
     RetryScan,
+    TicketAttachmentFilters,
     UploadReceipt,
+    WorkAttachmentFilters,
 )
 from altvia.config import Settings
 from altvia.file_settings import MAX_FILE_BYTES
@@ -272,7 +274,7 @@ def create_attachment_router(engine: Engine, settings: Settings) -> APIRouter:
         finally:
             transfers.release()
 
-    binary = {
+    binary: dict[str, Any] = {
         "parameters": [
             IF_MATCH,
             IDEMPOTENCY_KEY,
@@ -304,12 +306,19 @@ def create_attachment_router(engine: Engine, settings: Settings) -> APIRouter:
         },
     }
 
+    def binary_contract(purposes: list[str]) -> dict[str, Any]:
+        from copy import deepcopy
+
+        contract = deepcopy(binary)
+        contract["parameters"][-1]["schema"]["enum"] = purposes
+        return contract
+
     @router.post(
         "/tickets/{identifier}/attachments",
         response_model=UploadReceipt,
         status_code=201,
         responses={200: {"model": UploadReceipt}},
-        openapi_extra=binary,
+        openapi_extra=binary_contract(["public", "note"]),
     )
     async def ticket_upload(
         identifier: UUID, request: Request, response: Response
@@ -321,7 +330,7 @@ def create_attachment_router(engine: Engine, settings: Settings) -> APIRouter:
         response_model=UploadReceipt,
         status_code=201,
         responses={200: {"model": UploadReceipt}},
-        openapi_extra=binary,
+        openapi_extra=binary_contract(["work"]),
     )
     async def work_upload(identifier: UUID, request: Request, response: Response) -> UploadReceipt:
         return await upload(identifier, request, response, "work_item")
@@ -357,13 +366,13 @@ def create_attachment_router(engine: Engine, settings: Settings) -> APIRouter:
 
     @router.get("/tickets/{identifier}/attachments", response_model=AttachmentPage)
     def ticket_list(
-        identifier: UUID, request: Request, filters: Annotated[AttachmentFilters, Query()]
+        identifier: UUID, request: Request, filters: Annotated[TicketAttachmentFilters, Query()]
     ) -> AttachmentPage:
         return listing("ticket", identifier, request, filters)
 
     @router.get("/work-items/{identifier}/attachments", response_model=AttachmentPage)
     def work_list(
-        identifier: UUID, request: Request, filters: Annotated[AttachmentFilters, Query()]
+        identifier: UUID, request: Request, filters: Annotated[WorkAttachmentFilters, Query()]
     ) -> AttachmentPage:
         return listing("work_item", identifier, request, filters)
 

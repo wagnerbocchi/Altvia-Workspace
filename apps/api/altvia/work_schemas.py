@@ -17,6 +17,7 @@ from pydantic import (
     model_validator,
 )
 
+from altvia.attachment_schemas import AttachmentSelection, AttachmentSummary
 from altvia.deadlines import DateDue as DateDue
 from altvia.deadlines import Due as Due
 from altvia.deadlines import InstantDue as InstantDue
@@ -114,7 +115,7 @@ class Transition(StrictModel):
     end_operation: StrictBool = False
 
 
-class CommentCreate(StrictModel):
+class CommentCreate(AttachmentSelection, StrictModel):
     body: Annotated[
         str,
         BeforeValidator(lambda v: v.strip() if isinstance(v, str) else v),
@@ -245,6 +246,9 @@ class CommentOutput(StrictModel):
     author_id: UUID
     body: str
     created_at: datetime
+
+    attachment_count: int = 0
+    attachments: list[AttachmentSummary] = Field(default_factory=list)
 
 
 class CommentPage(StrictModel):

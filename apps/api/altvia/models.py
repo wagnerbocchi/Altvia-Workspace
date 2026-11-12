@@ -586,9 +586,22 @@ class WorkComment(Base):
     __tablename__ = "work_item_comments"
     __table_args__ = (
         CheckConstraint(
+            "attachment_count BETWEEN 0 AND 20", name="ck_work_item_comments_attachment_count"
+        ),
+        UniqueConstraint("id", "work_item_id", name="uq_work_item_comments_parent"),
+        CheckConstraint(
             "char_length(btrim(body)) BETWEEN 1 AND 10000", name="ck_work_comment_body"
         ),
         Index("ix_work_comment_page", "work_item_id", "created_at", "id"),
+    )
+    attachment_count: Mapped[int] = mapped_column(default=0, server_default="0")
+    attachments: Mapped[list["Attachment"]] = relationship(
+        secondary="work_comment_attachments",
+        primaryjoin="WorkComment.id == WorkCommentAttachment.comment_id",
+        secondaryjoin="Attachment.id == WorkCommentAttachment.attachment_id",
+        order_by="WorkCommentAttachment.position",
+        viewonly=True,
+        lazy="selectin",
     )
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     work_item_id: Mapped[UUID] = mapped_column(ForeignKey("work_items.id"))
@@ -762,6 +775,10 @@ class TicketStatusHistory(Base):
 class TicketNote(Base):
     __tablename__ = "ticket_notes"
     __table_args__ = (
+        CheckConstraint(
+            "attachment_count BETWEEN 0 AND 20", name="ck_ticket_notes_attachment_count"
+        ),
+        UniqueConstraint("id", "ticket_id", name="uq_ticket_notes_parent"),
         UniqueConstraint("ticket_id", "ticket_version", name="uq_ticket_note_version"),
         CheckConstraint("ticket_version > 1", name="ck_ticket_note_version"),
         CheckConstraint("char_length(body_text) <= 10000", name="ck_ticket_note_length"),
@@ -771,6 +788,15 @@ class TicketNote(Base):
             r"\200A\2028\2029\202F\205F\3000')) > 0",
             name="ck_ticket_note_body",
         ),
+    )
+    attachment_count: Mapped[int] = mapped_column(default=0, server_default="0")
+    attachments: Mapped[list["Attachment"]] = relationship(
+        secondary="ticket_note_attachments",
+        primaryjoin="TicketNote.id == TicketNoteAttachment.note_id",
+        secondaryjoin="Attachment.id == TicketNoteAttachment.attachment_id",
+        order_by="TicketNoteAttachment.position",
+        viewonly=True,
+        lazy="selectin",
     )
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     ticket_id: Mapped[UUID] = mapped_column(ForeignKey("tickets.id", ondelete="RESTRICT"))
@@ -784,6 +810,9 @@ class TicketNote(Base):
 class TicketMessage(Base):
     __tablename__ = "ticket_messages"
     __table_args__ = (
+        CheckConstraint(
+            "attachment_count BETWEEN 0 AND 20", name="ck_ticket_messages_attachment_count"
+        ),
         UniqueConstraint("id", "ticket_id", name="uq_message_ticket"),
         UniqueConstraint("ticket_id", "ticket_version", name="uq_ticket_message_version"),
         CheckConstraint("ticket_version > 1", name="ck_ticket_message_version"),
@@ -797,6 +826,15 @@ class TicketMessage(Base):
         CheckConstraint(
             "visibility='public' AND direction='outbound'", name="ck_ticket_message_kind"
         ),
+    )
+    attachment_count: Mapped[int] = mapped_column(default=0, server_default="0")
+    attachments: Mapped[list["Attachment"]] = relationship(
+        secondary="ticket_message_attachments",
+        primaryjoin="TicketMessage.id == TicketMessageAttachment.message_id",
+        secondaryjoin="Attachment.id == TicketMessageAttachment.attachment_id",
+        order_by="TicketMessageAttachment.position",
+        viewonly=True,
+        lazy="selectin",
     )
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     ticket_id: Mapped[UUID] = mapped_column(ForeignKey("tickets.id", ondelete="RESTRICT"))
@@ -821,7 +859,8 @@ class ActivityEvent(Base):
         CheckConstraint("aggregate_version > 0", name="ck_activity_version"),
         CheckConstraint(
             "resource_type IN "
-            "('identity','team','client','project','operational_area','work_item','ticket_queue','ticket')",
+            "('identity','team','client','project','operational_area"
+            "','work_item','ticket_queue','ticket')",
             name="ck_activity_resource",
         ),
         CheckConstraint("actor_kind IN ('user','management_command')", name="ck_activity_actor"),
@@ -896,7 +935,12 @@ class OutboundMessage(Base):
             "state IN ('queued','preparing','transmitting','accepted','failed','uncertain')"
         ),
         CheckConstraint("attempts BETWEEN 0 AND 8 AND version > 0"),
-        CheckConstraint("octet_length(wire) BETWEEN 1 AND 262144"),
+        CheckConstraint(
+            "(wire_format=1 AND octet_length(wire) BETWEEN 1 AND "
+            "262144) OR (wire_format=2 AND octet_length(wire) "
+            "BETWEEN 1 AND 26214400)",
+            name="ck_outbound_wire_format",
+        ),
         CheckConstraint("namespace_hash ~ '^[0-9a-f]{64}$'"),
         CheckConstraint(
             "(state IN ('preparing','transmitting'))="
@@ -918,6 +962,7 @@ class OutboundMessage(Base):
     envelope_from: Mapped[str] = mapped_column(String(254))
     envelope_to: Mapped[str] = mapped_column(String(254))
     namespace_hash: Mapped[str] = mapped_column(String(64))
+    wire_format: Mapped[int] = mapped_column(default=1, server_default="1")
     wire: Mapped[bytes] = mapped_column(LargeBinary, deferred=True)
     smtp_message_id: Mapped[str] = mapped_column(String(320), unique=True)
     state: Mapped[str] = mapped_column(String(20), default="queued")
@@ -1099,6 +1144,10 @@ class Attachment(Base):
 
     __tablename__ = "attachments"
     __table_args__ = (
+        UniqueConstraint("id", "ticket_id", "purpose", name="uq_attachment_ticket_id_purpose"),
+        UniqueConstraint(
+            "id", "work_item_id", "purpose", name="uq_attachment_work_item_id_purpose"
+        ),
         CheckConstraint(
             "(ticket_id IS NOT NULL AND work_item_id IS NULL AND purpose IN "
             "('public','note')) OR (ticket_id IS NULL AND work_item_id IS NOT NULL AND "
@@ -1181,3 +1230,64 @@ class AttachmentScanAttempt(Base):
     engine: Mapped[str | None] = mapped_column(String(16))
     database_version: Mapped[int | None]
     database_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class TicketMessageAttachment(Base):
+    __tablename__ = "ticket_message_attachments"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["message_id", "ticket_id"], ["ticket_messages.id", "ticket_messages.ticket_id"]
+        ),
+        ForeignKeyConstraint(
+            ["attachment_id", "ticket_id", "purpose"],
+            ["attachments.id", "attachments.ticket_id", "attachments.purpose"],
+        ),
+        UniqueConstraint("message_id", "position"),
+        CheckConstraint("purpose='public' AND position BETWEEN 0 AND 19"),
+    )
+    message_id: Mapped[UUID] = mapped_column(primary_key=True)
+    attachment_id: Mapped[UUID] = mapped_column(primary_key=True)
+    ticket_id: Mapped[UUID]
+    purpose: Mapped[str] = mapped_column(String(10))
+    position: Mapped[int]
+
+
+class TicketNoteAttachment(Base):
+    __tablename__ = "ticket_note_attachments"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["note_id", "ticket_id"], ["ticket_notes.id", "ticket_notes.ticket_id"]
+        ),
+        ForeignKeyConstraint(
+            ["attachment_id", "ticket_id", "purpose"],
+            ["attachments.id", "attachments.ticket_id", "attachments.purpose"],
+        ),
+        UniqueConstraint("note_id", "position"),
+        CheckConstraint("purpose='note' AND position BETWEEN 0 AND 19"),
+    )
+    note_id: Mapped[UUID] = mapped_column(primary_key=True)
+    attachment_id: Mapped[UUID] = mapped_column(primary_key=True)
+    ticket_id: Mapped[UUID]
+    purpose: Mapped[str] = mapped_column(String(10))
+    position: Mapped[int]
+
+
+class WorkCommentAttachment(Base):
+    __tablename__ = "work_comment_attachments"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["comment_id", "work_item_id"],
+            ["work_item_comments.id", "work_item_comments.work_item_id"],
+        ),
+        ForeignKeyConstraint(
+            ["attachment_id", "work_item_id", "purpose"],
+            ["attachments.id", "attachments.work_item_id", "attachments.purpose"],
+        ),
+        UniqueConstraint("comment_id", "position"),
+        CheckConstraint("purpose='work' AND position BETWEEN 0 AND 19"),
+    )
+    comment_id: Mapped[UUID] = mapped_column(primary_key=True)
+    attachment_id: Mapped[UUID] = mapped_column(primary_key=True)
+    work_item_id: Mapped[UUID]
+    purpose: Mapped[str] = mapped_column(String(10))
+    position: Mapped[int]

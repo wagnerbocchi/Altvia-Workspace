@@ -4,6 +4,7 @@ import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from email.message import EmailMessage
+from email.parser import BytesParser
 from email.policy import SMTP
 from email.utils import format_datetime
 from typing import Literal
@@ -44,6 +45,7 @@ SAFE_ERRORS = {
 }
 LEASE_SECONDS = 120
 MAX_WIRE_BYTES = 262144
+MAX_MIME_BYTES = 26214400
 MAX_MESSAGE_ID_CHARS = 320
 
 
@@ -115,6 +117,30 @@ def build_wire(
     return wire
 
 
+@dataclass(frozen=True)
+class PublicFile:
+    id: UUID
+    filename: str
+    media_type: str
+    content: bytes
+
+
+def build_mime_wire(text_wire: bytes, files: list[PublicFile]) -> bytes:
+    """Extend the unchanged format1 body/headers using standard MIME encoding."""
+    if not files or sum(len(file.content) for file in files) > MAX_MIME_BYTES:
+        raise ValueError("message_too_large")
+    msg = BytesParser(policy=SMTP).parsebytes(text_wire)
+    for file in files:
+        maintype, subtype = file.media_type.split("/", 1)
+        msg.add_attachment(
+            file.content, maintype=maintype, subtype=subtype, filename=file.filename, cte="base64"
+        )
+    wire = msg.as_bytes()
+    if len(wire) > MAX_MIME_BYTES:
+        raise ValueError("message_too_large")
+    return wire
+
+
 def reference_ids(db: Session, item: Ticket, participant: TicketParticipant) -> list[str]:
     """Current recipient context only; preserve existing outbound ordering exactly."""
     outgoing = list(
@@ -173,6 +199,7 @@ def freeze(
     sender: MailSender,
     participant: TicketParticipant,
     actor_id: UUID,
+    files: list[PublicFile] | None = None,
 ) -> OutboundMessage:
     thread = db.get(TicketMailThread, item.id)
     if thread is None:
@@ -183,6 +210,18 @@ def freeze(
     # The API caller already holds the identity/parent/ticket write locks.
     now = _clock(db)
     smtp_id = f"<{uuid4().hex}@{sender.from_email.rsplit('@', 1)[1]}>"
+    wire = build_wire(
+        sender.from_email,
+        participant.email,
+        item.subject,
+        message.body_text,
+        smtp_id,
+        thread.token,
+        now,
+        references,
+    )
+    if files:
+        wire = build_mime_wire(wire, files)
     row = OutboundMessage(
         ticket_id=item.id,
         message_id=message.id,
@@ -192,16 +231,8 @@ def freeze(
         envelope_from=sender.from_email,
         envelope_to=participant.email,
         namespace_hash=sender.namespace_hash,
-        wire=build_wire(
-            sender.from_email,
-            participant.email,
-            item.subject,
-            message.body_text,
-            smtp_id,
-            thread.token,
-            now,
-            references,
-        ),
+        wire=wire,
+        wire_format=2 if files else 1,
         smtp_message_id=smtp_id,
         state="queued",
         attempts=0,

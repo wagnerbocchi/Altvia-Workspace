@@ -11,7 +11,7 @@ from fastapi import APIRouter, Query, Request, Response
 from sqlalchemy import Engine, literal, select, tuple_, union_all
 from sqlalchemy.orm import Session
 
-from altvia import identity
+from altvia import attachment_links, identity
 from altvia import tickets as registry
 from altvia.activity_api import ActivityPage, activity_page
 from altvia.admin_http import (
@@ -538,23 +538,28 @@ def create_ticket_router(engine: Engine, settings: Settings) -> APIRouter:
             registry.require_update(item, access, actor.id)
             version = _expected_version(request)
             route = f"ticket-message:{identifier}"
-            key, fingerprint, saved = _operation(db, actor, request, route, body.model_dump())
+            key, fingerprint, saved = _operation(
+                db, actor, request, route, attachment_links.intent(body)
+            )
             if saved is not None:
                 response.status_code = 200
                 return TicketMessageReceipt.model_validate(saved.result)
             if item.version != version:
                 raise identity.IdentityError(409, "version_conflict")
             registry.require_active(access, item)
+            files = attachment_links.locked(db, "ticket", item.id, "public", body.attachment_ids)
             registry.advance(item)
             message = TicketMessage(
                 ticket_id=item.id,
                 author_id=actor.id,
                 body_text=body.body_text,
+                attachment_count=len(files),
                 ticket_version=item.version,
                 created_at=item.updated_at,
             )
             db.add(message)
             db.flush()
+            attachment_links.attach(db, message.id, item.id, "public", files)
             _event(db, actor, item, request, "message_drafted", message_id=str(message.id))
             receipt = TicketMessageReceipt(ticket_id=item.id, message_id=message.id)
             _remember(db, actor, route, key, fingerprint, receipt, 201)
@@ -621,23 +626,28 @@ def create_ticket_router(engine: Engine, settings: Settings) -> APIRouter:
             registry.require_notes(access, write=True)
             version = _expected_version(request)
             route = f"ticket-note:{identifier}"
-            key, fingerprint, saved = _operation(db, actor, request, route, body.model_dump())
+            key, fingerprint, saved = _operation(
+                db, actor, request, route, attachment_links.intent(body)
+            )
             if saved is not None:
                 response.status_code = 200
                 return TicketNoteReceipt.model_validate(saved.result)
             if item.version != version:
                 raise identity.IdentityError(409, "version_conflict")
             registry.require_active(access, item)
+            files = attachment_links.locked(db, "ticket", item.id, "note", body.attachment_ids)
             registry.advance(item)
             note = TicketNote(
                 ticket_id=item.id,
                 author_id=actor.id,
                 body_text=body.body_text,
+                attachment_count=len(files),
                 ticket_version=item.version,
                 created_at=item.updated_at,
             )
             db.add(note)
             db.flush()
+            attachment_links.attach(db, note.id, item.id, "note", files)
             _event(db, actor, item, request, "note_added", note_id=str(note.id))
             receipt = TicketNoteReceipt(ticket_id=item.id, note_id=note.id)
             _remember(db, actor, route, key, fingerprint, receipt, 201)

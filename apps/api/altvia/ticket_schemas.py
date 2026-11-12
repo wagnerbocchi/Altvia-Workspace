@@ -6,6 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
+from altvia.attachment_schemas import AttachmentSelection, AttachmentSummary
 from altvia.work_schemas import Candidate, Priority
 
 Status = Literal["new", "open", "pending_customer", "pending_third_party", "resolved", "closed"]
@@ -93,7 +94,7 @@ class TicketTransitionReceipt(TicketReceipt):
     history_id: UUID | None
 
 
-class TicketNoteCreate(StrictModel):
+class TicketNoteCreate(AttachmentSelection, StrictModel):
     body_text: Annotated[str, BeforeValidator(_text), Field(min_length=1, max_length=10000)]
 
     @field_validator("body_text", mode="before")
@@ -116,13 +117,16 @@ class TicketNoteOutput(StrictModel):
     ticket_version: int
     created_at: datetime
 
+    attachment_count: int = 0
+    attachments: list[AttachmentSummary] = Field(default_factory=list)
+
 
 class TicketNotePage(StrictModel):
     items: list[TicketNoteOutput]
     next_cursor: str | None
 
 
-class TicketMessageCreate(StrictModel):
+class TicketMessageCreate(AttachmentSelection, StrictModel):
     body_text: Annotated[str, BeforeValidator(_text), Field(min_length=1, max_length=10000)]
 
     @field_validator("body_text", mode="before")
@@ -149,6 +153,9 @@ class TicketMessageOutput(StrictModel):
     ] = "draft"
     ticket_version: int
     created_at: datetime
+
+    attachment_count: int = 0
+    attachments: list[AttachmentSummary] = Field(default_factory=list)
 
 
 class TicketMessagePage(StrictModel):

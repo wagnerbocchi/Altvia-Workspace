@@ -9,7 +9,7 @@ from fastapi import APIRouter, Query, Request, Response
 from sqlalchemy import Engine, select, tuple_
 from sqlalchemy.orm import Session, noload
 
-from altvia import identity, project_registry, work_queries
+from altvia import attachment_links, identity, project_registry, work_queries
 from altvia import work_items as work
 from altvia.activity_api import ActivityPage, activity_page
 from altvia.admin_http import (
@@ -439,7 +439,7 @@ def create_work_router(engine: Engine, settings: Settings) -> APIRouter:
             route = "work-comment:" + str(identifier)
             expected = _expected_version(request)
             key, fingerprint, saved = _operation(
-                db, actor, request, route, body.model_dump(mode="json")
+                db, actor, request, route, attachment_links.intent(body, mode="json")
             )
             if saved:
                 response.status_code = 200
@@ -447,9 +447,16 @@ def create_work_router(engine: Engine, settings: Settings) -> APIRouter:
             work.require_active(db, permission)
             if item.version != expected:
                 raise identity.IdentityError(409, "version_conflict")
-            row = WorkComment(work_item_id=item.id, author_id=actor.id, body=body.body)
+            files = attachment_links.locked(db, "work_item", item.id, "work", body.attachment_ids)
+            row = WorkComment(
+                work_item_id=item.id,
+                author_id=actor.id,
+                body=body.body,
+                attachment_count=len(files),
+            )
             db.add(row)
             db.flush()
+            attachment_links.attach(db, row.id, item.id, "work", files)
             work.advance(item)
             _event(db, actor, item, request, "commented", comment_id=str(row.id))
             result = CommentOutput.model_validate(row)

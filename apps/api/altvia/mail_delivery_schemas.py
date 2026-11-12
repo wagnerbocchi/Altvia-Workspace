@@ -4,13 +4,14 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
+
+from altvia.attachment_schemas import AttachmentSelection
 
 DeliveryState = Literal["queued", "preparing", "transmitting", "accepted", "failed", "uncertain"]
 
 
-class DeliveryCreate(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+class DeliveryCreate(AttachmentSelection):
     participant_id: UUID
     source_id: UUID
 

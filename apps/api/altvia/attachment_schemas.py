@@ -3,7 +3,7 @@
 from typing import Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator
 
 Purpose = Literal["public", "note", "work"]
 State = Literal["quarantine", "scanning", "ready", "rejected", "failed"]
@@ -58,3 +58,30 @@ class AttachmentFilters(Strict):
     purpose: Purpose
     limit: int = Field(default=25, ge=1, le=100)
     cursor: str | None = Field(default=None, max_length=500)
+
+
+class AttachmentSelection(Strict):
+    attachment_ids: list[UUID] = Field(default_factory=list, max_length=20)
+
+    @field_validator("attachment_ids")
+    @classmethod
+    def unique_ids(cls, value: list[UUID]) -> list[UUID]:
+        if len(value) != len(set(value)):
+            raise ValueError("Duplicate attachment")
+        return value
+
+
+class AttachmentSummary(Strict):
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
+    id: UUID
+    filename: str
+    media_type: str
+    bytes: int
+
+
+class TicketAttachmentFilters(AttachmentFilters):
+    purpose: Literal["public", "note"]
+
+
+class WorkAttachmentFilters(AttachmentFilters):
+    purpose: Literal["work"]

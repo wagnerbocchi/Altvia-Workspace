@@ -9,6 +9,7 @@ from sqlalchemy import Select, and_, func, literal_column, select
 from sqlalchemy.orm import Session
 
 from altvia import identity
+from altvia.attachment_links import summaries
 from altvia.models import (
     Client,
     ClientAccessGrant,
@@ -202,6 +203,8 @@ def note_output(note: TicketNote) -> TicketNoteOutput:
         author_id=note.author_id,
         author_name=note.author.display_name,
         body_text=note.body_text,
+        attachment_count=note.attachment_count,
+        attachments=summaries(note.attachments),
         ticket_version=note.ticket_version,
         created_at=note.created_at,
     )
@@ -219,6 +222,8 @@ def message_output(message: TicketMessage) -> TicketMessageOutput:
         author_id=message.author_id,
         author_name=message.author.display_name,
         body_text=message.body_text,
+        attachment_count=message.attachment_count,
+        attachments=summaries(message.attachments),
         visibility=message.visibility,
         direction=message.direction,
         ticket_version=message.ticket_version,

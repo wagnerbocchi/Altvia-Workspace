@@ -170,7 +170,9 @@ class _HTMLText(HTMLParser):
         return re.sub(r"\n[ \t]*\n+", "\n", "".join(self.chunks)).strip()
 
 
-def _headers(raw: bytes) -> tuple[Message, bytes, str]:
+def _root_headers(raw: bytes) -> tuple[Message, bytes]:
+    if not isinstance(raw, bytes) or not 1 <= len(raw) <= MAX_RAW_BYTES:
+        raise _Rejected("invalid_headers")
     candidates = [(raw.find(sep), sep) for sep in (b"\r\n\r\n", b"\n\n")]
     found = [(index, sep) for index, sep in candidates if index >= 0]
     if raw.startswith(b"\r\n"):
@@ -191,6 +193,20 @@ def _headers(raw: bytes) -> tuple[Message, bytes, str]:
     )
     if len(headers) > 100 or headers.defects:
         raise _Rejected("invalid_headers")
+    return headers, raw[index + len(separator) :]
+
+
+def root_headers(raw: bytes) -> tuple[tuple[str, str], ...]:
+    """Bounded raw root fields, without broad structured-header interpretation."""
+    try:
+        headers, _ = _root_headers(raw)
+        return tuple(headers.raw_items())
+    except (ValueError, UnicodeError, HeaderParseError, OverflowError) as error:
+        raise ValueError("invalid_headers") from error
+
+
+def _headers(raw: bytes) -> tuple[Message, bytes, str]:
+    headers, body = _root_headers(raw)
     raw_headers = list(headers.raw_items())
     for name in (
         "content-type",
@@ -219,7 +235,7 @@ def _headers(raw: bytes) -> tuple[Message, bytes, str]:
         raise _Rejected("invalid_headers") from error
     if headers.get("MIME-Version", "1.0").strip() != "1.0":
         raise _Rejected("invalid_headers")
-    return headers, raw[index + len(separator) :], subject
+    return headers, body, subject
 
 
 def _children(body: bytes, boundary: str, ancestors: tuple[str, ...]) -> list[bytes]:

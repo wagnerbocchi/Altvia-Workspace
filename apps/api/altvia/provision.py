@@ -14,6 +14,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from altvia.config import Settings
 from altvia.database import make_engine
+from altvia.mail_cases import READ_COLUMNS
 
 CRUD_TABLES = (
     "users",
@@ -65,7 +66,9 @@ ROLE_PRIVILEGES = {
     },
 }
 
+
 APP_COLUMN_READS = {
+    "mail_triage_cases": READ_COLUMNS,
     "ticket_participants": {"id", "ticket_id", "contact_id", "email", "active", "version"},
 }
 WORKER_COLUMN_READS = {

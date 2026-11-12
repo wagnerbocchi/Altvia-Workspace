@@ -928,3 +928,108 @@ class OutboundMessage(Base):
     last_error_code: Mapped[str | None] = mapped_column(String(40))
     accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class MailTriageCase(Base):
+    __tablename__ = "mail_triage_cases"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["source_id", "queue_id"], ["mailbox_sources.id", "mailbox_sources.queue_id"]
+        ),
+        ForeignKeyConstraint(
+            ["contact_id", "client_id"], ["client_contacts.id", "client_contacts.client_id"]
+        ),
+        UniqueConstraint(
+            "id", "source_id", "client_id", "contact_id", "email_snapshot", name="uq_case_context"
+        ),
+        Index(
+            "uq_case_message_context",
+            "source_id",
+            "client_id",
+            "contact_id",
+            "email_snapshot",
+            "message_id",
+            unique=True,
+            postgresql_where=text("message_id IS NOT NULL"),
+        ),
+        Index("ix_mail_cases_page", "created_at", "id"),
+        CheckConstraint(
+            "state IN ('ready','collision','revoked') AND version > 0", name="ck_case_state"
+        ),
+        CheckConstraint("routing_version=1", name="ck_case_routing"),
+        CheckConstraint(
+            "char_length(subject)<=998 AND octet_length(subject)<=3992 AND "
+            "octet_length(body_text) BETWEEN 1 AND 65536",
+            name="ck_case_text",
+        ),
+        CheckConstraint(
+            "jsonb_typeof(references_ids)='array' AND jsonb_array_length(references_ids)<=64",
+            name="ck_case_references",
+        ),
+        CheckConstraint(
+            "thread_token IS NULL OR thread_token ~ '^[0-9a-f]{64}$'", name="ck_case_token"
+        ),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    source_id: Mapped[UUID]
+    queue_id: Mapped[UUID]
+    client_id: Mapped[UUID] = mapped_column(ForeignKey("clients.id"))
+    contact_id: Mapped[UUID]
+    primary_variant_id: Mapped[UUID] = mapped_column(ForeignKey("inbound_mail_variants.id"))
+    email_snapshot: Mapped[str] = mapped_column(String(254))
+    contact_name: Mapped[str] = mapped_column(String(150))
+    subject: Mapped[str] = mapped_column(String(998))
+    body_text: Mapped[str] = mapped_column(Text, deferred=True)
+    routing_version: Mapped[int] = mapped_column(default=1)
+    message_id: Mapped[str | None] = mapped_column(String(320), deferred=True)
+    in_reply_to: Mapped[str | None] = mapped_column(String(320), deferred=True)
+    references_ids: Mapped[list[str]] = mapped_column(JSONB, deferred=True)
+    thread_token: Mapped[str | None] = mapped_column(String(64), deferred=True)
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    state: Mapped[str] = mapped_column(String(20), default="ready")
+    version: Mapped[int] = mapped_column(default=1)
+
+
+class MailCaseOrigin(Base):
+    __tablename__ = "mail_case_origins"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["case_id", "source_id", "client_id", "contact_id", "email_snapshot"],
+            [
+                "mail_triage_cases.id",
+                "mail_triage_cases.source_id",
+                "mail_triage_cases.client_id",
+                "mail_triage_cases.contact_id",
+                "mail_triage_cases.email_snapshot",
+            ],
+        ),
+        CheckConstraint(
+            "raw_sha256 ~ '^[0-9a-f]{64}$' AND evidence ~ "
+            "'^[A-Za-z0-9._:/-]{1,200}$' AND contact_version>0",
+            name="ck_origin_proof",
+        ),
+        CheckConstraint(
+            "disposition IN ('primary','alias','collision') AND "
+            "routing_version=1 AND parser_version=2",
+            name="ck_origin_disposition",
+        ),
+    )
+    variant_id: Mapped[UUID] = mapped_column(
+        ForeignKey("inbound_mail_variants.id"), primary_key=True
+    )
+    case_id: Mapped[UUID]
+    source_id: Mapped[UUID]
+    envelope_id: Mapped[UUID] = mapped_column(ForeignKey("inbound_mail_envelopes.id"))
+    raw_sha256: Mapped[str] = mapped_column(String(64))
+    client_id: Mapped[UUID]
+    contact_id: Mapped[UUID]
+    email_snapshot: Mapped[str] = mapped_column(String(254))
+    contact_version: Mapped[int]
+    evidence: Mapped[str] = mapped_column(String(200))
+    routing_version: Mapped[int] = mapped_column(default=1)
+    parser_version: Mapped[int] = mapped_column(default=2)
+    disposition: Mapped[str] = mapped_column(String(20))
+    attested_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )

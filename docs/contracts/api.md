@@ -544,3 +544,56 @@ atomic capture/checkpoint/reset transactions with no network I/O inside them.
 Strict private checkpoint events contain source/UID/reason metadata only and
 produce no shared activity. Raw/poll-state tables remain inaccessible to both
 runtime roles. No sender proof, ticket promotion, MIME display or SMTP is inferred.
+
+
+## ADR-0036 classified mail case reads (Task 1)
+
+GET /mail-cases accepts unique limit/cursor/queue_id/client_id/state. Limit1..100,
+default25; state is ready|collision|revoked. Cursor binds the current actor and
+all filters. Results are newest publication first (created_at/id), no total count.
+Each summary includes id, queue_id, client_id, contact_id, contact_name, subject,
+received_at, created_at, state and version. No body, address, routing or provenance
+appears in the list. GET /mail-cases/{case_id} adds the exact immutable parser2
+body_text and email_snapshot and returns ETag. Subject may be empty and full
+normalized body may reach65536 UTF8 bytes. Both require current explicit client
+ceiling plus a queue viewer/agent/operations_manager role, including for platform
+administrators; hidden resources return404. Unsupported/repeated/invalid queries
+return422. These routes expose actual owner publications, with no promotion
+capability fields or mutation endpoint until Task2 implements that behavior.
+
+mail_triage_cases is the explicit immutable text publication boundary; it never
+joins private previews for API content. Narrow API column grants exclude source,
+variant and routing identifiers. The worker receives no case-content grant. Both
+runtime roles remain denied raw/source/poll/preview/origin/evidence access.
+
+The owner-only module altvia.mail_cases_owner requires ALTVIA_ALLOW_MAIL_CASES=1
+for its attest/revoke/inspect command. Attest selects one immutable variant,
+reviewed current contact version and opaque evidence. Contact/client identity is
+explicit, never inferred from a mailbox/header. Its minimal committed receipt is
+case_id/state/disposition/replayed. Inspect returns case_id/version/state only.
+No HTTP attestation is exposed. Evidence belongs to the owner, never response,
+shared activity or logs. A malformed or own reserved outgoing ID refuses without
+creating an origin or case; raw quarantine remains. All outgoing delivery states
+reserve their generated IDs within the exact attested queue/client/contact/email
+context. Only accepted rows can later route replies under Task2.
+
+Routing_v1 reuses bounded root headers (16384 bytes,2048-byte physical lines,
+100 fields), with ASCII angle-bracket Message-IDs up to320 characters, dot-atom
+local parts and DNS labels1..63/domain<=253. Preserve identifier case. Reject
+malformed/duplicate IDs; allow a missing primary ID with no cross-UID dedup.
+At most one parent ID and64 folding-whitespace-separated references; optional
+thread token is64 lowercase hex. One From and optional matching one Sender and
+Reply-To use ASCII mailboxes; conservative display names are discarded without
+header codec lookup. Auto-Submitted must be no, a supplied Return-Path must be a
+non-null angle mailbox, and report/DSN forms remain quarantined.
+
+Contextual identity is source/client/contact/email_snapshot/Message-ID. Exact raw
+aliases carry independent per-variant evidence; changed wire permanently collides
+the existing case. SQL invalidates cases linked by any origin of a newly collided
+receipt, including old capture binaries, in stable case-ID order. No reverse
+customer/ticket lock is taken. Case/private audit/outbox and source versions share
+one transaction; exhaustion or event failure acknowledges nothing. Strict private
+mail.case_published/aliased/collided/revoked metadata is acknowledged by the worker
+without projecting shared activity. Old intake and normalization envelopes remain
+exact. Migration00023 contraction refuses case/origin/private history;00024 adds
+actual promotion state/receipts/FKs with its real incoming-message table.

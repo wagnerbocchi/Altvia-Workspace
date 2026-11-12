@@ -82,6 +82,16 @@ source has nine LOW and zero blockers/secrets. Sanitized252-entry evidence is
 hash-bound in docs/phase-3g-verified-delivery-evidence.md. Full incoming mail,
 private files, remaining MVP and final integrated target qualification stay open.
 
+ADR-0036 Task1 now implements the owner-classified immutable case/origin boundary,
+strict routing_v1, alias-aware SQL late-collision invalidation, private events and
+current queue-role/client-ceiling filtered list/detail reads. Task1 local acceptance passed420 affected PG/API/mail checks, formatting/lint,
+strict types, zero-blocking SAST, package/build and generated/web checks.
+Independent review/publication/CI remain pending. No
+promotion/UI or full incoming-mail completion is claimed at this boundary.
+No new unresolved engineering policy was needed: Q03/Q16 still own real receiving
+and per-variant identity evidence; conservative routing compatibility is documented
+in docs/contracts/api.md. Task2 remains the actual promotion/conversation stage.
+
 The next engineering contract is ADR-0036 and
 docs/plans/2026-11-12-attested-inbound-conversation.md: owner-attested classified
 cases, existing queue/customer scope, protected staff promotion, contextual

@@ -195,6 +195,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/mail-cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listing */
+        get: operations["listing_api_v1_mail_cases_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/mail-cases/{case_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detail */
+        get: operations["detail_api_v1_mail_cases__case_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/my-work": {
         parameters: {
             query?: never;
@@ -1197,6 +1231,105 @@ export interface components {
             items: components["schemas"]["Candidate"][];
             /** Next Cursor */
             next_cursor: string | null;
+        };
+        /** CaseDetail */
+        CaseDetail: {
+            /** Body Text */
+            body_text: string;
+            /**
+             * Client Id
+             * Format: uuid
+             */
+            client_id: string;
+            /**
+             * Contact Id
+             * Format: uuid
+             */
+            contact_id: string;
+            /** Contact Name */
+            contact_name: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Email Snapshot */
+            email_snapshot: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Queue Id
+             * Format: uuid
+             */
+            queue_id: string;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "ready" | "collision" | "revoked";
+            /** Subject */
+            subject: string;
+            /** Version */
+            version: number;
+        };
+        /** CasePage */
+        CasePage: {
+            /** Items */
+            items: components["schemas"]["CaseSummary"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** CaseSummary */
+        CaseSummary: {
+            /**
+             * Client Id
+             * Format: uuid
+             */
+            client_id: string;
+            /**
+             * Contact Id
+             * Format: uuid
+             */
+            contact_id: string;
+            /** Contact Name */
+            contact_name: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Queue Id
+             * Format: uuid
+             */
+            queue_id: string;
+            /**
+             * Received At
+             * Format: date-time
+             */
+            received_at: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "ready" | "collision" | "revoked";
+            /** Subject */
+            subject: string;
+            /** Version */
+            version: number;
         };
         /** CategoryCreate */
         CategoryCreate: {
@@ -3357,6 +3490,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActivityPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listing_api_v1_mail_cases_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+                queue_id?: string | null;
+                client_id?: string | null;
+                state?: ("ready" | "collision" | "revoked") | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CasePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detail_api_v1_mail_cases__case_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaseDetail"];
                 };
             };
             /** @description Validation Error */

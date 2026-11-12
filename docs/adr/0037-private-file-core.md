@@ -67,9 +67,18 @@ signing for the real native admin API. Never place secrets in argv or output.
 Create ordinary non-owner/non-admin API and scanner accounts. Native bucket policy
 allows API GetObject/PutObject and scanner GetObject on objects/* only. Require
 If-None-Match=* for every runtime PUT; explicitly deny destructive/administrative
-actions, listing, ACL/policy changes and other buckets. Test missing/wrong headers,
+actions, object listing, ACL/policy changes and other buckets. Test missing/wrong headers,
 copy/multipart variants, overwrites and actual anonymous/cross-bucket requests.
 An unsupported policy must fail qualification, not silently broaden credentials.
+Pinned internal IAM permits global ListBuckets without an identity-policy layer;
+its explicit owned scope returns only buckets owned by the caller. Runtime users
+must own NONE. Permit only HTTP200 with an actually empty bucket list, no other
+owner/continuation/bucket metadata; record that result honestly, never as403.
+Pin list-buckets-scope=owned and prove emptiness even with populated root/foreign
+buckets and their normal object policy. ListObjects/V2/versions/uploads and all
+actual object enumeration still require denial. Reject any visible bucket or
+ownership drift. Adding another IAM service merely to turn this empty response
+into403 would not improve the actual data boundary.
 Existing initialization is inspected and refused on incompatible identity/policy;
 bootstrap must not reset existing credentials or delete data to look idempotent.
 

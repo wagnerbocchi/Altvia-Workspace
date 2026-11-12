@@ -65,10 +65,14 @@ manager yielding a verified BinaryIO. ClamClient(settings).scan(source:BinaryIO,
 clean/infected/failed disposition/reason and reported engine/database identity.
 Fixed safe transport exceptions, no raw SDK/engine text to callers or logs.
 
-- [ ] RED actual private S3 clients: verified TLS, anonymous/cross-bucket/list/
+- [ ] RED actual private S3 clients: verified TLS, anonymous/cross-bucket/object-list/
   delete/admin/policy denial, scanner write denial, absent/wrong conditional header,
   duplicate412 preserving bytes, size/hash corruption and credential non-disclosure.
   Use real standard server, not an emulated S3 implementation.
+  For global ListBuckets, pinned internal IAM returns200: require empty actual
+  buckets/continuation under explicit owned scope and zero service-owned buckets,
+  with populated root/foreign negative controls. Never describe that as403 or
+  weaken actual object-list/cross-bucket denials.
 - [ ] Build the exact pinned Go source/hash and signed AV packages; actual version/
   native inventory, non-root/read-only/private volumes/networks/resource checks.
   Use native bucket policy and --fsync; validate conditional create-only semantics

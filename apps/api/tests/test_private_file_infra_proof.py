@@ -172,3 +172,81 @@ def test_cleanup_failure_without_primary_error_fails_after_manifest_persistence(
     saved = json.loads((tmp_path / "manifest.json").read_bytes())
     assert not saved["passed"] and saved["commands"][0]["exit"] == 9
     assert len(saved["cleanup_failures"]) == 1
+
+
+@pytest.mark.skipif(
+    not os.environ.get("ALTVIA_FILE_LOGGER_IMAGE"),
+    reason="Native console check requires an explicitly supplied prebuilt pinned ClamAV image",
+)
+@pytest.mark.parametrize("program", ["freshclam", "freshclam-daemon", "clamd"])
+def test_native_foreground_logging_reaches_fail_closed_database_boundary(tmp_path, program):
+    """No network/definitions: logger init succeeds, then genuine DB work must fail."""
+    engine = os.environ.get("ALTVIA_FILE_LOGGER_ENGINE", "docker")
+    assert engine in ("docker", "podman")
+    image = os.environ["ALTVIA_FILE_LOGGER_IMAGE"]
+    # This test cannot pull/install a runtime or silently follow a mutable tag.
+    assert len(image.removeprefix("sha256:")) == 64
+    assert all(c in "0123456789abcdef" for c in image.removeprefix("sha256:"))
+    directory = Path(__file__).resolve().parents[3] / "infra"
+    if program.startswith("freshclam"):
+        setup = (
+            "mkdir -m 700 /tmp/definitions; "
+            "sed 's/^DatabaseMirror .*/DatabaseMirror 127.0.0.1/;"
+            "s/^ConnectTimeout .*/ConnectTimeout 1/;"
+            "s/^ReceiveTimeout .*/ReceiveTimeout 1/' "
+            "/proof/freshclam.conf > /tmp/freshclam.conf; "
+            "printf '\\nMaxAttempts 1\\n' >> /tmp/freshclam.conf; "
+            "exec timeout 3 freshclam --config-file=/tmp/freshclam.conf "
+            "--no-dns --stdout --datadir=/tmp/definitions --update-db=daily"
+        )
+        if program == "freshclam-daemon":
+            setup += " --daemon"
+    else:
+        setup = (
+            "mkdir -m 700 /tmp/definitions; "
+            "exec timeout 3 clamd --config-file=/proof/clamd.conf --datadir=/tmp/definitions"
+        )
+    manifest = {"commands": []}
+    command = [
+        engine,
+        "run",
+        "--rm",
+        "--pull=never",
+        "--network=none",
+        "--read-only",
+        "--tmpfs",
+        "/tmp",
+        "--cap-drop=ALL",
+        "--security-opt=no-new-privileges",
+        "--pids-limit=32",
+        "--volume",
+        f"{directory}:/proof:ro",
+        "--entrypoint",
+        "/bin/sh",
+        image,
+        "-ec",
+        'test "$(id -u)" = 10001; test "$(clamd --version)" = \'ClamAV 1.4.6\'; ' + setup,
+    ]
+    result = proof.run_command(
+        tmp_path, manifest, command, cwd=directory.parent, env=None, timeout=15, allow_failure=True
+    )
+    config = directory / ("freshclam.conf" if program.startswith("freshclam") else "clamd.conf")
+    manifest["native_program"] = program
+    manifest["mounted_config_sha256"] = hashlib.sha256(config.read_bytes()).hexdigest()
+    (tmp_path / "manifest.json").write_bytes(json.dumps(manifest, indent=2).encode("utf-8"))
+    output = result.stdout + result.stderr
+    assert "Symbolic link loop" not in output, output
+    assert "internal logger" not in output, output
+    if program.startswith("freshclam"):
+        assert "ClamAV update process started" in output, output
+        assert "download" in output.lower(), output
+        if program == "freshclam-daemon":
+            # BusyBox timeout forwards TERM; freshclam handles it and exits0.
+            # The console termination event proves the foreground loop was alive.
+            assert result.returncode == 0, output
+            assert "Update process terminated" in output, output
+        else:
+            assert result.returncode not in (0, 124, 137), output
+    else:
+        assert result.returncode == 1, output
+        assert "No supported database files found" in output, output

@@ -378,6 +378,16 @@
             "title": "Id",
             "type": "string"
           },
+          "promotion_receipt": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PromotionReceipt"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "queue_id": {
             "format": "uuid",
             "title": "Queue Id",

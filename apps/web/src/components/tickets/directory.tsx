@@ -25,6 +25,7 @@ export function TicketDirectory({ api, actor }: { api: TicketApi; actor: string 
     <h1 id="tickets-heading" tabIndex={-1}>Chamados</h1>
     <div className="action-row">
       {authority.data?.can_create && <Button asChild><Link href="/service-desk/tickets/new">Novo chamado</Link></Button>}
+      <Link className="text-link" href="/service-desk/mail-cases">Mensagens recebidas</Link>
       <Link className="text-link" href="/service-desk/queues">Filas de atendimento</Link>
     </div>
     <div className="admin-plane">

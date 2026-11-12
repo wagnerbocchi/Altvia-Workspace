@@ -21,7 +21,7 @@ async function ticket(page: Page, csrf: string) {
   expect(result.status()).toBe(201);
   return (await result.json()).ticket_id as string;
 }
-const list = (page: Page) => page.getByRole("list", { name: "Rascunhos de resposta", exact: true });
+const list = (page: Page) => page.getByRole("list", { name: "Conversa do chamado", exact: true });
 const form = (page: Page) => page.getByRole("region", { name: "Preparar resposta", exact: true });
 async function review(page: Page, body: string) {
   await page.getByLabel("Texto da resposta", { exact: true }).fill(body);
@@ -128,7 +128,9 @@ test("@messages real escaped draft requires keyboard review, persists and stays 
   await page.getByRole("button", { name: "Voltar ao texto", exact: true }).click();
   await expect(page.getByLabel("Texto da resposta", { exact: true })).toBeFocused();
   await page.getByRole("button", { name: "Revisar rascunho", exact: true }).click();
-  await page.getByRole("button", { name: "Salvar rascunho", exact: true }).focus();
+  await expect(page.getByRole("heading", { name: "Revisar rascunho de resposta", exact: true })).toBeFocused();
+  const save = page.getByRole("button", { name: "Salvar rascunho", exact: true });
+  await expect(save).toBeEnabled(); await save.focus(); await expect(save).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(list(page)).toContainText("Resposta <script>window.injected = true</script>");
   await expect(list(page)).toContainText("Rascunho - nao enviado");
@@ -179,7 +181,7 @@ for (const failedRead of ["ticket", "receipt", "list"]) test(`@messages acknowle
   const api = `/api/v1/tickets/${id}`;
   await page.goto(`/service-desk/tickets/${id}`);
   await review(page, "Rascunho confirmado sem leitura");
-  const pattern = failedRead === "ticket" ? `**${api}` : failedRead === "receipt" ? `**${api}/messages/*` : `**${api}/messages?*`;
+  const pattern = failedRead === "ticket" ? `**${api}` : failedRead === "receipt" ? `**${api}/messages/*` : `**${api}/conversation?*`;
   await page.route(pattern, route => route.fulfill({ status: 503, body: "{}" }));
   await page.getByRole("button", { name: "Salvar rascunho", exact: true }).click();
   await expect(page.getByText("Rascunho salvo, nao enviado. Atualize o chamado antes de continuar.", { exact: true })).toBeVisible();
@@ -247,17 +249,17 @@ test("@messages chronological paging and failed list recovery use persisted page
   await page.goto(`/service-desk/tickets/${id}`);
   await expect(list(page).getByRole("listitem")).toHaveCount(10);
   await expect(list(page).getByRole("listitem").first()).toContainText("Resposta ordenada 0");
-  await page.getByRole("button", { name: "Proximas respostas", exact: true }).click();
+  await page.getByRole("button", { name: "Proximas mensagens", exact: true }).click();
   await expect(list(page).getByRole("listitem")).toHaveCount(1);
   await expect(list(page)).toContainText("Resposta ordenada 10");
-  await page.route(`**/api/v1/tickets/${id}/messages?*`, route => route.fulfill({ status: 503, body: "{}" }));
-  await page.getByRole("button", { name: "Atualizar respostas", exact: true }).click();
-  const region = page.getByRole("region", { name: "Respostas", exact: true });
+  await page.route(`**/api/v1/tickets/${id}/conversation?*`, route => route.fulfill({ status: 503, body: "{}" }));
+  await page.getByRole("button", { name: "Atualizar conversa", exact: true }).click();
+  const region = page.getByRole("region", { name: "Conversa", exact: true });
   await expect(region.getByRole("alert")).toBeVisible();
-  await page.unroute(`**/api/v1/tickets/${id}/messages?*`);
+  await page.unroute(`**/api/v1/tickets/${id}/conversation?*`);
   await region.getByRole("button", { name: "Tentar carregar novamente", exact: true }).click();
   await expect(list(page)).toContainText("Resposta ordenada 10");
-  await page.getByRole("button", { name: "Respostas anteriores", exact: true }).click();
+  await page.getByRole("button", { name: "Mensagens anteriores", exact: true }).click();
   await expect(list(page).getByRole("listitem")).toHaveCount(10);
 });
 

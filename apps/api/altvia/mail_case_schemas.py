@@ -47,6 +47,7 @@ class CaseDetail(CaseSummary):
     candidate_ticket_version: int | None
     candidate_ticket_status: Status | None
     candidate_can_reopen: bool
+    promotion_receipt: "PromotionReceipt | None" = None
 
 
 class CasePage(BaseModel):

@@ -40,17 +40,29 @@ export function TicketMessages({ id, api, canAdd, blocked, review, pendingDelive
   pendingDelivery: { messageId: string; acknowledged: boolean } | null; recoveryBusy: boolean; recoveryAvailable: boolean; recoverDelivery: () => void;
 }) {
   const paging = usePaging();
-  const query = useQuery({ queryKey: ["ticket-messages", id, paging.cursor], queryFn: ({ signal }) => api.messages(id, paging.cursor, signal) });
+  const query = useQuery({ queryKey: ["ticket-conversation", id, paging.cursor], queryFn: ({ signal }) => api.conversation(id, paging.cursor, signal) });
   const choices = useQuery({ queryKey: ["ticket-delivery-choices", id], queryFn: ({ signal }) => api.deliveryChoices(id, signal) });
   return <section className="admin-section" aria-labelledby="ticket-messages-heading">
-    <h2 id="ticket-messages-heading">Respostas</h2>
-    <p className="field-help">Respostas compartilhadas com quem tem acesso a este chamado. Salvar um rascunho nao envia e-mail. Cada envio exige revisao e confirmacao.</p>
+    <h2 id="ticket-messages-heading">Conversa</h2>
+    <p className="field-help">Mensagens recebidas e respostas publicas, em ordem de registro no chamado. Salvar um rascunho nao envia e-mail. Cada envio exige revisao e confirmacao.</p>
     {choices.isError && <ReadError retry={() => void choices.refetch()}>Nao foi possivel consultar as opcoes de envio.</ReadError>}
     {choices.data && (!choices.data.can_send || !choices.data.sender || !choices.data.participant) && <p className="field-help">{!canAdd ? "Sua conta pode consultar respostas, mas nao enviar neste chamado." : !choices.data.sender ? "O envio precisa de um remetente configurado pelo administrador para esta fila." : !choices.data.participant ? "O solicitante precisa de uma atestacao valida para este chamado antes do envio. Consulte o administrador." : "O envio nao esta disponivel nas condicoes atuais do chamado."}</p>}
     {!canAdd && <p className="field-help">Rascunhos podem ser salvos pelo responsavel ou gestor, com cliente, equipe e fila ativos e chamado aberto para alteracoes.</p>}
-    <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>Atualizar respostas</Button>
-    {query.isPending ? <LoadingRows label="Carregando respostas..." /> : query.isError ? <ReadError retry={() => void query.refetch()} /> : query.data.items.length ?
-      <ol className="record-list" aria-label="Rascunhos de resposta">{query.data.items.map(message => <li className="team-row" key={message.id}>
+    <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>Atualizar conversa</Button>
+    {query.isPending ? <LoadingRows label="Carregando conversa..." /> : query.isError ? <ReadError retry={() => void query.refetch()} /> : query.data.items.length ?
+      <ol className="record-list" aria-label="Conversa do chamado">{query.data.items.map(item => item.kind === "incoming" ? <li className="team-row" key={item.id}><div className="record-text"><strong>Recebida de {item.contact_name}</strong><span className="record-meta">{item.email_snapshot}</span><time className="record-meta" dateTime={item.received_at}>{new Date(item.received_at).toLocaleString("pt-BR")}</time><p className="field-help">Identidade atestada somente para esta mensagem; o contato e a conta nao estao globalmente verificados.</p>{item.invalidation_warning && <p className="read-notice">A atestacao desta mensagem foi revogada ou entrou em conflito. O registro historico foi preservado; consulte o administrador.</p>}<h3 className="work-subheading">{item.subject || "(Sem assunto recebido)"}</h3><div className="incoming-text" role="region" aria-label={`Texto recebido de ${item.contact_name}`} tabIndex={0}><p className="work-prose">{item.body_text}</p></div></div></li> : <OutboundMessage key={item.message.id} message={item.message} id={id} api={api} canAdd={canAdd} choices={choices} blocked={blocked} review={review} pendingDelivery={pendingDelivery} recoveryBusy={recoveryBusy} recoveryAvailable={recoveryAvailable} recoverDelivery={recoverDelivery} />)}</ol> : <p>Nenhuma mensagem nesta pagina.</p>}
+    <nav className="paging" aria-label="Paginas da conversa">
+      <Button type="button" variant="outline" disabled={query.isFetching || paging.index === 0} onClick={paging.previous}>Mensagens anteriores</Button>
+      <span>Pagina {paging.index + 1}</span>
+      <Button type="button" variant="outline" disabled={query.isFetching || !query.data?.next_cursor} onClick={() => query.data?.next_cursor && paging.next(query.data.next_cursor)}>Proximas mensagens</Button>
+    </nav>
+  </section>;
+}
+
+function OutboundMessage({ message, id, api, canAdd, choices, blocked, review, pendingDelivery, recoveryBusy, recoveryAvailable, recoverDelivery }: {
+  message: TicketMessage; id: string; api: TicketApi; canAdd: boolean; choices: ReturnType<typeof useQuery<DeliveryChoices>>; blocked: boolean; review: (message: TicketMessage, choices: DeliveryChoices) => void; pendingDelivery: { messageId: string; acknowledged: boolean } | null; recoveryBusy: boolean; recoveryAvailable: boolean; recoverDelivery: () => void;
+}) {
+  return <li className="team-row" key={message.id}>
         <div className="record-text">
           <strong>{message.author_name}</strong>
           {pendingDelivery?.messageId === message.id ? <div role="status">
@@ -62,13 +74,7 @@ export function TicketMessages({ id, api, canAdd, blocked, review, pendingDelive
           <p className="work-prose">{message.body_text}</p>
           {message.delivery_status === "draft" && pendingDelivery?.messageId !== message.id && canAdd && choices.data?.can_send && choices.data.sender && choices.data.participant && <Button variant="outline" disabled={blocked || choices.isFetching || choices.isError} onClick={() => review(message, choices.data!)}>Revisar envio</Button>}
         </div>
-      </li>)}</ol> : <p>Nenhum rascunho de resposta nesta pagina.</p>}
-    <nav className="paging" aria-label="Paginas de respostas">
-      <Button type="button" variant="outline" disabled={query.isFetching || paging.index === 0} onClick={paging.previous}>Respostas anteriores</Button>
-      <span>Pagina {paging.index + 1}</span>
-      <Button type="button" variant="outline" disabled={query.isFetching || !query.data?.next_cursor} onClick={() => query.data?.next_cursor && paging.next(query.data.next_cursor)}>Proximas respostas</Button>
-    </nav>
-  </section>;
+      </li>;
 }
 
 export function TicketMessageForm({ body, reviewed, disabled, error, change, review, cancel, submit }: {

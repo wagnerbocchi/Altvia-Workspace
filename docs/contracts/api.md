@@ -561,6 +561,14 @@ administrators; hidden resources return404. Unsupported/repeated/invalid queries
 return422. These routes expose actual owner publications. Task2 adds the capabilities and
 protected mutation specified below.
 
+Detail alone also includes nullable promotion_receipt using the existing minimal
+case_id/ticket_id/incoming_message_id result. It reuses immutable persisted pointers
+and requires current READ of the resulting ticket, including for read-only queue
+members. It remains available after historical revocation/collision when readable;
+it is never included in list summaries. This read supports reload navigation,
+not acknowledgement of an uncertain original POST: protected replay still owns
+confirmation of the original key/body/If-Match before receipt reads.
+
 mail_triage_cases is the explicit immutable text publication boundary; it never
 joins private previews for API content. Narrow API column grants exclude source and
 variant; bounded routing columns are internal service inputs, never response fields. The worker receives no case-content grant. Both

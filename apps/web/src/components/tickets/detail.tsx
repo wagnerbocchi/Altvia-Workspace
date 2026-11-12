@@ -53,15 +53,14 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
     if (acknowledgedMessage.current) {
       const message = await api.message(id, acknowledgedMessage.current);
       if (!fresh.data || message.ticket_version > fresh.data.version) throw Error("Message version not confirmed");
-      await cache.refetchQueries({ queryKey: ["ticket-messages", id], type: "active" }, { throwOnError: true });
     }
     if (acknowledgedDelivery.current) {
       const receipt = acknowledgedDelivery.current;
       const delivery = await api.delivery(id, receipt.message);
       if (delivery.delivery_id !== receipt.delivery || delivery.message_id !== receipt.message || delivery.ticket_id !== id) throw Error("Delivery receipt not confirmed");
-      await cache.refetchQueries({ queryKey: ["ticket-messages", id], type: "active" }, { throwOnError: true });
       await cache.invalidateQueries({ queryKey: ["ticket-delivery", id] });
     }
+    await cache.refetchQueries({ queryKey: ["ticket-conversation", id], type: "active" }, { throwOnError: true });
     await cache.refetchQueries({ queryKey: ["ticket-delivery-choices", id], type: "active" }, { throwOnError: true });
     if (!session.isCurrent()) return;
     if (acknowledgedDelivery.current) setDeliveryReview(null);

@@ -47,7 +47,7 @@ async function capture(page: Page, state: string) {
 }
 async function status(page: Page, api: string, message: string, state: string) {
   await expect.poll(async () => (await (await page.request.get(`${api}/messages/${message}/delivery`)).json()).state, { timeout: 45_000 }).toBe(state);
-  await page.getByRole("button", { name: "Atualizar respostas", exact: true }).click();
+  await page.getByRole("button", { name: "Atualizar conversa", exact: true }).click();
   await page.getByRole("button", { name: "Atualizar estado do envio", exact: true }).click();
 }
 
@@ -86,7 +86,7 @@ for (const [marker, state, label] of [["FAILED", "failed", "Envio falhou"], ["UN
   await expect(page.getByText(label, { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Revisar envio", exact: true })).toHaveCount(0);
   const first = await (await page.request.get(`${item.api}/messages/${item.messageId}/delivery`)).json();
-  await page.reload(); await page.getByRole("button", { name: "Atualizar respostas", exact: true }).click();
+  await page.reload(); await page.getByRole("button", { name: "Atualizar conversa", exact: true }).click();
   const second = await (await page.request.get(`${item.api}/messages/${item.messageId}/delivery`)).json();
   expect(second.delivery_id).toBe(first.delivery_id); expect(second.attempts).toBe(1);
   await capture(page, state);
@@ -133,8 +133,10 @@ for (const code of [401, 403]) test(`@delivery session boundary ${code} clears p
   const refused = page.waitForResponse(response => response.url().endsWith(`/messages/${item.messageId}/delivery`) && response.request().method() === "POST");
   await page.getByRole("button", { name: "Confirmar envio", exact: true }).click();
   expect((await refused).status()).toBe(code);
-  await expect(page.getByRole("heading", { name: "Verifique seu acesso", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: code === 401 ? "Acesse seu workspace" : "Verifique seu acesso", exact: true })).toBeVisible();
+  if (code === 401) await expect(page.getByRole("status")).toContainText("Sua sessão terminou");
   await expect(deliveryReview(page)).toHaveCount(0);
+  await expect(page.getByText("Private retained delivery review", { exact: true })).toHaveCount(0);
 });
 
 for (const committed of [false, true]) test(`@delivery ownership loss ${committed} retains disabled original review and protected replay`, async ({ page, browser }) => {
@@ -182,7 +184,7 @@ test("@delivery acknowledged result survives failed authoritative read without a
   });
   await page.getByRole("button", { name: "Confirmar envio", exact: true }).click();
   await expect(page.getByText("Solicitacao de envio registrada. Atualize o chamado para consultar o estado confirmado.")).toBeVisible();
-  const responseRow = page.getByRole("list", { name: "Rascunhos de resposta", exact: true }).getByRole("listitem");
+  const responseRow = page.getByRole("list", { name: "Conversa do chamado", exact: true }).getByRole("listitem");
   await expect(responseRow).toContainText("Solicitacao registrada; estado do envio aguardando confirmacao.");
   await expect(responseRow).not.toContainText("Rascunho - nao enviado");
   await expect(deliveryReview(page)).toContainText("Acknowledged original review");

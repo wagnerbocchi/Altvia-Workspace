@@ -1327,6 +1327,7 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            promotion_receipt?: components["schemas"]["PromotionReceipt"] | null;
             /**
              * Queue Id
              * Format: uuid

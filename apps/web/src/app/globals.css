@@ -163,6 +163,7 @@ dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
   .workspace-main { padding: 28px 20px 40px; }
   .admin-section { padding: 24px 20px; }
   .inline-form > .button { margin-top: 0; }
+  .mail-case-toolbar { margin-bottom: 24px; }
   .team-row, .member-row { gap: 12px; flex-wrap: wrap; }
   .member-row > .record-text { flex-basis: 100%; }
   .paging { gap: 10px; }
@@ -187,3 +188,8 @@ footer { display: flex; justify-content: space-between; gap: 16px; padding: 20px
   h1 { font-size: 26px; }
   footer { flex-wrap: wrap; }
 }
+
+.incoming-text { max-height: 22rem; overflow: auto; padding: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--ground); }
+.incoming-text .work-prose { max-width: 72ch; margin: 0; }
+
+.read-notice .text-link { text-decoration: underline; }

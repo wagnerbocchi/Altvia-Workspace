@@ -77,6 +77,12 @@ export function createTicketApi(csrf: string, onAuthError: (error: unknown) => v
     async messages(id: string, cursor: string | null, signal?: AbortSignal): Promise<components["schemas"]["TicketMessagePage"]> {
       return (await request(`${path(id)}/messages${pageQuery(cursor)}`, { signal })).json();
     },
+    async conversation(id: string, cursor: string | null, signal?: AbortSignal): Promise<components["schemas"]["ConversationPage"]> {
+      return (await request(`${path(id)}/conversation${pageQuery(cursor)}`, { signal })).json();
+    },
+    async incoming(id: string, incomingId: string): Promise<components["schemas"]["IncomingMessageOutput"]> {
+      return (await request(`${path(id)}/incoming-messages/${encodeURIComponent(incomingId)}`)).json();
+    },
     async message(id: string, messageId: string): Promise<components["schemas"]["TicketMessageOutput"]> {
       return (await request(`${path(id)}/messages/${encodeURIComponent(messageId)}`)).json();
     },

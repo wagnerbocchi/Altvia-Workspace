@@ -49,6 +49,23 @@ def scoped_case(db: Session, actor_id: UUID, case_id: UUID, *, lock: bool = Fals
     return dict(row)
 
 
+def readable_receipt(db: Session, actor_id: UUID, case: Case) -> PromotionReceipt | None:
+    """Expose the immutable result only with current read access to its ticket."""
+    if not case["ticket_id"] or not case["incoming_message_id"]:
+        return None
+    try:
+        tickets.scoped_ticket(db, actor_id, case["ticket_id"])
+    except identity.IdentityError as error:
+        if error.status == 404:
+            return None
+        raise
+    return PromotionReceipt(
+        case_id=case["id"],
+        ticket_id=case["ticket_id"],
+        incoming_message_id=case["incoming_message_id"],
+    )
+
+
 @dataclass(frozen=True)
 class Candidate:
     ticket_id: UUID | None

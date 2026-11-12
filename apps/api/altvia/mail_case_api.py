@@ -77,6 +77,7 @@ def create_mail_case_router(engine: Engine, settings: Settings) -> APIRouter:
                 {
                     **{key: value for key, value in row.items() if key in fields},
                     **mail_promotion.capabilities(db, actor.id, row),
+                    "promotion_receipt": mail_promotion.readable_receipt(db, actor.id, row),
                 }
             )
 

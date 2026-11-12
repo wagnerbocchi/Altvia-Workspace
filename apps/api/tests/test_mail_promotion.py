@@ -48,6 +48,25 @@ def test_create_snapshot_receipt_replay_and_conversation(db_engine, context, adm
     assert admin_client.get(path + "/delivery-choices").json()["participant"] is None
 
 
+def test_detail_receipt_survives_reload_for_readers_but_not_hidden_ticket(
+    db_engine, context, admin_client
+):
+    from altvia.mail_cases_owner import revoke_case
+
+    first = publish(db_engine, context)
+    path = f"/api/v1/mail-cases/{first.case_id}"
+    assert admin_client.get(path).json()["promotion_receipt"] is None
+    receipt = promote(admin_client, first.case_id).json()
+    assert admin_client.get(path).json()["promotion_receipt"] == receipt
+    assert "promotion_receipt" not in admin_client.get("/api/v1/mail-cases").json()["items"][0]
+    revoke_case(db_engine, first.case_id, 2)
+    sign_in(admin_client, "viewer@example.test")
+    detail = admin_client.get(path).json()
+    assert detail["promotion_receipt"] == receipt and not detail["can_create"]
+    sign_in(admin_client, "admin@example.test")
+    assert admin_client.get(path).status_code == 404
+
+
 def test_known_incoming_anchor_append_requires_participant_and_current_write(
     db_engine, context, admin_client
 ):

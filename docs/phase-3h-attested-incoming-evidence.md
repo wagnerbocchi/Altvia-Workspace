@@ -3,7 +3,7 @@
 ADR-0036 extends the accepted outbound base c47fd8a with explicitly owner-attested
 incoming mail, scoped staff triage/promotion and one incoming/outgoing conversation.
 Local implementation and independent source/UI reviews are complete at d6c3469.
-Final exact-source hosted acceptance is pending publication. Remaining MVP,
+Final publication36e4642 passed all five hosted gates. Remaining MVP,
 actual final target qualification and production acceptance are separate gates.
 No provider, real attestation/import or production deployment was performed.
 
@@ -125,8 +125,37 @@ Earlier publication14f334d passed all five hosted gates:994 API in726.95s,
 nonempty zero-vulnerability image inventories66/70/49/16/43. That success predates
 Task4's new harness. Its11-entry archive SHA256 is
 4d21fc4b9280c898e4bf9e3de7f8644245057180842c6d12e3c353adac856bc3.
-Final exact publication gates and their source/image identities must be recorded
-separately before declaring this increment accepted.
+## Final hosted acceptance
+
+Publication36e46428872efafb0c0b32acb4b9902f1e2067de passed every exact hosted gate:
+
+| Gate | Run | Actual result |
+| --- | --- | --- |
+| API | [43209674571](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43209674571) | 1040 passed in750.62s |
+| Browser | [43209674496](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43209674496) | 154 passed in5.8m |
+| Containers | [43209674579](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43209674579) | Actual complete Docker Compose/TLS/resource/network/non-root/secret/PID1/recreation and old/new incoming assertions passed |
+| Source security | [43209674644](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43209674644) | 17LOW, zero blockers and secrets |
+| Images | [43209674474](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43209674474) | Five nonempty inventories66/70/49/16/43, zero reported vulnerabilities/secrets |
+
+All five full logs were inspected and retained after credential redaction, with
+no actual failure/error/5xx/traceback/SIGILL signal. Pinned GitHub-action runtime
+deprecations and isolated CI initdb local-trust warnings remain visible; no check
+was disabled to remove them. All three downloaded artifact digests match GitHub
+metadata. The packaged artifact has17 screenshots and the old delivery JSON.
+The new incoming JSON was generated/asserted by the passing script but omitted
+by its former artifact path; the workflow now explicitly retains that existing
+file in subsequent runs. Full new local JSON/checkpoints are already preserved.
+
+Private13-entry final hosted archive,2029151 bytes:
+C:/Users/wagne/.codex/state/evidence/attested-incoming-d6c3469/ci-36e4642.zip,
+SHA256cdf13f7606176e14a50186392e3aca0520569522cb88a54ca2a9961ef0e90390.
+It includes all five logs, complete security reports/image identities, packaged
+artifact, GitHub metadata, summary and the preserved earlier a0 browser failure.
+Every archived entry was hash-verified. Image-security and packaged jobs build
+separate image identities; no equality or target qualification is inferred.
+
+Incoming conversation development/CI is accepted. Proceed to private files;
+operational provider policy, integrated rollback and final target remain separate.
 
 ## Remaining gates and continuation
 

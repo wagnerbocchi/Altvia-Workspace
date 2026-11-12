@@ -218,7 +218,7 @@ requester/send/status APIs. No HTTP owner attestation backdoor.
   separate requester attestation, real TLS first reply references, verified
   correlated incoming append/explicit reopen, duplicate/collision/role/private
   denial and API/PG restart. Use separate fixtures, preserve old exact assertions.
-- [ ] Publish checked source, inspect all five exact CI gates/full logs/nonempty
+- [x] Publish checked source, inspect all five exact CI gates/full logs/nonempty
   security reports and sanitized hashed artifact archive. No per-slice target SSH.
-- [ ] Update roadmap/evidence/completion ledger, immediately select the private
+- [x] Update roadmap/evidence/completion ledger, immediately select the private
   object-storage/fail-closed scanning contract and continue. No continuation prompt.

@@ -40,6 +40,7 @@ jobs:
           path: |
             .superpowers/container-tests/*/screenshots/*.png
             .superpowers/container-tests/*/mail-delivery-proof.json
+            .superpowers/container-tests/*/incoming-conversation-proof.json
           if-no-files-found: error
           retention-days: 14
 

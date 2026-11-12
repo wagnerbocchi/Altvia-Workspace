@@ -122,12 +122,20 @@ recovering the list must not dispose an uncertain POST body/idempotency key.
 | Sensitive logs/backups | Redacted structured logs, encrypted backups, restricted audit access | No password/token/body logs; restore honors private attachment ACL |
 | Supply chain/CPU | Lock dependencies, SAST/SCA/secrets/container scans and VM tests | Critical findings or unsupported ISA block release |
 
-Initial upload proposal: 10 MiB per file, 25 MiB raw MIME, <=20 attachments,
-PDF/PNG/JPEG/plain text only until reviewed operational needs expand the list.
+Phase0 upload proposal was10 MiB per file,25 MiB raw MIME and<=20 attachments.
+ADR0037 now selects10 MiB/file,20 per content item, PDF/PNG/JPEG/UTF8 text and
+private S3 plus fail-closed scanning for development. Its implementation remains
+pending. The actual incoming raw cap stays2 MiB under ADR0030; the historical
+25 MiB proposal never overrides it. New outgoing attachment format2 is separately
+bounded to25 MiB; legacy frozen format1 remains262144 bytes.
 No active HTML/SVG/executable/archive download allowlist initially. Native image
 parsing, MIME sanitizers, Argon2 and malware scanner require CPU homologation.
-No scanner chosen in Phase 0. If unavailable, files remain quarantined; public
-email attachments are not enabled with a silent scanning bypass.
+No scanner was chosen in Phase0. ADR0037 selects ClamAV1.4.6-r0 but provides no
+CPU/security acceptance yet. Unscanned files remain quarantined if unavailable;
+public attachments have no silent bypass. Policy1 is explicit scan-on-upload:
+historically ready files retain that decision while current authorization and
+actual byte integrity still gate access. Q-22 records whether production instead
+requires expiry/on-access rescanning; no such company policy is assumed.
 
 ## Authentication baseline (ADR-0003)
 

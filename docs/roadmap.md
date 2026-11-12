@@ -1,6 +1,6 @@
 # Development roadmap and decision register
 
-Updated 2026-11-11. User authorized incremental development after contracts,
+Updated 2026-11-12. User authorized incremental development after contracts,
 direct pushes to main and no PR. Continue safe independent work while questions
 await answers. This does not authorize production deployment or real data import.
 
@@ -156,7 +156,30 @@ approved R1 with no new issue. Local/source576-entry archive SHA256
 8b3a4aa3ecb589499cbab0049d3ded8ec054dff686095693bf47f62171e6d843 preserves
 earlier source/UI archives and failure history. See
 docs/phase-3h-attested-incoming-evidence.md.
-Final publication/hosted acceptance is pending; private files follows it directly.
+Final publication36e4642 passed all five hosted gates:1040 API in750.62s,
+154 browser in5.8m, actual full packaged Docker and source/image security.
+Source17LOW/zero blockers/secrets; five nonempty inventories66/70/49/16/43 have
+zero reported vulnerabilities. Root inspected all five full sanitized logs and
+verified all three artifact digests. Final13-entry hosted archive SHA256
+cdf13f7606176e14a50186392e3aca0520569522cb88a54ca2a9961ef0e90390 also preserves
+the old a0 browser failure. The workflow now retains its existing incoming JSON
+in subsequent artifacts; its actual local checkpoint JSON is already archived.
+Incoming development/CI is accepted. Private files follows directly; provider,
+operational rollback and final integrated target gates remain separate.
+
+ADR0037 and docs/plans/2026-11-12-private-file-core.md select the next development
+contract: VersityGW1.11.0 S3/POSIX with native narrow policies/conditional immutable
+PUT/fsync/TLS, botocore1.44.1 and signed vendor ClamAV1.4.6-r0. No component has
+been installed, built or ISA/security-qualified by that selection. Existing
+resource/session/note authority, bounded streaming and real persisted scan jobs
+precede UI; no placeholder files or raw-mail grants. Staff/outbound file core and
+later owner-bounded incoming-MIME files are distinct required increments.
+The builder check exposed one ambiguity, now explicit: policy1 scans on upload;
+ready is a historical fresh-definition decision, while every access still checks
+current resource scope and actual byte integrity. Q-22 retains the production
+choice of future expiry/on-access rescans. Local Podman has2048 MiB; full signed
+standard-definition acceptance uses adequate hosted/final-target resources without
+restarting/resizing that local VM. Continue independent development.
 
 The current engineering contract is ADR-0036 and
 docs/plans/2026-11-12-attested-inbound-conversation.md: owner-attested classified
@@ -399,7 +422,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-08 | Identity admin: OIDC issuer/claims/MFA availability | Secure local sessions, no simulated SSO/MFA | Corporate SSO when requested |
 | Q-09 | Management/privacy owner: retention, deletion holds, access/export approvals | No destructive retention job; protect raw data/logs/backups | Production data policy |
 | Q-10 | Support/management: desired Zammad migration/cutover/rollback | Keep current helpdesk; no API/database dependency | Optional future migration |
-| Q-11 | Infrastructure/security: storage/scanner/proxy selection and CPU-approved builds | Local private storage adapter, quarantine fail-closed | Production attachment/proxy acceptance |
+| Q-11 | Infrastructure/security: production storage/scanner/proxy acceptance and CPU-approved artifacts | ADR0037 selects VersityGW1.11.0/botocore1.44.1/ClamAV1.4.6-r0 for isolated development, not production or CPU acceptance; bounded private objects and no destructive retention | Production attachment/proxy acceptance |
 | Q-12 | Infrastructure admin: hypervisor ownership and CPU-model change possibility | x86-64-v1 remains mandatory | None: CPU upgrade is not assumed |
 | Q-13 | Product owner: approved logo/brand and visual preferences | Provisional restrained Portuguese interface, system fonts, no invented assets or claims; review after return | Final visual approval only |
 | Q-14 | Engineering/security: ongoing service-image security | All five actual target-tested images have zero reported vulnerabilities; blocking HIGH/CRITICAL CI, SAST medium+ and every detected secret; retained complete severity metadata, no risk acceptance | Remaining production security/readiness gates |
@@ -411,6 +434,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-19 | Support owner should select actual manual-close/reopen policy and any future automatic grace period | Phase 3C fixed queue flags default false. Synthetic tests explicitly enable manual behavior. Keep real calendars, SLA hours and automatic closure outside this manual setting | Production workflow policy and later SLA/automation acceptance |
 | Q-20 | Support/security owners should identify real internal-note readers and writers per queue | ADR-0029 defaults every old binding to none. Configuration managers can explicitly delegate read/write with current customer ceilings. Synthetic fixtures alone receive test grants | Real organizational note delegation and production privacy policy |
 | Q-21 | Support/infrastructure owners should approve actual inbound mail sizes, traffic and quarantine storage budget | Phase 3E-a bounds opaque raw intake to 2 MiB and 16 distinct variants per UID identity; refuse acknowledgement on overflow and never advance a mailbox checkpoint | Production connector/storage sizing; controlled synthetic intake can proceed |
+| Q-22 | Security/operations: should already scanned files expire or require a new scan/current scanner health at access time? | ADR0037 policy1 scans on upload; ready records its actual engine/definition decision, while current scope/hash/length remain mandatory at each access. No timeless-safe claim, expiry or company policy is invented | Production scan-validity policy; isolated core development continues |
 
 ## Backlog after core
 

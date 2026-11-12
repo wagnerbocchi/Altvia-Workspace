@@ -658,6 +658,49 @@ other15, later replies use latest16. Missing IDs stay absent. Existing eligible
 outbound-only ordering and all frozen bytes remain exact. Invalidated incoming and
 previous-requester ancestors never enter a new wire.
 
+## Selected ADR-0037 private-file core (not implemented yet)
+
+The selected implementation plan is2026-11-12-private-file-core. These are
+contracts before code, not advertised live routes; generated OpenAPI changes
+only when the actual endpoints land. Incoming-MIME file publication follows in
+its own later contract, without a runtime raw/preview/origin grant.
+
+POST /tickets/{id}/attachments or /work-items/{id}/attachments streams raw
+application/octet-stream. Strict unique filename/purpose query fields select
+ticket public|note or work work. Required headers: parent If-Match, Idempotency-Key,
+X-File-Bytes and X-File-SHA256. Actual bytes1..10485760 and digest/type/name must
+match, with current action/session/CSRF before transfer and again before commit.
+No authorization lock/DB transaction spans object I/O. The fingerprint includes
+original parent version, full actual content metadata and purpose. Fresh201,
+protected replay200; no parent version advance for an unlinked asset. Receipt
+contains owner_type/owner_id/attachment_id/bytes/sha256/initial version. That
+digest belongs to original-uploader acknowledgement; ordinary metadata omits it.
+
+GET parent attachments has actor/parent/filter-bound pagination, limit1..100/
+default25. Detail and download require current parent scope plus note access
+for note assets, including admins. Hidden/foreign/private-purpose IDs are404
+without body/name/ID/count. Real metadata exposes state/version and current
+download/retry capabilities, never object keys or raw scanner output. Download
+verifies actual length/hash and repeats auth before bytes; only ready files use
+Content-Disposition attachment, application/octet-stream and nosniff/no-store,
+with no direct object URL. Public/note/work
+purpose does not cross through ticket/work associations. Protected scan-retry
+uses FILE If-Match and retains attempt history/generations.
+
+Only actual clean scans with fresh signed definitions create ready. Policy1 is
+scan-on-upload: subsequent scanner downtime/staleness does not revoke a historical
+ready result; current resource rights and actual byte integrity still gate every
+download/fresh send. Q-22 retains any different production expiry/rescan policy.
+
+Existing message/note/comment creation adds optional unique ordered attachment_ids
+(max20) with concrete same-parent/purpose/ready links and immutable content count.
+Omitted fields preserve old fingerprints and exact events. Public send review
+includes its exact saved file IDs. An old omitted-file request cannot silently
+send attachments. S3 prefetch happens outside DB transactions before final current
+authorization/version/freeze; saved delivery replay needs no object refetch.
+Legacy format1 stays byte-exact/262144 bytes; file-bearing format2 is standard MIME
+with encoded total<=26214400. Notes/work assets cannot be sent by guessed ID.
+
 Migration00024 adds immutable same-case/ticket/client/queue incoming ownership,
 unique case/version, immutable case receipt and email source. Only the API gains
 incoming SELECT/INSERT and column-only case receipt/state/version UPDATE; worker

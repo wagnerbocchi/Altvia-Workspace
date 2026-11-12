@@ -215,6 +215,18 @@ recheck assignee membership. Internal notes cannot create outbound deliveries.
 Attachment links cannot be moved to a broader ACL without explicit reauthorization.
 Polymorphic attachment/event identifiers never replace actual FK checks.
 
+ADR0037 now selects the private-file core expansion, not yet implemented:
+attachments has exactly one ticket/work FK, immutable purpose/name/type/size/hash/
+opaque key/creator/policy1 and positive version. Actual states are quarantine/
+scanning/ready/rejected/failed, with DB-clock lease/generation/retry metadata and
+immutable scan-attempt history. Concrete ordered message/note/work-comment links
+use composite same-parent FKs and deferred immutable attachment_count constraints;
+legacy content starts at0. New outgoing wire_format2 is additive, preserving old
+format1 constraints/bytes. No incoming Case file column/link exists until the
+separate owner-bounded incoming-MIME contract. Follow the ADR/plan for real
+migration00025/00026 and least-privilege grants, not this reference as a claim
+that those tables, endpoints or capabilities already exist.
+
 ## SLA, durable processing and provenance
 
 | Tables | Contract |

@@ -54,9 +54,9 @@ Do not change sshd/hypervisor settings as a throughput workaround.
 | API/worker | python:3.12-slim | not selected | FastAPI, Pydantic core, Argon2, SQL driver/TLS/MIME imports and operations |
 | database | postgres:17 | not selected | Start on persistent volume, transaction/rollback, migrations, FTS/GIN and restore |
 | queue/cache | redis:7 | not selected | Start, authenticated enqueue/dequeue, reconnect/loss/replay |
-| private files | local adapter initially; S3 product undecided | not selected | Upload/quarantine/authorized download/restart/backup/restore |
+| private files | ADR0037 selects baseline-built VersityGW1.11.0 S3/POSIX and botocore1.44.1 for development | not built or qualified | Actual TLS/ACL/conditional PUT/fsync/integrity/restart/restore and final target |
 | reverse proxy | product/version undecided | not selected | TLS, origin routing, body limits, headers and readiness |
-| scanner/native libraries | undecided | not selected | Representative allowed/malicious file, fail-closed, CPU/memory |
+| scanner/native libraries | ADR0037 selects signed vendor ClamAV1.4.6-r0 for development | not built or qualified | Actual signed/current definitions, clean/malicious/limits/fail-closed/resource and final target |
 
 Node 24/Python 3.12/Postgres 17/Redis 7 are specification test references,
 not patch-version or security recommendations established on 2026-11-08.

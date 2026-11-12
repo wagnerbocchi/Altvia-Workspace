@@ -185,8 +185,8 @@ Task1 infrastructure source046eacf and scoped corrections1c4e134 now have actual
 local storage/TLS/policy/integrity/restart and transport evidence. The first review
 found three Important byte-evidence/timeout/safe-error issues;39 focused correction
 tests passed after eight failing RED cases. Scoped independent re-review marked
-all three ADDRESSED with no new breakage. Required hosted full signed-definition/
-update/resource/all-seven/regression acceptance remains pending.
+all three ADDRESSED with no new breakage. At that pre-hosted boundary, full
+signed-definition/update/resource/all-seven/regression acceptance was pending.
 Initial323 evidence/29 source hashes and supplemental38 artifacts/five sources were
 independently verified. Old26/42 Windows command hash mismatches are preserved as
 a historical evidence defect, with zero differences after newline normalization.
@@ -200,9 +200,22 @@ The required new private-file job failed native freshclam log initialization at
 52 real storage checks/restart and Docker storage cgroups passed, with18 exact
 source and50 exact stream hashes verified. H1 is corrected in5c722da using native
 foreground console logging; final15 focused/native checks passed and independent
-re-review marked H1 ADDRESSED/no new breakage. Full signed-definition/reload stays
-OPEN; all failed artifacts/full logs are preserved in the hash-bound public
+re-review marked H1 ADDRESSED/no new breakage. That first attempt did not qualify
+signed-definition/reload; all failed artifacts/full logs are preserved in the public
 Phase3I evidence record. No target qualification or full attachment claim.
+
+Task1 infrastructure is now accepted on a7628bf: ALL FIVE exact-source hosted gates
+SUCCESS,1098 API/three explicit opt-in native skips,154 browser, source18LOW/zero
+blockers/secrets and seven nonempty zero-vulnerability inventories. Actual full
+signed/current ClamAV1.4.6/daily28181 passed clean/EICAR/encryption/expanded-limit/
+oversize/stale/stopped controls, three signature verifications and real daily
+replacement/reload3628258 signatures. Real Docker storage/scanner/updater cgroups
+and isolation passed;18 source/132 raw-stream hashes matched. Final13-entry hosted
+archive SHA2560d0433e9a6254d4a5d5b59fd9e61c3fbca691c1486fcb8777ab165efdc4cca5e
+and all failures/reviews are retained in docs/phase-3i-private-file-evidence.md.
+Proceed directly to persisted assets/scan jobs, content links/MIME2, browser and
+integrated files, then incoming-MIME files. Final target qualification remains
+deferred; no uploaded-file functionality or production acceptance is claimed yet.
 
 The accepted incoming increment used ADR-0036 and
 docs/plans/2026-11-12-attested-inbound-conversation.md: owner-attested classified

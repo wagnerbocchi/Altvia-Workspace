@@ -99,17 +99,49 @@ definitions refusal; the foreground updater handles bounded TERM. No AV positive
 is inferred. Scoped independent re-review marked H1 ADDRESSED/no new breakage.
 The controller verified52 supplemental artifacts and three source hashes/Git blobs;
 the reviewer independently verified52 artifact hashes. Existing failed hosted
-evidence remains immutable. New actual hosted full-profile acceptance is required.
+evidence remains immutable. The following new hosted run closes that gate.
+
+## Accepted Task 1 infrastructure: a7628bf
+
+All five exact-source workflows passed: Source43232628427, Images43232628499,
+Browser43232628677, Containers43232628402 and API43232628893. API1098 passed/
+three explicit opt-in native skips in664.25s; browser154 passed in5.1m. Those three
+native logger checks passed locally with the pinned image/final mounted config;
+the separate required actual signed-profile job131231670234 also passed. Source
+has18 LOW/zero blockers/secrets; seven nonempty inventories retain zero reported
+vulnerabilities, with the same named package counts above.
+
+Actual project altvia-files-03988b1e50 verified52 storage checks/restart and real
+Docker cgroups/isolation for storage, clamd and updater. Full signed/current
+definitions loaded in ClamAV1.4.6: daily28181 dated2026-11-12T06:27:14Z. Clean was
+clean, EICAR infected, encrypted and expanded-limit files refused; oversize, stale
+clock and stopped-scanner controls refused release. All three vendor database
+signature checks reported Verification OK. A real signed daily replacement caused
+the daemon to reload3628258 signatures; the same actual scan cases passed after
+reload. This is engine/database observation, not cryptographic service attestation.
+
+All18 source hashes matched immutable a7628bf Git bytes; all132 stream hashes from
+66 commands matched actual artifact bytes. Expected nonzero commands were only
+the pre-bootstrap RED and stopped-scanner refusal. Private readonly/non-root/no-
+port controls and real resource limits passed. Updater alone retains definition
+egress. Runtime image IDs and independent image-scan IDs are retained separately;
+no equality or target-CPU qualification is inferred.
+
+All six full decoded/sanitized logs and four digest-verified GitHub artifacts are
+in the13-entry ci-a7628bf.zip archive,1949704 bytes, SHA256
+0d0433e9a6254d4a5d5b59fd9e61c3fbca691c1486fcb8777ab165efdc4cca5e,
+beside the earlier immutable evidence. Artifact13951018531 contains136 entries,
+including the full new manifest/streams/inventories; ZIP SHA256
+2da72829ff07a63c85b5d0a3bb2e0c999b16bff79fa91ef3a6c19f47772b4a47.
+The old incoming/outgoing proof JSON and packaged regressions also passed. Task1
+is accepted; this is still infrastructure, not the complete file feature.
 
 ## Outstanding acceptance and continuation
 
-Actual hosted full/current signed ClamAV definitions, clean/EICAR/encryption/
-expanded-limit/stale/refusal controls, signed update/observed reload, Docker
-resource/isolation proof, all-seven inventories and full regression gates remain
-pending. Local2048MiB Podman was not resized/restarted. Controlled socket replies
-are transport evidence only.
+Local2048MiB Podman was not resized/restarted. Controlled socket replies remain
+transport evidence, separate from the actual accepted hosted signed profile.
 
-After infrastructure acceptance, implement persisted assets/scan leases, concrete
+Continue with persisted assets/scan leases, concrete
 content links/reviewed MIME2, the Impeccable browser flow and packaged restore/
 privacy proof. Owner-bounded incoming-MIME files follow under a separate contract.
 Final actual x86-64-v1 qualification follows remaining MVP development under the

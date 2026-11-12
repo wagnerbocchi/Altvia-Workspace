@@ -30,8 +30,10 @@ drafts. No body, subject, email or recipient appears in audit/outbox/logs/activi
 ## Storage and HTTP
 
 Migration b46087000021 adds append-only ticket_messages: UUID, ticket_id, author_id,
-body_text1..10000, ticket_version>1, created_at, fixed visibility public,
-direction outbound and delivery_status draft. RESTRICT parent/author FKs, unique
+body_text1..10000, ticket_version>1, created_at, fixed visibility public and
+direction outbound. The read projection reports delivery_status draft; transport
+state belongs to the later delivery aggregate, not a redundant immutable column.
+RESTRICT parent/author FKs, unique
 ticket/version, SQL text/state checks and immutable update/delete trigger. Future
 transport will use a separate explicit delivery aggregate, not a private-note
 conversion or implicit send. API role SELECT/INSERT only; worker no message grant.

@@ -79,6 +79,13 @@ buckets and their normal object policy. ListObjects/V2/versions/uploads and all
 actual object enumeration still require denial. Reject any visible bucket or
 ownership drift. Adding another IAM service merely to turn this empty response
 into403 would not improve the actual data boundary.
+S3 CopyObject/completed multipart share PutObject authorization. A native copy
+creating a NEW immutable object may succeed only under the same permitted source/
+destination and If-None-Match=* constraints. Record that as a conditional creation,
+not a method denial. Missing/wrong preconditions, existing destinations and foreign
+scope must fail. Unsupported x-amz-copy-source policy conditions are not used.
+The application adapter still exposes bounded single PUT/GET only; it does not
+add copy/multipart functionality merely because the server supports those forms.
 Existing initialization is inspected and refused on incompatible identity/policy;
 bootstrap must not reset existing credentials or delete data to look idempotent.
 

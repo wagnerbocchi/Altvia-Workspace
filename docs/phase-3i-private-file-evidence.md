@@ -303,12 +303,99 @@ f70285367507bef7124a5e7793da9655a321aacb14e4a0616ff873239121e624.
 Both CRC pass and retain the reviewed-fix/pending-hosted scope. Root-owned public
 documentation edits stayed separate from the implementer's two-file correction.
 
+## Task 2 hosted optional-gateway failure and reviewed H4 correction
+
+Source033c8ac again passed the other four hosted workflows: Source43262106645,
+Images43262106934, Browser43262106688 and Containers43262107246. Browser154
+passed in6.2m; source22 LOW/zero blockers/secrets, all seven nonempty image
+inventories with zero vulnerabilities, actual signed/current scanner/update/
+reload and old packaged regressions passed. API43262107056/job131335855151
+failed before container creation or pytest. Docker successfully created and
+inspected the requested explicit internal bridge, but the valid immediate native
+IPAM response omitted Gateway. The owner incorrectly required that optional field.
+Commands0..5 exited0; absent-container stop1 is benign. No API test ran.
+
+Root verified197 failed-API source hashes/14 raw streams and18 signed-infrastructure
+source hashes/132 raw streams. All six complete sanitized logs and five
+digest-verified artifacts remain in ci-033c8ac.zip:13 entries,1946977 bytes,SHA256
+835125a79e261c64ca6b5dc5e661e668ffe74add66cfc84e7a75f0c7758be692.
+Status remains NOT ACCEPTED/H4. Failed API artifact13963998611 has15 entries,
+SHA256 f7b8d8df1de041535702ae7e14e3e90912fb41a68f9acb656ef4a8b0f2233170.
+The revised credential-URL audit finds zero remaining matches in sanitized logs.
+
+Reviewed correction65e3712 accepts a missing Gateway only after the same exact
+owned-name/internal-bridge/subnet checks. Present gateway values must still be
+usable distinct hosts in the verified subnet; null, malformed, foreign, network,
+broadcast and endpoint-colliding values are refused. No guessed gateway or
+outbound route is added. Native IPAM still reserves the endpoint when the existing
+container starts; actual service connectivity remains a required hosted proof.
+The static IP/TLS SAN, no-port, bounded retry, secret and runtime-security
+boundaries remain unchanged.
+
+Retained-native-shape RED has3 failures; focused GREEN38/Ruff/format/diff checks
+pass. Independent scoped review marks H4 ADDRESSED/specification and quality
+PASS/no new breakage. Root verifies seven frozen command records,14 raw streams,
+two source Git blobs, exact full retained native-row equality, the report digest
+and26 retained artifact hashes. No local native Docker or Podman run is claimed.
+No application/DTO/dependency/image/scanner code changed.
+
+source-65e3712.zip:561 entries,1359218 bytes,SHA256
+fbacc0c170afebca8d31022d77f1bbfcf252e53021e2cef2721306730b0f261f.
+fix-4-evidence.zip:33 entries,406410 bytes,SHA256
+962c733ce3831e609e0b69fe4d0f2cc920f3fbce4348267404ebf7b1b008c8a9.
+Both CRC pass and explicitly retain pending actual hosted Docker/full API
+acceptance. Task2 stays open until that required current-source gate executes.
+
+## Accepted Task 2 persisted assets and scan lifecycle: 65e3712
+
+All five exact-source workflows passed: Source43264489462, Images43264489241,
+Browser43264489151, Containers43264489671 and API43264489836. Actual Docker
+created the explicit internal network, allocated its static endpoint, passed the
+verified TLS/native bootstrap/health/no-published-port controls and stopped its
+own container successfully. All16 native command records exited0. Root verified
+197 source hashes against immutable65e3712 Git bytes, equal before/after source
+hashes and32 raw command streams.
+
+The single complete API invocation passed1173 cases in835.07s, with zero errors
+or failures and three explicit opt-in native-image skips. The required real-S3
+attachment modules actually executed37 passing cases (21 upload/access and16 scan
+cases), independently reconciled from JUnit and confirmed by the mandatory suite
+guard. Build/static/migration and cleanup steps passed. Two redundant Pydantic
+alias-metadata warnings appeared in existing concurrent queue tests; both tests
+passed with no observed contract failure. They remain nonblocking observations
+for final review, rather than hidden failures or a reason to expand this fix.
+
+Browser154 passed in5.7m. Source has22 LOW/zero blockers/secrets. All seven nonempty
+image inventories have zero vulnerabilities: API72/PostgreSQL49/ingress70/web43/
+Redis16/storage107/ClamAV38. Both old packaged regressions and actual signed/current
+ClamAV producer/update/reload passed. The producer verified three vendor signatures
+and observed3628258 signatures reloaded; storage/clamd/updater resource/isolation
+controls passed with updater-only definition egress. Root verified18 producer
+source hashes and130 raw streams;65 commands reflect one fewer polling iteration
+than earlier attempts, not an omitted required control.
+
+All six full decoded/sanitized logs and five digest-verified artifacts remain in
+ci-65e3712.zip:13 entries,1917672 bytes,SHA256
+d20e32d879b4ae431aaf42d331eb85d523d41ebcae5b22fba39156d8ea1c0932.
+Revised credential-URL audit finds zero remaining matches and ZIP CRC passes.
+API artifact13966891460 has34 entries,SHA256
+b52ea3d20f212d9756e16becdb9f50d47205cc16fcf981f6a98f33765e8cdc1b.
+Expected SQL constraint-negative diagnostics, disposable local initdb trust and
+action deprecations are separate benign test/runner conditions. Every historical
+failed invocation and pre-acceptance archive retains its original failed/pending
+status; this new actual complete run supplies the accepted full-suite evidence.
+
+Task2 is accepted. This delivers real private persisted assets and durable scans,
+not yet content links, reviewed MIME2, incoming-file ownership or browser upload.
+The deferred request-purpose enum Minor passes to Task3's affected contract work.
+No current image inherits older target-CPU qualification.
+
 ## Outstanding acceptance and continuation
 
 Local2048MiB Podman was not resized/restarted. Controlled socket replies remain
 transport evidence, separate from the actual accepted hosted signed profile.
 
-Complete Task 2 hosted acceptance, then concrete content links/reviewed MIME2,
+Proceed directly to concrete content links/reviewed MIME2,
 the Impeccable browser flow and packaged restore/
 privacy proof. Owner-bounded incoming-MIME files follow under a separate contract.
 Final actual x86-64-v1 qualification follows remaining MVP development under the

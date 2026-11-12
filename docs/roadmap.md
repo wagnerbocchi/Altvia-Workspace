@@ -246,8 +246,31 @@ reload. Correction160c886 accepts only those exact native name/driver/null forms
 retaining strict malformed rejection and all configured allocated subnets.
 Retained-native-shape RED2 and focused GREEN21/Ruff/format pass; scoped independent
 specification/quality review is clean. Actual Docker/full-suite acceptance remains
-pending before Task3. No target
-operation, global network change, full-file completion or CPU claim is implied.
+pending before Task3. Actual033c8ac then created the explicit private Docker
+network successfully but failed H4: valid immediate inspection omits optional
+Gateway. No API tests ran; other four workflows passed, including154 browser
+cases and actual signed scanner/reload. Reviewed65e3712 supports that absent
+field while retaining all private-boundary checks and rejecting invalid present
+gateways; RED3/GREEN38/static checks and scoped independent specification/quality
+review pass. Required actual Docker/full API acceptance was pending at that review.
+No target operation, global network change, full-file completion or CPU claim
+is implied. All failed artifacts and reviewed fixes remain immutable in Phase3I.
+
+Task2 is now ACCEPTED on65e3712: ALL FIVE exact-source hosted workflows SUCCESS.
+Actual native Docker/TLS/private S3 startup and cleanup passed; single complete
+API invocation1173 passed/0errors/0failures/3explicit native-image skips in835.07s.
+All37 required real-S3 file cases actually executed. Separate mandatory signed/
+current scanner producer/update/reload passed; browser154/5.7m, source22LOW/
+0blockers/secrets0 and all seven nonempty zero-vulnerability inventories passed.
+Root verified197 API source+32 stream hashes and18 producer source+130 streams.
+Six complete sanitized logs/five digest-verified artifacts remain in accepted
+ci-65e3712.zip13 entries/1917672 bytes/SHA256
+d20e32d879b4ae431aaf42d331eb85d523d41ebcae5b22fba39156d8ea1c0932.
+Two nonblocking redundant Pydantic alias warnings in existing concurrent queue
+tests remain explicit final-review observations. Continue immediately to Task3
+content links/reviewed MIME2 and its deferred purpose-enum correction, then real
+browser flows/packaged restore. Full file/MVP and final target qualification stay
+open. Exact outcomes and preserved failures: docs/phase-3i-private-file-evidence.md.
 
 The accepted incoming increment used ADR-0036 and
 docs/plans/2026-11-12-attested-inbound-conversation.md: owner-attested classified

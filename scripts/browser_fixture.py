@@ -383,6 +383,13 @@ if not os.environ.get("ALTVIA_E2E_EXPIRE") and not os.environ.get("ALTVIA_E2E_DI
     # Login HTTP/rate-limit acceptance remains in the identity suites; do not
     # spend that suite's single-source budget on unrelated contact setup.
     with Path(".env.browser-session").open("a", encoding="utf-8") as target:
+        # Visual/navigation checks share this real session without adding an
+        # administrator or spending extra logins after the functional suites.
+        with Session(engine) as db:
+            _, _, token = login(
+                db, admin_email, admin_password, "admin-fixture", "admin_fixture_session"
+            )
+        target.write(f"ALTVIA_E2E_ADMIN_SESSION={token}\n")
         for kind, (account_email, account_password, account_id) in note_accounts.items():
             with Session(engine) as db:
                 _, _, token = login(

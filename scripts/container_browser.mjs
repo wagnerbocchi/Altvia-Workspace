@@ -105,7 +105,16 @@ try {
   await expect(page.getByRole("heading", { name: "Minha conta" })).toBeVisible();
   assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze()).violations, []);
   await capture("account-mobile.png");
-  await page.getByRole("link", { name: "Administrar equipes" }).click();
+  const navigate = async name => {
+    const toggle = page.getByRole("button", { name: "Navegacao principal", exact: true });
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await page.getByRole("navigation", { name: "Navegacao principal", exact: true })
+      .getByRole("link", { name, exact: true }).click();
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  };
+  await navigate("Administrar equipes");
   const teamName = `Equipe ${project}`;
   await page.getByLabel("Nome da nova equipe").fill(teamName);
   await page.getByRole("button", { name: "Criar equipe", exact: true }).click();
@@ -130,7 +139,7 @@ try {
   await page.getByRole("link", { name: "Voltar às equipes" }).click();
   await expect(page.getByRole("link", { name: teamName, exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Voltar à minha conta" }).click();
-  await page.getByRole("link", { name: "Administrar contas" }).click();
+  await navigate("Administrar contas");
   const accountName = `Conta ${project}`;
   await page.getByLabel("Nome da nova conta").fill(accountName);
   await page.getByLabel("E-mail da nova conta").fill(`${project}@example.invalid`);
@@ -153,7 +162,7 @@ try {
   assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations, []);
   await page.getByRole("link", { name: "Voltar às contas" }).click();
   await page.getByRole("link", { name: "Voltar à minha conta" }).click();
-  await page.getByRole("link", { name: "Clientes", exact: true }).click();
+  await navigate("Clientes");
   const ownId = await page.evaluate(async () => (await (await fetch("/api/v1/auth/me")).json()).id);
   const clientName = `Cliente ${project}`;
   await page.getByLabel("Nome do cliente", { exact: true }).fill(clientName);
@@ -202,7 +211,7 @@ try {
   await page.getByRole("link", { name: "Voltar ao cliente", exact: true }).click();
   await page.getByRole("link", { name: "Voltar aos clientes", exact: true }).click();
   await page.getByRole("link", { name: "Voltar à minha conta" }).click();
-  await page.getByRole("link", { name: "Projetos", exact: true }).click();
+  await navigate("Projetos");
   await page.getByRole("link", { name: "Áreas operacionais", exact: true }).click();
   const areaName = `Area ${project}`;
   await page.getByLabel("Nome da nova área", { exact: true }).fill(areaName);

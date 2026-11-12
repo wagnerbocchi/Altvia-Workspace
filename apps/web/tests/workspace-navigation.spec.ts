@@ -78,10 +78,9 @@ test("private navigation disappears during identity failure and after logout", a
 
 test("administrative links use the existing identity capability", async ({ page, context }) => {
   await context.clearCookies();
-  const login = await page.request.post("/api/v1/auth/sessions", { data: {
-    email: process.env.ALTVIA_E2E_ADMIN_EMAIL!, password: process.env.ALTVIA_E2E_ADMIN_PASSWORD!,
-  }, headers: { Origin: "https://127.0.0.1:3443" } });
-  expect(login.status()).toBe(201);
+  await context.addCookies([{ name: "__Host-altvia_session", value: process.env.ALTVIA_E2E_ADMIN_SESSION!,
+    domain: "127.0.0.1", path: "/", secure: true, httpOnly: true, sameSite: "Lax" }]);
+  expect((await page.request.get("/api/v1/auth/me")).status()).toBe(200);
   await page.goto("/admin/users");
   const navigation = page.getByRole("navigation", { name: "Navegacao principal" });
   await expect(navigation.getByRole("link", { name: "Administrar contas" })).toHaveAttribute("aria-current", "page");

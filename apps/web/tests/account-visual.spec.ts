@@ -3,15 +3,14 @@ import { mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 // Separate capture run: synthetic identities only, no browser traces or filled credentials.
-test("@account-captures directory confirmation and uncertain-result states", async ({ page }) => {
+test("@account-captures directory confirmation and uncertain-result states", async ({ page, context }) => {
   const shots = fileURLToPath(new URL("../../../.impeccable/review/accounts/", import.meta.url));
   await mkdir(shots, { recursive: true });
-  const login = await page.request.post("/api/v1/auth/sessions", {
-    data: { email: process.env.ALTVIA_E2E_ADMIN_EMAIL!, password: process.env.ALTVIA_E2E_ADMIN_PASSWORD! },
-    headers: { Origin: "https://127.0.0.1:3443" },
-  });
-  expect(login.status()).toBe(201);
-  const me = (await login.json()).user;
+  await context.addCookies([{ name: "__Host-altvia_session", value: process.env.ALTVIA_E2E_ADMIN_SESSION!,
+    domain: "127.0.0.1", path: "/", secure: true, httpOnly: true, sameSite: "Lax" }]);
+  const identity = await page.request.get("/api/v1/auth/me");
+  expect(identity.status()).toBe(200);
+  const me = await identity.json();
   await page.goto("/admin/users");
   await expect(page.getByLabel("Nome da nova conta")).toBeVisible();
   await expect(page.locator(".account-form-grid .field").first()).toHaveCSS("margin-bottom", "0px");

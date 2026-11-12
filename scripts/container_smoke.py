@@ -11,7 +11,12 @@ from pathlib import Path
 from uuid import uuid4
 
 import httpx
-from packaged_smtp_proof import prepare_packaged_smtp, verify_packaged_smtp_restart
+from packaged_smtp_proof import (
+    prepare_packaged_incoming,
+    prepare_packaged_smtp,
+    verify_packaged_incoming_restart,
+    verify_packaged_smtp_restart,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -1156,6 +1161,33 @@ with Session(make_engine(Settings())) as db,db.begin():
                             delivery_proof = prepare_packaged_smtp(
                                 contributor, ticket_body, run, compose, ROOT, secret_dir
                             )
+                            with httpx.Client(
+                                base_url=origin,
+                                verify=str(secret_dir / "tls_cert"),
+                                headers={"Origin": origin},
+                                timeout=15,
+                                trust_env=False,
+                            ) as incoming_reader:
+                                login = incoming_reader.post(
+                                    "/api/v1/auth/sessions",
+                                    json={
+                                        "email": "note-reader@example.test",
+                                        "password": password,
+                                    },
+                                )
+                                assert login.status_code == 201
+                                incoming_reader.headers["X-CSRF-Token"] = login.json()["csrf_token"]
+                                incoming_proof = prepare_packaged_incoming(
+                                    contributor,
+                                    client,
+                                    incoming_reader,
+                                    ticket_body,
+                                    run,
+                                    compose,
+                                    ROOT,
+                                    secret_dir,
+                                    delivery_proof["private_account"],
+                                )
                     work_body = {
                         "project_id": project_id,
                         "title": f"Packaged work {index}",
@@ -1526,6 +1558,7 @@ with Session(make_engine(Settings())) as db,db.begin():
             assert persisted_messages[0]["ticket_version"] == 2
             assert client.get(message_ticket_path).json()["status"] == "new"
             verify_packaged_smtp_restart(client, delivery_proof, run, compose, work)
+            verify_packaged_incoming_restart(client, incoming_proof, run, compose, work)
             print("Packaged verified SMTP acceptance, uncertainty, SIGTERM and restart passed.")
             (work / "public-message-proof.json").write_text(
                 json.dumps(

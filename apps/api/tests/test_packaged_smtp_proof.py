@@ -24,6 +24,63 @@ def execute(nodes, namespace):
     )
 
 
+def test_first_incoming_reply_requires_actual_root_and_exact_decoded_body():
+    from email.message import EmailMessage
+
+    message = EmailMessage()
+    message["In-Reply-To"] = "<first@example.test>"
+    message["References"] = "<first@example.test>"
+    body = "public-canary\n.literal"
+    message.set_content(body)
+    proof.assert_incoming_wire(message.as_bytes(), "<first@example.test>", body, "private-canary")
+    for wire, root, text_body, private in (
+        (message.as_bytes(), "<other@example.test>", body, "private-canary"),
+        (message.as_bytes(), "<first@example.test>", "changed", "private-canary"),
+        (message.as_bytes(), "<first@example.test>", body, "public-canary"),
+    ):
+        with pytest.raises(AssertionError):
+            proof.assert_incoming_wire(wire, root, text_body, private)
+
+
+def test_classified_imap_requires_explicit_disposable_opt_in(monkeypatch):
+    spec = importlib.util.spec_from_file_location(
+        "packaged_imap_proof", PROOF.with_name("packaged_imap_proof.py")
+    )
+    imap = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(imap)
+    monkeypatch.delenv("ALTVIA_ALLOW_CONTAINER_TEST", raising=False)
+    with pytest.raises(RuntimeError, match="Explicit synthetic container test required"):
+        imap.packaged_classified_imap_proof(None)
+
+
+def test_incoming_orchestration_requires_explicit_disposable_opt_in(monkeypatch):
+    monkeypatch.delenv("ALTVIA_ALLOW_CONTAINER_TEST", raising=False)
+    with pytest.raises(RuntimeError, match="Explicit synthetic container test required"):
+        proof.prepare_packaged_incoming(*([None] * 9))
+
+
+@pytest.mark.parametrize("table", ["outbox_events", "activity_events", "audit_logs"])
+def test_incoming_metadata_canary_rejects_actual_multiline_json(table):
+    tree = ast.parse(proof.INCOMING_SNAPSHOT)
+    loop = next(
+        n for n in ast.walk(tree) if isinstance(n, ast.For) and isinstance(n.target, ast.Tuple)
+    )
+    marker = "classified-body-canary"
+    namespace = {
+        "p": {"canaries": [marker]},
+        "db": MetadataDB({}, table),
+        "json": json,
+        "select": select,
+        "OutboxEvent": OutboxEvent,
+        "ActivityEvent": ActivityEvent,
+        "AuditLog": AuditLog,
+    }
+    execute([loop], namespace)
+    namespace["db"].value = {"body_text": "first\n" + marker + "\nlast"}
+    with pytest.raises(AssertionError):
+        execute([loop], namespace)
+
+
 class RedisValue:
     def __init__(self, value):
         self.value = value
@@ -141,6 +198,9 @@ def test_full_multiline_body_leak_is_rejected(boundary, table):
         ("ticket_notes", "body_text", "SELECT"),
         ("mail_senders", "from_email", "UPDATE"),
         ("ticket_participants", "evidence", "INSERT"),
+        ("mail_case_origins", "evidence", "SELECT"),
+        ("mail_triage_cases", "body_text", "SELECT"),
+        ("ticket_incoming_messages", "case_id", "INSERT"),
     ],
 )
 def test_column_only_grants_fail_packaged_probe(db_engine, table, column, privilege):
@@ -158,6 +218,16 @@ def test_column_only_grants_fail_packaged_probe(db_engine, table, column, privil
     # Use the actual probe loops but substitute the disposable role for its
     # initial current_user assertion. SET ROLE supplies all effective checks.
     loops = privileges.body[1:]
+    if table == "mail_case_origins":
+        loops = [
+            next(
+                n
+                for n in ast.walk(ast.parse(proof.INCOMING_PRIVILEGES))
+                if isinstance(n, ast.For)
+                and isinstance(n.target, ast.Name)
+                and n.target.id == "table"
+            )
+        ]
     with db_engine.begin() as db:
         db.execute(text('CREATE ROLE "' + role + '"'))
         # Runtime provisioning deliberately revokes PUBLIC schema access.
@@ -172,7 +242,9 @@ def test_column_only_grants_fail_packaged_probe(db_engine, table, column, privil
             {"t": table, "p": privilege},
         )
         with pytest.raises(AssertionError):
-            execute(loops, {"db": db, "text": text})
+            from sqlalchemy.exc import DBAPIError
+
+            execute(loops, {"db": db, "text": text, "DBAPIError": DBAPIError})
         db.execute(text("RESET ROLE"))
         db.execute(text('DROP OWNED BY "' + role + '"'))
         db.execute(text('DROP ROLE "' + role + '"'))

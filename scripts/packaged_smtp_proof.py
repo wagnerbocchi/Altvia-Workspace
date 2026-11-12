@@ -14,6 +14,18 @@ from email.parser import BytesParser
 from pathlib import Path
 from uuid import UUID, uuid4
 
+
+def assert_incoming_wire(wire, root, body, private_marker):
+    """Inspect real decoded MIME, including the first attested incoming root."""
+    message = BytesParser(policy=policy.default).parsebytes(wire)
+    assert str(message["In-Reply-To"]) == root
+    assert str(message["References"]).split() == [root]
+    assert message.get_content_type() == "text/plain" and not message.is_multipart()
+    assert message.get_content().replace("\r\n", "\n") == body + "\n"
+    assert private_marker not in message.get_content()
+    assert private_marker.encode() not in wire
+
+
 OWNER_SETUP = """
 import json,sys
 from uuid import UUID
@@ -63,6 +75,482 @@ with Session(make_engine(DatabaseSettings())) as db:
             assert all(item['public_marker'] not in serialized for item in p['items'])
     print(json.dumps(rows))
 """
+
+INCOMING_PRIVILEGES = """
+import json,sys
+from sqlalchemy import text
+from sqlalchemy.exc import DBAPIError
+from altvia.config import DatabaseSettings
+from altvia.database import make_engine
+from altvia.mail_cases_owner import main
+p=json.load(sys.stdin)
+with make_engine(DatabaseSettings()).connect() as db:
+    assert db.scalar(text('SELECT current_user'))==p['role']
+    for table in ('mailbox_sources','inbound_mail_envelopes','inbound_mail_variants',
+                  'mailbox_poll_states','inbound_mail_previews','mail_case_origins'):
+        for privilege in ('SELECT','INSERT','UPDATE','DELETE'):
+            assert not db.scalar(text('SELECT has_table_privilege(current_user,:t,:p)'),
+                                 {'t':table,'p':privilege})
+            if privilege!='DELETE':
+                assert not db.scalar(text('SELECT has_any_column_privilege(current_user,:t,:p)'),
+                                     {'t':table,'p':privilege})
+        try:
+            with db.begin_nested():
+                db.execute(text('SELECT * FROM '+table+' LIMIT 0'))
+        except DBAPIError as error:
+            assert error.orig.sqlstate=='42501'
+        else:
+            raise AssertionError('Private SELECT succeeded')
+import os,io
+from contextlib import redirect_stdout,redirect_stderr
+os.environ['ALTVIA_ALLOW_MAIL_CASES']='1'
+out,err=io.StringIO(),io.StringIO()
+with redirect_stdout(out),redirect_stderr(err):
+    assert main(['attest','--variant-id',p['variant_id'],'--contact-id',p['contact_id'],
+                 '--contact-version',str(p['contact_version']),
+                 '--evidence','synthetic-packaged-incoming-only'])==1
+assert out.getvalue()==''
+assert err.getvalue()=='Mail case command refused; no classification acknowledged.\\n'
+print(json.dumps({'role':p['role'],'table_column_and_actual_select_denial':True,
+                  'owner_command_refused':True}))
+"""
+
+INCOMING_SNAPSHOT = """
+import hashlib,json,sys
+from uuid import UUID
+from sqlalchemy import select,func
+from sqlalchemy.orm import Session
+from altvia.config import DatabaseSettings
+from altvia.database import make_engine
+from altvia.models import (MailTriageCase,MailCaseOrigin,TicketIncomingMessage,InboundMailVariant,
+    InboundMailPreview,TicketParticipant,OutboundMessage,OutboxEvent,AuditLog,ActivityEvent)
+p=json.load(sys.stdin)
+with Session(make_engine(DatabaseSettings())) as db:
+    rows=[]
+    for item in p['items']:
+        case=db.get(MailTriageCase,UUID(item['case_id']))
+        incoming=db.get(TicketIncomingMessage,UUID(item['incoming_message_id']))
+        assert str(case.ticket_id)==item['ticket_id'] and case.incoming_message_id==incoming.id
+        assert incoming.case_id==case.id
+        assert db.scalar(select(func.count()).select_from(TicketIncomingMessage).where(
+            TicketIncomingMessage.case_id==case.id))==1
+        origin=db.get(MailCaseOrigin,UUID(item['variant_id']))
+        variant=db.get(InboundMailVariant,origin.variant_id)
+        preview=db.get(InboundMailPreview,(variant.id,2))
+        assert hashlib.sha256(variant.raw_message).hexdigest()==item['raw_sha256']
+        assert case.body_text==preview.body_text==item['body_text']
+        rows.append({'case_id':str(case.id),'state':case.state,'version':case.version,
+          'ticket_id':str(case.ticket_id),'incoming_message_id':str(incoming.id),
+          'ticket_version':incoming.ticket_version,'received_at':case.received_at.isoformat(),
+          'recorded_at':incoming.recorded_at.isoformat(),
+          'raw_sha256':item['raw_sha256'],
+          'text_sha256':hashlib.sha256(case.body_text.encode()).hexdigest()})
+    for model,column in ((OutboxEvent,OutboxEvent.payload),(ActivityEvent,ActivityEvent.details),
+                         (AuditLog,AuditLog.details)):
+        for value in db.scalars(select(column)):
+            serialized=json.dumps(value)
+            assert all(marker not in serialized for marker in p['canaries'])
+    delivery=db.get(OutboundMessage,UUID(p['delivery_id']))
+    assert delivery.state=='accepted' and delivery.attempts==1
+    print(json.dumps({'incoming':rows,'wire_sha256':hashlib.sha256(delivery.wire).hexdigest(),
+      'accepted_at':delivery.accepted_at.isoformat(),'message_id':delivery.smtp_message_id}))
+"""
+
+
+def prepare_packaged_incoming(
+    client, denied, reader, ticket_body, run, compose, root, secret_dir, sender_account
+):
+    """Ordinary scoped HTTPS writes after distinct explicit synthetic owner operations."""
+    if os.environ.get("ALTVIA_ALLOW_CONTAINER_TEST") != "1":
+        raise RuntimeError("Explicit synthetic container test required")
+
+    def owner(code, payload):
+        return json.loads(
+            run(
+                [*compose, "run", "--rm", "--no-deps", "-T", "migrate", "python", "-c", code],
+                data=json.dumps(payload),
+            )
+        )
+
+    nonce = uuid4().hex
+    contact_path = f"/api/v1/clients/{ticket_body['client_id']}/contacts"
+    created_contact = client.post(
+        contact_path,
+        json={
+            "display_name": "Packaged classified requester",
+            "email": f"classified-{nonce}@example.test",
+        },
+        headers={"Idempotency-Key": uuid4().hex},
+    )
+    assert created_contact.status_code == 201
+    contact = client.get(contact_path + "/" + created_contact.json()["contact_id"])
+    assert contact.status_code == 200
+    contact = contact.json()
+    root_id = "<packaged-incoming-" + nonce + "@example.test>"
+    private = "incoming-private-note-" + nonce
+    public = "incoming-public-reply-" + nonce
+    bodies = [
+        "classified-first-" + nonce,
+        "classified-reply-" + nonce,
+        "classified-reopen-" + nonce,
+    ]
+    canaries = [
+        private,
+        public,
+        *bodies,
+        contact["email_normalized"],
+        root_id,
+        "synthetic-packaged-incoming-only",
+    ]
+    imap_code = (root / "apps/api/tests/imap_fixture.py").read_text(encoding="utf-8")
+    imap_code += "\n" + (root / "scripts/packaged_imap_proof.py").read_text(encoding="utf-8")
+    imap_code += "\npackaged_classified_imap_proof(imap_server)\n"
+
+    def capture(index, references=None):
+        raw = (
+            "From: "
+            + contact["email_normalized"]
+            + "\r\nMessage-ID: "
+            + (root_id if index == 0 else f"<packaged-reply-{index}-{nonce}@example.test>")
+            + "\r\nSubject: Synthetic incoming classified\r\n"
+            + ("References: " + references + "\r\n" if references else "")
+            + "Content-Type: text/plain; charset=us-ascii\r\n\r\n"
+            + bodies[index]
+        )
+        payload = {
+            "raw": raw,
+            "source_key": f"classified-{index}-{nonce}",
+            "queue_id": ticket_body["queue_id"],
+            "contact_id": contact["id"],
+            "contact_version": contact["version"],
+            "cert": (secret_dir / "imap_cert").read_text(),
+            "key": (secret_dir / "imap_key").read_text(),
+        }
+        result = json.loads(
+            run(
+                [
+                    *compose,
+                    "run",
+                    "--rm",
+                    "--no-deps",
+                    "-T",
+                    "-e",
+                    "ALTVIA_ALLOW_CONTAINER_TEST=1",
+                    "migrate",
+                    "python",
+                    "-c",
+                    imap_code,
+                ],
+                data=json.dumps(payload),
+            )
+        )
+        return {**result, "raw": raw, "body_text": bodies[index]}
+
+    operations = []
+
+    def promotion(case, intent, expected_version=1):
+        path = "/api/v1/mail-cases/" + case["case_id"] + "/promotion"
+        headers = {"If-Match": f'"{expected_version}"', "Idempotency-Key": uuid4().hex}
+        assert client.post(path, json=intent).status_code == 428
+        assert denied.get(path.rsplit("/", 1)[0]).status_code == 404
+        assert denied.post(path, json=intent, headers=headers).status_code == 404
+        assert reader.get(path.rsplit("/", 1)[0]).status_code == 200
+        assert reader.post(path, json=intent, headers=headers).status_code == 403
+        result = client.post(path, json=intent, headers=headers)
+        assert result.status_code == 201, result.text
+        receipt = result.json()
+        replay = client.post(path, json=intent, headers=headers)
+        assert replay.status_code == 200 and replay.json() == receipt
+        assert (
+            client.post(
+                path, json=intent, headers={**headers, "Idempotency-Key": uuid4().hex}
+            ).status_code
+            == 409
+        )
+        assert (
+            client.post(
+                path,
+                json={**intent, "priority": "low"}
+                if intent["action"] == "create"
+                else {**intent, "ticket_version": intent["ticket_version"] + 1},
+                headers=headers,
+            ).status_code
+            == 409
+        )
+        operations.append(
+            {"path": path, "intent": intent, "headers": headers, "receipt": receipt, "case": case}
+        )
+        return receipt
+
+    first = capture(0)
+    receipt = promotion(
+        first,
+        {
+            "action": "create",
+            "subject": "Reviewed packaged incoming",
+            "priority": "high",
+            "assignee_id": ticket_body["assignee_id"],
+        },
+    )
+    ticket_id = receipt["ticket_id"]
+    path = "/api/v1/tickets/" + ticket_id
+    assert client.get(path).json()["source"] == "email"
+    assert client.get(path).json()["description"] == ""
+    assert client.get(path + "/delivery-choices").json()["participant"] is None
+    # The case classification NEVER creates the separately attested SMTP requester.
+    # One immutable sender per queue. Reuse the already exercised synthetic
+    # account without changing any earlier source, wire or delivery status.
+    account = dict(sender_account)
+    setup = owner(
+        OWNER_SETUP,
+        {
+            "account": account,
+            "ticket_id": ticket_id,
+            "queue_id": ticket_body["queue_id"],
+            "version": 2,
+        },
+    )
+    account["source_id"] = setup["source_id"]
+    assert setup["source_id"] != first["source_id"]
+    assert (
+        client.post(
+            path + "/notes",
+            json={"body_text": private},
+            headers={"If-Match": '"2"', "Idempotency-Key": uuid4().hex},
+        ).status_code
+        == 201
+    )
+    body = "Actual public response\n" + public + "\n.literal"
+    message = client.post(
+        path + "/messages",
+        json={"body_text": body},
+        headers={"If-Match": '"3"', "Idempotency-Key": uuid4().hex},
+    )
+    assert message.status_code == 201
+    delivery_path = path + "/messages/" + message.json()["message_id"] + "/delivery"
+    queued = client.post(
+        delivery_path,
+        json={"source_id": setup["source_id"], "participant_id": setup["participant_id"]},
+        headers={"If-Match": '"4"', "Idempotency-Key": uuid4().hex},
+    )
+    assert queued.status_code == 201
+    code = (root / "scripts/packaged_smtp_fixture.py").read_text(encoding="utf-8")
+    code += "\n" + (root / "scripts/packaged_smtp_proof.py").read_text(encoding="utf-8")
+    code += "\npackaged_smtp_worker_proof(synthetic_relay)\n"
+    worker = json.loads(
+        run(
+            [
+                *compose,
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "-e",
+                "ALTVIA_ALLOW_CONTAINER_TEST=1",
+                "worker",
+                "python",
+                "-c",
+                code,
+            ],
+            data=json.dumps(
+                {
+                    "delivery_id": queued.json()["delivery_id"],
+                    "account": account,
+                    "mode": "accepted",
+                    "private_marker": private,
+                    "public_marker": public,
+                    "body_text": body,
+                    "incoming_root": root_id,
+                    "cert": (secret_dir / "imap_cert").read_text(),
+                    "key": (secret_dir / "imap_key").read_text(),
+                }
+            ),
+            timeout=150,
+        )
+    )
+    status = client.get(delivery_path).json()
+    assert status["state"] == "accepted" and status["attempts"] == 1
+    second = capture(1, root_id + " " + status["smtp_message_id"])
+    detail = client.get("/api/v1/mail-cases/" + second["case_id"]).json()
+    assert detail["can_append"] and detail["candidate_ticket_id"] == ticket_id
+    promotion(
+        second, {"action": "append", "ticket_id": ticket_id, "ticket_version": 5, "reopen": False}
+    )
+    for version, state in ((6, "open"), (7, "resolved"), (8, "closed")):
+        changed = client.post(
+            path + "/transitions",
+            json={"target_status": state, "reason": "Synthetic packaged lifecycle"},
+            headers={"If-Match": f'"{version}"', "Idempotency-Key": uuid4().hex},
+        )
+        assert changed.status_code == 200, changed.text
+    third = capture(2, status["smtp_message_id"])
+    detail = client.get("/api/v1/mail-cases/" + third["case_id"]).json()
+    assert detail["candidate_can_reopen"]
+    intent = {"action": "append", "ticket_id": ticket_id, "ticket_version": 9, "reopen": False}
+    assert (
+        client.post(
+            "/api/v1/mail-cases/" + third["case_id"] + "/promotion",
+            json=intent,
+            headers={"If-Match": '"1"', "Idempotency-Key": uuid4().hex},
+        ).status_code
+        == 409
+    )
+    promotion(
+        third, {**intent, "reopen": True, "reopen_reason": "Reviewed synthetic incoming reply"}
+    )
+    assert client.get(path).json()["version"] == 11
+    assert client.get(path).json()["status"] == "open"
+    # Independently attested byte-identical alias after promotion, then a real raw
+    # contradiction of that alias: no rewritten wire, text, timestamp or receipt.
+    alias_code = """
+import json,sys
+from uuid import UUID
+from sqlalchemy.orm import Session
+from altvia.config import DatabaseSettings
+from altvia.database import make_engine
+from altvia.mail_intake import capture_message
+from altvia.mail_normalize import normalize_variant
+from altvia.mail_cases_owner import attest_case
+p=json.load(sys.stdin);engine=make_engine(DatabaseSettings())
+with Session(engine) as db,db.begin():
+    alias=capture_message(db,p['source_key'],1,2,p['raw'].encode('ascii'))
+normalize_variant(engine,alias.variant_id)
+result=attest_case(engine,alias.variant_id,UUID(p['contact_id']),p['contact_version'],
+                   'synthetic-packaged-alias-only')
+assert str(result.case_id)==p['case_id']
+assert result.state=='promoted' and result.disposition=='alias'
+with Session(engine) as db,db.begin():
+    collision=capture_message(db,p['source_key'],1,2,(p['raw']+' contradiction').encode('ascii'))
+    assert collision.state=='collision'
+print(json.dumps({'alias_preserved_receipt':True,'late_raw_collision':True}))
+"""
+    alias = owner(
+        alias_code, {**first, "contact_id": contact["id"], "contact_version": contact["version"]}
+    )
+    assert client.get("/api/v1/mail-cases/" + first["case_id"]).json()["state"] == "collision"
+    for operation in operations:
+        for actor, status_code in ((reader, 403), (denied, 404)):
+            response = actor.post(
+                operation["path"], json=operation["intent"], headers=operation["headers"]
+            )
+            assert response.status_code == status_code
+    assert (
+        client.post(
+            operations[0]["path"],
+            json=operations[0]["intent"],
+            headers={**operations[0]["headers"], "Idempotency-Key": uuid4().hex},
+        ).status_code
+        == 409
+    )
+    assert denied.get(path + "/conversation").status_code == 404
+    assert (
+        denied.get(path + "/incoming-messages/" + receipt["incoming_message_id"]).status_code == 404
+    )
+    assert reader.get(path + "/notes").status_code == 403
+    reader_conversation = reader.get(path + "/conversation")
+    assert reader_conversation.status_code == 200
+    assert private not in json.dumps(reader_conversation.json())
+    logs = run([*compose, "logs", "--no-color", "api", "worker"])
+    assert all(marker not in logs for marker in canaries)
+    role_proofs = []
+    for service, role in (("api", "altvia_app"), ("worker", "altvia_worker")):
+        role_proofs.append(
+            json.loads(
+                run(
+                    [*compose, "exec", "-T", service, "python", "-c", INCOMING_PRIVILEGES],
+                    data=json.dumps(
+                        {
+                            "role": role,
+                            "variant_id": first["variant_id"],
+                            "contact_id": contact["id"],
+                            "contact_version": contact["version"],
+                        }
+                    ),
+                )
+            )
+        )
+    snapshot_payload = {
+        "items": [{**op["case"], **op["receipt"]} for op in operations],
+        "canaries": canaries,
+        "delivery_id": queued.json()["delivery_id"],
+    }
+    snapshot = owner(INCOMING_SNAPSHOT, snapshot_payload)
+    assert snapshot["wire_sha256"] == worker["wire_sha256"]
+    return {
+        "operations": operations,
+        "snapshot_payload": snapshot_payload,
+        "snapshot": snapshot,
+        "worker": worker,
+        "alias": alias,
+        "roles": role_proofs,
+        "ticket_id": ticket_id,
+        "delivery_path": delivery_path,
+        "status": status,
+        "private_marker": private,
+        "diagnostics_private_text_excluded": True,
+    }
+
+
+def verify_packaged_incoming_restart(client, proof, run, compose, work):
+    for operation in proof["operations"]:
+        result = client.post(
+            operation["path"], json=operation["intent"], headers=operation["headers"]
+        )
+        assert result.status_code == 200 and result.json() == operation["receipt"]
+        receipt = operation["receipt"]
+        path = "/api/v1/tickets/" + receipt["ticket_id"]
+        message = client.get(path + "/incoming-messages/" + receipt["incoming_message_id"])
+        assert message.status_code == 200
+        assert message.json()["body_text"] == operation["case"]["body_text"]
+        assert message.json()["invalidation_warning"] == (
+            "incoming_attestation_invalidated" if operation is proof["operations"][0] else None
+        )
+    conversation = client.get("/api/v1/tickets/" + proof["ticket_id"] + "/conversation")
+    assert conversation.status_code == 200
+    items = conversation.json()["items"]
+    assert [item["ticket_version"] for item in items] == [2, 4, 6, 11]
+    assert [item["kind"] for item in items] == ["incoming", "outbound", "incoming", "incoming"]
+    assert proof["private_marker"] not in json.dumps(conversation.json())
+    assert client.get(proof["delivery_path"]).json() == proof["status"]
+    snapshot = json.loads(
+        run(
+            [
+                *compose,
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "migrate",
+                "python",
+                "-c",
+                INCOMING_SNAPSHOT,
+            ],
+            data=json.dumps(proof["snapshot_payload"]),
+        )
+    )
+    assert snapshot == proof["snapshot"]
+    (work / "incoming-conversation-proof.json").write_text(
+        json.dumps(
+            {
+                "synthetic_only": True,
+                "api_postgres_recreation": True,
+                "separate_requester_attestation": True,
+                "distinct_receiving_sending_sources": True,
+                "protected_replay": True,
+                "denied_actors": True,
+                "explicit_closed_reopen": True,
+                "conversation_private_note_excluded": True,
+                "diagnostics_private_text_excluded": proof["diagnostics_private_text_excluded"],
+                "frozen": snapshot,
+                "worker": proof["worker"],
+                "alias": proof["alias"],
+                "roles": proof["roles"],
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
 
 def prepare_packaged_smtp(client, ticket_body, run, compose, root, secret_dir):
@@ -192,6 +680,7 @@ def prepare_packaged_smtp(client, ticket_body, run, compose, root, secret_dir):
         "proofs": proofs,
         "snapshot_payload": snapshot_payload,
         "frozen": owner(OWNER_SNAPSHOT, snapshot_payload),
+        "private_account": account,
     }
 
 
@@ -250,6 +739,9 @@ def packaged_smtp_worker_proof(serve):
             "mailbox_poll_states",
             "inbound_mail_previews",
             "mailbox_sources",
+            "mail_triage_cases",
+            "mail_case_origins",
+            "ticket_incoming_messages",
         ):
             for privilege in ("SELECT", "INSERT", "UPDATE", "DELETE"):
                 assert not db.scalar(
@@ -392,6 +884,13 @@ def packaged_smtp_worker_proof(serve):
                         message.get_content().replace("\r\n", "\n") == payload["body_text"] + "\n"
                     )
                     assert marker not in relay.messages[0]
+                    if "incoming_root" in payload:
+                        assert_incoming_wire(
+                            relay.messages[0],
+                            payload["incoming_root"],
+                            payload["body_text"],
+                            payload["private_marker"],
+                        )
                     if payload["mode"] == "accepted":
                         assert relay.accepted_reply.wait(2)
                     assert relay.final_250_count == (payload["mode"] == "accepted")
@@ -438,6 +937,7 @@ def packaged_smtp_worker_proof(serve):
                                 "message_id_sha256": hashlib.sha256(
                                     initial[3].encode()
                                 ).hexdigest(),
+                                "wire_sha256": hashlib.sha256(initial[2]).hexdigest(),
                                 "restricted_privileges": True,
                                 "private_note_excluded": True,
                                 "redis_events_diagnostics_excluded": True,

@@ -353,6 +353,36 @@
         "title": "AttachmentPage",
         "type": "object"
       },
+      "AttachmentSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "bytes": {
+            "title": "Bytes",
+            "type": "integer"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "media_type": {
+            "title": "Media Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "filename",
+          "media_type",
+          "bytes"
+        ],
+        "title": "AttachmentSummary",
+        "type": "object"
+      },
       "Candidate": {
         "additionalProperties": false,
         "properties": {
@@ -975,6 +1005,15 @@
       "CommentCreate": {
         "additionalProperties": false,
         "properties": {
+          "attachment_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Attachment Ids",
+            "type": "array"
+          },
           "body": {
             "maxLength": 10000,
             "minLength": 1,
@@ -991,6 +1030,18 @@
       "CommentOutput": {
         "additionalProperties": false,
         "properties": {
+          "attachment_count": {
+            "default": 0,
+            "title": "Attachment Count",
+            "type": "integer"
+          },
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/AttachmentSummary"
+            },
+            "title": "Attachments",
+            "type": "array"
+          },
           "author_id": {
             "format": "uuid",
             "title": "Author Id",
@@ -1313,6 +1364,15 @@
       "DeliveryCreate": {
         "additionalProperties": false,
         "properties": {
+          "attachment_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Attachment Ids",
+            "type": "array"
+          },
           "participant_id": {
             "format": "uuid",
             "title": "Participant Id",
@@ -3591,6 +3651,15 @@
       "TicketMessageCreate": {
         "additionalProperties": false,
         "properties": {
+          "attachment_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Attachment Ids",
+            "type": "array"
+          },
           "body_text": {
             "maxLength": 10000,
             "minLength": 1,
@@ -3607,6 +3676,18 @@
       "TicketMessageOutput": {
         "additionalProperties": false,
         "properties": {
+          "attachment_count": {
+            "default": 0,
+            "title": "Attachment Count",
+            "type": "integer"
+          },
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/AttachmentSummary"
+            },
+            "title": "Attachments",
+            "type": "array"
+          },
           "author_id": {
             "format": "uuid",
             "title": "Author Id",
@@ -3731,6 +3812,15 @@
       "TicketNoteCreate": {
         "additionalProperties": false,
         "properties": {
+          "attachment_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Attachment Ids",
+            "type": "array"
+          },
           "body_text": {
             "maxLength": 10000,
             "minLength": 1,
@@ -3747,6 +3837,18 @@
       "TicketNoteOutput": {
         "additionalProperties": false,
         "properties": {
+          "attachment_count": {
+            "default": 0,
+            "title": "Attachment Count",
+            "type": "integer"
+          },
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/AttachmentSummary"
+            },
+            "title": "Attachments",
+            "type": "array"
+          },
           "author_id": {
             "format": "uuid",
             "title": "Author Id",
@@ -9987,8 +10089,7 @@
             "schema": {
               "enum": [
                 "public",
-                "note",
-                "work"
+                "note"
               ],
               "title": "Purpose",
               "type": "string"
@@ -10116,8 +10217,7 @@
             "schema": {
               "enum": [
                 "public",
-                "note",
-                "work"
+                "note"
               ],
               "type": "string"
             }
@@ -12109,11 +12209,7 @@
             "name": "purpose",
             "required": true,
             "schema": {
-              "enum": [
-                "public",
-                "note",
-                "work"
-              ],
+              "const": "work",
               "title": "Purpose",
               "type": "string"
             }
@@ -12239,8 +12335,6 @@
             "required": true,
             "schema": {
               "enum": [
-                "public",
-                "note",
                 "work"
               ],
               "type": "string"

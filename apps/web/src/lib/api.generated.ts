@@ -1412,6 +1412,20 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** AttachmentSummary */
+        AttachmentSummary: {
+            /** Bytes */
+            bytes: number;
+            /** Filename */
+            filename: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Media Type */
+            media_type: string;
+        };
         /** Candidate */
         Candidate: {
             /** Display Name */
@@ -1681,11 +1695,20 @@ export interface components {
         };
         /** CommentCreate */
         CommentCreate: {
+            /** Attachment Ids */
+            attachment_ids?: string[];
             /** Body */
             body: string;
         };
         /** CommentOutput */
         CommentOutput: {
+            /**
+             * Attachment Count
+             * @default 0
+             */
+            attachment_count: number;
+            /** Attachments */
+            attachments?: components["schemas"]["AttachmentSummary"][];
             /**
              * Author Id
              * Format: uuid
@@ -1819,6 +1842,8 @@ export interface components {
         };
         /** DeliveryCreate */
         DeliveryCreate: {
+            /** Attachment Ids */
+            attachment_ids?: string[];
             /**
              * Participant Id
              * Format: uuid
@@ -2773,11 +2798,20 @@ export interface components {
         };
         /** TicketMessageCreate */
         TicketMessageCreate: {
+            /** Attachment Ids */
+            attachment_ids?: string[];
             /** Body Text */
             body_text: string;
         };
         /** TicketMessageOutput */
         TicketMessageOutput: {
+            /**
+             * Attachment Count
+             * @default 0
+             */
+            attachment_count: number;
+            /** Attachments */
+            attachments?: components["schemas"]["AttachmentSummary"][];
             /**
              * Author Id
              * Format: uuid
@@ -2845,11 +2879,20 @@ export interface components {
         };
         /** TicketNoteCreate */
         TicketNoteCreate: {
+            /** Attachment Ids */
+            attachment_ids?: string[];
             /** Body Text */
             body_text: string;
         };
         /** TicketNoteOutput */
         TicketNoteOutput: {
+            /**
+             * Attachment Count
+             * @default 0
+             */
+            attachment_count: number;
+            /** Attachments */
+            attachments?: components["schemas"]["AttachmentSummary"][];
             /**
              * Author Id
              * Format: uuid
@@ -5869,7 +5912,7 @@ export interface operations {
     ticket_list_api_v1_tickets__identifier__attachments_get: {
         parameters: {
             query: {
-                purpose: "public" | "note" | "work";
+                purpose: "public" | "note";
                 limit?: number;
                 cursor?: string | null;
             };
@@ -5905,7 +5948,7 @@ export interface operations {
         parameters: {
             query: {
                 filename: string;
-                purpose: "public" | "note" | "work";
+                purpose: "public" | "note";
             };
             header: {
                 "If-Match": string;
@@ -6933,7 +6976,7 @@ export interface operations {
     work_list_api_v1_work_items__identifier__attachments_get: {
         parameters: {
             query: {
-                purpose: "public" | "note" | "work";
+                purpose: "work";
                 limit?: number;
                 cursor?: string | null;
             };
@@ -6969,7 +7012,7 @@ export interface operations {
         parameters: {
             query: {
                 filename: string;
-                purpose: "public" | "note" | "work";
+                purpose: "work";
             };
             header: {
                 "If-Match": string;

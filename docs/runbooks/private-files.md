@@ -1,5 +1,7 @@
-Private file infrastructure is development scope under ADR-0037. It creates no
-attachment route, content grant, file metadata table or manual clean override.
+Private files are development scope under ADR-0037. Migration00025 and the API/
+worker now implement private ticket public/note and work assets, binary uploads,
+metadata/download, protected failed-scan retry and durable fenced scanning. No
+content-link, outbound MIME-file path or manual clean override is included here.
 Production rollout, real data import, deletion/retention policy and final target
 CPU qualification remain separate gates.
 
@@ -104,7 +106,7 @@ volumes. No `down -v`, retention deletion, production rollout or per-slice targe
 homologation is authorized here.
 
 The Task2 hosted API gate adds a separate bounded S3-only fixture using the same
-storage Dockerfile, native bootstrap and TLS certificate tool. It will run the
+storage Dockerfile, native bootstrap and TLS certificate tool. It runs the
 existing full API suite once with file tests required, from the Linux runner to a
 private bridge address in the synthetic certificate SAN. No storage port or AV
 definitions are published or loaded. Missing required file configuration and a
@@ -112,3 +114,30 @@ skipped attachment suite fail that gate. Local developers without this external
 fixture may receive explicit skips; those do not qualify file behavior. Fixture
 cleanup stops only the random task container and preserves its object volume and
 hash-bound command evidence.
+
+For the hosted Linux API fixture, the existing job runs:
+
+```sh
+uv run python scripts/ci_file_storage.py start
+uv run pytest -q --junitxml=.superpowers/api-tests.xml
+uv run python scripts/ci_file_storage.py verify
+uv run python scripts/ci_file_storage.py stop
+```
+
+The start/stop commands are bounded to the random path recorded through GITHUB_ENV;
+they are not a general local deployment utility. The mandatory job sets
+ALTVIA_REQUIRE_FILE_TESTS=1. Its manifest and numbered raw streams are retained
+without secret mounts; the JUnit verifier rejects skipped/missing/failed attachment
+suites. API settings use ALTVIA_STORAGE_FILE and the worker uses
+ALTVIA_SCANNER_STORAGE_FILE; the Compose overlay selects the existing mounted JSON
+files. Existing five-service stacks may leave these unset, which fails file
+transfer closed and does not fabricate a clean result. Quarantine/retry backlog
+remains durable. Historical ready policy1 decisions remain valid through scanner
+outages, subject to current authorization and verified stored bytes.
+
+Drain the file-aware API and worker before any contraction. Migration00025 refuses
+contraction while any asset, attempt or file audit/outbox history exists. Retain
+the file-aware application pair, S3 objects and matching database backup on rollback;
+do not delete data to make a downgrade pass. Failed final upload writes and matching
+concurrent uploads may leave opaque unreferenced private objects. No orphan removal,
+retention, ready-file expiry or production scanning policy is implied.

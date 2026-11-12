@@ -659,12 +659,13 @@ other15, later replies use latest16. Missing IDs stay absent. Existing eligible
 outbound-only ordering and all frozen bytes remain exact. Invalidated incoming and
 previous-requester ancestors never enter a new wire.
 
-## Selected ADR-0037 private-file core (not implemented yet)
+## ADR-0037 private-file core and selected content-link contract
 
-The selected implementation plan is2026-11-12-private-file-core. These are
-contracts before code, not advertised live routes; generated OpenAPI changes
-only when the actual endpoints land. Incoming-MIME file publication follows in
-its own later contract, without a runtime raw/preview/origin grant.
+Task2 of2026-11-12-private-file-core implements the upload, metadata, download and
+scan-retry routes below through migration00025. Generated OpenAPI/TypeScript comes
+from those actual endpoints. Content links and outbound MIME files below remain
+selected later work. Incoming-MIME publication follows in its own later contract,
+without a runtime raw/preview/origin grant.
 
 POST /tickets/{id}/attachments or /work-items/{id}/attachments streams raw
 application/octet-stream. Strict unique filename/purpose query fields select

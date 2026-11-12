@@ -4,6 +4,57 @@
  */
 
 export interface paths {
+    "/api/v1/attachments/{identifier}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detail */
+        get: operations["detail_api_v1_attachments__identifier__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attachments/{identifier}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Content */
+        get: operations["content_api_v1_attachments__identifier__content_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attachments/{identifier}/scan-retries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry */
+        post: operations["retry_api_v1_attachments__identifier__scan_retries_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/me": {
         parameters: {
             query?: never;
@@ -774,6 +825,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tickets/{identifier}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ticket List */
+        get: operations["ticket_list_api_v1_tickets__identifier__attachments_get"];
+        put?: never;
+        /** Ticket Upload */
+        post: operations["ticket_upload_api_v1_tickets__identifier__attachments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tickets/{identifier}/claim": {
         parameters: {
             query?: never;
@@ -1121,6 +1190,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/work-items/{identifier}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Work List */
+        get: operations["work_list_api_v1_work_items__identifier__attachments_get"];
+        put?: never;
+        /** Work Upload */
+        post: operations["work_upload_api_v1_work_items__identifier__attachments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/work-items/{identifier}/comments": {
         parameters: {
             query?: never;
@@ -1265,6 +1352,65 @@ export interface components {
             active?: boolean;
             /** Name */
             name?: string;
+        };
+        /** AttachmentOutput */
+        AttachmentOutput: {
+            /** Bytes */
+            bytes: number;
+            /** Can Download */
+            can_download: boolean;
+            /** Can Retry Scan */
+            can_retry_scan: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Filename */
+            filename: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Media Type */
+            media_type: string;
+            /**
+             * Owner Id
+             * Format: uuid
+             */
+            owner_id: string;
+            /**
+             * Owner Type
+             * @enum {string}
+             */
+            owner_type: "ticket" | "work_item";
+            /**
+             * Policy Version
+             * @constant
+             */
+            policy_version: 1;
+            /**
+             * Purpose
+             * @enum {string}
+             */
+            purpose: "public" | "note" | "work";
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "quarantine" | "scanning" | "ready" | "rejected" | "failed";
+            /** Version */
+            version: number;
+        };
+        /** AttachmentPage */
+        AttachmentPage: {
+            /** Can Upload */
+            can_upload: boolean;
+            /** Items */
+            items: components["schemas"]["AttachmentOutput"][];
+            /** Next Cursor */
+            next_cursor: string | null;
         };
         /** Candidate */
         Candidate: {
@@ -2427,6 +2573,18 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** RetryReceipt */
+        RetryReceipt: {
+            /**
+             * Attachment Id
+             * Format: uuid
+             */
+            attachment_id: string;
+            /** Version */
+            version: number;
+        };
+        /** RetryScan */
+        RetryScan: Record<string, never>;
         /** SenderChoice */
         SenderChoice: {
             /** From Email */
@@ -2972,6 +3130,34 @@ export interface components {
              */
             target_status: "todo" | "in_progress" | "blocked" | "done" | "cancelled";
         };
+        /** UploadReceipt */
+        UploadReceipt: {
+            /**
+             * Attachment Id
+             * Format: uuid
+             */
+            attachment_id: string;
+            /** Bytes */
+            bytes: number;
+            /**
+             * Owner Id
+             * Format: uuid
+             */
+            owner_id: string;
+            /**
+             * Owner Type
+             * @enum {string}
+             */
+            owner_type: "ticket" | "work_item";
+            /** Sha256 */
+            sha256: string;
+            /**
+             * Version
+             * @default 1
+             * @constant
+             */
+            version: 1;
+        };
         /** UserAdminOutput */
         UserAdminOutput: {
             /** Active */
@@ -3226,6 +3412,115 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    detail_api_v1_attachments__identifier__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttachmentOutput"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    content_api_v1_attachments__identifier__content_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_api_v1_attachments__identifier__scan_retries_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RetryScan"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetryReceipt"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RetryReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     me_api_v1_auth_me_get: {
         parameters: {
             query?: never;
@@ -5571,6 +5866,93 @@ export interface operations {
             };
         };
     };
+    ticket_list_api_v1_tickets__identifier__attachments_get: {
+        parameters: {
+            query: {
+                purpose: "public" | "note" | "work";
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttachmentPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ticket_upload_api_v1_tickets__identifier__attachments_post: {
+        parameters: {
+            query: {
+                filename: string;
+                purpose: "public" | "note" | "work";
+            };
+            header: {
+                "If-Match": string;
+                "Idempotency-Key": string;
+                "X-File-Bytes": number;
+                "X-File-SHA256": string;
+            };
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadReceipt"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     claim_api_v1_tickets__identifier__claim_post: {
         parameters: {
             query?: never;
@@ -6535,6 +6917,93 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActivityPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    work_list_api_v1_work_items__identifier__attachments_get: {
+        parameters: {
+            query: {
+                purpose: "public" | "note" | "work";
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttachmentPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    work_upload_api_v1_work_items__identifier__attachments_post: {
+        parameters: {
+            query: {
+                filename: string;
+                purpose: "public" | "note" | "work";
+            };
+            header: {
+                "If-Match": string;
+                "Idempotency-Key": string;
+                "X-File-Bytes": number;
+                "X-File-SHA256": string;
+            };
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadReceipt"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadReceipt"];
                 };
             };
             /** @description Validation Error */

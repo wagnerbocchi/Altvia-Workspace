@@ -3,9 +3,11 @@
 Date: 2026-11-12. Engineering selection under the user's continuous MVP/direct-main
 authorization, after ADR-0036 development acceptance at36e4642. Master FR006/007/012,
 security requirements and existing domain authorization/replay contracts apply.
-This is a development contract. Task1 infrastructure and Task2 private assets/
-scanning are implemented; content links and outbound MIME files remain selected
-later work. This is not production/CPU acceptance. No target connection, production deployment, real data import or
+This is a development contract. Tasks1-3 backend infrastructure, private assets,
+scanning, immutable content links and reviewed outbound MIME files are implemented
+and development/CI accepted throughdf3c8bb. Browser file workflows and incoming-MIME
+file ownership remain pending. The user explicitly stopped execution before
+design/UI/UX/Task4. This is not production/CPU acceptance. No target connection, production deployment, real data import or
 retention/deletion policy is authorized here.
 
 ## Goal and bounded sequence

@@ -390,13 +390,79 @@ not yet content links, reviewed MIME2, incoming-file ownership or browser upload
 The deferred request-purpose enum Minor passes to Task3's affected contract work.
 No current image inherits older target-CPU qualification.
 
-## Outstanding acceptance and continuation
+## Accepted Task 3 backend: content links and reviewed MIME2
+
+Contractfaf705a preceded implementation8b3a187 and generated contractsdf3c8bb.
+The backend creates immutable ordered links/counts on public messages, private
+notes and work comments under their distinct current action authority. Concrete
+composite FKs, immutable content and deferred SQL guards seal the committed set.
+Omitted attachment_ids retain exact old fingerprints/events; explicit empty and
+null behavior follows ADR0037. Delivery requires the exact reviewed public file
+IDs, verifies real S3 bytes outside DB transactions and repeats current scope/
+version/link checks before freezing. Saved replay never fetches files again.
+Legacy format1 remains byte-compatible and bounded262144; actual file-bearing
+format2 uses standard MIME with ordered original bytes/names and encoded cap26214400.
+The restricted worker continues sending only frozen public wire.
+
+Independent specification/quality review approved33d63bd..df3c8bb with no
+Critical/Important/Minor findings. Task2 M1 is resolved: request schemas now expose
+ticket public|note and work work, retaining the ordinary metadata union. The only
+web-tree change is generated API TypeScript; no interface/design/UX implementation
+was started. The user's explicit stop was recorded separately in9887136.
+
+Local affected validation passed265 cases, including25 new cases, with no errors,
+failures or skips. A prior257-pass/8-failure invocation remains failed historical
+evidence: its inherited development PG volume lacked exactly the prior attempt
+guard function, BEFORE INSERT trigger and closed reason CHECK despite its revision
+label. The old volume was preserved, not repaired. All13 affected modules were
+rerun on fresh correctly migrated Task3 PG; the265-case complete fresh invocation
+supplies the accepted evidence. Old/fresh schema dumps and the exact delta remain.
+Static checks,61-module mypy, repeated generated contracts, package audit and the
+actual nonroot/read-only/network-none API image passed. Initial generator lookup/
+console-copy failures and an OCI healthcheck warning remain distinguished from
+the successful repeated generators and final Docker-format image with healthcheck.
+
+Root independently verified163 artifact hashes,49 command records/98 raw streams,
+212 final input hashes,22 changed Git files, the report digest and package members/
+new source bytes.47 commands preserved identical before/after inputs; the two
+intentional first contract generations changed only their corresponding output
+file, and the final repeats were byte-identical. source-df3c8bb.zip has565 entries,
+1379023 bytes,SHA256f1f042f260ca8bf76a6102374873011f9350d42f6d1d7d8573ff4eb49800025d.
+reviewed-local-evidence.zip has174 entries,1921369 bytes,SHA256
+d2128990ef1300069b55f43176eb45c862e4750875403181d2c81d87c3b2ace6.
+Both CRC pass and preserve their original pending-hosted status at creation.
+Task3 archives are at C:/Users/wagne/.codex/state/evidence/private-file-task3-df3c8bb/.
+
+All five exact-df3c8bb workflows passed: Source43291545079, Images43291544980,
+Browser43291544853, Containers43291545091 and API43291545034. The complete API
+invocation passed1198 cases in803.97s, zero failures/errors, with three explicit
+opt-in native-image logger skips. Actual execution includes all25 new Task3 cases
+(16 delivery/9 links) and37 existing required file cases. Separate mandatory actual
+signed/current ClamAV proof passed; the three skips do not substitute for it.
+Browser154 passed in6.6m. Source22 LOW/zero blockers/secrets and all seven nonempty
+inventories report zero vulnerabilities (72/49/70/43/16/107/38 by the names above).
+Old packaged regressions and actual signed update/reload3628258 signatures passed.
+Root verified201 API source hashes/32 raw streams and18 producer source hashes/
+132 streams against immutable Git/artifact bytes; three vendor signatures verified.
+
+Six complete sanitized job logs and five digest-verified artifacts are retained
+with controller verification in ci-df3c8bb.zip:15 entries,2004276 bytes,SHA256
+cc208d76683bd4e5f4bc6ca8b09086ed6575982c2f8e558ef31ff9a7571f91dc.
+ZIP CRC and revised credential-URL audit pass with zero remaining matches.
+API artifact13977797770 has34 entries,SHA256
+a08a9f84132589a82f02cc2b3e3e462c7c731f7b3f60cb50fbcc837a6de23e34.
+Expected SQL constraint/role-negative diagnostics, disposable local initdb trust
+and action deprecations remain benign test/runner conditions. No required gate
+failed. Task3 backend is accepted; no incoming-file/UI/target claim is inferred.
+
+## User-requested stop and outstanding acceptance
 
 Local2048MiB Podman was not resized/restarted. Controlled socket replies remain
 transport evidence, separate from the actual accepted hosted signed profile.
 
-Proceed directly to concrete content links/reviewed MIME2,
-the Impeccable browser flow and packaged restore/
-privacy proof. Owner-bounded incoming-MIME files follow under a separate contract.
+STOP before design, UI, UX or Task4, per the user's latest explicit instruction.
+The next planned browser file workflow remains unstarted pending a new user
+instruction. Packaged end-to-end file/restore/privacy proof and owner-bounded
+incoming-MIME files remain subsequent incomplete work, not accepted by Task3.
 Final actual x86-64-v1 qualification follows remaining MVP development under the
 user's consolidated cadence.

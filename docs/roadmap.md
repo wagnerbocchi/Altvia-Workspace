@@ -7,10 +7,11 @@ await answers. This does not authorize production deployment or real data import
 ## Current user stop point
 
 User instruction2026-11-12: continue backend development and validation, but stop
-before beginning any design, UI or UX. Finish the current private-files Task3
-backend (immutable content links and explicitly reviewed MIME delivery), its
-relevant checks, independent review and authorized publication. Stop before the
-next planned Task4 browser/interface work; do not dispatch frontend/design work.
+before beginning any design, UI or UX. Private-files Task3 backend is now closed
+on accepteddf3c8bb (immutable content links and explicitly reviewed MIME delivery),
+with relevant checks, independent review and authorized publication complete.
+Execution is STOPPED before the next planned Task4 browser/interface work; do not
+dispatch frontend/design work without a new user instruction.
 Generated API contracts remain permitted backend validation. This boundary
 supersedes the earlier instruction to continue across every remaining MVP stage.
 The MVP and final target qualification remain incomplete at this stop point.
@@ -34,6 +35,16 @@ Earlier qualification entries below remain historical evidence, not instructions
 to repeat server homologation during each new delivery.
 
 ## Delivery status
+
+Task3 closure: all five exact-df3c8bb hosted gates passed,1198 API cases/three
+explicit opt-in native-image skips and154 browser cases. All25 new file-link/MIME
+cases actually executed; separate mandatory signed/current scanner/update/reload
+and packaged regressions passed. Source22LOW/0blockers/secrets0 and seven nonempty
+zero-vulnerability inventories pass. Independent source/spec review has zero
+findings; prior M1 request-purpose enums are resolved. The original local257/8
+stale-schema run remains failed; full265-case rerun on fresh correct PG passed.
+Full source/hash/raw-evidence/restore-scope record: docs/phase-3i-private-file-evidence.md.
+No UI/design work, incoming-MIME file ownership or target qualification is complete.
 
 Phase 1 is closed on 2026-11-09. Final source 2f6ba60 passed all five hosted gates,
 290 API and 31 browser tests, and the full five-image/six-service stack passed on

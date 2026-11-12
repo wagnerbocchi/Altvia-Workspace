@@ -115,7 +115,25 @@ Its clarified ADR0036 contract retains the first eligible incoming root when
 more than16 precede the first reply, excludes previous-requester references from
 new wires, and preserves receipts/history for promoted aliases and invalidation.
 
-The next engineering contract is ADR-0036 and
+Task3 adds actual scoped triage and the combined incoming/outgoing conversation
+at931c28c, with the detail-only historical receipt contract f7f71e6. Independent
+specification/quality review approved it without Critical/Important findings;
+Impeccable's two material findings were corrected and independently accepted,
+and its documentation handoff found no material gap. Local frozen acceptance:
+191 API in918.09s and154 full browser in10.2m; the final four-file visual/FORM
+correction passed12 incoming scenarios/all36 corrected axe/theme captures,
+web checks and build. Backend bytes remained unchanged. Both original36 and
+corrected36 captures, full logs/failures and298 raw source hashes are preserved
+in the private528-entry archive attested-inbound-task3-931c28c/acceptance.zip,
+SHA256924cff84fdf654cd6a05c7718c037de9a23c07671da60d1f3292f86e78dadb68.
+Minor readability cleanup and existing local runner warnings remain explicit;
+neither is a functional blocker. Hosted a0da5a5 passed993 API/source/images/
+containers but failed one browser focus-order assertion (141/142). Its actual
+deterministic RED/GREEN correction is in Task3; hosted acceptance for the new
+head must still pass. Packaged process/database restart and complete synthetic
+incoming proof remain Task4. No provider, production or target claim is made.
+
+The current engineering contract is ADR-0036 and
 docs/plans/2026-11-12-attested-inbound-conversation.md: owner-attested classified
 cases, existing queue/customer scope, protected staff promotion, contextual
 identity/correlation and incoming/outgoing conversation. Unknown raw mail stays

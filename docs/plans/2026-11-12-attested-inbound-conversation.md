@@ -188,10 +188,10 @@ reusing the already persisted immutable receipt and existing narrow grants.
 conversation union; existing ticket creation category/assignee choices and sender/
 requester/send/status APIs. No HTTP owner attestation backdoor.
 
-- [ ] Run user-required Impeccable context/craft floor, preserve incumbent Operate
+- [x] Run user-required Impeccable context/craft floor, preserve incumbent Operate
   world, define surface brief. Only published owner-attested cases appear; empty
   and readonly states explain real next actions without raw counts or inert controls.
-- [ ] Exact immutable text/contact/client/queue review; new subject/priority and
+- [x] Exact immutable text/contact/client/queue review; new subject/priority and
   bounded choices, safe correlated target/reopen reason. Preserve original
   case/key/version/body and target ticket version through HTTP/ownership failures.
   Receipt acknowledgement reads actual case+ticket/incoming record before new
@@ -199,14 +199,14 @@ requester/send/status APIs. No HTTP owner attestation backdoor.
   A detail-only history receipt enables reload/read-only navigation but cannot
   replace protected replay of an uncertain original operation or acknowledge a
   competing operation as that original request.
-- [ ] One conversation display with incoming and public outbound, current delivery
+- [x] One conversation display with incoming and public outbound, current delivery
   states/review/composer reused; notes retain their own permission/layout/body.
   Per-message attestation wording never claims a verified global contact/account.
-- [ ] Real PG/API/Redis/TLS browser new-request/reply/reopen/restart, missing ID,
+- [x] Real PG/API/Redis/TLS browser new-request/reply/reopen/restart, missing ID,
   long escaped text, foreign/readonly/hidden cases, note separation, uncertain HTTP
   and receipt recovery. No fabricated status/promotion endpoints. Keyboard/axe/
   desktop/mobile/light/dark capture and independent Impeccable review/documentation.
-- [ ] Check/build/generated comparison, affected then frozen full browser; do not
+- [x] Check/build/generated comparison, affected then frozen full browser; do not
   edit source/fixtures or rebuild .next during tests. Independent source gate and
   checked UI commit. No provider/target operation.
 

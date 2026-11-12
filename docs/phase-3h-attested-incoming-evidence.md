@@ -157,6 +157,16 @@ separate image identities; no equality or target qualification is inferred.
 Incoming conversation development/CI is accepted. Proceed to private files;
 operational provider policy, integrated rollback and final target remain separate.
 
+Bookkeeping/next-contract publication0ef1187 also passed all five gates on the
+unchanged application. Its packaged artifact now retains
+incoming-conversation-proof.json:19 entries, SHA256
+185ca42de4bd19eef9204bebf0b2322cc718785fa9a0e63204c4502f38d6e284.
+Root verified the actual hosted19/30/35/35 delivered/processed checkpoints, two
+Redis scans and12 markers per phase, all diagnostics checks and the unchanged
+collision/recreation event set. This closes the JSON-retention bookkeeping gap.
+Private copy/verification is under artifact-retention-0ef1187 in the same evidence
+directory. It supplies no acceptance of the newly selected S3/Clam components.
+
 ## Remaining gates and continuation
 
 Runbook [attested-incoming.md](runbooks/attested-incoming.md) retains explicit trust,

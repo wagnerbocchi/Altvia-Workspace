@@ -60,12 +60,20 @@ entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
-The Phase 3E-c policy follow-up selects ADR-0033 before code: strict Subject/body
-charset ownership, complete HTML token accounting and separate immutable parser2
-results. Preserve parser1 rows and event schema1; explicit latest writes/replay
-use version2/schema2. Owner tools drain for migration; rollback keeps compatible
-tools and expansion. Local/full hosted/packaged acceptance is tracked separately;
-R3/R4 closure requires that proof. No new user-facing preview or target connection.
+The Phase 3E-c policy follow-up delivers ADR-0033: strict Subject/body charset
+ownership, complete HTML token accounting and separate immutable parser2 results.
+Contracts31bbd6f preceded implementation. Final e0e6b06 passed all five hosted
+gates with779 API/116 browser, local affected195 and actual v1/v2/replay/restart/
+runtime-denial proof. Five nonempty image inventories report zero vulnerabilities;
+source retains four existing LOW, zero blockers/secrets. R3/R4 and follow-up
+review findings are fixed with RED/GREEN proof; no deferred Minor remains here.
+See docs/phase-3e-c-policy-v2-evidence.md. Preserve parser1 rows/event schema1;
+new writes/replay use version2/schema2. Drain old owner tools for key migration;
+rollback retains compatible tools and expansion. A reproduced removed Alpine
+Node pin was updated exactly to24.22.3-r0, with actual image capability/security
+proof. No new artifact inherits old CPU qualification. No user-facing preview,
+provider/production authorization or target connection is implied. Full native
+email/Phase 3/MVP and final integrated actual-target qualification remain open.
 
 Phase 3E-c delivers ADR-0032's private MIME-to-text boundary: immutable owner-only
 ready/rejected results, source-serialized replay and strict private events. Contract
@@ -77,11 +85,10 @@ See docs/phase-3e-c-mime-evidence.md. No sender proof, public route, promotion,
 attachment extraction or outbound mail is implied. Q-03/Q-09/Q-11/Q-16/Q-21,
 Phase 3/MVP and final actual-target qualification remain open.
 The independent review's two Important findings have executed RED/GREEN fixes.
-Two reproduced minor gaps remain explicit follow-up before any user-facing MIME
-preview: RFC 2047 Subject decoding uses the broader stdlib codec registry, and
-closing tags do not consume the opening/self-closing HTML tag counter. Raw/header/
-decoded-byte bounds and owner-only storage remain enforced; do not claim the
-stricter Subject/total-tag contract fully satisfied or production-ready.
+That original parser1 source retained two reproduced minor gaps: broader Subject
+codecs and uncounted closing tags. The ADR-0033 follow-up above corrects them for
+parser2 while preserving historical v1 interpretations. Those old rows never
+prove corrected policy or grant user-facing/production acceptance.
 
 Phase 3E-b development is complete under ADR-0031: bounded read-only IMAPS into
 existing quarantine, authenticated namespace binding, fenced leases and atomic

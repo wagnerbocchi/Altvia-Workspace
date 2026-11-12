@@ -53,7 +53,13 @@ Interface: exact reviewed source and complete real local/hosted/package evidence
 
 - [x] Dispatch one fresh whole-increment source review; fix Important findings
   once using observed RED/GREEN plus complete affected suite.
-- [ ] Publish checked source, inspect all five hosted gates/full logs/artifacts,
+- [x] Publish checked source, inspect all five hosted gates/full logs/artifacts,
   warnings, severity metadata and nonempty image inventories.
-- [ ] Preserve sanitized hashed evidence, publish bounded closure, verify remote
+- [x] Preserve sanitized hashed evidence, publish bounded closure, verify remote
   main/clean tree/unchanged tested code. Keep full email/MVP/target gates open.
+
+Acceptance: docs/phase-3e-c-policy-v2-evidence.md records exact final e0e6b06,
+195 local/779 hosted API/116 browser, actual v1/v2/replay/restart/runtime-denial,
+five-image zero-finding proof and immutable archive. The initial two build failures
+and actual removed-pin RED/corrected Node24.22.3-r0 GREEN remain preserved.
+No review finding is deferred. Full native email/MVP and final target stay open.

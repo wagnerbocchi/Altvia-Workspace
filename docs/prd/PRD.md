@@ -175,6 +175,16 @@ user-facing previews/production mail acceptance. Sender/thread verification,
 ticket promotion, public replies/SMTP and private files retain later contracts.
 Native end-to-end email, Phase 3/MVP and final actual-target qualification stay open.
 
+The ADR-0033 follow-up closes those two policy gaps for explicit parser2 results,
+preserving immutable parser1 history rather than relabeling it. Subject/body codec
+ownership and complete HTML token accounting have executed regression proof;
+versioned replay/private schema1/2 consumption retain the source lock protocol.
+Final e0e6b06 passed all five gates with779 API/116 browser tests, packaged v1/v2
+replay/restart/runtime denial and five nonempty zero-vulnerability inventories.
+See docs/phase-3e-c-policy-v2-evidence.md for the reproduced repository pin failure
+and corrected Node24.22.3-r0 build. This qualification does not expose previews,
+verify senders or replace remaining full email/MVP and final actual-target gates.
+
 Non-goals: SaaS billing/subscriptions, marketplace, local AI/embeddings, external
 search cluster, advanced ITIL/CMDB, advanced Gantt and native mobile applications.
 No speculative scaffolding for these capabilities.

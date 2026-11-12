@@ -80,6 +80,12 @@
 - Current user authorization (2026-11-08): local commits and direct pushes to
   `main` in `wagnerbocchi/Altvia-Workspace`, without PR. No production deployment,
   SSH/security change, data import or Zammad retirement is implied.
+- User instruction (2026-11-11): continue until the remaining MVP is complete,
+  without stopping after each successful slice to ask whether to continue.
+  Track the continuous sequence in docs/plans/2026-11-11-mvp-completion.md;
+  register unresolved real-world policy/configuration questions and continue
+  independent safe development. Finish development before consolidated isolated
+  target qualification. No production rollout, real import or retirement is granted.
 - Separate user authorization (2026-11-10) covered registering the workstation's
   public SSH key, installing/authenticating Codex on the VM and adding the remote
   development project. Setup is complete; reuse noninteractive public-key access

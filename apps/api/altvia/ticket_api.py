@@ -34,6 +34,7 @@ from altvia.models import (
     Client,
     ClientContact,
     Ticket,
+    TicketMessage,
     TicketNote,
     TicketQueue,
     TicketStatusHistory,
@@ -47,6 +48,10 @@ from altvia.ticket_schemas import (
     TicketClientChoices,
     TicketCreate,
     TicketFilters,
+    TicketMessageCreate,
+    TicketMessageOutput,
+    TicketMessagePage,
+    TicketMessageReceipt,
     TicketNoteCreate,
     TicketNoteOutput,
     TicketNotePage,
@@ -343,6 +348,90 @@ def create_ticket_router(engine: Engine, settings: Settings) -> APIRouter:
                 ticket_id=item.id, history_id=history.id if history else None
             )
             _remember(db, actor, route, key, fingerprint, receipt, 200)
+            return receipt
+
+    @router.get("/tickets/{identifier}/messages", response_model=TicketMessagePage)
+    def messages(
+        identifier: UUID,
+        request: Request,
+        limit: Annotated[int, Query(ge=1, le=100)] = 50,
+        cursor: Annotated[str | None, Query(max_length=250)] = None,
+    ) -> TicketMessagePage:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings)
+            registry.scoped_ticket(db, actor.id, identifier)
+            _collection(request)
+            scope = f"v1|ticket-messages:{actor.id}:{identifier}|"
+            last = _version_cursor(cursor, scope)
+            query = (
+                select(TicketMessage)
+                .where(TicketMessage.ticket_id == identifier)
+                .order_by(TicketMessage.ticket_version)
+                .limit(limit + 1)
+            )
+            if last is not None:
+                query = query.where(TicketMessage.ticket_version > last)
+            rows = list(db.scalars(query))
+            return TicketMessagePage(
+                items=[registry.message_output(row) for row in rows[:limit]],
+                next_cursor=scope + str(rows[limit - 1].ticket_version)
+                if len(rows) > limit
+                else None,
+            )
+
+    @router.get("/tickets/{identifier}/messages/{message_id}", response_model=TicketMessageOutput)
+    def message(identifier: UUID, message_id: UUID, request: Request) -> TicketMessageOutput:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings)
+            registry.scoped_ticket(db, actor.id, identifier)
+            row = db.scalar(
+                select(TicketMessage).where(
+                    TicketMessage.id == message_id, TicketMessage.ticket_id == identifier
+                )
+            )
+            if row is None:
+                raise identity.IdentityError(404, "not_found")
+            return registry.message_output(row)
+
+    @router.post(
+        "/tickets/{identifier}/messages",
+        response_model=TicketMessageReceipt,
+        status_code=201,
+        responses={200: {"model": TicketMessageReceipt}},
+        openapi_extra={"parameters": [IF_MATCH, IDEMPOTENCY_KEY]},
+    )
+    def append_message(
+        identifier: UUID,
+        body: TicketMessageCreate,
+        request: Request,
+        response: Response,
+    ) -> TicketMessageReceipt:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings, write=True)
+            item, access = registry.scoped_ticket(db, actor.id, identifier, write=True)
+            registry.require_update(item, access, actor.id)
+            version = _expected_version(request)
+            route = f"ticket-message:{identifier}"
+            key, fingerprint, saved = _operation(db, actor, request, route, body.model_dump())
+            if saved is not None:
+                response.status_code = 200
+                return TicketMessageReceipt.model_validate(saved.result)
+            if item.version != version:
+                raise identity.IdentityError(409, "version_conflict")
+            registry.require_active(access, item)
+            registry.advance(item)
+            message = TicketMessage(
+                ticket_id=item.id,
+                author_id=actor.id,
+                body_text=body.body_text,
+                ticket_version=item.version,
+                created_at=item.updated_at,
+            )
+            db.add(message)
+            db.flush()
+            _event(db, actor, item, request, "message_drafted", message_id=str(message.id))
+            receipt = TicketMessageReceipt(ticket_id=item.id, message_id=message.id)
+            _remember(db, actor, route, key, fingerprint, receipt, 201)
             return receipt
 
     @router.get("/tickets/{identifier}/notes", response_model=TicketNotePage)

@@ -17,6 +17,7 @@ from altvia.models import (
     Team,
     Ticket,
     TicketCategory,
+    TicketMessage,
     TicketNote,
     TicketQueue,
     TicketStatusHistory,
@@ -26,6 +27,7 @@ from altvia.queue_registry import QUEUE_ROLES
 from altvia.ticket_schemas import (
     TICKET_TRANSITIONS,
     TicketFilters,
+    TicketMessageOutput,
     TicketNoteOutput,
     TicketOutput,
     TicketTransition,
@@ -209,6 +211,20 @@ def can_update(item: Ticket, access: Access, actor_id: UUID) -> bool:
     return access.manage or (access.contribute and item.assignee_id == actor_id)
 
 
+def message_output(message: TicketMessage) -> TicketMessageOutput:
+    return TicketMessageOutput(
+        id=message.id,
+        ticket_id=message.ticket_id,
+        author_id=message.author_id,
+        author_name=message.author.display_name,
+        body_text=message.body_text,
+        visibility=message.visibility,
+        direction=message.direction,
+        ticket_version=message.ticket_version,
+        created_at=message.created_at,
+    )
+
+
 def require_update(item: Ticket, access: Access, actor_id: UUID) -> None:
     if not can_update(item, access, actor_id):
         raise identity.IdentityError(403, "forbidden")
@@ -349,6 +365,7 @@ def output(item: Ticket, access: Access, actor_id: UUID) -> TicketOutput:
             "can_claim": writable and access.contribute and item.assignee_id is None,
             "can_read_notes": can_read_notes(access),
             "can_add_note": writable and access.contribute and access.note_access == "write",
+            "can_add_message": writable and can_update(item, access, actor_id),
             "allowed_transitions": targets(item, access, actor_id),
         }
     )

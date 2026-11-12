@@ -25,12 +25,12 @@ provision.py, migration00021, tests/test_ticket_messages.py.
 Interface: message DTO/list/detail/create and can_add_message; message_drafted
 strict public metadata while note_access remains independent.
 
-- [ ] Write/run actual PostgreSQL/API RED for missing routes, then scope/current
+- [x] Write/run actual PostgreSQL/API RED for missing routes, then scope/current
   assignment, linked parent denial, protected replay, version/event failure,
   private-note independence, pagination/cursor and immutable SQL/migration tests.
-- [ ] Implement owning contracts/model/migration/privileges and reuse ticket locks,
+- [x] Implement owning contracts/model/migration/privileges and reuse ticket locks,
   helpers and exact event validation. No draft transport or clock side effects.
-- [ ] Run focused API/domain/static/contracts/build checks and commit coherent source.
+- [x] Run focused API/domain/static/contracts/build checks and commit coherent source.
 
 ### Task2 Real browser response composer and recovery
 

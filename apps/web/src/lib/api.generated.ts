@@ -740,6 +740,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tickets/{identifier}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Messages */
+        get: operations["messages_api_v1_tickets__identifier__messages_get"];
+        put?: never;
+        /** Append Message */
+        post: operations["append_message_api_v1_tickets__identifier__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/{identifier}/messages/{message_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Message */
+        get: operations["message_api_v1_tickets__identifier__messages__message_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tickets/{identifier}/notes": {
         parameters: {
             query?: never;
@@ -2121,6 +2156,78 @@ export interface components {
             /** Subject */
             subject: string;
         };
+        /** TicketMessageCreate */
+        TicketMessageCreate: {
+            /** Body Text */
+            body_text: string;
+        };
+        /** TicketMessageOutput */
+        TicketMessageOutput: {
+            /**
+             * Author Id
+             * Format: uuid
+             */
+            author_id: string;
+            /** Author Name */
+            author_name: string;
+            /** Body Text */
+            body_text: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Delivery Status
+             * @default draft
+             * @constant
+             */
+            delivery_status: "draft";
+            /**
+             * Direction
+             * @default outbound
+             * @constant
+             */
+            direction: "outbound";
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
+            /** Ticket Version */
+            ticket_version: number;
+            /**
+             * Visibility
+             * @default public
+             * @constant
+             */
+            visibility: "public";
+        };
+        /** TicketMessagePage */
+        TicketMessagePage: {
+            /** Items */
+            items: components["schemas"]["TicketMessageOutput"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** TicketMessageReceipt */
+        TicketMessageReceipt: {
+            /**
+             * Message Id
+             * Format: uuid
+             */
+            message_id: string;
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
+        };
         /** TicketNoteCreate */
         TicketNoteCreate: {
             /** Body Text */
@@ -2189,6 +2296,8 @@ export interface components {
             assignee_id: string | null;
             /** Assignee Name */
             assignee_name: string | null;
+            /** Can Add Message */
+            can_add_message: boolean;
             /** Can Add Note */
             can_add_note: boolean;
             /** Can Assign */
@@ -4917,6 +5026,119 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TicketReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    messages_api_v1_tickets__identifier__messages_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketMessagePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    append_message_api_v1_tickets__identifier__messages_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TicketMessageCreate"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketMessageReceipt"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketMessageReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    message_api_v1_tickets__identifier__messages__message_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+                message_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketMessageOutput"];
                 };
             };
             /** @description Validation Error */

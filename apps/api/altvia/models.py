@@ -779,6 +779,35 @@ class TicketNote(Base):
     author: Mapped[User] = relationship(lazy="joined", viewonly=True)
 
 
+class TicketMessage(Base):
+    __tablename__ = "ticket_messages"
+    __table_args__ = (
+        UniqueConstraint("ticket_id", "ticket_version", name="uq_ticket_message_version"),
+        CheckConstraint("ticket_version > 1", name="ck_ticket_message_version"),
+        CheckConstraint("char_length(body_text) <= 10000", name="ck_ticket_message_length"),
+        CheckConstraint(
+            r"char_length(btrim(body_text,U&'\0009\000A\000B\000C\000D\001C\001D\001E\001F"
+            r"\0020\0085\00A0\1680\2000\2001\2002\2003\2004\2005\2006\2007\2008\2009"
+            r"\200A\2028\2029\202F\205F\3000')) > 0",
+            name="ck_ticket_message_body",
+        ),
+        CheckConstraint(
+            "visibility='public' AND direction='outbound'", name="ck_ticket_message_kind"
+        ),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    ticket_id: Mapped[UUID] = mapped_column(ForeignKey("tickets.id", ondelete="RESTRICT"))
+    author_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    body_text: Mapped[str] = mapped_column(Text)
+    ticket_version: Mapped[int]
+    visibility: Mapped[str] = mapped_column(String(16), default="public", server_default="public")
+    direction: Mapped[str] = mapped_column(
+        String(16), default="outbound", server_default="outbound"
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    author: Mapped[User] = relationship(lazy="joined", viewonly=True)
+
+
 class ActivityEvent(Base):
     __tablename__ = "activity_events"
     __table_args__ = (

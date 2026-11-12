@@ -32,7 +32,7 @@ Python email/smtplib/ssl. No new native library or service.
 - Review MIME/header injection, malicious multiline replies and total wire bounds.
 - Review public-draft/queue/read authorization independently from private notes.
 
-### Task1: Persist verified sender, requester and protected public delivery
+### Task 1: Persist verified sender, requester and protected public delivery
 
 **Files:** Create migration00022, altvia/mail_delivery.py,
 altvia/mail_delivery_api.py, altvia/mail_delivery_schemas.py,
@@ -79,7 +79,7 @@ only required eligibility columns may be granted, never password/session hashes.
   Run affected ticket/activity/provision tests, Ruff/mypy, exporter comparison and
   actual package build. Commit the coherent persisted delivery owner.
 
-### Task2: Bounded TLS SMTP transport and actual worker integration
+### Task 2: Bounded TLS SMTP transport and actual worker integration
 
 **Files:** Create altvia/smtp_transport.py and tests/test_smtp_transport.py;
 modify worker.py, config.py, provision.py and runtime tests only as required.
@@ -106,7 +106,7 @@ duplicate-tolerant wake-up. Absent/mismatched configuration performs no send.
   delivery/worker/runtime tests. Expected: all real wire/state assertions pass,
   safe shutdown and no raw/preview/note privileges. Commit transport integration.
 
-### Task3: Real browser send review and delivery state
+### Task 3: Real browser send review and delivery state
 
 **Files:** Extend ticket messages/detail/feedback and lib/tickets.ts; create
 apps/web/tests/ticket-delivery.spec.ts; update the task-owned surface brief.
@@ -124,7 +124,7 @@ Display persisted state from the API; no local optimistic accepted/delivered sta
 - [ ] Run web check/build/generated comparison and full browser suite; obtain
   required rendered review/documentation. Commit the checked UI slice.
 
-### Task4: Integrated acceptance and immediate next stage
+### Task 4: Integrated acceptance and immediate next stage
 
 - [ ] Obtain one fresh whole-increment source review. Fix Important findings
   with RED/GREEN and affected full suites; explicitly record remaining rulings.

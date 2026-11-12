@@ -50,7 +50,13 @@ receipt/refresh recovery, escaped persisted pages and clear unsent state.
 
 - [x] Obtain one fresh whole-increment source review; fix Important findings
   with RED/GREEN and full affected suite. Preserve minor dispositions explicitly.
-- [ ] Publish checked commits to main; inspect all five exact-source gates/full
+- [x] Publish checked commits to main; inspect all five exact-source gates/full
   logs, packaged restart/privacy and complete security/image inventories.
-- [ ] Preserve sanitized hashed evidence, close docs, verify remote/clean tree.
+- [x] Preserve sanitized hashed evidence, close docs, verify published source.
   Update the continuous completion ledger and start verified outbound work next.
+
+Closed2026-11-12 on558f4ee: all five hosted gates passed,796 API/131 browser,
+actual packaged public-draft/replay/restart/privacy and zero image vulnerabilities.
+Exact evidence/rollback/rulings: docs/phase-3f-public-drafts-evidence.md. Shared
+working-tree changes now belong to the next verified-mail persistence task;
+there is no claim that ongoing development has an empty working tree.

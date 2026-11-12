@@ -63,8 +63,10 @@ entry is required while that key is loaded and remains authorized.
 Continuous MVP completion now includes ADR-0034 public response drafts. Persisted
 API16ae9d9 and browser/recovery558f4ee passed100 affected API checks and131 full
 local browser checks; one Important ownership-loss recovery finding has actual
-RED/GREEN proof. All five exact558f4ee hosted gates are being inspected; this is
-not yet full native email or final target qualification. The next selected
+RED/GREEN proof. All five exact558f4ee hosted gates passed with796 API/131 browser,
+actual packaged restart/privacy and five zero-finding image inventories. See
+docs/phase-3f-public-drafts-evidence.md. This is not yet full native email or final
+target qualification. The next selected
 engineering contract is ADR-0035 and its verified-mail-delivery plan. Sender and
 requester attestation remain explicit owner operations with real policy Q03/Q16;
 no production verification or sending is authorized or inferred.

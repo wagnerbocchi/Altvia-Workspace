@@ -142,3 +142,9 @@ resolved and returned ship. No open runtime or visual finding remains.
 Task 2: durable design documentation and publication evidence are recorded in
 docs/workspace-redesign-evidence.md. Backend/private-file MVP work and final
 target qualification remain separate, unfinished stages.
+
+Completed: 7164a61 accepted with all five hosted gates, 1198 API and 161 browser
+cases, both packaged container jobs and verified security artifacts. The initial
+publication failures were corrected in proof-only commit 2e8b94d and independently
+reviewed. Source, design documentation and visual review are complete. The closing
+record is documentation-only and reuses the accepted source evidence.

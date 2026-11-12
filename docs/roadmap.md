@@ -18,12 +18,13 @@ It remains pending separately. The new design preserves existing functionality,
 resource authority and light/dark support. No production deployment or target
 qualification is implied. The MVP remains incomplete.
 
-The 26-route redesign is implemented through 0956b32. The full pre-correction
-browser suite passed 158 cases; the reviewed correction passed 47 focused cases
-and all-route captures. Source findings are resolved and Impeccable returned ship
-after the shared-width correction. Publication/hosted acceptance and the exact
-scope of evidence are recorded in docs/workspace-redesign-evidence.md. The design
-uses the selected Twenty reference without copying its brand or adding features.
+The 26-route redesign is complete: visual runtime 0956b32, proof correction
+2e8b94d and accepted publication 7164a61. All five hosted gates passed, including
+1198 API and 161 browser cases and both container jobs. Source findings are
+resolved and Impeccable returned ship after the shared-width correction. Exact
+scope, skips, warnings and retained evidence are in
+docs/workspace-redesign-evidence.md. The design uses the selected Twenty reference
+without copying its brand or adding features. Pending MVP stages remain open.
 
 ## Current validation cadence
 

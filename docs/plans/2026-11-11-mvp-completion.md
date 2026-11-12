@@ -18,10 +18,11 @@ Execute docs/plans/2026-11-12-workspace-redesign.md for the26 existing routes.
 Private-files Task4 remains pending; its implementer stopped before source edits.
 This supersedes the above stop for visual work, not every remaining backend stage.
 
-Existing-route redesign implemented through 0956b32: full 158-case baseline,
-47-case correction proof and final all-route captures; source review approved
-and visual finding resolved. See docs/workspace-redesign-evidence.md for design
-documentation and hosted acceptance. This does not close any pending stage below.
+Existing-route redesign complete: runtime 0956b32 and proof correction 2e8b94d,
+accepted on 7164a61 with all five hosted gates, 1198 API/161 browser cases and
+both container jobs. Source review approved and visual finding resolved. See
+docs/workspace-redesign-evidence.md for documentation, exact limits and retained
+evidence. This does not close any pending stage below.
 
 The master specification was reread completely for this sequence. Its Phase0
 example stop point was superseded by the user's later development authorization.

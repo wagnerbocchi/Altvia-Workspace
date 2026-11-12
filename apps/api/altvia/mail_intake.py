@@ -65,11 +65,13 @@ class IntakeEventPayload(BaseModel):
     last_uid: str | None = None
     reason: str | None = None
     status: str | None = None
+    parser_version: str | None = None
 
 
 def validate_intake_event(event: OutboxEvent) -> None:
     payload = IntakeEventPayload.model_validate(event.payload)
     expected = {"actor_id", "actor_kind", "source_id"}
+    expected_schema = 1
     if event.event_type == "mailbox.message_quarantined":
         expected |= {"envelope_id", "variant_id", "state"}
         if payload.envelope_id is None or payload.variant_id is None:
@@ -89,6 +91,11 @@ def validate_intake_event(event: OutboxEvent) -> None:
             raise ValueError("Invalid poll event")
     elif event.event_type == "mailbox.message_normalized":
         expected |= {"envelope_id", "variant_id", "status"}
+        if event.schema_version == 2:
+            expected_schema = 2
+            expected |= {"parser_version"}
+            if payload.parser_version != "2":
+                raise ValueError("Invalid normalized parser version")
         if (
             payload.envelope_id is None
             or payload.variant_id is None
@@ -99,7 +106,7 @@ def validate_intake_event(event: OutboxEvent) -> None:
         event.event_type not in INTAKE_EVENTS
         or event.aggregate_type != "mailbox_source"
         or event.aggregate_id != payload.source_id
-        or event.schema_version != 1
+        or event.schema_version != expected_schema
         or event.aggregate_version < 1
         or payload.actor_kind != "management_command"
         or payload.model_fields_set != expected
@@ -109,7 +116,12 @@ def validate_intake_event(event: OutboxEvent) -> None:
 
 
 def record_intake_event(
-    db: Session, source: MailboxSource, action: str, details: dict[str, str] | None = None
+    db: Session,
+    source: MailboxSource,
+    action: str,
+    details: dict[str, str] | None = None,
+    *,
+    schema_version: int = 1,
 ) -> None:
     now, correlation = datetime.now(UTC), uuid4().hex
     payload: dict[str, str | None] = {
@@ -120,7 +132,7 @@ def record_intake_event(
     if details is not None:
         payload |= details
     event = OutboxEvent(
-        schema_version=1,
+        schema_version=schema_version,
         aggregate_type="mailbox_source",
         aggregate_id=source.id,
         aggregate_version=source.version,

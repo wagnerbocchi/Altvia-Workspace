@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from altvia.config import DatabaseSettings
 from altvia.database import make_engine
 from altvia.mail_intake import MAX_VERSION, SafeMailParser, record_intake_event
-from altvia.mail_mime import normalize
+from altvia.mail_mime import PARSER_VERSION, normalize
 from altvia.models import InboundMailEnvelope, InboundMailPreview, InboundMailVariant, MailboxSource
 
 
@@ -27,6 +27,7 @@ class NormalizeReceipt:
     variant_id: UUID
     status: str
     replayed: bool
+    parser_version: int
 
 
 def normalize_variant(engine: Engine, variant_id: UUID) -> NormalizeReceipt:
@@ -51,15 +52,15 @@ def normalize_variant(engine: Engine, variant_id: UUID) -> NormalizeReceipt:
         variant = db.get(InboundMailVariant, variant_id)
         if variant is None:
             raise NormalizeError("variant_unavailable")
-        existing = db.get(InboundMailPreview, variant_id)
+        existing = db.get(InboundMailPreview, (variant_id, PARSER_VERSION))
         if existing is not None:
-            return NormalizeReceipt(source.id, variant_id, existing.status, True)
+            return NormalizeReceipt(source.id, variant_id, existing.status, True, PARSER_VERSION)
         if source.version >= MAX_VERSION:
             raise NormalizeError("source_version_exhausted")
         db.add(
             InboundMailPreview(
                 variant_id=variant_id,
-                parser_version=1,
+                parser_version=PARSER_VERSION,
                 status=normalized.status,
                 subject=normalized.subject,
                 body_text=normalized.body_text,
@@ -78,9 +79,11 @@ def normalize_variant(engine: Engine, variant_id: UUID) -> NormalizeReceipt:
                 "envelope_id": str(variant.envelope_id),
                 "variant_id": str(variant_id),
                 "status": normalized.status,
+                "parser_version": str(PARSER_VERSION),
             },
+            schema_version=2,
         )
-        return NormalizeReceipt(source.id, variant_id, normalized.status, False)
+        return NormalizeReceipt(source.id, variant_id, normalized.status, False, PARSER_VERSION)
 
 
 def main(argv: list[str] | None = None) -> int:

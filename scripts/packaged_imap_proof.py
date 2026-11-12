@@ -12,9 +12,9 @@ from uuid import UUID
 from altvia.config import DatabaseSettings
 from altvia.database import make_engine
 from altvia.imap_poll import main
-from altvia.mail_intake import register_source
+from altvia.mail_intake import record_intake_event, register_source
 from altvia.mail_normalize import main as normalize_main
-from altvia.models import InboundMailEnvelope, InboundMailPreview, InboundMailVariant
+from altvia.models import InboundMailEnvelope, InboundMailPreview, InboundMailVariant, MailboxSource
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -67,6 +67,38 @@ def packaged_imap_proof(serve):
                     )
                     assert variant.raw_message == server.state["messages"][1]
                     variant_id = variant.id
+                    envelope_id = variant.envelope_id
+                # Represent an existing immutable historical interpretation; the
+                # PostgreSQL migration tests separately prove actual v1 upgrade.
+                with Session(engine) as db, db.begin():
+                    source = db.scalar(
+                        select(MailboxSource)
+                        .where(MailboxSource.id == UUID(receipts[0]["source_id"]))
+                        .with_for_update()
+                    )
+                    db.add(
+                        InboundMailPreview(
+                            variant_id=variant_id,
+                            parser_version=1,
+                            status="ready",
+                            subject="Synthetic legacy subject",
+                            body_text="Synthetic legacy interpretation",
+                            part_count=1,
+                            attachment_count=0,
+                        )
+                    )
+                    source.version += 1
+                    db.flush()
+                    record_intake_event(
+                        db,
+                        source,
+                        "mailbox.message_normalized",
+                        {
+                            "envelope_id": str(envelope_id),
+                            "variant_id": str(variant_id),
+                            "status": "ready",
+                        },
+                    )
                 os.environ["ALTVIA_ALLOW_MAIL_NORMALIZE"] = "1"
                 for replay in (False, True):
                     captured = io.StringIO()
@@ -74,10 +106,13 @@ def packaged_imap_proof(serve):
                         assert normalize_main(["--variant-id", str(variant_id)]) == 0
                     receipt = json.loads(captured.getvalue())
                     assert receipt["replayed"] is replay and receipt["status"] == "ready"
+                    assert receipt["parser_version"] == 2
                     assert "Synthetic private" not in captured.getvalue()
                 with Session(engine) as db:
-                    preview = db.get(InboundMailPreview, variant_id)
+                    preview = db.get(InboundMailPreview, (variant_id, 2))
                     assert preview.body_text == "Synthetic private text" and preview.reason is None
+                    legacy = db.get(InboundMailPreview, (variant_id, 1))
+                    assert legacy.body_text == "Synthetic legacy interpretation"
         print(
             json.dumps(
                 {

@@ -30,9 +30,9 @@ def test_result_persists_without_ticket_shared_activity_or_payload_events(db_eng
     assert first.status == "ready" and not first.replayed and first.source_id == source
     assert result(db_engine, raw.variant_id).replayed
     with Session(db_engine) as db:
-        stored = db.get(InboundMailPreview, raw.variant_id)
+        stored = db.get(InboundMailPreview, (raw.variant_id, 2))
         assert stored.subject == "private-subject" and stored.body_text == "private-body"
-        assert (stored.parser_version, stored.part_count, stored.attachment_count) == (1, 1, 0)
+        assert (stored.parser_version, stored.part_count, stored.attachment_count) == (2, 1, 0)
         assert db.get(MailboxSource, source).version == 3
         events = list(db.scalars(select(OutboxEvent)))
         assert len(events) == 3 and "private-" not in json.dumps([e.payload for e in events])
@@ -52,7 +52,7 @@ def test_rejection_and_collision_are_durable_without_reinterpreting_intake(db_en
     assert result(db_engine, b.variant_id).replayed
     assert capture(db_engine, RAW).state == "collision"
     with Session(db_engine) as db:
-        row = db.get(InboundMailPreview, b.variant_id)
+        row = db.get(InboundMailPreview, (b.variant_id, 2))
         assert row.body_text is row.subject is row.part_count is row.attachment_count is None
         assert row.reason == "invalid_headers"
 
@@ -80,7 +80,7 @@ def test_failed_event_rolls_back_preview_and_source_version(db_engine, source):
         with pytest.raises(DBAPIError):
             result(db_engine, raw.variant_id)
         with Session(db_engine) as db:
-            assert db.get(InboundMailPreview, raw.variant_id) is None
+            assert db.get(InboundMailPreview, (raw.variant_id, 2)) is None
             assert db.get(MailboxSource, source).version == 2
     finally:
         with db_engine.begin() as connection:
@@ -215,7 +215,7 @@ def test_preview_empty_migration_roundtrip_and_event_guard(db_engine, seeded_use
         {"status": "ready", "body_text": "x" * 65537},
         {"status": "ready", "part_count": 65},
         {"status": "ready", "attachment_count": 2},
-        {"status": "ready", "parser_version": 2},
+        {"status": "ready", "parser_version": 3},
         {"status": "other"},
         {
             "status": "rejected",
@@ -265,5 +265,5 @@ def test_overflow_header_command_persists_rejection_replays_and_never_echoes(
             and "Traceback" not in output.out
         )
     with Session(db_engine) as db:
-        row = db.get(InboundMailPreview, raw.variant_id)
+        row = db.get(InboundMailPreview, (raw.variant_id, 2))
         assert row.reason == "invalid_headers" and row.body_text is row.subject is None

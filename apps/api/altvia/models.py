@@ -249,7 +249,7 @@ class InboundMailVariant(Base):
 class InboundMailPreview(Base):
     __tablename__ = "inbound_mail_previews"
     __table_args__ = (
-        CheckConstraint("parser_version=1", name="ck_preview_parser"),
+        CheckConstraint("parser_version IN (1,2)", name="ck_preview_parser"),
         CheckConstraint(
             "(status='ready' AND subject IS NOT NULL AND body_text IS NOT NULL "
             "AND part_count IS NOT NULL AND attachment_count IS NOT NULL AND reason IS NULL "
@@ -267,7 +267,7 @@ class InboundMailPreview(Base):
     variant_id: Mapped[UUID] = mapped_column(
         ForeignKey("inbound_mail_variants.id", ondelete="RESTRICT"), primary_key=True
     )
-    parser_version: Mapped[int] = mapped_column(default=1, server_default="1")
+    parser_version: Mapped[int] = mapped_column(primary_key=True, default=2, server_default="1")
     status: Mapped[str] = mapped_column(String(16))
     subject: Mapped[str | None] = mapped_column(String(998))
     body_text: Mapped[str | None] = mapped_column(Text)

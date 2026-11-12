@@ -32,12 +32,15 @@
   checkpoint/reset/capture writes with the current unexpired poll token, keep
   network I/O outside DB transactions and preserve all UIDVALIDITY epochs.
   Poll metadata is private; neither runtime role gains poll-state/raw-table access.
-- Private MIME normalization uses ADR-0032: bounded owner-only text/rejection,
-  immutable parser-v1 results, no HTML rendering, sender proof or ticket promotion.
+- Private MIME normalization uses ADR-0032/0033: bounded owner-only text/rejection,
+  immutable (variant_id,parser_version) results, no HTML rendering, sender proof or ticket promotion.
   Parse outside write transactions; persist under the existing source lock with
   atomic version/audit/outbox and exact legacy event envelopes. Runtime roles
-  receive no preview grants. Close the recorded Subject-charset/end-tag-counter
-  review gaps before user-facing previews or production mail acceptance.
+  receive no preview grants. New writes/replay explicitly select parser2 and
+  normalized event schema2; preserve parser1 rows and exact legacy schema1 events.
+  Historical v1 results never prove corrected policy. Drain old owner tools for
+  key transitions; retain version-aware tools/consumer on rollback and refuse
+  contraction with v2 rows/history. No user-facing preview is granted here.
 - Administrative account/role mutations must reuse altvia.management's lock protocol,
   last-active-admin guard, session invalidation and audit/outbox. A profile edit
   never grants roles; platform administration never bypasses customer scope.

@@ -1337,8 +1337,9 @@ with Session(make_engine(Settings())) as db,db.begin():
                     "-v",
                     "variant=" + imap_proof["variant_id"],
                 ],
-                data="SELECT status='ready' AND parser_version=1 "
-                "AND body_text='Synthetic private text' AND reason IS NULL "
+                data="SELECT count(*)=2 AND bool_or(status='ready' AND parser_version=2 "
+                "AND body_text='Synthetic private text' AND reason IS NULL) "
+                "AND bool_or(parser_version=1 AND body_text='Synthetic legacy interpretation') "
                 "FROM inbound_mail_previews WHERE variant_id=:'variant'::uuid;",
             ).strip()
             assert preview_restart == "t"
@@ -1372,6 +1373,7 @@ with make_engine(DatabaseSettings()).connect() as db:
             print("Packaged opaque mail quarantine, collision, replay and runtime denial passed.")
             print("Packaged read-only TLS IMAPS, checkpoint restart and runtime denial passed.")
             print("Packaged private MIME command, replay, restart and runtime denial passed.")
+            print("Packaged MIME v1/v2 coexistence, explicit version replay and restart passed.")
             assert client.get(path).json()["name"] == "Visible"
             # Client/project delegation and three project member mutations
             # advance this separate account from 10 to 15.

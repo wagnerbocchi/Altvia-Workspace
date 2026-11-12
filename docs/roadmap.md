@@ -60,6 +60,13 @@ entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
+The Phase 3E-c policy follow-up selects ADR-0033 before code: strict Subject/body
+charset ownership, complete HTML token accounting and separate immutable parser2
+results. Preserve parser1 rows and event schema1; explicit latest writes/replay
+use version2/schema2. Owner tools drain for migration; rollback keeps compatible
+tools and expansion. Local/full hosted/packaged acceptance is tracked separately;
+R3/R4 closure requires that proof. No new user-facing preview or target connection.
+
 Phase 3E-c delivers ADR-0032's private MIME-to-text boundary: immutable owner-only
 ready/rejected results, source-serialized replay and strict private events. Contract
 17fe438 preceded implementation. Final ae4d25a passed all five hosted gates with

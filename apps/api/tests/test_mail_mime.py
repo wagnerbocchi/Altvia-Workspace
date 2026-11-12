@@ -193,3 +193,54 @@ def test_numeric_date_overflow_is_a_fixed_all_or_nothing_rejection():
 def test_malformed_active_subtrees_never_release_hidden_text(body):
     result = normalize(message(body, b"Content-Type: text/html"))
     assert result.status == "rejected" and result.subject is result.body_text is None
+
+
+@pytest.mark.parametrize(
+    "word",
+    [
+        b"=?utf-7?q?+AOk-?=",
+        b"=?rot13?q?secret?=",
+        b"=?unknown-codec?q?secret?=",
+    ],
+)
+def test_subject_unsupported_codecs_reject_without_partial_content(word):
+    result = normalize(message(b"Visible", b"Subject: " + word))
+    assert result.status == "rejected" and result.reason == "unsupported_charset"
+    assert result.subject is result.body_text is None
+
+
+@pytest.mark.parametrize(
+    "word,expected",
+    [
+        (b"=?UTF8?b?T2zDoSE=?=", "Olá!"),
+        (b"=?latin1?q?Ol=E1?=", "Olá"),
+        (b"=?windows-1252?q?=93Ol=E1=94?=", "“Olá”"),
+        (b"=?us-ascii?q?plain_text?=", "plain text"),
+        (b"=?utf-8?q?Ol=C3=A1_?=\r\n =?UTF8?b?YcOnw6Nv?=", "Olá ação"),
+    ],
+)
+def test_subject_supported_aliases_and_folded_words_decode_strictly(word, expected):
+    result = normalize(message(b"Visible", b"Subject: " + word))
+    assert result.status == "ready" and result.subject == expected
+
+
+@pytest.mark.parametrize("subject", [b"=?utf-8?b?/w==?=", "Unencoded café".encode()])
+def test_subject_invalid_encoded_or_unencoded_international_bytes_reject(subject):
+    result = normalize(message(b"Visible", b"Subject: " + subject))
+    assert result.status == "rejected" and result.subject is result.body_text is None
+
+
+@pytest.mark.parametrize(
+    "tokens",
+    [
+        b"</p>" * 4096,
+        b"<p>x</p>" * 2048,
+        b"<i/>" * 4096,
+        b"<br>" * 4096,
+    ],
+)
+def test_html_exact_real_token_budget_and_single_self_closing_count(tokens):
+    assert normalize(message(b"Visible" + tokens, b"Content-Type: text/html")).status == "ready"
+    result = normalize(message(b"Visible" + tokens + b"</void>", b"Content-Type: text/html"))
+    assert result.status == "rejected" and result.reason == "html_limit"
+    assert result.subject is result.body_text is None

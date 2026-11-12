@@ -6,11 +6,14 @@ import codecs
 import re
 from dataclasses import dataclass
 from email import policy
+from email.header import decode_header
 from email.message import Message
 from email.parser import BytesParser
 from html.parser import HTMLParser
 
 from altvia.mail_intake import MAX_RAW_BYTES
+
+PARSER_VERSION = 2
 
 REJECTION_CODES = {
     "invalid_raw",
@@ -38,6 +41,30 @@ class NormalizedMail:
 
 class _Rejected(ValueError):
     pass
+
+
+def _charset(value: str) -> str:
+    try:
+        charset = codecs.lookup(value).name
+    except LookupError as error:
+        raise _Rejected("unsupported_charset") from error
+    if charset not in {"utf-8", "ascii", "iso8859-1", "cp1252"}:
+        raise _Rejected("unsupported_charset")
+    return charset
+
+
+def _subject(value: str) -> str:
+    chunks = []
+    # decode_header handles RFC2047 transfer encoding without invoking charsets.
+    # Decode bytes ourselves before headerregistry can use its broader codecs.
+    for data, charset in decode_header(value):
+        if isinstance(data, str):
+            data = data.encode("ascii", errors="strict")
+        chunks.append(data.decode(_charset(charset or "us-ascii"), errors="strict"))
+    subject = _clean("".join(chunks)).replace("\n", " ")
+    if len(subject) > 998 or len(subject.encode()) > 3992:
+        raise _Rejected("invalid_headers")
+    return subject
 
 
 def _clean(text: str) -> str:
@@ -80,10 +107,13 @@ class _HTMLText(HTMLParser):
         self.tags = 0
         self.chunks: list[str] = []
 
-    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+    def _count_token(self) -> None:
         self.tags += 1
         if self.tags > 4096:
             raise _Rejected("html_limit")
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self._count_token()
         if tag in self.blocks and not any(t in self.suppressed for t in self.stack):
             self.chunks.append("\n")
         if tag not in self.void:
@@ -97,9 +127,13 @@ class _HTMLText(HTMLParser):
             raise _Rejected("unsupported_mime")
         self.handle_starttag(tag, attrs)
         if tag not in self.void:
-            self.handle_endtag(tag)
+            self._close_tag(tag)
 
     def handle_endtag(self, tag: str) -> None:
+        self._count_token()
+        self._close_tag(tag)
+
+    def _close_tag(self, tag: str) -> None:
         if tag in self.stack:
             index = len(self.stack) - 1 - self.stack[::-1].index(tag)
             if any(t in self.suppressed for t in self.stack[index + 1 :]):
@@ -118,7 +152,7 @@ class _HTMLText(HTMLParser):
         return re.sub(r"\n[ \t]*\n+", "\n", "".join(self.chunks)).strip()
 
 
-def _headers(raw: bytes) -> tuple[Message, bytes]:
+def _headers(raw: bytes) -> tuple[Message, bytes, str]:
     candidates = [(raw.find(sep), sep) for sep in (b"\r\n\r\n", b"\n\n")]
     found = [(index, sep) for index, sep in candidates if index >= 0]
     if raw.startswith(b"\r\n"):
@@ -139,6 +173,7 @@ def _headers(raw: bytes) -> tuple[Message, bytes]:
     )
     if len(headers) > 100 or headers.defects:
         raise _Rejected("invalid_headers")
+    raw_headers = list(headers.raw_items())
     for name in (
         "content-type",
         "content-transfer-encoding",
@@ -147,11 +182,15 @@ def _headers(raw: bytes) -> tuple[Message, bytes]:
         "subject",
         "content-id",
     ):
-        if len(headers.get_all(name, [])) > 1:
+        if sum(key.lower() == name for key, _ in raw_headers) > 1:
             raise _Rejected("invalid_headers")
+    subject = _subject(next((value for key, value in raw_headers if key.lower() == "subject"), ""))
     # Access structured headers now: policy parses their parameters lazily.
     try:
-        for _name, value in headers.items():
+        for name, _raw_value in raw_headers:
+            if name.lower() == "subject":
+                continue
+            value = headers[name]
             if getattr(value, "defects", ()):
                 raise _Rejected("invalid_headers")
             str(value)
@@ -160,7 +199,7 @@ def _headers(raw: bytes) -> tuple[Message, bytes]:
         raise _Rejected("invalid_headers") from error
     if headers.get("MIME-Version", "1.0").strip() != "1.0":
         raise _Rejected("invalid_headers")
-    return headers, raw[index + len(separator) :]
+    return headers, raw[index + len(separator) :], subject
 
 
 def _children(body: bytes, boundary: str, ancestors: tuple[str, ...]) -> list[bytes]:
@@ -208,11 +247,9 @@ class _Normalizer:
         self.parts += 1
         if self.parts > 64 or len(ancestors) >= 8:
             raise _Rejected("structure_limit")
-        headers, body = _headers(raw)
+        headers, body, subject = _headers(raw)
         if not ancestors:
-            self.subject = _clean(str(headers.get("Subject", ""))).replace("\n", " ")
-            if len(self.subject) > 998 or len(self.subject.encode()) > 3992:
-                raise _Rejected("invalid_headers")
+            self.subject = subject
         content_type = headers.get_content_type()
         attached = (
             headers.get_content_disposition() not in {None, "inline"}
@@ -239,7 +276,7 @@ class _Normalizer:
                 raise _Rejected("invalid_multipart")
             parts = _children(body, boundary, ancestors)
             if content_type == "multipart/related" and headers.get_param("start") is not None:
-                first, _ = _headers(parts[0])
+                first, _, _ = _headers(parts[0])
                 if headers.get_param("start") != first.get("Content-ID"):
                     raise _Rejected("unsupported_mime")
             values = [self.entity(part, (*ancestors, boundary)) for part in parts]
@@ -275,12 +312,7 @@ class _Normalizer:
         self.decoded += len(decoded)
         if self.decoded > 262144:
             raise _Rejected("text_limit")
-        try:
-            charset = codecs.lookup(headers.get_content_charset("us-ascii")).name
-        except LookupError as error:
-            raise _Rejected("unsupported_charset") from error
-        if charset not in {"utf-8", "ascii", "iso8859-1", "cp1252"}:
-            raise _Rejected("unsupported_charset")
+        charset = _charset(headers.get_content_charset("us-ascii"))
         text = decoded.decode(charset, errors="strict")
         if content_type == "text/html":
             text = _HTMLText().text(text)

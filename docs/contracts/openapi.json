@@ -822,6 +822,162 @@
         "title": "DateDue",
         "type": "object"
       },
+      "DeliveryChoices": {
+        "properties": {
+          "can_send": {
+            "title": "Can Send",
+            "type": "boolean"
+          },
+          "participant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ParticipantChoice"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sender": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SenderChoice"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "sender",
+          "participant",
+          "can_send"
+        ],
+        "title": "DeliveryChoices",
+        "type": "object"
+      },
+      "DeliveryCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "participant_id": {
+            "format": "uuid",
+            "title": "Participant Id",
+            "type": "string"
+          },
+          "source_id": {
+            "format": "uuid",
+            "title": "Source Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "participant_id",
+          "source_id"
+        ],
+        "title": "DeliveryCreate",
+        "type": "object"
+      },
+      "DeliveryOutput": {
+        "properties": {
+          "accepted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted At"
+          },
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "delivery_id": {
+            "format": "uuid",
+            "title": "Delivery Id",
+            "type": "string"
+          },
+          "last_error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error Code"
+          },
+          "message_id": {
+            "format": "uuid",
+            "title": "Message Id",
+            "type": "string"
+          },
+          "smtp_message_id": {
+            "title": "Smtp Message Id",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "queued",
+              "preparing",
+              "transmitting",
+              "accepted",
+              "failed",
+              "uncertain"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "ticket_id": {
+            "format": "uuid",
+            "title": "Ticket Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket_id",
+          "message_id",
+          "delivery_id",
+          "state",
+          "attempts",
+          "last_error_code",
+          "smtp_message_id",
+          "accepted_at"
+        ],
+        "title": "DeliveryOutput",
+        "type": "object"
+      },
+      "DeliveryReceipt": {
+        "properties": {
+          "delivery_id": {
+            "format": "uuid",
+            "title": "Delivery Id",
+            "type": "string"
+          },
+          "message_id": {
+            "format": "uuid",
+            "title": "Message Id",
+            "type": "string"
+          },
+          "ticket_id": {
+            "format": "uuid",
+            "title": "Ticket Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket_id",
+          "message_id",
+          "delivery_id"
+        ],
+        "title": "DeliveryReceipt",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1392,6 +1548,30 @@
           "as_of"
         ],
         "title": "MyWorkPage",
+        "type": "object"
+      },
+      "ParticipantChoice": {
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "participant_id": {
+            "format": "uuid",
+            "title": "Participant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "participant_id",
+          "email",
+          "display_name"
+        ],
+        "title": "ParticipantChoice",
         "type": "object"
       },
       "PasswordInput": {
@@ -2235,6 +2415,25 @@
         "title": "RequesterPage",
         "type": "object"
       },
+      "SenderChoice": {
+        "properties": {
+          "from_email": {
+            "title": "From Email",
+            "type": "string"
+          },
+          "source_id": {
+            "format": "uuid",
+            "title": "Source Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_id",
+          "from_email"
+        ],
+        "title": "SenderChoice",
+        "type": "object"
+      },
       "StateOutput": {
         "additionalProperties": false,
         "properties": {
@@ -2706,8 +2905,16 @@
             "type": "string"
           },
           "delivery_status": {
-            "const": "draft",
             "default": "draft",
+            "enum": [
+              "draft",
+              "queued",
+              "preparing",
+              "transmitting",
+              "accepted",
+              "failed",
+              "uncertain"
+            ],
             "title": "Delivery Status",
             "type": "string"
           },
@@ -8635,6 +8842,49 @@
         ]
       }
     },
+    "/api/v1/tickets/{identifier}/delivery-choices": {
+      "get": {
+        "operationId": "delivery_choices_api_v1_tickets__identifier__delivery_choices_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identifier",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryChoices"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delivery Choices",
+        "tags": [
+          "mail-delivery"
+        ]
+      }
+    },
     "/api/v1/tickets/{identifier}/messages": {
       "get": {
         "operationId": "messages_api_v1_tickets__identifier__messages_get",
@@ -8836,6 +9086,148 @@
         "summary": "Message",
         "tags": [
           "Tickets"
+        ]
+      }
+    },
+    "/api/v1/tickets/{identifier}/messages/{message_id}/delivery": {
+      "get": {
+        "operationId": "delivery_api_v1_tickets__identifier__messages__message_id__delivery_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identifier",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Message Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryOutput"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delivery",
+        "tags": [
+          "mail-delivery"
+        ]
+      },
+      "post": {
+        "operationId": "queue_delivery_api_v1_tickets__identifier__messages__message_id__delivery_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identifier",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Message Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "required": true,
+            "schema": {
+              "pattern": "^\"[1-9][0-9]{0,9}\"$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeliveryCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryReceipt"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryReceipt"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Queue Delivery",
+        "tags": [
+          "mail-delivery"
         ]
       }
     },

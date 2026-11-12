@@ -92,7 +92,8 @@ unchanged. Delivery creates neither a ticket transition nor an SLA success.
 States are queued, preparing, transmitting, accepted, failed and uncertain.
 Persist a finite unguessable attempt lease before network I/O. All attempt
 updates compare the current token and expiry. Network I/O never runs inside a
-database transaction. Freeze bytes once: bounded plain-text MIME, no HTML or
+database transaction. Freeze bytes once: plain-text MIME bounded to262144 bytes, supporting the full
+existing10000-codepoint public draft plus finite encoded headers; no HTML or
 attachments in this increment, no caller-supplied From/Reply-To/References.
 Generate one stable Message-ID under the configured sender domain. Preserve
 existing accepted thread references with finite bounds. A private random ticket
@@ -115,9 +116,11 @@ provider text in logs, audit, outbox, Redis messages or activity. Only fixed err
 codes and identifiers cross those boundaries.
 
 Uncertain reconciliation is owner-only, with reviewed delivery version and
-recorded external evidence. Drain relevant mail workers before deciding, and
+a bounded opaque external evidence reference. No body, address or provider reply
+is accepted as an evidence reference. Drain relevant mail workers before deciding, and
 verify provider acceptance using the stable Message-ID. An explicit accepted
-decision records accepted_at; explicit confirmed non-acceptance may requeue the
+decision records the aware provider acceptance timestamp supplied with the
+evidence, bounded from delivery creation through current DB wall clock; explicit confirmed non-acceptance may requeue the
 same immutable delivery. Never present a general retry button for uncertain mail.
 The operator must account for in-flight SMTP, which SQL fencing cannot retract.
 

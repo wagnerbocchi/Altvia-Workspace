@@ -181,6 +181,7 @@ class MailboxSource(Base):
     __tablename__ = "mailbox_sources"
     __table_args__ = (
         CheckConstraint("source_key ~ '^[A-Za-z0-9_-]{1,64}$'", name="ck_mail_source_key"),
+        UniqueConstraint("id", "queue_id", name="uq_mail_source_queue"),
         CheckConstraint("version > 0", name="ck_mail_source_version"),
     )
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
@@ -782,6 +783,7 @@ class TicketNote(Base):
 class TicketMessage(Base):
     __tablename__ = "ticket_messages"
     __table_args__ = (
+        UniqueConstraint("id", "ticket_id", name="uq_message_ticket"),
         UniqueConstraint("ticket_id", "ticket_version", name="uq_ticket_message_version"),
         CheckConstraint("ticket_version > 1", name="ck_ticket_message_version"),
         CheckConstraint("char_length(body_text) <= 10000", name="ck_ticket_message_length"),
@@ -807,6 +809,10 @@ class TicketMessage(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     author: Mapped[User] = relationship(lazy="joined", viewonly=True)
 
+    delivery: Mapped["OutboundMessage | None"] = relationship(
+        foreign_keys="OutboundMessage.message_id", lazy="joined", viewonly=True
+    )
+
 
 class ActivityEvent(Base):
     __tablename__ = "activity_events"
@@ -830,3 +836,95 @@ class ActivityEvent(Base):
     aggregate_version: Mapped[int]
     correlation_id: Mapped[str] = mapped_column(String(64))
     details: Mapped[dict[str, str | None]] = mapped_column(JSONB)
+
+
+class MailSender(Base):
+    __tablename__ = "mail_senders"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["source_id", "queue_id"], ["mailbox_sources.id", "mailbox_sources.queue_id"]
+        ),
+        CheckConstraint("namespace_hash ~ '^[0-9a-f]{64}$'"),
+        CheckConstraint("from_email ~ '^[A-Za-z0-9.!#$%&''*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+$'"),
+    )
+    source_id: Mapped[UUID] = mapped_column(primary_key=True)
+    queue_id: Mapped[UUID] = mapped_column(unique=True)
+    from_email: Mapped[str] = mapped_column(String(254))
+    namespace_hash: Mapped[str] = mapped_column(String(64))
+
+
+class TicketParticipant(Base):
+    __tablename__ = "ticket_participants"
+    __table_args__ = (
+        UniqueConstraint("id", "ticket_id"),
+        Index(
+            "uq_active_ticket_requester", "ticket_id", unique=True, postgresql_where=text("active")
+        ),
+        CheckConstraint("version > 0 AND evidence ~ '^[A-Za-z0-9._:/-]{1,200}$'"),
+        CheckConstraint("email ~ '^[A-Za-z0-9.!#$%&''*+/=?^_`{|}~-]+@[A-Za-z0-9.-]+$'"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    ticket_id: Mapped[UUID] = mapped_column(ForeignKey("tickets.id"))
+    contact_id: Mapped[UUID] = mapped_column(ForeignKey("client_contacts.id"))
+    email: Mapped[str] = mapped_column(String(254))
+    evidence: Mapped[str] = mapped_column(String(200), deferred=True)
+    attested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), deferred=True)
+    active: Mapped[bool] = mapped_column(default=True)
+    version: Mapped[int] = mapped_column(default=1)
+
+
+class TicketMailThread(Base):
+    __tablename__ = "ticket_mail_threads"
+    __table_args__ = (CheckConstraint("token ~ '^[0-9a-f]{64}$'"),)
+    ticket_id: Mapped[UUID] = mapped_column(ForeignKey("tickets.id"), primary_key=True)
+    token: Mapped[str] = mapped_column(String(64), unique=True)
+
+
+class OutboundMessage(Base):
+    __tablename__ = "outbound_messages"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["message_id", "ticket_id"], ["ticket_messages.id", "ticket_messages.ticket_id"]
+        ),
+        ForeignKeyConstraint(
+            ["participant_id", "ticket_id"],
+            ["ticket_participants.id", "ticket_participants.ticket_id"],
+        ),
+        Index("ix_delivery_pending", "state", "next_attempt_at"),
+        CheckConstraint(
+            "state IN ('queued','preparing','transmitting','accepted','failed','uncertain')"
+        ),
+        CheckConstraint("attempts BETWEEN 0 AND 8 AND version > 0"),
+        CheckConstraint("octet_length(wire) BETWEEN 1 AND 262144"),
+        CheckConstraint("namespace_hash ~ '^[0-9a-f]{64}$'"),
+        CheckConstraint(
+            "(state IN ('preparing','transmitting'))="
+            "(lease_token IS NOT NULL AND lease_until IS NOT NULL)"
+        ),
+        CheckConstraint("(state='accepted')=(accepted_at IS NOT NULL)"),
+        CheckConstraint(
+            "last_error_code IS NULL OR last_error_code IN "
+            "('temporary','permanent','transport','eligibility_revoked',"
+            "'lease_expired','data_unknown','retry_exhausted')"
+        ),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    ticket_id: Mapped[UUID] = mapped_column(ForeignKey("tickets.id"))
+    message_id: Mapped[UUID] = mapped_column(unique=True)
+    source_id: Mapped[UUID] = mapped_column(ForeignKey("mail_senders.source_id"))
+    participant_id: Mapped[UUID]
+    actor_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    envelope_from: Mapped[str] = mapped_column(String(254))
+    envelope_to: Mapped[str] = mapped_column(String(254))
+    namespace_hash: Mapped[str] = mapped_column(String(64))
+    wire: Mapped[bytes] = mapped_column(LargeBinary, deferred=True)
+    smtp_message_id: Mapped[str] = mapped_column(String(320), unique=True)
+    state: Mapped[str] = mapped_column(String(20), default="queued")
+    attempts: Mapped[int] = mapped_column(default=0)
+    version: Mapped[int] = mapped_column(default=1)
+    next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    lease_token: Mapped[UUID | None]
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_error_code: Mapped[str | None] = mapped_column(String(40))
+    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

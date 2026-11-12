@@ -144,7 +144,9 @@ class TicketMessageOutput(StrictModel):
     body_text: str
     visibility: Literal["public"] = "public"
     direction: Literal["outbound"] = "outbound"
-    delivery_status: Literal["draft"] = "draft"
+    delivery_status: Literal[
+        "draft", "queued", "preparing", "transmitting", "accepted", "failed", "uncertain"
+    ] = "draft"
     ticket_version: int
     created_at: datetime
 

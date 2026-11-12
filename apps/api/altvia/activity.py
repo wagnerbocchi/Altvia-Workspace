@@ -67,6 +67,7 @@ TICKET_EVENT_TYPES = {
     "ticket.status_changed",
     "ticket.note_added",
     "ticket.message_drafted",
+    "ticket.delivery_queued",
 }
 
 
@@ -85,6 +86,7 @@ class TicketEventPayload(BaseModel):
     history_id: UUID | None = None
     note_id: UUID | None = None
     message_id: UUID | None = None
+    delivery_id: UUID | None = None
 
     @model_validator(mode="after")
     def valid_changes(self) -> "TicketEventPayload":
@@ -309,11 +311,15 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
         if db.get(ProcessedEvent, (CONSUMER, event_id)) is not None:
             event.status, event.lease_until, event.last_error_code = "delivered", None, None
             return False
-        if event.event_type in INTAKE_EVENTS:
+        if event.event_type in INTAKE_EVENTS or event.event_type == "mail.delivery_changed":
             # Unclassified mail has no shared-feed audience. Acknowledge only its
             # strictly redacted metadata; raw tables remain inaccessible here.
             try:
-                validate_intake_event(event)
+                if event.event_type == "mail.delivery_changed":
+                    from altvia.mail_delivery import validate_delivery_event
+                    validate_delivery_event(event)
+                else:
+                    validate_intake_event(event)
             except (ValueError, ValidationError):
                 event.status, event.last_error_code, event.lease_until = (
                     "dead",
@@ -369,6 +375,7 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                     "ticket.status_changed": {"from_status", "to_status", "history_id"},
                     "ticket.note_added": {"note_id"},
                     "ticket.message_drafted": {"message_id"},
+                    "ticket.delivery_queued": {"message_id", "delivery_id"},
                 }[event.event_type]
                 if payload.ticket_id != event.aggregate_id or fields != expected_ticket_fields:
                     raise ValueError("Invalid ticket event fields")
@@ -376,6 +383,10 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                     raise ValueError("Missing private note identifier")
                 if event.event_type == "ticket.message_drafted" and payload.message_id is None:
                     raise ValueError("Missing public message identifier")
+                if event.event_type == "ticket.delivery_queued" and (
+                    payload.message_id is None or payload.delivery_id is None
+                ):
+                    raise ValueError("Missing delivery identity")
                 if event.event_type in {"ticket.updated", "ticket.assigned"}:
                     if not payload.changed_fields:
                         raise ValueError("Missing ticket changes")

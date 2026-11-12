@@ -740,6 +740,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tickets/{identifier}/delivery-choices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Delivery Choices */
+        get: operations["delivery_choices_api_v1_tickets__identifier__delivery_choices_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tickets/{identifier}/messages": {
         parameters: {
             query?: never;
@@ -769,6 +786,24 @@ export interface paths {
         get: operations["message_api_v1_tickets__identifier__messages__message_id__get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/{identifier}/messages/{message_id}/delivery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Delivery */
+        get: operations["delivery_api_v1_tickets__identifier__messages__message_id__delivery_get"];
+        put?: never;
+        /** Queue Delivery */
+        post: operations["queue_delivery_api_v1_tickets__identifier__messages__message_id__delivery_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1415,6 +1450,75 @@ export interface components {
             /** Timezone */
             timezone: string;
         };
+        /** DeliveryChoices */
+        DeliveryChoices: {
+            /** Can Send */
+            can_send: boolean;
+            participant: components["schemas"]["ParticipantChoice"] | null;
+            sender: components["schemas"]["SenderChoice"] | null;
+        };
+        /** DeliveryCreate */
+        DeliveryCreate: {
+            /**
+             * Participant Id
+             * Format: uuid
+             */
+            participant_id: string;
+            /**
+             * Source Id
+             * Format: uuid
+             */
+            source_id: string;
+        };
+        /** DeliveryOutput */
+        DeliveryOutput: {
+            /** Accepted At */
+            accepted_at: string | null;
+            /** Attempts */
+            attempts: number;
+            /**
+             * Delivery Id
+             * Format: uuid
+             */
+            delivery_id: string;
+            /** Last Error Code */
+            last_error_code: string | null;
+            /**
+             * Message Id
+             * Format: uuid
+             */
+            message_id: string;
+            /** Smtp Message Id */
+            smtp_message_id: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "queued" | "preparing" | "transmitting" | "accepted" | "failed" | "uncertain";
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
+        };
+        /** DeliveryReceipt */
+        DeliveryReceipt: {
+            /**
+             * Delivery Id
+             * Format: uuid
+             */
+            delivery_id: string;
+            /**
+             * Message Id
+             * Format: uuid
+             */
+            message_id: string;
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1624,6 +1728,18 @@ export interface components {
             items: components["schemas"]["MyWorkItem"][];
             /** Next Cursor */
             next_cursor: string | null;
+        };
+        /** ParticipantChoice */
+        ParticipantChoice: {
+            /** Display Name */
+            display_name: string;
+            /** Email */
+            email: string;
+            /**
+             * Participant Id
+             * Format: uuid
+             */
+            participant_id: string;
         };
         /** PasswordInput */
         PasswordInput: {
@@ -1980,6 +2096,16 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** SenderChoice */
+        SenderChoice: {
+            /** From Email */
+            from_email: string;
+            /**
+             * Source Id
+             * Format: uuid
+             */
+            source_id: string;
+        };
         /** StateOutput */
         StateOutput: {
             /**
@@ -2180,9 +2306,9 @@ export interface components {
             /**
              * Delivery Status
              * @default draft
-             * @constant
+             * @enum {string}
              */
-            delivery_status: "draft";
+            delivery_status: "draft" | "queued" | "preparing" | "transmitting" | "accepted" | "failed" | "uncertain";
             /**
              * Direction
              * @default outbound
@@ -5039,6 +5165,37 @@ export interface operations {
             };
         };
     };
+    delivery_choices_api_v1_tickets__identifier__delivery_choices_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryChoices"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     messages_api_v1_tickets__identifier__messages_get: {
         parameters: {
             query?: {
@@ -5139,6 +5296,86 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TicketMessageOutput"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delivery_api_v1_tickets__identifier__messages__message_id__delivery_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identifier: string;
+                message_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryOutput"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    queue_delivery_api_v1_tickets__identifier__messages__message_id__delivery_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                identifier: string;
+                message_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeliveryCreate"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryReceipt"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeliveryReceipt"];
                 };
             };
             /** @description Validation Error */

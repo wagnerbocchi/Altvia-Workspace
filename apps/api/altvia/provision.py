@@ -45,6 +45,9 @@ ROLE_PRIVILEGES = {
         "ticket_status_history": {"SELECT", "INSERT"},
         "ticket_notes": {"SELECT", "INSERT"},
         "ticket_messages": {"SELECT", "INSERT"},
+        "mail_senders": {"SELECT"},
+        "ticket_mail_threads": {"SELECT", "INSERT"},
+        "outbound_messages": {"SELECT", "INSERT"},
         "work_item_external_participants": {"SELECT", "INSERT", "DELETE"},
         "audit_logs": {"INSERT"},
         "outbox_events": {"INSERT"},
@@ -53,13 +56,39 @@ ROLE_PRIVILEGES = {
         "work_item_status_history": {"SELECT", "INSERT"},
     },
     "altvia_worker": {
-        "outbox_events": {"SELECT"},
+        "outbox_events": {"SELECT", "INSERT"},
+        "outbound_messages": {"SELECT"},
+        "mail_senders": {"SELECT"},
         "processed_events": {"SELECT", "INSERT"},
         "activity_events": {"SELECT", "INSERT"},
         "audit_logs": {"INSERT"},
     },
 }
 
+APP_COLUMN_READS = {
+    "ticket_participants": {"id", "ticket_id", "contact_id", "email", "active", "version"},
+}
+WORKER_COLUMN_READS = {
+    "users": {"id", "active"},
+    "tickets": {"id", "client_id", "queue_id", "requester_id", "assignee_id", "status"},
+    "role_bindings": {"user_id", "scope_kind", "queue_id", "role_name"},
+    "client_access_grants": {"user_id", "client_id"},
+    "clients": {"id", "active"},
+    "teams": {"id", "active"},
+    "ticket_queues": {"id", "team_id", "active"},
+    "client_contacts": {"id", "client_id", "active", "email_normalized"},
+    "ticket_participants": {"id", "ticket_id", "contact_id", "email", "active"},
+}
+DELIVERY_STATUS_COLUMNS = {
+    "state",
+    "attempts",
+    "version",
+    "next_attempt_at",
+    "lease_token",
+    "lease_until",
+    "last_error_code",
+    "accepted_at",
+}
 WORKER_STATUS_COLUMNS = {"status", "attempts", "next_attempt_at", "lease_until", "last_error_code"}
 
 
@@ -144,10 +173,28 @@ def _provision_role(connection: Connection, engine: Engine, login_url: str, name
         or not (
             g.privilege_type in privileges.get(g.relname, set())
             or (
+                name == "altvia_app"
+                and g.privilege_type == "SELECT"
+                and g.column_name in APP_COLUMN_READS.get(g.relname, set())
+            )
+            or (
                 name == "altvia_worker"
-                and g.relname == "outbox_events"
-                and g.privilege_type == "UPDATE"
-                and g.column_name in WORKER_STATUS_COLUMNS
+                and (
+                    (
+                        g.privilege_type == "SELECT"
+                        and g.column_name in WORKER_COLUMN_READS.get(g.relname, set())
+                    )
+                    or (
+                        g.privilege_type == "UPDATE"
+                        and g.column_name
+                        in (
+                            {
+                                "outbox_events": WORKER_STATUS_COLUMNS,
+                                "outbound_messages": DELIVERY_STATUS_COLUMNS,
+                            }.get(g.relname, set())
+                        )
+                    )
+                )
             )
         )
         for g in grants
@@ -183,7 +230,27 @@ def _provision_role(connection: Connection, engine: Engine, login_url: str, name
                 sql.Identifier(name),
             )
         )
+    if name == "altvia_app":
+        for table, columns in APP_COLUMN_READS.items():
+            raw.execute(
+                sql.SQL("GRANT SELECT ({}) ON {} TO altvia_app").format(
+                    sql.SQL(",").join(sql.Identifier(c) for c in sorted(columns)),
+                    sql.Identifier("public", table),
+                )
+            )
     if name == "altvia_worker":
+        for table, columns in WORKER_COLUMN_READS.items():
+            raw.execute(
+                sql.SQL("GRANT SELECT ({}) ON {} TO altvia_worker").format(
+                    sql.SQL(",").join(sql.Identifier(c) for c in sorted(columns)),
+                    sql.Identifier("public", table),
+                )
+            )
+        raw.execute(
+            sql.SQL("GRANT UPDATE ({}) ON public.outbound_messages TO altvia_worker").format(
+                sql.SQL(",").join(sql.Identifier(c) for c in sorted(DELIVERY_STATUS_COLUMNS))
+            )
+        )
         raw.execute(
             sql.SQL("GRANT UPDATE ({}) ON public.outbox_events TO altvia_worker").format(
                 sql.SQL(",").join(

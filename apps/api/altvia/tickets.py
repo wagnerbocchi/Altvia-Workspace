@@ -213,6 +213,7 @@ def can_update(item: Ticket, access: Access, actor_id: UUID) -> bool:
 
 def message_output(message: TicketMessage) -> TicketMessageOutput:
     return TicketMessageOutput(
+        delivery_status=message.delivery.state if message.delivery else "draft",
         id=message.id,
         ticket_id=message.ticket_id,
         author_id=message.author_id,

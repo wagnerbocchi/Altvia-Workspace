@@ -750,6 +750,31 @@ authorization/version/freeze; saved delivery replay needs no object refetch.
 Legacy format1 stays byte-exact/262144 bytes; file-bearing format2 is standard MIME
 with encoded total<=26214400. Notes/work assets cannot be sent by guessed ID.
 
+Task3 exact DTO compatibility: attachment_ids on TicketMessageCreate,
+TicketNoteCreate, CommentCreate and DeliveryCreate is an optional ordered list
+of unique UUIDs, maximum20. Omitted excludes ONLY attachment_ids from legacy POST
+canonicalization; explicit [] is a distinct protected empty intent; null is422.
+Existing required body fields stay. Content output adds immutable attachment_count
+and ordered attachments, each strict {id,filename,media_type,bytes}; legacy values
+are0/[]. Current content/parent/purpose read authority gates every summary/count.
+Message/note receipts retain their exact old IDs. Comment receipts add the output
+fields; absent historical fields default0/[] without rewriting stored receipts.
+All existing content event envelopes remain exact, including new linked writes.
+Files must be ready, same exact parent and correct purpose; foreign/wrong-purpose
+IDs404, authorized not-ready409. Public-send review must exactly match saved IDs
+and order; omitted review of a file-bearing message409
+delivery_attachment_review_required. Delivery receipts/status remain unchanged.
+Current auth/session/action and protected replay precede S3. Cached replay fetches
+nothing. Fresh preparation verifies bytes outside transactions, then repeats
+current auth/version/links/sender/requester checks and freezes atomically. Raw
+totals>26214400 fail before fetch; actual format2 encoded total has that same cap.
+One file-bearing preparation per API process; busy/storage/corruption503 with
+Retry-After5. No access-time scanner call. Text-only build_wire and format1 cap
+stay exact; format2 is multipart/mixed with ordered base64 parts and original UTF8
+filenames. Existing frozen wire/format/receipts/timestamps never change. Upload/
+list schemas restrict ticket request purpose to public|note and work to work;
+ordinary metadata retains public|note|work.
+
 Migration00024 adds immutable same-case/ticket/client/queue incoming ownership,
 unique case/version, immutable case receipt and email source. Only the API gains
 incoming SELECT/INSERT and column-only case receipt/state/version UPDATE; worker

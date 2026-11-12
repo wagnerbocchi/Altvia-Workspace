@@ -288,6 +288,65 @@ reference rules stay exact. SMTP acceptance remains server acceptance only.
 
 ## Validation, rollback and continuation
 
+### Task 3 exact content and delivery contract
+
+TicketMessageCreate, TicketNoteCreate and CommentCreate accept attachment_ids as
+an optional ordered list of at most20 unique UUIDs. Omission means legacy no-file
+intent: exclude ONLY this new field from the old canonical request. Explicit []
+is a distinct protected empty intent; null is422. Existing body requirements stay.
+Current original-action authority and protected replay precede fresh file checks.
+Fresh links require ready policy1 files on the same exact ticket/work item with
+purpose public/note/work respectively. Hidden, foreign or wrong-purpose IDs are
+indistinguishable404; visible non-ready assets are409. Lock identity before
+authentication, then existing parent locks, then files in sorted UUID order.
+Selection order is persisted separately from lock order. Files confer no grants.
+
+Content reads add immutable attachment_count and ordered attachments summaries,
+each strictly id, filename, media_type and bytes. Legacy content reads count0/[];
+summaries inherit the full current content/parent/purpose read authority. Denied
+note readers receive no summary or count. Ticket/message and ticket/note creation
+receipts remain exactly their old ID fields. Work-comment creation retains its
+existing content receipt with additive count/summaries; historical stored receipts
+remain unchanged and deserialize absent new output fields as0/[]. Content body,
+count and ordered concrete links are immutable. Count is0..20, positions0..count-1,
+IDs unique per content. Composite FKs bind both content and files to their concrete
+parent/purpose; deferred guards reject missing/extra links at commit. Existing
+message_drafted/note_added/commented events remain byte-shape compatible even
+when files are selected; no filenames/counts/IDs are added to those envelopes.
+
+DeliveryCreate adds the same optional ordered attachment_ids review. Omission
+keeps the exact old canonical request and permits only a message with no files;
+explicit [] deliberately reviews no files, null is422. A fresh request must match
+the saved public links in exact order or409 delivery_attachment_review_required.
+Duplicate/over20 IDs are422. DeliveryReceipt/DeliveryOutput stay unchanged. Current
+public-send authority, original headers and cached protected receipt precede any
+storage access. Saved replay does not fetch files, regardless of later parent
+activity/version, while current original-action/session authority remains needed.
+
+A fresh send first validates current authority, parent version, sender/requester,
+links/ready status and absence of another delivery. Reject raw totals>26214400
+before fetching. At most one fresh file-bearing preparation per API process;
+busy/storage failure/corruption gives fixed503 with Retry-After5, no partial
+delivery/receipt/version/event. Verify each actual object length/hash through
+S3Store.verified_spool outside ALL DB transactions. Reacquire identity/auth/parent/
+sorted file locks and repeat all current authority/version/review/eligibility
+checks before atomic freeze. No live scanner I/O is introduced. A revoked session,
+grant or requester during prefetch prevents freezing. Cleanup spools on every exit.
+
+Persist wire_format1 (default for every existing snapshot and all new text-only
+messages) or2 (actual file-bearing MIME only). Format1 calls the unchanged
+build_wire and retains its262144-byte bound. Format2 uses standard email MIME:
+multipart/mixed, the same plain UTF8 quoted-printable body and contextual headers,
+then base64 attachment parts in saved order, accepted original UTF8 filenames and
+stored media types, exact decoded bytes. Encoded total<=26214400, including all
+headers/boundaries. Wire format and wire bytes are frozen together; SMTP worker
+continues sending only frozen bytes with existing lease/one-DATA/uncertainty/
+timestamps. Existing incoming root/current requester reference rules apply.
+Migration00026 refuses contraction with links, nonzero content counts or format2
+history. Runtime API alone gains link SELECT/INSERT; worker gets no link table
+or file-name grants. Upload/list request schemas advertise ticket public|note
+and work work; ordinary metadata Purpose remains the context-wide union.
+
 Actual private S3 authorization/conditional PUT/TLS/fsync/restart, real production-
 profile signed/current ClamAV clean/EICAR/limits/encryption/update/refusal, streamed
 API/session/CSRF/IDOR/note privacy, replay/races/atomic rollback, scan fencing/stop,

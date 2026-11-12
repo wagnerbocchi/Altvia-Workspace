@@ -105,8 +105,12 @@ runtime-role promotion/read/freeze and worker schema2/private denials. All13
 static/security/package/native/generated/web-check/production-build gates passed;
 OpenAPI/TypeScript reproduce exactly, Bandit17LOW/zero blockers, all288 raw sources
 unchanged (aggregate3b92c48ea3e0430a741d34edd0ef462edf86e6017a874d4f78b9dd80c18d4e18).
-Independent controller review/publication/full hosted acceptance remain required
-before Task2 acceptance. Its UI and packaged incoming workflow remain Tasks3/4.
+Task2 source 7c198c8 passed independent specification and quality review with zero
+findings. The private 48-entry acceptance archive has SHA256
+a1e302cf9980d77a1f0eb214d43d485236843976f80660aae3fac3e87a585e76 and retains
+separate stdout/stderr, exit metadata, earlier failures, manifests and review.
+Hosted acceptance follows publication. UI and actual packaged incoming workflow
+remain Tasks3/4; no complete incoming-mail or final target claim is made here.
 Its clarified ADR0036 contract retains the first eligible incoming root when
 more than16 precede the first reply, excludes previous-requester references from
 new wires, and preserves receipts/history for promoted aliases and invalidation.

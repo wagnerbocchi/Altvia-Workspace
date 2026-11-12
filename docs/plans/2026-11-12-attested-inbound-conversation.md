@@ -86,23 +86,23 @@ hex. From exactly1 mailbox, optional Sender/Reply-To exactly1 each and all match
 the attested current ASCII mailbox. Reject non-no Auto-Submitted, null Return-Path
 and report/DSN forms. No broad header codec trust or external fetch.
 
-- [ ] RED actual PG/source/variant/parser2 publication/read API. Pin immutable
+- [x] RED actual PG/source/variant/parser2 publication/read API. Pin immutable
   body/context, contact version/email/activity checks, owner-role/opt-in denial,
   runtime raw/origin/evidence denial, missing/malformed/hostile routing limits.
-- [ ] Implement contextual unique key source/client/contact/email/Message-ID,
+- [x] Implement contextual unique key source/client/contact/email/Message-ID,
   nullable-ID primary-only cases, exact alias versus changed-wire contradiction,
   immutable provenance and source/version/private event transaction. No expected
   source version: unrelated capture traffic must not invalidate immutable review.
-- [ ] Add source->case SQL collision trigger covering ANY alias origin and old
+- [x] Add source->case SQL collision trigger covering ANY alias origin and old
   capture writes, stable case order, permanent invalidation/version overflow,
   no reverse customer/ticket lock or old payload change. Test races/atomic rollback.
-- [ ] Cover foreign-context same-ID independence, own reserved outbound-ID refusal
+- [x] Cover foreign-context same-ID independence, own reserved outbound-ID refusal
   without poisoning outbound, per-variant reclassification refusal, revocation,
   archived parents/contact, pagination/filter/hidden resource and guarded rollback.
   Reserve existing server-generated outbound IDs regardless of queued/preparing/
   transmitting/accepted/failed/uncertain state; only accepted rows route replies.
   Refused publication creates no acknowledged origin/case and leaves raw quarantine.
-- [ ] Run affected real PG tests plus routing/MIME/intake/runtime/activity, lint,
+- [x] Run affected real PG tests plus routing/MIME/intake/runtime/activity, lint,
   FORMAT/mypy/security/build/migration drift and generated contracts. Commit checked
   owner/read boundary after independent task spec+quality review.
 
@@ -142,20 +142,20 @@ mail_delivery and tests. Regenerate OpenAPI/TypeScript.
   locks in stable order and re-resolve invalidation after lock. Foreign/unknown
   strings confer no authority or special error; all-known-own conflict fails.
 
-- [ ] RED actual API creation/append/reopen, known anchor+unknown/foreign ancestors,
+- [x] RED actual API creation/append/reopen, known anchor+unknown/foreign ancestors,
   two-own-ticket ambiguity, invalid own anchor, token mismatch/absence and same-queue
   different source. Check contact/email changes, participant requirement, current
   staff role/assignment/ceiling/session, hidden parent and linked row negatives.
-- [ ] Extract only the shared creation/history responsibility from manual create;
+- [x] Extract only the shared creation/history responsibility from manual create;
   reuse creation_access, self/unassigned restrictions and validation AFTER replay.
   Source is an internal manual/email argument, not a new manual body field.
   Reuse _event/_assigned, advance/transition with narrow optional DB timestamps for
   new incoming actions; preserve all old defaults/fingerprints/field sets.
-- [ ] Implement atomic versions: new ticket/history1 then incoming2; append next;
+- [x] Implement atomic versions: new ticket/history1 then incoming2; append next;
   explicit permitted reopen next then incoming following. Require real reason,
   existing queue flag/targets and current action authority. No automatic state
   sync, arbitrary new-ticket bypass of a recognized thread or implicit participant.
-- [ ] Protect replay with current case and resulting ticket/action authorization
+- [x] Protect replay with current case and resulting ticket/action authorization
   before minimal receipt, fresh version/eligibility only on new effects. SQL unique
   case prevents another key/message. Test committed/uncommitted replay, race,
   collision-before/after, event rollback/version exhaustion and mixed locks.
@@ -163,7 +163,7 @@ mail_delivery and tests. Regenerate OpenAPI/TypeScript.
   reuses current creation/self-assignee checks plus resulting ticket read scope;
   append replay requires current target write authority. In particular, creation
   of an unassigned ticket must not make its own successful receipt unrecoverable.
-- [ ] Extend freeze reference query to eligible promoted incoming and accepted
+- [x] Extend freeze reference query to eligible promoted incoming and accepted
   outbound IDs in the current contact/frozen-recipient context, latest16
   chronological except first-reply earliest incoming root plus latest other15,
   preserving exact eligible outbound-only ordering
@@ -172,7 +172,7 @@ mail_delivery and tests. Regenerate OpenAPI/TypeScript.
   invalidated anchor exclusion and no foreign IDs/private text. Identical aliases
   after promotion keep the same Case/receipt/incoming row; version their promoted
   private alias event explicitly as schema2 while preserving ready schema1.
-- [ ] Run full affected PG/mail/ticket/activity/runtime/migration/static/build/
+- [x] Run full affected PG/mail/ticket/activity/runtime/migration/static/build/
   contract gates. Independent task spec+quality review, then coherent checked commit.
 
 ### Task 3: Real attested triage and incoming/outgoing browser conversation

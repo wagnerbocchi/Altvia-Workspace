@@ -182,7 +182,7 @@ use DB clock for a60s lease, close transactions for network work and require the
 current unexpired token/generation before publishing a result. Monotonic process
 timeouts never substitute for DB expiry. Stop/retry/late results cannot publish
 ready after loss of ownership. Use8 attempts per generation with bounded exponential
-backoff; a currently authorized protected retry of failed starts a new generation
+backoff (30 * 2^(attempt-1) seconds, capped at3600); a currently authorized protected retry of failed starts a new generation
 while immutable attempt history remains. Rejected malware is not manually released.
 
 Before scanning, GET/hash/count the private object in a bounded spool. Clamd uses
@@ -208,6 +208,55 @@ before any client byte. No transaction/lock spans network. Stream only ready byt
 with attachment disposition, safe UTF8 filename, application/octet-stream,
 nosniff/no-store and no reusable direct object URL. Corruption/missing storage
 fails closed with a fixed infrastructure error, never user401 or raw SDK output.
+
+## Task 2 exact HTTP contract
+
+Routes are under /api/v1. Upload remains POST /tickets/{id}/attachments and
+POST /work-items/{id}/attachments. GET on those same parent collections requires
+the explicit unique purpose query: public|note for tickets, work for work items.
+Only purpose, limit and cursor are accepted on a list. Limit1..100/default25;
+cursor binds actor, exact parent and purpose. An unauthorized note-purpose list
+is404, not a mixed list with a hidden-note count. The envelope is items,
+next_cursor and can_upload, computed from current parent/action authority
+independently of pagination. Creation authority never follows from page contents.
+
+Global detail GET /attachments/{id} and content GET /attachments/{id}/content
+resolve the concrete parent, then apply current parent/purpose authority. There
+is no account-wide file catalogue. Hidden/foreign/private-purpose IDs are404.
+
+Ordinary attachment metadata: id, owner_type(ticket|work_item), owner_id, purpose,
+filename, media_type, bytes, state, policy_version, version, created_at,
+can_download and can_retry_scan. No creator directory lookup, hash, object key,
+engine/database identity, lease, attempt history or diagnostic string is exposed.
+Use strict typed models and UTC timestamps. Detail ETag represents the file
+version. States remain quarantine|scanning|ready|rejected|failed.
+
+Upload receipt: owner_type, owner_id, attachment_id, bytes, sha256 and version.
+Its version is the immutable initial file version1, not a promise that the scan
+has not progressed. Upload returns201; a currently authorized protected replay
+returns200 with the original receipt. Its ETag is the receipt's file version,
+never a new parent version. Parent If-Match is part of the original upload intent.
+The ordinary metadata read used for ACK compares immutable upload identity;
+current scan version/status may have advanced. GET alone cannot acknowledge POST.
+
+POST /attachments/{id}/scan-retries has strict empty JSON object {}, FILE If-Match,
+Idempotency-Key and the existing Origin/CSRF/session protocol. No client result,
+generation or engine parameter is accepted. Fresh successful retry returns201;
+protected replay200. Receipt is attachment_id and version, preserving the version
+created by that retry even after subsequent scanning. ETag matches that receipt.
+Fresh retry requires failed state and current original-purpose write eligibility;
+rejected malware has no manual release. Reuse current authority before replay,
+checking fresh active/version/state eligibility only for a new effect. No parent
+version advance. Generation/attempt history remains internal and immutable.
+
+Reuse existing problem/error conventions for auth, origin/CSRF,404, protected
+header/version/replay validation. Distinguish oversized413, unsupported request
+media415, malformed byte/digest/query/name/type validation422 and bounded body
+timeout408. Busy/unavailable/corrupt storage fails with fixed503/Retry-After;
+never return an infrastructure fault as a user401 or expose SDK/path text.
+Authorized not-ready downloads return409 without bytes. Malformed/repeated
+payload-specific headers and malformed percent/UTF8 query input are refused.
+Ordinary HTTP headers remain supported; unknown query fields do not.
 
 ## Concrete content links and outbound compatibility
 

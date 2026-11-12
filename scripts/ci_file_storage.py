@@ -6,6 +6,7 @@ import importlib.util
 import ipaddress
 import json
 import os
+import re
 import secrets
 import sys
 import time
@@ -13,6 +14,82 @@ from pathlib import Path
 from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def available_subnet(occupied):
+    # Finite RFC1918 /24 candidates; never adopt an overlapping automatic pool.
+    for subnet in ipaddress.ip_network("10.240.0.0/12").subnets(new_prefix=24):
+        if not any(old.version == 4 and subnet.overlaps(old) for old in occupied):
+            return subnet
+    raise RuntimeError("private_network_pool_exhausted")
+
+
+def network_create_command(project, subnet):
+    return [
+        "docker",
+        "network",
+        "create",
+        "--driver",
+        "bridge",
+        "--internal",
+        "--subnet",
+        str(subnet),
+        project,
+    ]
+
+
+def occupied_subnets(run):
+    identifiers = run(["docker", "network", "ls", "--quiet"]).stdout.splitlines()
+    if len(identifiers) > 256 or any(
+        not re.fullmatch(r"[0-9a-f]{12,64}", identifier) for identifier in identifiers
+    ):
+        raise ValueError("private_network_inventory_invalid")
+    if not identifiers:
+        return []
+    try:
+        networks = json.loads(run(["docker", "network", "inspect", *identifiers]).stdout)
+        if not isinstance(networks, list) or len(networks) != len(identifiers):
+            raise ValueError
+        return [
+            ipaddress.ip_network(config["Subnet"])
+            for network in networks
+            for config in network["IPAM"]["Config"]
+        ]
+    except (ValueError, TypeError, KeyError):
+        raise ValueError("private_network_inventory_invalid") from None
+
+
+def create_private_network(run, project):
+    # Native IPAM reserves the explicit pool. Re-inspect only a known overlap
+    # race, at most three attempts; unrelated errors never broaden the fixture.
+    for attempt in range(3):
+        subnet = available_subnet(occupied_subnets(run))
+        result = run(network_create_command(project, subnet), allow_failure=True)
+        if result.returncode:
+            if "pool overlaps with other one" in result.stderr.lower() and attempt < 2:
+                continue
+            raise RuntimeError("private_network_create_failed")
+        try:
+            rows = json.loads(run(["docker", "network", "inspect", project]).stdout)
+            if not isinstance(rows, list) or len(rows) != 1:
+                raise ValueError
+            network = rows[0]
+            configs = network["IPAM"]["Config"]
+            address = subnet.network_address + 10
+            if (
+                network["Name"] != project
+                or network["Driver"] != "bridge"
+                or network["Internal"] is not True
+                or len(configs) != 1
+                or ipaddress.ip_network(configs[0]["Subnet"]) != subnet
+                or ipaddress.ip_address(configs[0]["Gateway"]) not in subnet
+                or ipaddress.ip_address(configs[0]["Gateway"]) == address
+            ):
+                raise ValueError
+            return str(subnet), str(address)
+        except (ValueError, TypeError, KeyError):
+            raise ValueError("private_network_created_invalid") from None
+    raise RuntimeError("private_network_create_failed")
 
 
 def verify_suite(path: Path) -> int:
@@ -114,10 +191,8 @@ def main():
         manifest["storage_image"] = run(
             ["docker", "image", "inspect", "--format", "{{.Id}}", image]
         ).stdout.strip()
-        run(["docker", "network", "create", "--internal", project])
-        network = json.loads(run(["docker", "network", "inspect", project]).stdout)[0]
-        subnet = ipaddress.ip_network(network["IPAM"]["Config"][0]["Subnet"])
-        address = str(subnet.network_address + 10)
+        subnet, address = create_private_network(run, project)
+        manifest["private_subnet"] = subnet
         run(["node", "scripts/file_test_certificate.mjs", str(private), address])
         sensitive.append((private / "storage_key").read_text())
         configs = {}

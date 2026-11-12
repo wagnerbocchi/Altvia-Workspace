@@ -4,7 +4,7 @@ import hashlib
 import re
 import tempfile
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from typing import Any, BinaryIO, cast
 
 import botocore.session  # type: ignore[import-untyped]
@@ -102,8 +102,9 @@ class S3Store:
     @contextmanager
     def verified_spool(self, key: str, *, size: int, sha256: str) -> Iterator[BinaryIO]:
         validate_object(key, size, sha256)
-        with cast(BinaryIO, tempfile.TemporaryFile(mode="w+b")) as spool:
+        with ExitStack() as resources:
             try:
+                spool = resources.enter_context(cast(BinaryIO, tempfile.TemporaryFile(mode="w+b")))
                 response = self.client.get_object(Bucket=BUCKET, Key=key)
                 body = response["Body"]
                 try:

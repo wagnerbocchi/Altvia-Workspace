@@ -2,13 +2,15 @@
 
 import hashlib
 import io
+from types import SimpleNamespace
 
 import pytest
-from altvia import file_storage_owner
+from altvia import file_storage, file_storage_owner
 from altvia.file_settings import StorageSettings
 from altvia.file_storage import S3Store, StorageError
 from botocore.stub import Stubber
 from pydantic import ValidationError
+from urllib3.exceptions import ProtocolError, ReadTimeoutError
 
 
 @pytest.mark.parametrize(
@@ -136,3 +138,58 @@ def test_verified_spool_closes_after_use(tmp_path):
         ) as source:
             assert source.read() == b"right"
         assert source.closed
+
+
+def test_verified_spool_tempfile_failure_has_fixed_safe_error(tmp_path, monkeypatch):
+    store = S3Store(settings(tmp_path))
+
+    def unavailable_spool(**_):
+        raise OSError("private-path-sentinel")
+
+    monkeypatch.setattr(file_storage.tempfile, "TemporaryFile", unavailable_spool)
+    with Stubber(store.client), pytest.raises(StorageError) as caught:
+        with store.verified_spool("objects/" + "1" * 64, size=1, sha256="0" * 64):
+            pytest.fail("Unavailable spool escaped")
+    assert str(caught.value) == "storage_unavailable"
+    assert caught.value.__suppress_context__
+
+
+@pytest.mark.parametrize("error", [OSError("consumer-path"), ValueError("consumer-input")])
+def test_verified_spool_does_not_normalize_consumer_errors(tmp_path, error):
+    store = S3Store(settings(tmp_path))
+    with Stubber(store.client) as stub:
+        stub.add_response("get_object", {"Body": io.BytesIO(b"right"), "ContentLength": 5})
+        with pytest.raises(type(error)) as caught:
+            with store.verified_spool(
+                "objects/" + "1" * 64, size=5, sha256=hashlib.sha256(b"right").hexdigest()
+            ) as source:
+                raise error
+        assert caught.value is error
+        assert source.closed
+
+
+@pytest.mark.parametrize(
+    "error", [ReadTimeoutError(None, None, "raw-sdk-sentinel"), ProtocolError("raw-sdk-sentinel")]
+)
+def test_owner_admin_body_transport_failures_have_fixed_safe_error(tmp_path, monkeypatch, error):
+    class RawBody:
+        def read(self, size):
+            assert size == 65537
+            raise error
+
+    class Transport:
+        closed = False
+
+        def send(self, _):
+            return SimpleNamespace(raw=RawBody(), status_code=200)
+
+        def close(self):
+            self.closed = True
+
+    transport = Transport()
+    monkeypatch.setattr(file_storage_owner, "URLLib3Session", lambda **_: transport)
+    with pytest.raises(ValueError) as caught:
+        file_storage_owner.admin_request(settings(tmp_path), "list-users")
+    assert str(caught.value) == "storage_bootstrap_refused"
+    assert caught.value.__suppress_context__
+    assert transport.closed

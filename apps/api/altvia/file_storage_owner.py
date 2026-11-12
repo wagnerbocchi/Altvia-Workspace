@@ -13,6 +13,7 @@ from botocore.exceptions import BotoCoreError, ClientError  # type: ignore[impor
 from botocore.httpsession import URLLib3Session  # type: ignore[import-untyped]
 from defusedxml import ElementTree as SafeET  # type: ignore[import-untyped]
 from defusedxml.common import DefusedXmlException  # type: ignore[import-untyped]
+from urllib3.exceptions import HTTPError as HTTPTransportError
 
 from altvia.file_settings import StorageSettings
 from altvia.file_storage import BUCKET, s3_client
@@ -109,7 +110,7 @@ def admin_request(settings: StorageSettings, operation: str, body: bytes = b"") 
         if response.status_code not in (200, 201) or len(raw) > 65536:
             raise ValueError("storage_bootstrap_refused")
         return bytes(raw)
-    except (BotoCoreError, OSError):
+    except (BotoCoreError, OSError, HTTPTransportError):
         raise ValueError("storage_bootstrap_refused") from None
     finally:
         session.close()

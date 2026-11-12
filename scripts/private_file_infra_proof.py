@@ -40,6 +40,133 @@ def source_hashes() -> dict[str, str]:
     }
 
 
+def run_command(
+    work,
+    manifest,
+    command,
+    *,
+    cwd,
+    env,
+    data=None,
+    timeout=900,
+    allow_failure=False,
+    sensitive_values=(),
+):
+    """Retain exact child bytes before returning a separately decoded parsing copy."""
+    outcome, status, failure_type = "exit", None, None
+    available = {"stdout": True, "stderr": True}
+    try:
+        result = subprocess.run(
+            command,
+            cwd=cwd,
+            env=env,
+            input=data.encode("utf-8") if isinstance(data, str) else data,
+            capture_output=True,
+            timeout=timeout,
+        )
+        stdout, stderr, status = result.stdout, result.stderr, result.returncode
+    except subprocess.TimeoutExpired as error:
+        outcome, failure_type = "timeout", type(error).__name__
+        stdout, stderr = error.stdout or b"", error.stderr or b""
+        available = {"stdout": error.stdout is not None, "stderr": error.stderr is not None}
+    except OSError as error:
+        outcome, failure_type = "launch_error", type(error).__name__
+        stdout, stderr = b"", b""
+        available = {"stdout": False, "stderr": False}
+    number = len(manifest["commands"])
+    evidence = {}
+    for channel, original in (("stdout", stdout), ("stderr", stderr)):
+        decoded = original.decode("utf-8", errors="replace")
+        safe_text = decoded
+        for value in sensitive_values:
+            safe_text = safe_text.replace(value, "[redacted-private-credential]")
+        # Invalid UTF-8 and CRLF remain exact unless actual redaction is needed.
+        safe = original if safe_text == decoded else safe_text.encode("utf-8")
+        relative = f"{number:03}.{channel}"
+        original_relative = relative
+        if original != safe:
+            restricted = work / "private"
+            restricted.mkdir(mode=0o700, exist_ok=True)
+            original_relative = f"private/{relative}"
+            (work / original_relative).write_bytes(original)
+        (work / relative).write_bytes(safe)
+        evidence[channel + "_path"] = relative
+        evidence[channel + "_original_path"] = original_relative
+        evidence[channel + "_sha256"] = hashlib.sha256(safe).hexdigest()
+        evidence[channel + "_original_sha256"] = hashlib.sha256(original).hexdigest()
+        evidence[channel + "_redacted"] = original != safe
+        evidence[channel + "_available"] = available[channel]
+    entry = {"command": command, "outcome": outcome, "exit": status, **evidence}
+    if outcome != "exit":
+        entry["failure_type"] = failure_type
+    if outcome == "timeout":
+        entry["timeout_seconds"] = timeout
+    manifest.setdefault("command_evidence_schema", 2)
+    manifest["commands"].append(entry)
+    if outcome == "timeout":
+        raise RuntimeError(f"Infrastructure command timed out; private evidence: {work}") from None
+    if outcome == "launch_error":
+        raise RuntimeError(
+            f"Infrastructure command could not start; private evidence: {work}"
+        ) from None
+    if status and not allow_failure:
+        raise RuntimeError(f"Infrastructure command failed ({status}); private evidence: {work}")
+    return subprocess.CompletedProcess(
+        command,
+        status,
+        stdout.decode("utf-8", errors="replace"),
+        stderr.decode("utf-8", errors="replace"),
+    )
+
+
+def finalize_proof(work, manifest, run, cleanup, *, failure=None):
+    """Attempt every cleanup and persist evidence without replacing a primary failure."""
+    if failure is not None:
+        manifest["passed"] = False
+        manifest["failure"] = {"type": type(failure).__name__}
+    cleanup_failures = []
+    for command, timeout in cleanup:
+        index = len(manifest["commands"])
+        try:
+            result = run(command, timeout=timeout, allow_failure=True)
+        except Exception as error:
+            recorded = manifest["commands"][index:]
+            cleanup_failures.append(
+                {
+                    "command": command,
+                    "command_index": index,
+                    "outcome": recorded[0]["outcome"] if recorded else "exception",
+                    "type": type(error).__name__,
+                }
+            )
+        else:
+            if result.returncode:
+                cleanup_failures.append(
+                    {
+                        "command": command,
+                        "command_index": index,
+                        "outcome": "exit",
+                        "exit": result.returncode,
+                    }
+                )
+    if cleanup_failures:
+        manifest["cleanup_failures"] = cleanup_failures
+    try:
+        if source_hashes() != manifest["source_hashes"]:
+            manifest["source_mutation"] = True
+    except Exception as error:
+        manifest["source_check_failure"] = {"type": type(error).__name__}
+    finalization_failed = bool(
+        cleanup_failures or manifest.get("source_mutation") or manifest.get("source_check_failure")
+    )
+    if finalization_failed:
+        manifest["passed"] = False
+    (work / "manifest.json").write_bytes(json.dumps(manifest, indent=2).encode("utf-8"))
+    print("Private file infrastructure evidence:", work)
+    if finalization_failed and failure is None:
+        raise RuntimeError(f"Infrastructure proof finalization failed; private evidence: {work}")
+
+
 def require_capacity(memory: int) -> None:
     if memory < 6 * 1024**3:
         raise RuntimeError("Full signed-definition profile requires at least 6 GiB engine memory")
@@ -427,43 +554,17 @@ def main() -> None:
     sensitive_values = []
 
     def run(command, *, data=None, timeout=900, allow_failure=False):
-        result = subprocess.run(
+        return run_command(
+            work,
+            manifest,
             command,
             cwd=ROOT,
             env=env,
-            input=data,
-            capture_output=True,
-            text=True,
+            data=data,
             timeout=timeout,
-            encoding="utf-8",
+            allow_failure=allow_failure,
+            sensitive_values=sensitive_values,
         )
-        number = len(manifest["commands"])
-        evidence = {}
-        for channel in ("stdout", "stderr"):
-            original = getattr(result, channel)
-            safe = original
-            for value in sensitive_values:
-                safe = safe.replace(value, "[redacted-private-credential]")
-            if original != safe:
-                restricted = work / "private"
-                restricted.mkdir(mode=0o700, exist_ok=True)
-                (restricted / f"{number:03}.{channel}").write_text(original, encoding="utf-8")
-            (work / f"{number:03}.{channel}").write_text(safe, encoding="utf-8")
-            evidence[channel + "_sha256"] = hashlib.sha256(safe.encode()).hexdigest()
-            evidence[channel + "_original_sha256"] = hashlib.sha256(original.encode()).hexdigest()
-            evidence[channel + "_redacted"] = original != safe
-        manifest["commands"].append(
-            {
-                "command": command,
-                "exit": result.returncode,
-                **evidence,
-            }
-        )
-        if result.returncode and not allow_failure:
-            raise RuntimeError(
-                f"Infrastructure command failed ({result.returncode}); private evidence: {work}"
-            )
-        return result
 
     def probe(phase, payload, red=False):
         extra = ["-e", "ALTVIA_FILE_RED=1"] if red else []
@@ -707,19 +808,16 @@ def main() -> None:
                 raise RuntimeError("Stopped scanner released clean bytes")
         manifest["passed"] = True
     finally:
-        run(
-            [*compose, "logs", "--no-color", "storage", "clamd", "freshclam"],
-            timeout=30,
-            allow_failure=True,
+        finalize_proof(
+            work,
+            manifest,
+            run,
+            [
+                ([*compose, "logs", "--no-color", "storage", "clamd", "freshclam"], 30),
+                ([*compose, "down"], 90),  # Preserve all named volumes.
+            ],
+            failure=sys.exception(),
         )
-        run([*compose, "down"], timeout=90, allow_failure=True)  # Preserve all named volumes.
-        if source_hashes() != manifest["source_hashes"]:
-            manifest["passed"] = False
-            manifest["source_mutation"] = True
-        (work / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-        print("Private file infrastructure evidence:", work)
-        if manifest.get("source_mutation"):
-            raise RuntimeError("Source changed during real infrastructure proof")
 
 
 if __name__ == "__main__":

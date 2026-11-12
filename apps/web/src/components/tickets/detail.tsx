@@ -7,18 +7,19 @@ import { Button } from "@/components/ui/button";
 import type { WorkspaceSession } from "@/components/workspace-session";
 import { LoadingRows, ReadError, useTeamWrite } from "@/components/team-admin/common";
 import type { QueueApi } from "@/lib/ticket-queues";
-import { ApiError } from "@/lib/http";
+import { ApiError, isResourceForbidden } from "@/lib/http";
 import { type TicketApi, type TicketPatch, type TicketRecord, type TicketTransition, ticketPriorities, ticketStatuses } from "@/lib/tickets";
 import { TicketForm } from "./form";
 import { TicketFeedback } from "./feedback";
 import { TicketActivity, TicketHistory } from "./reads";
 import { TicketNoteForm, TicketNotes } from "./notes";
-import { TicketMessageForm, TicketMessages } from "./messages";
+import { type DeliveryReview, TicketDeliveryReview, TicketMessageForm, TicketMessages } from "./messages";
 
 type Intent = { kind: "edit"; body: TicketPatch; version: number }
   | { kind: "claim"; version: number; key: string }
   | { kind: "transition"; body: TicketTransition; version: number; key: string }
   | { kind: "note"; body: { body_text: string }; version: number; key: string }
+  | { kind: "delivery"; review: DeliveryReview; version: number; key: string }
   | { kind: "message"; body: { body_text: string }; version: number; key: string };
 
 export function TicketDetail({ id, api, queues, session }: { id: string; api: TicketApi; queues: QueueApi; session: WorkspaceSession }) {
@@ -30,6 +31,9 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
   const acknowledgedNote = useRef<string | null>(null);
   const [noteDraft, setNoteDraft] = useState<{ body: string; version: number } | null>(null);
   const [noteError, setNoteError] = useState("");
+  const acknowledgedDelivery = useRef<{ message: string; delivery: string } | null>(null);
+  const [deliveryAcknowledged, setDeliveryAcknowledged] = useState(false);
+  const [deliveryReview, setDeliveryReview] = useState<DeliveryReview | null>(null);
   const acknowledgedMessage = useRef<string | null>(null);
   const [messageDraft, setMessageDraft] = useState<{ body: string; version: number } | null>(null);
   const [messageReview, setMessageReview] = useState<{ body: string; version: number } | null>(null);
@@ -51,7 +55,18 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
       if (!fresh.data || message.ticket_version > fresh.data.version) throw Error("Message version not confirmed");
       await cache.refetchQueries({ queryKey: ["ticket-messages", id], type: "active" }, { throwOnError: true });
     }
+    if (acknowledgedDelivery.current) {
+      const receipt = acknowledgedDelivery.current;
+      const delivery = await api.delivery(id, receipt.message);
+      if (delivery.delivery_id !== receipt.delivery || delivery.message_id !== receipt.message || delivery.ticket_id !== id) throw Error("Delivery receipt not confirmed");
+      await cache.refetchQueries({ queryKey: ["ticket-messages", id], type: "active" }, { throwOnError: true });
+      await cache.invalidateQueries({ queryKey: ["ticket-delivery", id] });
+    }
+    await cache.refetchQueries({ queryKey: ["ticket-delivery-choices", id], type: "active" }, { throwOnError: true });
     if (!session.isCurrent()) return;
+    if (acknowledgedDelivery.current) setDeliveryReview(null);
+    acknowledgedDelivery.current = null;
+    setDeliveryAcknowledged(false);
     acknowledgedNote.current = null;
     acknowledgedMessage.current = null;
     setAwaiting(false);
@@ -59,6 +74,7 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
     await Promise.all(["tickets", "ticket-states", "ticket-activity"].map(key => cache.invalidateQueries({ queryKey: key === "tickets" ? [key] : [key, id] })));
   };
   const write = useTeamWrite(session, async (intent: Intent) => {
+    if (intent.kind === "delivery") return { kind: "delivery" as const, receipt: await api.send(id, intent.review.message.id, { participant_id: intent.review.choices.participant!.participant_id, source_id: intent.review.choices.sender!.source_id }, intent.version, intent.key) };
     if (intent.kind === "edit") return { kind: "edit" as const, row: await api.update(id, intent.body, intent.version) };
     if (intent.kind === "note") return { kind: "note" as const, receipt: await api.addNote(id, intent.body, intent.version, intent.key) };
     if (intent.kind === "message") return { kind: "message" as const, receipt: await api.addMessage(id, intent.body, intent.version, intent.key) };
@@ -70,13 +86,14 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
     if (result.kind === "edit") cache.setQueryData(["ticket", id], result.row);
     if (result.kind === "note") { acknowledgedNote.current = result.receipt.note_id; setNoteDraft(null); setNoteError(""); }
     if (result.kind === "message") { acknowledgedMessage.current = result.receipt.message_id; setMessageDraft(null); setMessageReview(null); setMessageError(""); }
+    if (result.kind === "delivery") { acknowledgedDelivery.current = { message: result.receipt.message_id, delivery: result.receipt.delivery_id }; setDeliveryAcknowledged(true); }
     setAwaiting(true);
-    setNotice(result.kind === "message" ? "Rascunho salvo, nao enviado. Atualize o chamado antes de continuar." : result.kind === "note" ? "Nota registrada. Atualize o chamado antes de continuar." : "Operacao confirmada. Atualize o chamado antes de continuar.");
+    setNotice(result.kind === "delivery" ? "Solicitacao de envio registrada. Atualize o chamado para consultar o estado confirmado." : result.kind === "message" ? "Rascunho salvo, nao enviado. Atualize o chamado antes de continuar." : result.kind === "note" ? "Nota registrada. Atualize o chamado antes de continuar." : "Operacao confirmada. Atualize o chamado antes de continuar.");
     void refresh().then(() => { if (session.isCurrent()) setNotice("Alteracao confirmada."); }).catch(() => { /* The authoritative read owns recovery. */ });
   });
   const reload = async () => {
     await refresh();
-    if (session.isCurrent()) { setEditor(null); setTarget(""); setReason(""); setTransitionReview(null); setNoteDraft(null); setNoteError(""); setMessageDraft(null); setMessageReview(null); setMessageError(""); setError(""); setNotice(""); }
+    if (session.isCurrent()) { setEditor(null); setTarget(""); setReason(""); setTransitionReview(null); setNoteDraft(null); setNoteError(""); setMessageDraft(null); setMessageReview(null); setDeliveryReview(null); setMessageError(""); setError(""); setNotice(""); }
   };
   const blocked = write.locked || awaiting || query.isFetching || query.isError;
   const reviewed = transitionReview ?? row;
@@ -100,7 +117,7 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
       <p className="admin-intro">Chamado {row.number} - {ticketStatuses[row.status]}</p>
       <Button variant="outline" disabled={query.isFetching || write.pending} onClick={() => void refresh().catch(() => {})}>Atualizar chamado</Button>
       {notice && <p role="status" className="read-notice">{notice}</p>}
-      <TicketFeedback write={write} reload={reload} verifyLabel={write.current?.kind === "message" ? "Verificar rascunho" : write.current?.kind === "note" ? "Verificar nota interna" : write.current?.kind === "claim" ? "Verificar atribuicao" : write.current?.kind === "transition" ? "Verificar mudanca de estado" : undefined} />
+      <TicketFeedback write={write} reload={reload} verifyLabel={write.current?.kind === "delivery" ? "Verificar solicitacao de envio" : write.current?.kind === "message" ? "Verificar rascunho" : write.current?.kind === "note" ? "Verificar nota interna" : write.current?.kind === "claim" ? "Verificar atribuicao" : write.current?.kind === "transition" ? "Verificar mudanca de estado" : undefined} />
       <div className="admin-plane">
         <section className="admin-section" aria-labelledby="ticket-data-heading">
           <h2 id="ticket-data-heading">Dados do chamado</h2>
@@ -142,7 +159,20 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
             </fieldset>
           </form>
         </section>}
-        <TicketMessages id={id} api={api} canAdd={row.can_add_message} />
+        <TicketMessages id={id} api={api} canAdd={row.can_add_message}
+          pendingDelivery={deliveryReview && (write.current?.kind === "delivery" || deliveryAcknowledged) ? { messageId: deliveryReview.message.id, acknowledged: deliveryAcknowledged } : null}
+          recoveryAvailable={deliveryAcknowledged || write.uncertain || isResourceForbidden(write.error)}
+          recoveryBusy={write.pending || query.isFetching || write.reloading}
+          recoverDelivery={() => { if (acknowledgedDelivery.current) void refresh().catch(() => {}); else write.verify(); }}
+          blocked={blocked || editor !== null || deliveryReview !== null} review={(message, choices) => {
+          if (blocked || !row.can_add_message || deliveryReview) return;
+          setDeliveryReview({ message, choices, version: row.version, key: crypto.randomUUID() });
+          requestAnimationFrame(() => document.getElementById("ticket-delivery-review-heading")?.focus());
+        }} />
+        {deliveryReview && <TicketDeliveryReview review={deliveryReview} disabled={blocked || !row.can_add_message} cancel={() => setDeliveryReview(null)} confirm={() => {
+          if (blocked || !row.can_add_message) return;
+          write.submit({ kind: "delivery", review: deliveryReview, version: deliveryReview.version, key: deliveryReview.key });
+        }} />}
         {(row.can_add_message || messageDraft !== null || messageReview !== null) && <TicketMessageForm body={messageDraft?.body ?? ""} reviewed={messageReview?.body ?? null} disabled={blocked || editor !== null || !row.can_add_message} error={messageError}
           change={body => { setMessageDraft({ body, version: messageDraft?.version ?? row.version }); setMessageError(""); }}
           review={() => {

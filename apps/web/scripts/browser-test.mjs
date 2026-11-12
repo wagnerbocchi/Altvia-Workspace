@@ -5,6 +5,10 @@ import { request } from "node:http";
 import { createRequire } from "node:module";
 import { createServer as createTcpServer } from "node:net";
 import { fileURLToPath } from "node:url";
+import { mkdtemp, writeFile, rm, appendFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { randomUUID } from "node:crypto";
+import { createServer as createTlsServer } from "node:tls";
 import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import selfsigned from "selfsigned";
@@ -26,6 +30,8 @@ const result = child => new Promise((done, reject) => {
 });
 const uv = process.platform === "win32" ? "uv.exe" : "uv";
 let gateway;
+let relay;
+let relayFolder;
 try {
   for (const port of [3000, 8000, 3443]) {
     await new Promise((done, reject) => {
@@ -35,6 +41,47 @@ try {
     });
   }
   await result(run(uv, ["run", "alembic", "-c", "apps/api/alembic.ini", "upgrade", "head"]));
+  relayFolder = await mkdtemp(resolve(tmpdir(), "altvia-browser-smtp-"));
+  const smtpCertificate = await selfsigned.generate([{ name: "commonName", value: "localhost" }], {
+    keySize: 2048, algorithm: "sha256", extensions: [{ name: "subjectAltName", altNames: [{ type: 7, ip: "127.0.0.1" }, { type: 2, value: "localhost" }] }],
+  });
+  const certificatePath = resolve(relayFolder, "certificate.pem");
+  await writeFile(certificatePath, smtpCertificate.cert);
+  process.env.ALTVIA_E2E_SMTP_CAPTURE = resolve(relayFolder, "messages.jsonl");
+  await writeFile(process.env.ALTVIA_E2E_SMTP_CAPTURE, "");
+  relay = createTlsServer({ key: smtpCertificate.private, cert: smtpCertificate.cert }, socket => {
+    socket.setTimeout(10000, () => socket.destroy());
+    socket.write("220 synthetic browser relay\r\n");
+    let buffer = "", data = false, body = "", envelope = [];
+    socket.on("error", () => {});
+    socket.on("data", chunk => {
+      buffer += chunk.toString("utf8");
+      if (buffer.length > 300000) return socket.destroy();
+      while (buffer.includes("\r\n")) {
+        const end = buffer.indexOf("\r\n");
+        const line = buffer.slice(0, end); buffer = buffer.slice(end + 2);
+        if (data) {
+          if (line !== ".") { if (body.length + line.length > 300000) return socket.destroy(); body += (line.startsWith("..") ? line.slice(1) : line) + "\r\n"; continue; }
+          data = false;
+          const snapshot = { body, envelope };
+          void appendFile(process.env.ALTVIA_E2E_SMTP_CAPTURE, JSON.stringify(snapshot) + "\n").then(() => {
+            if (body.includes("E2E-SMTP-UNCERTAIN")) socket.destroy();
+            else socket.write(body.includes("E2E-SMTP-FAILED") ? "550 synthetic rejection\r\n" : "250 synthetic acceptance\r\n");
+          });
+          continue;
+        }
+        const verb = line.split(" ")[0].toUpperCase();
+        if (verb === "EHLO") socket.write("250-local\r\n250 AUTH PLAIN\r\n");
+        else if (verb === "AUTH") socket.write("235 authenticated\r\n");
+        else if (verb === "MAIL" || verb === "RCPT") { envelope.push(line); socket.write("250 OK\r\n"); }
+        else if (verb === "DATA") { data = true; socket.write("354 continue\r\n"); }
+        else socket.write("250 OK\r\n");
+      }
+    });
+  });
+  await new Promise(done => relay.listen(0, "127.0.0.1", done));
+  process.env.ALTVIA_SMTP_ACCOUNTS_FILE = resolve(relayFolder, "accounts.json");
+  await writeFile(process.env.ALTVIA_SMTP_ACCOUNTS_FILE, JSON.stringify([{ source_id: randomUUID(), host: "127.0.0.1", port: relay.address().port, tls_mode: "implicit", username: "synthetic", password: randomUUID(), from_email: "support@example.invalid", ca_file: certificatePath }]));
   await result(run(uv, ["run", "python", "scripts/browser_fixture.py"]));
   process.loadEnvFile(resolve(root, ".env.browser-session"));
   const python = resolve(root, process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python");
@@ -71,6 +118,7 @@ try {
   await result(run(process.execPath, [require.resolve("@playwright/test/cli"), "test", ...process.argv.slice(2)], web));
 } finally {
   gateway?.closeAllConnections(); gateway?.close();
+  relay?.close();
   for (const child of children.reverse()) if (child.exitCode === null) {
     if (process.platform === "win32") {
       // Windows venv launchers create a child interpreter; close the whole tree.
@@ -83,4 +131,5 @@ try {
       await new Promise(done => child.once("exit", done));
     }
   }
+  if (relayFolder) await rm(relayFolder, { recursive: true, force: true });
 }

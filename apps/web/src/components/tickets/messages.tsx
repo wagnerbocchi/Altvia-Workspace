@@ -3,23 +3,64 @@
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { LoadingRows, ReadError, usePaging } from "@/components/team-admin/common";
-import type { TicketApi } from "@/lib/tickets";
+import type { DeliveryChoices, TicketApi, TicketMessage } from "@/lib/tickets";
 
-export function TicketMessages({ id, api, canAdd }: { id: string; api: TicketApi; canAdd: boolean }) {
+const deliveryLabels = { draft: "Rascunho - nao enviado", queued: "Na fila de envio", preparing: "Preparando envio", transmitting: "Transmitindo ao servidor de e-mail", accepted: "Aceito pelo servidor de e-mail", failed: "Envio falhou", uncertain: "Resultado do envio incerto" };
+
+function DeliveryStatus({ id, message, api }: { id: string; message: TicketMessage; api: TicketApi }) {
+  const query = useQuery({ queryKey: ["ticket-delivery", id, message.id], queryFn: ({ signal }) => api.delivery(id, message.id, signal), enabled: message.delivery_status !== "draft" });
+  const status = query.data?.state ?? message.delivery_status;
+  const errors: Record<string, string> = { permanent: "O servidor recusou a mensagem.", temporary: "O servidor pediu para aguardar; o sistema fara novas tentativas limitadas.", transport: "A conexao segura nao foi concluida; o sistema fara novas tentativas limitadas.", eligibility_revoked: "A autorizacao ou a elegibilidade mudou antes do envio.", retry_exhausted: "O limite de tentativas foi atingido.", data_unknown: "O resultado no servidor precisa de verificacao administrativa." };
+  return <div>
+    <span className="record-meta">{deliveryLabels[status]}</span>
+    {status === "accepted" && <p className="field-help">O servidor aceitou a mensagem. Isso nao confirma a entrega ao destinatario.</p>}
+    {status === "failed" && <p className="field-help">Nao foi possivel concluir este envio. Solicite analise ao administrador; esta resposta nao sera reenviada por esta tela.</p>}
+    {status === "uncertain" && <p className="field-help">O servidor pode ter aceitado a mensagem. Nao envie outra copia. Um administrador precisa conferir o resultado.</p>}
+    {query.data?.last_error_code && errors[query.data.last_error_code] && <p className="field-help">{errors[query.data.last_error_code]}</p>}
+    {query.data && <p className="record-meta">Tentativas: {query.data.attempts}{query.data.accepted_at && ` - Aceite em ${new Date(query.data.accepted_at).toLocaleString("pt-BR")}`}</p>}
+    {message.delivery_status !== "draft" && <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>Atualizar estado do envio</Button>}
+    {query.isError && <ReadError retry={() => void query.refetch()}>Nao foi possivel consultar o envio. O ultimo estado conhecido continua exibido; nao crie outra copia.</ReadError>}
+  </div>;
+}
+
+export type DeliveryReview = { message: TicketMessage; choices: DeliveryChoices; version: number; key: string };
+export function TicketDeliveryReview({ review, disabled, confirm, cancel }: { review: DeliveryReview; disabled: boolean; confirm: () => void; cancel: () => void }) {
+  return <section className="admin-section" aria-labelledby="ticket-delivery-review-heading">
+    <h2 id="ticket-delivery-review-heading" tabIndex={-1}>Revisar envio de resposta</h2>
+    <dl className="account-details work-facts"><div><dt>De</dt><dd>{review.choices.sender?.from_email}</dd></div><div><dt>Para</dt><dd>{review.choices.participant?.display_name} - {review.choices.participant?.email}</dd></div></dl>
+    <p className="field-help">Destinatario atestado somente para este chamado. Isso nao verifica sua conta ou contato em outros contextos.</p>
+    <h3 className="work-subheading">Texto salvo que sera enviado</h3><p className="work-prose">{review.message.body_text}</p>
+    <p className="field-help">Confirmar coloca esta resposta na fila de envio. Notas internas nao fazem parte da mensagem.</p>
+    <div className="action-row"><Button disabled={disabled} onClick={confirm}>Confirmar envio</Button><Button variant="outline" disabled={disabled} onClick={cancel}>Cancelar revisao de envio</Button></div>
+  </section>;
+}
+
+export function TicketMessages({ id, api, canAdd, blocked, review, pendingDelivery, recoveryBusy, recoveryAvailable, recoverDelivery }: {
+  id: string; api: TicketApi; canAdd: boolean; blocked: boolean; review: (message: TicketMessage, choices: DeliveryChoices) => void;
+  pendingDelivery: { messageId: string; acknowledged: boolean } | null; recoveryBusy: boolean; recoveryAvailable: boolean; recoverDelivery: () => void;
+}) {
   const paging = usePaging();
   const query = useQuery({ queryKey: ["ticket-messages", id, paging.cursor], queryFn: ({ signal }) => api.messages(id, paging.cursor, signal) });
+  const choices = useQuery({ queryKey: ["ticket-delivery-choices", id], queryFn: ({ signal }) => api.deliveryChoices(id, signal) });
   return <section className="admin-section" aria-labelledby="ticket-messages-heading">
     <h2 id="ticket-messages-heading">Respostas</h2>
-    <p className="field-help">Rascunhos compartilhados com quem tem acesso a este chamado. Nenhuma resposta foi enviada ao solicitante.</p>
+    <p className="field-help">Respostas compartilhadas com quem tem acesso a este chamado. Salvar um rascunho nao envia e-mail. Cada envio exige revisao e confirmacao.</p>
+    {choices.isError && <ReadError retry={() => void choices.refetch()}>Nao foi possivel consultar as opcoes de envio.</ReadError>}
+    {choices.data && (!choices.data.can_send || !choices.data.sender || !choices.data.participant) && <p className="field-help">{!canAdd ? "Sua conta pode consultar respostas, mas nao enviar neste chamado." : !choices.data.sender ? "O envio precisa de um remetente configurado pelo administrador para esta fila." : !choices.data.participant ? "O solicitante precisa de uma atestacao valida para este chamado antes do envio. Consulte o administrador." : "O envio nao esta disponivel nas condicoes atuais do chamado."}</p>}
     {!canAdd && <p className="field-help">Rascunhos podem ser salvos pelo responsavel ou gestor, com cliente, equipe e fila ativos e chamado aberto para alteracoes.</p>}
     <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>Atualizar respostas</Button>
     {query.isPending ? <LoadingRows label="Carregando respostas..." /> : query.isError ? <ReadError retry={() => void query.refetch()} /> : query.data.items.length ?
       <ol className="record-list" aria-label="Rascunhos de resposta">{query.data.items.map(message => <li className="team-row" key={message.id}>
         <div className="record-text">
           <strong>{message.author_name}</strong>
-          <span className="record-meta">Rascunho - nao enviado</span>
+          {pendingDelivery?.messageId === message.id ? <div role="status">
+            <span className="record-meta">{pendingDelivery.acknowledged ? "Solicitacao registrada; estado do envio aguardando confirmacao." : "Solicitacao sem resultado confirmado; estado do envio aguardando verificacao."}</span>
+            <p className="field-help">Nao crie outra copia. Recupere o resultado desta solicitacao antes de continuar.</p>
+            {recoveryAvailable && <Button variant="outline" disabled={recoveryBusy} onClick={recoverDelivery}>{pendingDelivery.acknowledged ? "Confirmar estado deste envio" : "Recuperar resultado deste envio"}</Button>}
+          </div> : <DeliveryStatus id={id} message={message} api={api} />}
           <time className="record-meta" dateTime={message.created_at}>{new Date(message.created_at).toLocaleString("pt-BR")}</time>
           <p className="work-prose">{message.body_text}</p>
+          {message.delivery_status === "draft" && pendingDelivery?.messageId !== message.id && canAdd && choices.data?.can_send && choices.data.sender && choices.data.participant && <Button variant="outline" disabled={blocked || choices.isFetching || choices.isError} onClick={() => review(message, choices.data!)}>Revisar envio</Button>}
         </div>
       </li>)}</ol> : <p>Nenhum rascunho de resposta nesta pagina.</p>}
     <nav className="paging" aria-label="Paginas de respostas">

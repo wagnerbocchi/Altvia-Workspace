@@ -7,6 +7,9 @@ import { ApiError, isResourceForbidden } from "@/lib/http";
 export function ticketError(error: unknown) {
   if (error instanceof ApiError) {
     if (isResourceForbidden(error)) return "Sua conta nao pode realizar esta alteracao. A operacao continua pendente. Atualize o chamado para revisar seu acesso ou descarte a edicao.";
+    if (error.code === "delivery_ineligible") return "O remetente ou a atestacao do solicitante mudou. Recarregue para revisar as opcoes antes de preparar outro envio.";
+    if (error.code === "delivery_exists") return "Esta resposta ja tem um envio registrado. Recarregue para consultar seu estado; nao envie outra copia.";
+    if (error.code === "delivery_content_ineligible") return "O texto salvo nao pode ser enviado nesta configuracao. Consulte o administrador.";
     if (error.code === "ticket_parent_inactive") return "O cliente, a equipe ou a fila foi arquivado. Atualize o chamado.";
     if (error.code === "ticket_closed") return "Reabra o chamado antes de editar ou atribuir um responsavel.";
     if (error.code === "invalid_ticket_assignee") return "O responsavel perdeu a elegibilidade. Atualize as opcoes.";

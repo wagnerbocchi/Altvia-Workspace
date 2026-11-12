@@ -5,6 +5,10 @@ export type TicketRecord = components["schemas"]["TicketOutput"];
 export type TicketCreate = components["schemas"]["TicketCreate"];
 export type TicketPatch = components["schemas"]["TicketPatch"];
 export type TicketTransition = components["schemas"]["TicketTransition"];
+export type DeliveryChoices = components["schemas"]["DeliveryChoices"];
+export type DeliveryOutput = components["schemas"]["DeliveryOutput"];
+export type DeliveryCreate = components["schemas"]["DeliveryCreate"];
+export type TicketMessage = components["schemas"]["TicketMessageOutput"];
 export type TicketFilters = Partial<Pick<TicketRecord, "queue_id" | "client_id" | "status" | "priority" | "assignee_id">> & { q?: string; unassigned?: boolean };
 export const ticketStatuses: Record<TicketRecord["status"], string> = {
   new: "Novo", open: "Aberto", pending_customer: "Aguardando cliente",
@@ -78,6 +82,15 @@ export function createTicketApi(csrf: string, onAuthError: (error: unknown) => v
     },
     async addMessage(id: string, body: components["schemas"]["TicketMessageCreate"], version: number, key: string): Promise<components["schemas"]["TicketMessageReceipt"]> {
       return (await request(`${path(id)}/messages`, write("POST", body, version, key))).json();
+    },
+    async deliveryChoices(id: string, signal?: AbortSignal): Promise<DeliveryChoices> {
+      return (await request(`${path(id)}/delivery-choices`, { signal })).json();
+    },
+    async delivery(id: string, messageId: string, signal?: AbortSignal): Promise<DeliveryOutput> {
+      return (await request(`${path(id)}/messages/${encodeURIComponent(messageId)}/delivery`, { signal })).json();
+    },
+    async send(id: string, messageId: string, body: DeliveryCreate, version: number, key: string): Promise<components["schemas"]["DeliveryReceipt"]> {
+      return (await request(`${path(id)}/messages/${encodeURIComponent(messageId)}/delivery`, write("POST", body, version, key))).json();
     },
   };
 }

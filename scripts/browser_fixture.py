@@ -220,6 +220,21 @@ with Session(engine) as db, db.begin():
         note_queue = TicketQueue(team_id=queue_access_team.id, name="Notas internas - Validacao")
         db.add(note_queue)
         db.flush()
+        if os.environ.get("ALTVIA_SMTP_ACCOUNTS_FILE"):
+            from altvia.mail_participants import register_sender
+            from altvia.mail_settings import load_accounts
+            from altvia.models import MailboxSource
+
+            for account in load_accounts(Path(os.environ["ALTVIA_SMTP_ACCOUNTS_FILE"])).values():
+                if account.host != "127.0.0.1" or account.from_email != "support@example.invalid":
+                    raise SystemExit("Synthetic local relay required")
+                db.add(
+                    MailboxSource(
+                        id=account.source_id, source_key="browser-synthetic", queue_id=note_queue.id
+                    )
+                )
+                db.flush()
+                register_sender(db, account)
         note_accounts = {}
         for kind, role, access in [
             ("AUTHOR", "operations_manager", "write"),

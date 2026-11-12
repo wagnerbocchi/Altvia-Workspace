@@ -53,6 +53,13 @@ fresh promotion/anchor use and preserve a private conflicting origin. This is
 deliberately conservative: changed Received headers can require operator review.
 Body equality alone is never deduplication proof.
 
+After promotion, an identical independently attested alias retains the SAME case,
+incoming row and immutable promotion receipt; it cannot create another message.
+Its private mail.case_aliased event uses explicit schema2 with state promoted and
+the same bounded metadata fields. Existing schema1 ready-alias envelopes remain
+exact. Revocation/collision after promotion preserves the incoming receipt/history
+and supplies the fixed historical invalidation warning, never a destructive undo.
+
 The same claimed Message-ID in another attested client/contact/email context is
 independent. It cannot reveal, invalidate or deduplicate the first context. An
 incoming primary ID equal to an existing server-generated outbound ID in its OWN
@@ -121,6 +128,17 @@ Extend outbound reference selection to eligible promoted incoming IDs and accept
 outbound IDs, at most16 in persisted chronological order. Preserve exact existing
 outbound-only ordering and all previously frozen bytes/IDs/receipts. The first
 reply must include the original eligible incoming ID when one exists.
+
+Reference selection for a new freeze is also bounded to the current queue/client/
+contact/frozen-recipient-email context. Changing a requester never includes the
+previous requester's ancestor IDs in a new wire. Preserve the exact created_at/id
+ordering of eligible outbound-only histories and every previously frozen wire.
+On a context's first reply (no accepted outbound there), retain its earliest
+eligible incoming ID plus the latest other15 eligible references, in chronological
+order. This first-reply root retention takes precedence over an unqualified
+latest16 truncation when more than16 incoming records precede that reply. Later
+replies use the latest16 eligible references. Missing IDs remain absent. Cover
+both many-incoming-before-first-reply and changed-requester negatives explicitly.
 
 ## Locks, collisions, versions and protected effects
 

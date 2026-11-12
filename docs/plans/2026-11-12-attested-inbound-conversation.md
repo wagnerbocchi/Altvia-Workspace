@@ -162,9 +162,14 @@ mail_delivery and tests. Regenerate OpenAPI/TypeScript.
   append replay requires current target write authority. In particular, creation
   of an unassigned ticket must not make its own successful receipt unrecoverable.
 - [ ] Extend freeze reference query to eligible promoted incoming and accepted
-  outbound IDs, latest16 chronological, preserving exact outbound-only behavior
+  outbound IDs in the current contact/frozen-recipient context, latest16
+  chronological except first-reply earliest incoming root plus latest other15,
+  preserving exact eligible outbound-only ordering
   and existing wire. Prove actual first reply In-Reply-To/References, missing-ID
-  limitation, invalidated anchor exclusion and no foreign IDs/private text.
+  limitation, >16 incoming before first reply, changed-requester exclusion,
+  invalidated anchor exclusion and no foreign IDs/private text. Identical aliases
+  after promotion keep the same Case/receipt/incoming row; version their promoted
+  private alias event explicitly as schema2 while preserving ready schema1.
 - [ ] Run full affected PG/mail/ticket/activity/runtime/migration/static/build/
   contract gates. Independent task spec+quality review, then coherent checked commit.
 

@@ -17,7 +17,7 @@ target-VM qualification follows development, not each slice.
 | --- | --- | --- |
 | Service Desk conversation | Public response drafts separate from private notes; protected review/replay and real browser conversation | Development/CI complete558f4ee;796 API/131 browser, packaged proof; final target deferred |
 | Outbound mail | Explicit verified participant boundary, durable public-only queue, verified TLS SMTP, stable IDs, retry/uncertain reconciliation and browser delivery states | Development/CI complete c47fd8a;894 API/142 browser,201 affected, actual packaged SMTP/restart/privacy/active shutdown; final target deferred |
-| Inbound mail | Restricted authorized triage, explicit verified sender/thread evidence, safe creation/append/reopen, no subject/From-only trust | ADR0036/2026-11-12 implementation plan selected after outbound acceptance; development next |
+| Inbound mail | Restricted authorized triage, explicit verified sender/thread evidence, safe creation/append/reopen, no subject/From-only trust | ADR0036 Task1 owner/read boundary711d4b0:420 affected tests and clean independent review; promotion/conversation/UI/packaged acceptance in progress |
 | Private files | Private object storage, bounded streaming, fail-closed scanning, authorized ticket/work links and downloads | Pending |
 | Ticket/work links | Same-client N:N authorization of both endpoints, independent state, real browser links | Pending |
 | Automation/unified work | Structured durable rules, idempotent assignment/reopen/race behavior, visible failures, consolidated scoped My Work | Pending |

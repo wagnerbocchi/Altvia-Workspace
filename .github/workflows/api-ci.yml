@@ -11,7 +11,7 @@ permissions:
 jobs:
   identity:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     services:
       postgres:
         image: postgres:17-bookworm@sha256:73bedc9eaa0121b92b9b26bb52e5141b3f6f37479c7ef913c0160455763ca80a
@@ -28,6 +28,7 @@ jobs:
       ALTVIA_DATABASE_URL: postgresql+psycopg://altvia_test:test-${{ github.run_id }}-${{ github.run_attempt }}@127.0.0.1:5432/altvia_test
       ALTVIA_PUBLIC_ORIGIN: https://testserver
       ALTVIA_ALLOW_TEST_DB: "1"
+      ALTVIA_REQUIRE_FILE_TESTS: "1"
       ALTVIA_REDIS_URL: redis://:test-${{ github.run_id }}-${{ github.run_attempt }}@127.0.0.1:6379/0
       ALTVIA_CI_REDIS_PASSWORD: test-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
@@ -43,8 +44,31 @@ jobs:
       - run: uv run mypy
       - run: uv run alembic -c apps/api/alembic.ini upgrade head
       - run: uv run alembic -c apps/api/alembic.ini check
-      - run: uv run pytest -q
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: '11.25.0'
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.21.0'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: uv run python scripts/ci_file_storage.py start
+      - run: uv run pytest -q --junitxml=.superpowers/api-tests.xml
+      - run: uv run python scripts/ci_file_storage.py verify
       - run: uv build
+      - if: always()
+        run: uv run python scripts/ci_file_storage.py stop
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: api-file-core-${{ github.sha }}
+          path: |
+            .superpowers/api-tests.xml
+            .superpowers/api-files/*/manifest.json
+            .superpowers/api-files/*/[0-9]*.stdout
+            .superpowers/api-files/*/[0-9]*.stderr
+          if-no-files-found: error
+          retention-days: 30
       - if: always()
         run: docker rm -f altvia-ci-redis
 

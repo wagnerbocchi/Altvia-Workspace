@@ -246,6 +246,37 @@ class InboundMailVariant(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
+class InboundMailPreview(Base):
+    __tablename__ = "inbound_mail_previews"
+    __table_args__ = (
+        CheckConstraint("parser_version=1", name="ck_preview_parser"),
+        CheckConstraint(
+            "(status='ready' AND subject IS NOT NULL AND body_text IS NOT NULL "
+            "AND part_count IS NOT NULL AND attachment_count IS NOT NULL AND reason IS NULL "
+            "AND char_length(subject)<=998 AND octet_length(subject)<=3992 "
+            "AND octet_length(body_text) BETWEEN 1 AND 65536 "
+            "AND part_count BETWEEN 1 AND 64 AND attachment_count BETWEEN 0 AND part_count) OR "
+            "(status='rejected' AND subject IS NULL AND body_text IS NULL AND part_count IS NULL "
+            "AND attachment_count IS NULL AND reason IS NOT NULL AND reason IN "
+            "('invalid_raw','invalid_headers','unsupported_mime','invalid_multipart',"
+            "'invalid_encoding','unsupported_charset','structure_limit','text_limit',"
+            "'html_limit','no_text'))",
+            name="ck_preview_result",
+        ),
+    )
+    variant_id: Mapped[UUID] = mapped_column(
+        ForeignKey("inbound_mail_variants.id", ondelete="RESTRICT"), primary_key=True
+    )
+    parser_version: Mapped[int] = mapped_column(default=1, server_default="1")
+    status: Mapped[str] = mapped_column(String(16))
+    subject: Mapped[str | None] = mapped_column(String(998))
+    body_text: Mapped[str | None] = mapped_column(Text)
+    part_count: Mapped[int | None]
+    attachment_count: Mapped[int | None]
+    reason: Mapped[str | None] = mapped_column(String(32))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class Team(Base):
     __tablename__ = "teams"
     __table_args__ = (

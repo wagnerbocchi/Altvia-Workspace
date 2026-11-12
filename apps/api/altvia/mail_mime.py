@@ -206,7 +206,8 @@ class _Normalizer:
                 raise _Rejected("invalid_headers")
         content_type = headers.get_content_type()
         attached = (
-            headers.get_content_disposition() == "attachment" or headers.get_filename() is not None
+            headers.get_content_disposition() not in {None, "inline"}
+            or headers.get_filename() is not None
         )
         if attached:
             self.attachments += 1

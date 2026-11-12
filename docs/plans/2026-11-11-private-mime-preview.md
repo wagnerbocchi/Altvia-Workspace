@@ -26,12 +26,12 @@ Files: apps/api/altvia/mail_mime.py, apps/api/tests/test_mail_mime.py.
 Interface: normalize(raw: bytes) -> NormalizedMail with status/subject/body_text/
 part_count/attachment_count/reason; no persistence or external I/O.
 
-- [ ] Add failing plain/encoded/HTML/mixed/alternative/related/attachment tests and
+- [x] Add failing plain/encoded/HTML/mixed/alternative/related/attachment tests and
   hostile malformed/size/depth/parts/header/encoding/control cases. Run pytest:
   expected missing module first, then concrete failed behavior before fixes.
-- [ ] Implement bounded per-entity header traversal, strict transfer/charset codecs,
+- [x] Implement bounded per-entity header traversal, strict transfer/charset codecs,
   text selection and non-rendering HTML extraction at ADR-0032 limits.
-- [ ] Run focused pytest, Ruff/format/mypy. Expected all pass. Commit checked slice.
+- [x] Run focused pytest, Ruff/format/mypy. Expected all pass. Commit checked slice.
 
 ### Task 2 Durable private results and owner command
 
@@ -40,11 +40,11 @@ migrations/versions/b46087000019_mail_previews.py, tests/test_mail_normalize.py.
 Interface: normalize_variant(engine, variant_id) -> NormalizeReceipt; restricted
 python -m altvia.mail_normalize --variant-id UUID with explicit opt-in.
 
-- [ ] Observe real PostgreSQL RED for missing result table/service; add replay,
+- [x] Observe real PostgreSQL RED for missing result table/service; add replay,
   collision/concurrency/version/rollback, private event, runtime and migration tests.
-- [ ] Implement append-only checks/trigger, source-serialized atomic write/event
+- [x] Implement append-only checks/trigger, source-serialized atomic write/event
   and idempotent CLI with fixed diagnostics. Preserve old event envelopes.
-- [ ] Run complete affected MIME/intake/IMAP/activity/runtime suites and actual
+- [x] Run complete affected MIME/intake/IMAP/activity/runtime suites and actual
   command proof; static/contracts/package/security checks. Expected all pass.
 
 ### Task 3 Independent review, packaged acceptance and publication

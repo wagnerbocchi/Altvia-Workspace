@@ -22,7 +22,7 @@ and a future UI must escape it. Neither test nor runtime fetches URLs/images.
 Supported entities: text/plain and text/html; multipart/mixed, alternative and
 related. Mixed joins inline text in wire order; alternative prefers plain text,
 then HTML fallback; related selects its first root and requires any explicit
-start parameter to identify that root. Attachment disposition or any filename
+start parameter to identify that root. Any non-inline disposition or filename
 prevents a text leaf from becoming body text. Other leaf media, including
 message/rfc822, remain opaque attachments. No archive or attached message is
 expanded. Unknown multipart types, invalid structure/encoding/charset and

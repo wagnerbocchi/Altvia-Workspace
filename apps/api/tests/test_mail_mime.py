@@ -158,3 +158,12 @@ def test_duplicate_boundaries_and_missing_close_do_not_select_partial_content():
         normalize(multipart([message()]).replace(b"--test-boundary--", b"not-close")).status
         == "rejected"
     )
+
+
+def test_unrecognized_disposition_is_opaque_attachment():
+    unknown = message(
+        b"Do not use", b"Content-Type: text/plain\r\nContent-Disposition: custom-kind"
+    )
+    result = normalize(multipart([message(b"Visible"), unknown]))
+    assert result.status == "ready" and result.body_text == "Visible"
+    assert result.attachment_count == 1

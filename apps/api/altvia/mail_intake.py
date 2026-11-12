@@ -36,6 +36,7 @@ INTAKE_EVENTS = {
     "mailbox_source.created",
     "mailbox.message_quarantined",
     "mailbox.poll_checkpointed",
+    "mailbox.message_normalized",
 }
 
 
@@ -63,6 +64,7 @@ class IntakeEventPayload(BaseModel):
     uid_validity: str | None = None
     last_uid: str | None = None
     reason: str | None = None
+    status: str | None = None
 
 
 def validate_intake_event(event: OutboxEvent) -> None:
@@ -85,6 +87,14 @@ def validate_intake_event(event: OutboxEvent) -> None:
                 raise ValueError("Invalid poll event")
         if payload.reason not in {"initial", "epoch_changed", "message_captured", "range_scanned"}:
             raise ValueError("Invalid poll event")
+    elif event.event_type == "mailbox.message_normalized":
+        expected |= {"envelope_id", "variant_id", "status"}
+        if (
+            payload.envelope_id is None
+            or payload.variant_id is None
+            or payload.status not in {"ready", "rejected"}
+        ):
+            raise ValueError("Invalid normalized event")
     if (
         event.event_type not in INTAKE_EVENTS
         or event.aggregate_type != "mailbox_source"

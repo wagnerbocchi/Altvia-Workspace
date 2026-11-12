@@ -264,3 +264,88 @@ def test_malformed_or_unknown_native_ipam_is_not_treated_as_empty(row):
     with pytest.raises(ValueError, match="private_network_inventory_invalid"):
         native_owner().create_private_network(run, "altvia-api-files-0123456789")
     assert not any(command[2] == "create" for command, _ in native.calls)
+
+
+# Exact native created-network row from hosted Docker command5, 033c8ac.
+HOSTED_DOCKER_CREATED_NETWORK = {
+    "Name": "altvia-api-files-9a99af5c8a",
+    "Id": "6bbca172f115fc5d1d9970ac97dea0515fe2e253b766285d16f55ea44fc9cbd6",
+    "Created": "2026-11-12T16:47:59.101862924Z",
+    "Scope": "local",
+    "Driver": "bridge",
+    "EnableIPv4": True,
+    "EnableIPv6": False,
+    "IPAM": {"Driver": "default", "Options": {}, "Config": [{"Subnet": "10.240.0.0/24"}]},
+    "Internal": True,
+    "Attachable": False,
+    "Ingress": False,
+    "ConfigFrom": {"Network": ""},
+    "ConfigOnly": False,
+    "Containers": {},
+    "Options": {},
+    "Labels": {},
+}
+
+
+def observed_created_network(row):
+    native, inventory_run = observed_inventory(HOSTED_DOCKER_NETWORKS)
+
+    def run(command, **options):
+        result = inventory_run(command, **options)
+        if command[1:3] == ["network", "inspect"] and native.created is not None:
+            result.stdout = json.dumps([row])
+        return result
+
+    return native, run
+
+
+def test_retained_docker_created_subnet_without_gateway_returns_static_endpoint():
+    native, run = observed_created_network(HOSTED_DOCKER_CREATED_NETWORK)
+    assert native_owner().create_private_network(run, "altvia-api-files-9a99af5c8a") == (
+        "10.240.0.0/24",
+        "10.240.0.10",
+    )
+    assert [command for command, _ in native.calls if command[2] == "create"] == [
+        [
+            "docker",
+            "network",
+            "create",
+            "--driver",
+            "bridge",
+            "--internal",
+            "--subnet",
+            "10.240.0.0/24",
+            "altvia-api-files-9a99af5c8a",
+        ]
+    ]
+
+
+@pytest.mark.parametrize(
+    "gateway", [None, "", "invalid", "10.240.1.1", "10.240.0.10", "10.240.0.0", "10.240.0.255"]
+)
+def test_created_network_present_gateway_must_be_a_distinct_usable_host(gateway):
+    row = json.loads(json.dumps(HOSTED_DOCKER_CREATED_NETWORK))
+    row["IPAM"]["Config"][0]["Gateway"] = gateway
+    _, run = observed_created_network(row)
+    with pytest.raises(ValueError, match="private_network_created_invalid"):
+        native_owner().create_private_network(run, "altvia-api-files-9a99af5c8a")
+
+
+@pytest.mark.parametrize(
+    "override",
+    [
+        {"Name": "foreign"},
+        {"Driver": "host"},
+        {"Internal": False},
+        {"IPAM": {"Config": [{"Subnet": "10.240.1.0/24"}]}},
+        {"IPAM": {"Config": [{"Subnet": "10.240.0.0/16"}]}},
+        {"IPAM": {"Config": [{"Subnet": "invalid"}]}},
+        {"IPAM": {"Config": None}},
+        {"IPAM": {"Config": []}},
+        {"IPAM": {"Config": [{"Subnet": "10.240.0.0/24"}, {"Subnet": "10.241.0.0/24"}]}},
+    ],
+)
+def test_created_network_absent_gateway_does_not_relax_private_pool_boundary(override):
+    _, run = observed_created_network(HOSTED_DOCKER_CREATED_NETWORK | override)
+    with pytest.raises(ValueError, match="private_network_created_invalid"):
+        native_owner().create_private_network(run, "altvia-api-files-9a99af5c8a")

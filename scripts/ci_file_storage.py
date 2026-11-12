@@ -92,10 +92,19 @@ def create_private_network(run, project):
                 or network["Internal"] is not True
                 or len(configs) != 1
                 or ipaddress.ip_network(configs[0]["Subnet"]) != subnet
-                or ipaddress.ip_address(configs[0]["Gateway"]) not in subnet
-                or ipaddress.ip_address(configs[0]["Gateway"]) == address
             ):
                 raise ValueError
+            # Docker can omit Gateway for this internal bridge. Only subnet-local
+            # connectivity is needed; native IPAM reserves --ip at container start.
+            # A present gateway must still be usable and distinct from that IP.
+            if "Gateway" in configs[0]:
+                gateway = ipaddress.ip_address(configs[0]["Gateway"])
+                if gateway not in subnet or gateway in {
+                    subnet.network_address,
+                    subnet.broadcast_address,
+                    address,
+                }:
+                    raise ValueError
             return str(subnet), str(address)
         except (ValueError, TypeError, KeyError):
             raise ValueError("private_network_created_invalid") from None

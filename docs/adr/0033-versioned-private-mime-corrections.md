@@ -83,3 +83,14 @@ self-closing tokens. Prove PostgreSQL v1 upgrade preservation, concurrent v2
 replay, immutable coexisting results, event1/2 strictness/private consumption,
 guarded rollback/history, runtime denial, CLI and recreated packaged results.
 Inspect full hosted/security evidence; final target qualification stays deferred.
+
+## Build availability follow-up
+
+During exact-source acceptance, both web-image jobs failed before runtime proof.
+A fresh local build reproduced the signed Alpine repository removing pinned
+nodejs24.22.1-r1 and offering24.22.3-r0. Retain the same image family/digest and
+exact package pinning, updating only Node's maintained patch pin to24.22.3-r0.
+The corrected real image build passed its Node24/module137/locale/standalone/
+no-Sharp/no-installer capability checks. All hosted gates and five-image scans
+remain required for the resulting artifact. Earlier ISA qualification does not
+transfer to this changed runtime; final actual-target qualification remains open.

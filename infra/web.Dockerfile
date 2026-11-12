@@ -10,7 +10,7 @@ RUN node scripts/check_web_native.mjs && pnpm web:build
 
 # Signed distro Node uses maintained shared native libraries, with no npm/yarn.
 FROM alpine@sha256:0f49f331d9212aff11b932863be4eb01cdf962969aa86dab7d1ee21ac6f5f52b
-RUN apk add --no-cache nodejs=24.22.1-r1 zlib=1.4-r0 brotli-libs=1.2.1-r0 icu-data-full=78.1-r0 \
+RUN apk add --no-cache nodejs=24.22.3-r0 zlib=1.4-r0 brotli-libs=1.2.1-r0 icu-data-full=78.1-r0 \
     && addgroup -g 10001 altvia && adduser -D -H -u 10001 -G altvia altvia
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=3000
 WORKDIR /opt/altvia

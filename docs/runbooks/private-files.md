@@ -102,3 +102,13 @@ and unrestricted command logs private; do not archive secret mounts or environme
 inspections. Proof cleanup stops only its random project and preserves its named
 volumes. No `down -v`, retention deletion, production rollout or per-slice target
 homologation is authorized here.
+
+The Task2 hosted API gate adds a separate bounded S3-only fixture using the same
+storage Dockerfile, native bootstrap and TLS certificate tool. It will run the
+existing full API suite once with file tests required, from the Linux runner to a
+private bridge address in the synthetic certificate SAN. No storage port or AV
+definitions are published or loaded. Missing required file configuration and a
+skipped attachment suite fail that gate. Local developers without this external
+fixture may receive explicit skips; those do not qualify file behavior. Fixture
+cleanup stops only the random task container and preserves its object volume and
+hash-bound command evidence.

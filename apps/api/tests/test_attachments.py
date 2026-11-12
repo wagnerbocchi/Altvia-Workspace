@@ -578,3 +578,61 @@ def test_actual_streamed_size_limit_includes_exact_ten_mib(admin_client, db_engi
         },
     )
     assert oversized.status_code == 413
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        b"<html>active</html>",
+        b"<svg xmlns='http://www.w3.org/2000/svg'></svg>",
+        b" \n<html>active</html>",
+        b"\t<svg xmlns='http://www.w3.org/2000/svg'></svg>",
+        b"<?xml version='1.0'?><document/>",
+    ],
+)
+def test_bom_cannot_mask_disallowed_text_signatures(admin_client, db_engine, seeded_user, body):
+    from altvia.models import Attachment
+    from sqlalchemy import func, select
+    from sqlalchemy.orm import Session
+
+    parent = ticket(admin_client, setup(admin_client, db_engine, seeded_user))
+    response = upload(admin_client, parent, content=b"\xef\xbb\xbf" + body)
+    assert response.status_code == 422, response.text
+    assert response.json()["code"] == "invalid_file_type"
+    with Session(db_engine) as db:
+        assert db.scalar(select(func.count()).select_from(Attachment)) == 0
+
+
+def test_ordinary_bom_text_preserves_original_uploaded_bytes_and_receipt(
+    admin_client, db_engine, seeded_user
+):
+    from uuid import UUID
+
+    from altvia.file_storage import S3Store
+    from altvia.file_storage_owner import load_storage
+    from altvia.models import Attachment
+    from sqlalchemy.orm import Session
+
+    parent = ticket(admin_client, setup(admin_client, db_engine, seeded_user))
+    content = b"\xef\xbb\xbf" + "ordinary text: caf\u00e9\n".encode("utf-8")
+    digest = hashlib.sha256(content).hexdigest()
+    assert digest != hashlib.sha256(content[3:]).hexdigest()
+    key = uuid4().hex
+    response = upload(admin_client, parent, content=content, key=key)
+    assert response.status_code == 201, response.text
+    receipt = response.json()
+    assert receipt["bytes"] == len(content) and receipt["sha256"] == digest
+    assert receipt["version"] == 1
+    replay = upload(admin_client, parent, content=content, key=key)
+    assert replay.status_code == 200 and replay.json() == receipt
+    with Session(db_engine) as db:
+        row = db.get(Attachment, UUID(receipt["attachment_id"]))
+        assert row.state == "quarantine" and row.media_type == "text/plain"
+        assert row.bytes == len(content) and row.sha256 == digest
+        object_key = row.object_key
+    storage = S3Store(load_storage(file_path("scanner")))
+    try:
+        with storage.verified_spool(object_key, size=len(content), sha256=digest) as stored:
+            assert stored.read() == content
+    finally:
+        storage.close()

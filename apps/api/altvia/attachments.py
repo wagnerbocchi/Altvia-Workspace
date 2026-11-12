@@ -149,8 +149,9 @@ def media_type(source: BinaryIO, filename: str) -> str:
         source.seek(0)
         try:
             text = source.read().decode("utf-8", errors="strict")
+            sniffing_text = text.removeprefix("\ufeff")
             if not re.search(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", text) and not re.match(
-                r"\s*(?:<!doctype\s+html|<html|<svg|<script|<\?xml)", text, re.I
+                r"\s*(?:<!doctype\s+html|<html|<svg|<script|<\?xml)", sniffing_text, re.I
             ):
                 result = "text/plain"
         except UnicodeError:

@@ -167,3 +167,29 @@ def test_unrecognized_disposition_is_opaque_attachment():
     result = normalize(multipart([message(b"Visible"), unknown]))
     assert result.status == "ready" and result.body_text == "Visible"
     assert result.attachment_count == 1
+
+
+def test_numeric_date_overflow_is_a_fixed_all_or_nothing_rejection():
+    raw = message(
+        b"Visible",
+        b"Date: Wed, 1 Jan 999999999999999999999999999999 "
+        b"00:00:00 +0000\r\nContent-Type: text/plain",
+    )
+    result = normalize(raw)
+    assert result.status == "rejected" and result.reason == "invalid_headers"
+    assert result.body_text is result.subject is None
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        b"<div><template></div>hidden-template</template><p>Visible</p>",
+        b"<div><object></div>hidden-object</object><p>Visible</p>",
+        b"<div><svg></div>hidden-svg</svg><p>Visible</p>",
+        b"<script/>hidden-script<p>Visible</p>",
+        b"<template/>hidden-template<p>Visible</p>",
+    ],
+)
+def test_malformed_active_subtrees_never_release_hidden_text(body):
+    result = normalize(message(body, b"Content-Type: text/html"))
+    assert result.status == "rejected" and result.subject is result.body_text is None

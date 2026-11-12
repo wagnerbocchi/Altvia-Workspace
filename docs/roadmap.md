@@ -65,6 +65,12 @@ immutable owner-only ready/rejected results, source-serialized replay and strict
 private events. No sender proof, public route, promotion, attachment extraction or
 outbound mail is implied. All local/hosted/packaged acceptance is recorded before
 closure; Q-03/Q-09/Q-11/Q-16/Q-21 and final actual-target qualification remain open.
+The independent review's two Important findings have RED/GREEN fixes in progress.
+Two reproduced minor gaps remain explicit follow-up before any user-facing MIME
+preview: RFC 2047 Subject decoding uses the broader stdlib codec registry, and
+closing tags do not consume the opening/self-closing HTML tag counter. Raw/header/
+decoded-byte bounds and owner-only storage remain enforced; do not claim the
+stricter Subject/total-tag contract fully satisfied or production-ready.
 
 Phase 3E-b development is complete under ADR-0031: bounded read-only IMAPS into
 existing quarantine, authenticated namespace binding, fenced leases and atomic

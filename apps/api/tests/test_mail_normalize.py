@@ -243,3 +243,27 @@ def test_sql_rejects_null_or_unbounded_interpretation(db_engine, source, fields)
     }
     with pytest.raises(DBAPIError), Session(db_engine) as db, db.begin():
         db.add(InboundMailPreview(**values))
+
+
+def test_overflow_header_command_persists_rejection_replays_and_never_echoes(
+    db_engine, source, monkeypatch, capsys
+):
+    raw = capture(
+        db_engine,
+        b"Date: Wed, 1 Jan 999999999999999999999999999999 "
+        b"00:00:00 +0000\r\n\r\nprivate-overflow-body",
+    )
+    monkeypatch.setenv("ALTVIA_ALLOW_MAIL_NORMALIZE", "1")
+    for replay in (False, True):
+        assert mail_normalize.main(["--variant-id", str(raw.variant_id)]) == 0
+        output = capsys.readouterr()
+        receipt = json.loads(output.out)
+        assert receipt["status"] == "rejected" and receipt["replayed"] is replay
+        assert (
+            not output.err
+            and "private-overflow" not in output.out
+            and "Traceback" not in output.out
+        )
+    with Session(db_engine) as db:
+        row = db.get(InboundMailPreview, raw.variant_id)
+        assert row.reason == "invalid_headers" and row.body_text is row.subject is None

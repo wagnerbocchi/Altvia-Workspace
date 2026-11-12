@@ -1319,13 +1319,36 @@ with Session(make_engine(Settings())) as db,db.begin():
                 )
             )
             assert poll_restart == {"last_uid": 1, "released": True}
+            preview_restart = run(
+                [
+                    *compose,
+                    "exec",
+                    "-T",
+                    "postgres",
+                    "psql",
+                    "-X",
+                    "-qAt",
+                    "-v",
+                    "ON_ERROR_STOP=1",
+                    "-U",
+                    "altvia_owner",
+                    "-d",
+                    "altvia_test",
+                    "-v",
+                    "variant=" + imap_proof["variant_id"],
+                ],
+                data="SELECT status='ready' AND parser_version=1 "
+                "AND body_text='Synthetic private text' AND reason IS NULL "
+                "FROM inbound_mail_previews WHERE variant_id=:'variant'::uuid;",
+            ).strip()
+            assert preview_restart == "t"
             intake_denial = """
 from sqlalchemy import text
 from altvia.config import DatabaseSettings
 from altvia.database import make_engine
 with make_engine(DatabaseSettings()).connect() as db:
     for table in ('mailbox_sources','inbound_mail_envelopes',
-                  'inbound_mail_variants','mailbox_poll_states'):
+                  'inbound_mail_variants','mailbox_poll_states','inbound_mail_previews'):
         for privilege in ('SELECT','INSERT','UPDATE','DELETE'):
             assert not db.scalar(text('SELECT has_table_privilege(current_user,:table,:privilege)'),
                                  {'table':table,'privilege':privilege})
@@ -1348,6 +1371,7 @@ with make_engine(DatabaseSettings()).connect() as db:
             )
             print("Packaged opaque mail quarantine, collision, replay and runtime denial passed.")
             print("Packaged read-only TLS IMAPS, checkpoint restart and runtime denial passed.")
+            print("Packaged private MIME command, replay, restart and runtime denial passed.")
             assert client.get(path).json()["name"] == "Visible"
             # Client/project delegation and three project member mutations
             # advance this separate account from 10 to 15.

@@ -92,6 +92,9 @@ class _HTMLText(HTMLParser):
                 raise _Rejected("html_limit")
 
     def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag in self.suppressed:
+            # HTML non-void active elements cannot be safely treated as XML voids.
+            raise _Rejected("unsupported_mime")
         self.handle_starttag(tag, attrs)
         if tag not in self.void:
             self.handle_endtag(tag)
@@ -99,6 +102,8 @@ class _HTMLText(HTMLParser):
     def handle_endtag(self, tag: str) -> None:
         if tag in self.stack:
             index = len(self.stack) - 1 - self.stack[::-1].index(tag)
+            if any(t in self.suppressed for t in self.stack[index + 1 :]):
+                raise _Rejected("unsupported_mime")
             del self.stack[index:]
         if tag in self.blocks and not any(t in self.suppressed for t in self.stack):
             self.chunks.append("\n")
@@ -145,10 +150,14 @@ def _headers(raw: bytes) -> tuple[Message, bytes]:
         if len(headers.get_all(name, [])) > 1:
             raise _Rejected("invalid_headers")
     # Access structured headers now: policy parses their parameters lazily.
-    for _name, value in headers.items():
-        if getattr(value, "defects", ()):
-            raise _Rejected("invalid_headers")
-        str(value)
+    try:
+        for _name, value in headers.items():
+            if getattr(value, "defects", ()):
+                raise _Rejected("invalid_headers")
+            str(value)
+    except OverflowError as error:
+        # DateHeader's integer-to-datetime conversion can overflow on hostile years.
+        raise _Rejected("invalid_headers") from error
     if headers.get("MIME-Version", "1.0").strip() != "1.0":
         raise _Rejected("invalid_headers")
     return headers, raw[index + len(separator) :]

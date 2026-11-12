@@ -98,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
         receipt = normalize_variant(engine, args.variant_id)
         print(json.dumps(asdict(receipt), default=str))
         return 0
-    except (SQLAlchemyError, ValueError, OSError):
+    except (SQLAlchemyError, ValueError, OSError, OverflowError):
         print("Mail normalization failed; no result acknowledged.", file=sys.stderr)
         return 1
     finally:

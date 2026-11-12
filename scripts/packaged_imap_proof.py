@@ -13,7 +13,8 @@ from altvia.config import DatabaseSettings
 from altvia.database import make_engine
 from altvia.imap_poll import main
 from altvia.mail_intake import register_source
-from altvia.models import InboundMailEnvelope, InboundMailVariant
+from altvia.mail_normalize import main as normalize_main
+from altvia.models import InboundMailEnvelope, InboundMailPreview, InboundMailVariant
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -32,6 +33,10 @@ def packaged_imap_proof(serve):
             key.write_text(payload["key"], encoding="ascii")
             key.chmod(0o600)
             with serve(cert, key) as server:
+                server.state["messages"][1] = (
+                    b"Subject: Synthetic private MIME\r\nContent-Type: text/html\r\n\r\n"
+                    b"<p>Synthetic private text</p><script>never-visible</script>"
+                )
                 os.environ.update(
                     {
                         "ALTVIA_ALLOW_IMAP_POLL": "1",
@@ -52,15 +57,35 @@ def packaged_imap_proof(serve):
                 assert receipts[1]["last_uid"] == receipts[0]["last_uid"] == 1
                 assert sum(b"UID FETCH" in c for c in server.state["commands"]) == 1
                 with Session(engine) as db:
-                    raw = db.scalar(
-                        select(InboundMailVariant.raw_message)
+                    variant = db.scalar(
+                        select(InboundMailVariant)
                         .join(
                             InboundMailEnvelope,
                             InboundMailVariant.envelope_id == InboundMailEnvelope.id,
                         )
                         .where(InboundMailEnvelope.source_id == UUID(receipts[0]["source_id"]))
                     )
-                    assert raw == server.state["messages"][1]
-        print(json.dumps({"source_id": receipts[0]["source_id"], "last_uid": 1}))
+                    assert variant.raw_message == server.state["messages"][1]
+                    variant_id = variant.id
+                os.environ["ALTVIA_ALLOW_MAIL_NORMALIZE"] = "1"
+                for replay in (False, True):
+                    captured = io.StringIO()
+                    with redirect_stdout(captured):
+                        assert normalize_main(["--variant-id", str(variant_id)]) == 0
+                    receipt = json.loads(captured.getvalue())
+                    assert receipt["replayed"] is replay and receipt["status"] == "ready"
+                    assert "Synthetic private" not in captured.getvalue()
+                with Session(engine) as db:
+                    preview = db.get(InboundMailPreview, variant_id)
+                    assert preview.body_text == "Synthetic private text" and preview.reason is None
+        print(
+            json.dumps(
+                {
+                    "source_id": receipts[0]["source_id"],
+                    "last_uid": 1,
+                    "variant_id": str(variant_id),
+                }
+            )
+        )
     finally:
         engine.dispose()

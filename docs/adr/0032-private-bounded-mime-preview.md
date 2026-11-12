@@ -83,3 +83,13 @@ multipart selection, attachments, malformed/hostile syntax, nested/part/size/tag
 limits and controls. Package the actual command and recreate PostgreSQL before
 checking durable result. Local/CI/security gates continue; final baseline-VM
 qualification remains deferred. No live mailbox or real data is used.
+
+## Known minor review gaps retained for follow-up
+
+R3: the body charset allowlist is enforced, while RFC 2047 Subject words still
+use the standard library's codec registry. R4: the HTML 4096-tag counter counts
+opening/self-closing tokens, not end tags. Both remain inside the independent
+raw/header/decoded byte bounds and produce only private untrusted text. They
+are recorded minor correctness gaps, not proof that the stricter subject/tag
+contract is fully satisfied. Close them before a user-facing MIME preview or
+production mail acceptance. No authority is derived from either interpretation.

@@ -317,11 +317,16 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
         if (
             event.event_type in INTAKE_EVENTS | CASE_EVENTS
             or event.event_type == "mail.delivery_changed"
+            or event.event_type in {"file.uploaded", "file.scan_changed", "file.scan_retried"}
         ):
             # Unclassified mail has no shared-feed audience. Acknowledge only its
             # strictly redacted metadata; raw tables remain inaccessible here.
             try:
-                if event.event_type in CASE_EVENTS:
+                if event.event_type.startswith("file."):
+                    from altvia.attachment_scan import validate_event
+
+                    validate_event(event)
+                elif event.event_type in CASE_EVENTS:
                     validate_case_event(event)
                 elif event.event_type == "mail.delivery_changed":
                     from altvia.mail_delivery import validate_delivery_event

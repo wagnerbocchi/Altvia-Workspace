@@ -12,6 +12,7 @@ from sqlalchemy import Connection, Engine, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import SQLAlchemyError
 
+from altvia.attachment_scan import RETRY_UPDATES, SCAN_COLUMNS, SCAN_UPDATES
 from altvia.config import Settings
 from altvia.database import make_engine
 from altvia.mail_cases import READ_COLUMNS, ROUTING_COLUMNS
@@ -44,6 +45,7 @@ ROLE_PRIVILEGES = {
         "ticket_categories": {"SELECT", "INSERT", "UPDATE"},
         "tickets": {"SELECT", "INSERT", "UPDATE"},
         "ticket_status_history": {"SELECT", "INSERT"},
+        "attachments": {"SELECT", "INSERT"},
         "ticket_notes": {"SELECT", "INSERT"},
         "ticket_messages": {"SELECT", "INSERT"},
         "ticket_incoming_messages": {"SELECT", "INSERT"},
@@ -60,6 +62,7 @@ ROLE_PRIVILEGES = {
     "altvia_worker": {
         "outbox_events": {"SELECT", "INSERT"},
         "outbound_messages": {"SELECT"},
+        "attachment_scan_attempts": {"SELECT", "INSERT"},
         "mail_senders": {"SELECT"},
         "processed_events": {"SELECT", "INSERT"},
         "activity_events": {"SELECT", "INSERT"},
@@ -72,8 +75,12 @@ APP_COLUMN_READS = {
     "mail_triage_cases": READ_COLUMNS | ROUTING_COLUMNS,
     "ticket_participants": {"id", "ticket_id", "contact_id", "email", "active", "version"},
 }
-APP_COLUMN_UPDATES = {"mail_triage_cases": {"state", "version", "ticket_id", "incoming_message_id"}}
+APP_COLUMN_UPDATES = {
+    "mail_triage_cases": {"state", "version", "ticket_id", "incoming_message_id"},
+    "attachments": RETRY_UPDATES,
+}
 WORKER_COLUMN_READS = {
+    "attachments": SCAN_COLUMNS,
     "users": {"id", "active"},
     "tickets": {"id", "client_id", "queue_id", "requester_id", "assignee_id", "status"},
     "role_bindings": {"user_id", "scope_kind", "queue_id", "role_name"},
@@ -204,6 +211,7 @@ def _provision_role(connection: Connection, engine: Engine, login_url: str, name
                             {
                                 "outbox_events": WORKER_STATUS_COLUMNS,
                                 "outbound_messages": DELIVERY_STATUS_COLUMNS,
+                                "attachments": SCAN_UPDATES,
                             }.get(g.relname, set())
                         )
                     )
@@ -260,6 +268,11 @@ def _provision_role(connection: Connection, engine: Engine, login_url: str, name
                 )
             )
     if name == "altvia_worker":
+        raw.execute(
+            sql.SQL("GRANT UPDATE ({}) ON public.attachments TO altvia_worker").format(
+                sql.SQL(",").join(sql.Identifier(c) for c in sorted(SCAN_UPDATES))
+            )
+        )
         for table, columns in WORKER_COLUMN_READS.items():
             raw.execute(
                 sql.SQL("GRANT SELECT ({}) ON {} TO altvia_worker").format(

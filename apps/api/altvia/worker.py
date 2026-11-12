@@ -22,12 +22,16 @@ from sqlalchemy import Engine, func, or_, select, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from altvia import mail_delivery
+from altvia import attachment_scan, mail_delivery
 from altvia.activity import CONSUMER, claim_events, consume_event, publication_failed, replay_event
 from altvia.config import WorkerSettings
 from altvia.database import make_engine
+from altvia.file_scan_transport import ClamClient
+from altvia.file_settings import ScannerSettings
+from altvia.file_storage import S3Store
+from altvia.file_storage_owner import load_storage
 from altvia.mail_settings import SMTPAccount, load_accounts
-from altvia.models import OutboundMessage, OutboxEvent
+from altvia.models import Attachment, OutboundMessage, OutboxEvent
 from altvia.observability import configure_logging
 from altvia.smtp_transport import ActiveTransports, deliver_once
 
@@ -40,6 +44,9 @@ def build_worker(
     *,
     accounts: dict[UUID, SMTPAccount] | None = None,
     active: ActiveTransports | None = None,
+    file_storage: S3Store | None = None,
+    file_scanner: ClamClient | None = None,
+    stop: Event | None = None,
 ) -> tuple[RedisBroker, Worker, Actor[[str], None]]:
     accounts = (
         accounts
@@ -105,6 +112,22 @@ def build_worker(
             send_mail
         )
         queues.add("mail")
+    if file_storage is not None and file_scanner is not None:
+        file_stop = stop if stop is not None else Event()
+
+        def scan_file(file_id: str) -> None:
+            try:
+                identifier = UUID(file_id)
+            except (TypeError, ValueError, AttributeError):
+                LOGGER.warning("", extra={"event_code": "invalid_message"})
+                return
+            try:
+                attachment_scan.scan_once(engine, identifier, file_storage, file_scanner, file_stop)
+            except SQLAlchemyError:
+                LOGGER.error("", extra={"event_code": "file_database_unavailable"})
+
+        actor(broker=broker, actor_name="file_scan", queue_name="files", max_retries=0)(scan_file)
+        queues.add("files")
     return broker, Worker(broker, queues=queues, worker_threads=2), registered
 
 
@@ -157,6 +180,40 @@ def dispatch_mail_once(
     return sent
 
 
+def dispatch_file_once(engine: Engine, broker: RedisBroker, stop: Event | None = None) -> int:
+    if stop is not None and stop.is_set():
+        return 0
+    attachment_scan.recover(engine)
+    if "file_scan" not in broker.actors:
+        return 0
+    if not broker.client.set("altvia:file:publisher", "1", nx=True, ex=10):
+        return 0
+    capacity = max(0, min(2, 8 - int(broker.do_qsize("files"))))
+    if not capacity:
+        return 0
+    with Session(engine) as db:
+        identifiers = list(
+            db.scalars(
+                select(Attachment.id)
+                .where(
+                    Attachment.state == "quarantine",
+                    Attachment.attempts < 8,
+                    Attachment.next_attempt_at <= func.clock_timestamp(),
+                )
+                .order_by(Attachment.next_attempt_at, Attachment.id)
+                .limit(capacity)
+            )
+        )
+    registered = broker.get_actor("file_scan")
+    count = 0
+    for identifier in identifiers:
+        if stop is not None and stop.is_set():
+            break
+        registered.send(str(identifier))
+        count += 1
+    return count
+
+
 def dispatch_once(
     engine: Engine, registered: Actor[[str], None], now: datetime, stop: Event | None = None
 ) -> int:
@@ -198,12 +255,26 @@ def main() -> int:
     broker = None
     worker = None
     active = ActiveTransports()
+    stop = Event()
+    file_storage = None
     try:
         settings = WorkerSettings()
         accounts = load_accounts(settings.smtp_accounts_file) if settings.smtp_accounts_file else {}
         engine = make_engine(settings, worker_timeouts=True)
+        file_storage = (
+            S3Store(load_storage(settings.scanner_storage_file))
+            if settings.scanner_storage_file is not None
+            else None
+        )
+        file_scanner = ClamClient(ScannerSettings(socket_path=settings.scanner_socket))
         broker, worker, registered = build_worker(
-            engine, settings, accounts=accounts, active=active
+            engine,
+            settings,
+            accounts=accounts,
+            active=active,
+            file_storage=file_storage,
+            file_scanner=file_scanner,
+            stop=stop,
         )
         heartbeat = settings.worker_state_dir / "heartbeat"
         if args.command == "health":
@@ -226,7 +297,6 @@ def main() -> int:
             if input(f"Type {args.event_id} to replay this dead event: ") != str(args.event_id):
                 return 1
             return 0 if replay_event(engine, args.event_id, datetime.now(UTC)) else 1
-        stop = Event()
         settings.worker_state_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
         for name in (signal.SIGTERM, signal.SIGINT):
             signal.signal(name, lambda _signum, _frame: stop.set())
@@ -236,6 +306,7 @@ def main() -> int:
             try:
                 count = dispatch_once(engine, registered, datetime.now(UTC), stop)
                 count += dispatch_mail_once(engine, broker, accounts, stop)
+                count += dispatch_file_once(engine, broker, stop)
                 if stop.is_set():
                     break
                 if (
@@ -260,9 +331,12 @@ def main() -> int:
         LOGGER.error("", extra={"event_code": "worker_configuration_or_dependency_failure"})
         return 1
     finally:
+        stop.set()
         active.cancel()
         if worker is not None and worker.workers:
             worker.stop(timeout=5000)
+        if file_storage is not None:
+            file_storage.close()
         if broker is not None:
             broker.client.close()
         if engine is not None:

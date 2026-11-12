@@ -2,9 +2,13 @@
 # five-service development stacks stay usable without allocating the AV profile.
 services:
   api:
+    environment:
+      ALTVIA_STORAGE_FILE: /run/secrets/storage_api
     secrets: [storage_api, storage_ca]
     networks: [objects]
   worker:
+    environment:
+      ALTVIA_SCANNER_STORAGE_FILE: /run/secrets/storage_scanner
     secrets: [storage_scanner, storage_ca]
     networks: [objects]
     volumes: [clam_socket:/run/clamav:ro]

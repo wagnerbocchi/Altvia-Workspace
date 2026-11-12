@@ -14,6 +14,7 @@ from starlette.responses import JSONResponse
 
 from altvia import identity
 from altvia.activity_api import create_activity_router
+from altvia.attachment_api import create_attachment_router
 from altvia.client_api import create_client_router
 from altvia.config import Settings
 from altvia.contact_api import create_contact_router
@@ -69,6 +70,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     app = FastAPI(title="Altvia Workspace API", version="0.1.0", lifespan=lifespan)
     app.add_middleware(RequestBoundary)
+    app.include_router(create_attachment_router(engine, config))
 
     @app.exception_handler(identity.IdentityError)
     async def identity_error(request: Request, exc: identity.IdentityError) -> JSONResponse:

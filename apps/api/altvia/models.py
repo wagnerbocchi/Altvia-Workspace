@@ -1092,3 +1092,86 @@ class MailCaseOrigin(Base):
     attested_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+class Attachment(Base):
+    """Private immutable upload identity; scan lifecycle is versioned separately."""
+
+    __tablename__ = "attachments"
+    __table_args__ = (
+        CheckConstraint(
+            "(ticket_id IS NOT NULL AND work_item_id IS NULL AND purpose IN "
+            "('public','note')) OR (ticket_id IS NULL AND work_item_id IS NOT NULL AND "
+            "purpose='work')",
+            name="ck_attachment_owner",
+        ),
+        CheckConstraint(
+            "bytes BETWEEN 1 AND 10485760 AND sha256 ~ '^[0-9a-f]{64}$' AND object_key ~"
+            " '^objects/[0-9a-f]{64}$'",
+            name="ck_attachment_object",
+        ),
+        CheckConstraint(
+            "version>0 AND parent_version>0 AND policy_version=1 AND generation>0 AND "
+            "attempts BETWEEN 0 AND 8",
+            name="ck_attachment_versions",
+        ),
+        CheckConstraint(
+            "state IN ('quarantine','scanning','ready','rejected','failed') AND "
+            "((state='scanning' AND lease_token IS NOT NULL AND lease_until IS NOT NULL)"
+            " OR (state<>'scanning' AND lease_token IS NULL AND lease_until IS NULL))",
+            name="ck_attachment_state",
+        ),
+        Index("ix_attachment_ticket_page", "ticket_id", "purpose", "created_at", "id"),
+        Index("ix_attachment_work_page", "work_item_id", "purpose", "created_at", "id"),
+        Index("ix_attachment_scan_due", "state", "next_attempt_at"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    ticket_id: Mapped[UUID | None] = mapped_column(ForeignKey("tickets.id"))
+    work_item_id: Mapped[UUID | None] = mapped_column(ForeignKey("work_items.id"))
+    purpose: Mapped[str] = mapped_column(String(10))
+    filename: Mapped[str] = mapped_column(String(255))
+    media_type: Mapped[str] = mapped_column(String(30))
+    bytes: Mapped[int] = mapped_column(BigInteger)
+    sha256: Mapped[str] = mapped_column(String(64))
+    object_key: Mapped[str] = mapped_column(String(72), unique=True)
+    creator_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    parent_version: Mapped[int]
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    policy_version: Mapped[int] = mapped_column(default=1)
+    version: Mapped[int] = mapped_column(default=1)
+    state: Mapped[str] = mapped_column(String(10), default="quarantine")
+    generation: Mapped[int] = mapped_column(default=1)
+    attempts: Mapped[int] = mapped_column(default=0)
+    next_attempt_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    lease_token: Mapped[UUID | None]
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class AttachmentScanAttempt(Base):
+    """Immutable completed/expired attempt identity, including fenced lease."""
+
+    __tablename__ = "attachment_scan_attempts"
+    __table_args__ = (
+        CheckConstraint(
+            "generation>0 AND attempt BETWEEN 1 AND 8 AND finished_at>=claimed_at AND "
+            "lease_until>claimed_at",
+            name="ck_scan_attempt_bounds",
+        ),
+        CheckConstraint("disposition IN ('clean','infected','failed')", name="ck_scan_disposition"),
+    )
+
+    attachment_id: Mapped[UUID] = mapped_column(ForeignKey("attachments.id"), primary_key=True)
+    generation: Mapped[int] = mapped_column(primary_key=True)
+    attempt: Mapped[int] = mapped_column(primary_key=True)
+    token: Mapped[UUID] = mapped_column(unique=True)
+    claimed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    lease_until: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    disposition: Mapped[str] = mapped_column(String(10))
+    reason: Mapped[str] = mapped_column(String(30))
+    engine: Mapped[str | None] = mapped_column(String(16))
+    database_version: Mapped[int | None]
+    database_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

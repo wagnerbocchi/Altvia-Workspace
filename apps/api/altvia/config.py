@@ -25,6 +25,7 @@ class DatabaseSettings(BaseSettings):
 
 
 class Settings(DatabaseSettings):
+    storage_file: Path | None = None
     public_origin: str
 
     @field_validator("public_origin")
@@ -48,6 +49,8 @@ class WorkerSettings(DatabaseSettings):
     redis_url: SecretStr
     worker_state_dir: Path = Path("/run/altvia")
     smtp_accounts_file: Path | None = None
+    scanner_storage_file: Path | None = None
+    scanner_socket: Path = Path("/run/clamav/clamd.sock")
 
     @field_validator("redis_url")
     @classmethod

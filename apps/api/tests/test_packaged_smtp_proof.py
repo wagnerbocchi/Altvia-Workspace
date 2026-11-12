@@ -82,17 +82,33 @@ def test_incoming_metadata_canary_rejects_actual_multiline_json(table):
 
 
 class RedisValue:
-    def __init__(self, value):
+    def __init__(self, value, kind=b"string"):
         self.value = value
+        self.kind = kind
 
     def scan_iter(self, **kwargs):
         return [b"actor-message"]
 
     def type(self, key):
-        return b"string"
+        return self.kind
 
     def get(self, key):
         return self.value
+
+    def hscan_iter(self, key):
+        return [(b"field", self.value)]
+
+    def lrange(self, *args):
+        return [self.value]
+
+    def smembers(self, *args):
+        return {self.value}
+
+    def zrange(self, *args):
+        return [self.value]
+
+    def close(self):
+        pass
 
 
 class MetadataDB:
@@ -113,6 +129,180 @@ class MetadataDB:
         if self.only_table is not None and self.only_table not in str(query):
             return [{}]
         return [self.value]
+
+
+@pytest.mark.parametrize(
+    "canary",
+    [
+        "classified-body-canary",
+        "<incoming-private-id@example.test>",
+        "synthetic-packaged-incoming-only",
+        "synthetic-packaged-alias-only",
+    ],
+)
+@pytest.mark.parametrize("boundary", ["redis", "worker-events", "child-diagnostics"])
+def test_incoming_canaries_reject_actual_worker_checker_multiline_json(canary, boundary):
+    payload = {
+        "private_marker": "note-marker",
+        "public_marker": "public-marker",
+        "privacy_canaries": [canary],
+        "account": {"username": "smtp-user", "password": "smtp-password"},
+    }
+    namespace = {
+        **vars(proof),
+        "payload": payload,
+        "marker": b"note-marker",
+        "initial": (None, None, None, None, "from@example.test", "to@example.test"),
+        "account": payload["account"],
+        "redis": RedisValue(b"safe"),
+        "engine": MetadataDB({}),
+        "diagnostics": b"safe",
+        "text": text,
+    }
+    worker = next(
+        n
+        for n in ast.parse(PROOF.read_text(encoding="utf-8")).body
+        if isinstance(n, ast.FunctionDef) and n.name == "packaged_smtp_worker_proof"
+    )
+    if boundary == "child-diagnostics":
+        nodes = [
+            n
+            for n in ast.walk(worker)
+            if isinstance(n, ast.For) and isinstance(n.target, ast.Name) and n.target.id == "secret"
+        ]
+        if not nodes:
+            nodes = [
+                n
+                for n in ast.walk(worker)
+                if isinstance(n, ast.Expr)
+                and isinstance(n.value, ast.Call)
+                and isinstance(n.value.func, ast.Name)
+                and n.value.func.id == "assert_worker_diagnostics"
+            ]
+    else:
+        nodes = [
+            n
+            for n in ast.walk(worker)
+            if isinstance(n, ast.FunctionDef) and n.name == "inspect_metadata"
+        ]
+        nodes += ast.parse("inspect_metadata()").body
+    assert nodes, "Actual worker checker path must be located"
+    execute(nodes, namespace)
+    leak = json.dumps({"message": "first\n" + canary + "\nlast"})
+    if boundary == "redis":
+        namespace["redis"].value = leak.encode()
+    elif boundary == "worker-events":
+        namespace["engine"].value = json.loads(leak)
+    else:
+        namespace["diagnostics"] = leak.encode()
+    with pytest.raises(AssertionError):
+        execute(nodes, namespace)
+
+
+INCOMING_CANARIES = [
+    "classified-body-canary",
+    "<incoming-private-id@example.test>",
+    "synthetic-packaged-incoming-only",
+    "synthetic-packaged-alias-only",
+]
+
+
+@pytest.mark.parametrize("canary", INCOMING_CANARIES)
+@pytest.mark.parametrize("kind", [b"string", b"hash", b"list", b"set", b"zset"])
+def test_late_worker_checkpoint_rejects_actual_decoded_redis_values(
+    monkeypatch, capsys, canary, kind
+):
+    import io
+    import sys
+    from types import SimpleNamespace
+    from uuid import UUID
+
+    from pydantic import SecretStr
+    from redis import Redis
+
+    event_id = UUID("f07df534-e53e-49e9-973d-cc39fb308411")
+
+    class CompletedDB(MetadataDB):
+        def scalar(self, query):
+            return "altvia_worker"
+
+        def execute(self, query):
+            return SimpleNamespace(all=lambda: [(event_id, "delivered", "actual-time")])
+
+        def dispose(self):
+            pass
+
+    redis_value = RedisValue(b"safe", kind)
+    monkeypatch.setenv("ALTVIA_ALLOW_CONTAINER_TEST", "1")
+    monkeypatch.setattr(
+        "altvia.config.WorkerSettings",
+        lambda: SimpleNamespace(redis_url=SecretStr("redis://:synthetic@localhost:6379/0")),
+    )
+    monkeypatch.setattr("altvia.database.make_engine", lambda *args, **kwargs: CompletedDB({}))
+    monkeypatch.setattr(Redis, "from_url", lambda *args, **kwargs: redis_value)
+    payload = json.dumps(
+        {
+            "phase": "after-collision",
+            "event_ids": [str(event_id)],
+            "metadata_markers": INCOMING_CANARIES,
+        }
+    )
+    monkeypatch.setattr(sys, "stdin", io.StringIO(payload))
+    proof.packaged_worker_privacy_checkpoint()
+    result = json.loads(capsys.readouterr().out)
+    assert result["completed_events"] == 1 and result["delivered_and_processed"]
+    assert result["redis_scans"] >= 2
+    redis_value.value = json.dumps({"body": "first\n" + canary + "\nlast"}).encode()
+    monkeypatch.setattr(sys, "stdin", io.StringIO(payload))
+    with pytest.raises(AssertionError):
+        proof.packaged_worker_privacy_checkpoint()
+
+
+@pytest.mark.parametrize("canary", INCOMING_CANARIES)
+def test_late_main_diagnostics_reject_actual_checker_multiline_json(canary):
+    from uuid import uuid4
+
+    context = {
+        "aggregate_ids": [str(uuid4())],
+        "incoming_count": 1,
+        "metadata_markers": INCOMING_CANARIES,
+    }
+    logs = "safe"
+
+    def run(command, **kwargs):
+        if "logs" in command:
+            return logs
+        if "exec" in command:
+            return json.dumps({"completed_events": 1})
+        return json.dumps(
+            [{"event_id": str(uuid4()), "type": "ticket.message_received", "schema": 1}]
+        )
+
+    assert proof.incoming_privacy_checkpoint(run, [], PROOF.parents[1], context, "after-append")[
+        "main_diagnostics_checked"
+    ]
+    logs = json.dumps({"body": "first\n" + canary + "\nlast"})
+    with pytest.raises(AssertionError):
+        proof.incoming_privacy_checkpoint(run, [], PROOF.parents[1], context, "after-append")
+
+
+def test_event_completion_requires_every_exact_event_delivered_and_processed():
+    from uuid import uuid4
+
+    first, second = uuid4(), uuid4()
+    expected = [first, second]
+    complete = [(first, "delivered", "time"), (second, "delivered", "time")]
+    assert proof.processed_events_complete(complete, expected)
+    assert not proof.processed_events_complete(complete[:1], expected)
+    assert not proof.processed_events_complete(
+        complete + [(uuid4(), "delivered", "time")], expected
+    )
+    for status, processed in (("pending", "time"), ("dead", "time"), ("delivered", None)):
+        assert not proof.processed_events_complete(
+            [complete[0], (second, status, processed)], expected
+        )
+    with pytest.raises(AssertionError, match="empty event set"):
+        proof.processed_events_complete([], [])
 
 
 @pytest.mark.parametrize(
@@ -138,6 +328,7 @@ def test_full_multiline_body_leak_is_rejected(boundary, table):
     }
     leaked = {"body_text": body}
     namespace = {
+        **vars(proof),
         "json": json,
         "p": payload,
         "payload": payload,
@@ -175,6 +366,15 @@ def test_full_multiline_body_leak_is_rejected(boundary, table):
             for n in ast.walk(worker)
             if isinstance(n, ast.For) and isinstance(n.target, ast.Name) and n.target.id == "secret"
         ]
+        if not nodes:
+            nodes = [
+                n
+                for n in ast.walk(worker)
+                if isinstance(n, ast.Expr)
+                and isinstance(n.value, ast.Call)
+                and isinstance(n.value.func, ast.Name)
+                and n.value.func.id == "assert_worker_diagnostics"
+            ]
     else:
         nodes = [
             n

@@ -26,6 +26,192 @@ def assert_incoming_wire(wire, root, body, private_marker):
     assert private_marker.encode() not in wire
 
 
+def worker_privacy_markers(payload, initial):
+    """Metadata/log rules, deliberately separate from allowed SMTP references."""
+    return tuple(
+        dict.fromkeys(
+            value.encode()
+            for value in (
+                payload["private_marker"],
+                payload["public_marker"],
+                payload["account"]["username"],
+                payload["account"]["password"],
+                initial[4],
+                initial[5],
+                *payload.get("privacy_canaries", ()),
+            )
+        )
+    )
+
+
+def assert_worker_diagnostics(diagnostics, forbidden):
+    if isinstance(diagnostics, str):
+        diagnostics = diagnostics.encode()
+    for secret in forbidden:
+        assert secret not in diagnostics
+
+
+def inspect_worker_metadata(redis, engine, forbidden):
+    """One checker for live SMTP children and all later incoming checkpoints."""
+    from sqlalchemy import text
+
+    assert forbidden and all(forbidden)
+    for key in redis.scan_iter(count=100):
+        assert all(value not in key for value in forbidden)
+        kind = redis.type(key)
+        # Inspect actual decoded values, never potentially compressed Redis DUMP.
+        if kind == b"string":
+            values = [redis.get(key)]
+        elif kind == b"hash":
+            values = [part for pair in redis.hscan_iter(key) for part in pair]
+        elif kind == b"list":
+            values = redis.lrange(key, 0, -1)
+        elif kind == b"set":
+            values = redis.smembers(key)
+        elif kind == b"zset":
+            values = redis.zrange(key, 0, -1)
+        else:
+            assert kind == b"none", "Unexpected Redis value type in proof"
+            values = []
+        assert all(needle not in (value or b"") for value in values for needle in forbidden)
+    with engine.connect() as db:
+        for table, column in (("outbox_events", "payload"), ("activity_events", "details")):
+            for value in db.scalars(text("SELECT " + column + " FROM " + table)):
+                assert_worker_diagnostics(json.dumps(value), forbidden)
+
+
+def processed_events_complete(rows, expected):
+    assert expected, "An empty event set cannot prove worker completion"
+    return {row[0] for row in rows} == set(expected) and all(
+        row[1] == "delivered" and row[2] is not None for row in rows
+    )
+
+
+def packaged_worker_privacy_checkpoint():
+    """Observe existing main-worker completion and Redis through its real role."""
+    from altvia.config import WorkerSettings
+    from altvia.database import make_engine
+    from altvia.models import OutboxEvent, ProcessedEvent
+    from redis import Redis
+    from sqlalchemy import and_, select, text
+
+    assert os.environ.get("ALTVIA_ALLOW_CONTAINER_TEST") == "1"
+    payload = json.load(sys.stdin)
+    expected = [UUID(value) for value in payload["event_ids"]]
+    forbidden = tuple(value.encode() for value in payload["metadata_markers"])
+    settings = WorkerSettings()
+    engine = make_engine(settings, worker_timeouts=True)
+    redis = Redis.from_url(settings.redis_url.get_secret_value(), socket_timeout=2)
+    try:
+        with engine.connect() as db:
+            assert db.scalar(text("SELECT current_user")) == "altvia_worker"
+        deadline, scans = time.monotonic() + 45, 0
+        while True:
+            inspect_worker_metadata(redis, engine, forbidden)
+            scans += 1
+            with engine.connect() as db:
+                rows = db.execute(
+                    select(
+                        OutboxEvent.event_id,
+                        OutboxEvent.status,
+                        ProcessedEvent.processed_at,
+                    )
+                    .outerjoin(
+                        ProcessedEvent,
+                        and_(
+                            ProcessedEvent.event_id == OutboxEvent.event_id,
+                            ProcessedEvent.consumer == "identity_activity_v1",
+                        ),
+                    )
+                    .where(OutboxEvent.event_id.in_(expected))
+                ).all()
+            if processed_events_complete(rows, expected):
+                break
+            assert time.monotonic() < deadline, "Relevant main-worker events did not complete"
+            time.sleep(0.1)
+        inspect_worker_metadata(redis, engine, forbidden)
+        print(
+            json.dumps(
+                {
+                    "phase": payload["phase"],
+                    "completed_events": len(expected),
+                    "event_ids_sha256": hashlib.sha256(
+                        "\n".join(sorted(payload["event_ids"])).encode()
+                    ).hexdigest(),
+                    "redis_scans": scans + 1,
+                    "metadata_marker_count": len(forbidden),
+                    "actual_worker_role": True,
+                    "delivered_and_processed": True,
+                    "decoded_redis_and_sql_checked": True,
+                }
+            )
+        )
+    finally:
+        redis.close()
+        engine.dispose()
+
+
+OWNER_INCOMING_EVENTS = """
+import json,sys
+from uuid import UUID
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+from altvia.config import DatabaseSettings
+from altvia.database import make_engine
+from altvia.models import OutboxEvent
+p=json.load(sys.stdin)
+with Session(make_engine(DatabaseSettings())) as db:
+    rows=db.execute(select(OutboxEvent.event_id,OutboxEvent.event_type,OutboxEvent.schema_version)
+      .where(OutboxEvent.aggregate_id.in_([UUID(v) for v in p['aggregate_ids']]))
+      .order_by(OutboxEvent.event_id)).all()
+    assert rows
+    print(json.dumps([{'event_id':str(r[0]),'type':r[1],'schema':r[2]} for r in rows]))
+"""
+
+
+def incoming_privacy_checkpoint(run, compose, root, context, phase):
+    events = json.loads(
+        run(
+            [
+                *compose,
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "migrate",
+                "python",
+                "-c",
+                OWNER_INCOMING_EVENTS,
+            ],
+            data=json.dumps(context),
+        )
+    )
+    assert (
+        sum(row["type"] == "ticket.message_received" for row in events) == context["incoming_count"]
+    )
+    if phase in {"after-collision", "after-recreation"}:
+        assert any(row["type"] == "mail.case_aliased" and row["schema"] == 2 for row in events)
+    code = (root / "scripts/packaged_smtp_proof.py").read_text(encoding="utf-8")
+    code += (
+        "\nos.environ['ALTVIA_ALLOW_CONTAINER_TEST']='1'\npackaged_worker_privacy_checkpoint()\n"
+    )
+    result = json.loads(
+        run(
+            [*compose, "exec", "-T", "worker", "python", "-c", code],
+            data=json.dumps(
+                {**context, "phase": phase, "event_ids": [row["event_id"] for row in events]}
+            ),
+        )
+    )
+    # Same diagnostic checker as the stopped SMTP child; this checks the existing
+    # main process only after actual relevant events have been delivered/processed.
+    assert_worker_diagnostics(
+        run([*compose, "logs", "--no-color", "api", "worker"]),
+        tuple(value.encode() for value in context["metadata_markers"]),
+    )
+    return {**result, "main_diagnostics_checked": True}
+
+
 OWNER_SETUP = """
 import json,sys
 from uuid import UUID
@@ -201,6 +387,7 @@ def prepare_packaged_incoming(
         contact["email_normalized"],
         root_id,
         "synthetic-packaged-incoming-only",
+        "synthetic-packaged-alias-only",
     ]
     imap_code = (root / "apps/api/tests/imap_fixture.py").read_text(encoding="utf-8")
     imap_code += "\n" + (root / "scripts/packaged_imap_proof.py").read_text(encoding="utf-8")
@@ -361,6 +548,7 @@ def prepare_packaged_incoming(
                     "public_marker": public,
                     "body_text": body,
                     "incoming_root": root_id,
+                    "privacy_canaries": canaries,
                     "cert": (secret_dir / "imap_cert").read_text(),
                     "key": (secret_dir / "imap_key").read_text(),
                 }
@@ -370,11 +558,48 @@ def prepare_packaged_incoming(
     )
     status = client.get(delivery_path).json()
     assert status["state"] == "accepted" and status["attempts"] == 1
+    privacy_checkpoints = []
+
+    def privacy_context():
+        return {
+            "aggregate_ids": [
+                ticket_id,
+                *(
+                    value
+                    for operation in operations
+                    for value in (
+                        operation["case"]["source_id"],
+                        operation["case"]["case_id"],
+                    )
+                ),
+            ],
+            "incoming_count": len(operations),
+            "metadata_markers": list(
+                dict.fromkeys(
+                    [
+                        *canaries,
+                        account["username"],
+                        account["password"],
+                        account["from_email"],
+                    ]
+                )
+            ),
+        }
+
     second = capture(1, root_id + " " + status["smtp_message_id"])
     detail = client.get("/api/v1/mail-cases/" + second["case_id"]).json()
     assert detail["can_append"] and detail["candidate_ticket_id"] == ticket_id
     promotion(
         second, {"action": "append", "ticket_id": ticket_id, "ticket_version": 5, "reopen": False}
+    )
+    privacy_checkpoints.append(
+        incoming_privacy_checkpoint(
+            run,
+            compose,
+            root,
+            privacy_context(),
+            "after-append",
+        )
     )
     for version, state in ((6, "open"), (7, "resolved"), (8, "closed")):
         changed = client.post(
@@ -400,6 +625,15 @@ def prepare_packaged_incoming(
     )
     assert client.get(path).json()["version"] == 11
     assert client.get(path).json()["status"] == "open"
+    privacy_checkpoints.append(
+        incoming_privacy_checkpoint(
+            run,
+            compose,
+            root,
+            privacy_context(),
+            "after-reopen",
+        )
+    )
     # Independently attested byte-identical alias after promotion, then a real raw
     # contradiction of that alias: no rewritten wire, text, timestamp or receipt.
     alias_code = """
@@ -428,6 +662,15 @@ print(json.dumps({'alias_preserved_receipt':True,'late_raw_collision':True}))
         alias_code, {**first, "contact_id": contact["id"], "contact_version": contact["version"]}
     )
     assert client.get("/api/v1/mail-cases/" + first["case_id"]).json()["state"] == "collision"
+    privacy_checkpoints.append(
+        incoming_privacy_checkpoint(
+            run,
+            compose,
+            root,
+            privacy_context(),
+            "after-collision",
+        )
+    )
     for operation in operations:
         for actor, status_code in ((reader, 403), (denied, 404)):
             response = actor.post(
@@ -452,6 +695,9 @@ print(json.dumps({'alias_preserved_receipt':True,'late_raw_collision':True}))
     assert private not in json.dumps(reader_conversation.json())
     logs = run([*compose, "logs", "--no-color", "api", "worker"])
     assert all(marker not in logs for marker in canaries)
+    assert_worker_diagnostics(
+        logs, tuple(value.encode() for value in privacy_context()["metadata_markers"])
+    )
     role_proofs = []
     for service, role in (("api", "altvia_app"), ("worker", "altvia_worker")):
         role_proofs.append(
@@ -488,6 +734,8 @@ print(json.dumps({'alias_preserved_receipt':True,'late_raw_collision':True}))
         "status": status,
         "private_marker": private,
         "diagnostics_private_text_excluded": True,
+        "privacy_context": privacy_context(),
+        "privacy_checkpoints": privacy_checkpoints,
     }
 
 
@@ -529,6 +777,13 @@ def verify_packaged_incoming_restart(client, proof, run, compose, work):
         )
     )
     assert snapshot == proof["snapshot"]
+    after_restart = incoming_privacy_checkpoint(
+        run,
+        compose,
+        Path(__file__).resolve().parents[1],
+        proof["privacy_context"],
+        "after-recreation",
+    )
     (work / "incoming-conversation-proof.json").write_text(
         json.dumps(
             {
@@ -545,6 +800,7 @@ def verify_packaged_incoming_restart(client, proof, run, compose, work):
                 "worker": proof["worker"],
                 "alias": proof["alias"],
                 "roles": proof["roles"],
+                "privacy_checkpoints": [*proof["privacy_checkpoints"], after_restart],
             },
             indent=2,
         )
@@ -781,37 +1037,7 @@ def packaged_smtp_worker_proof(serve):
             ).one()
 
     def inspect_metadata():
-        forbidden = [
-            marker,
-            payload["public_marker"].encode(),
-            payload["account"]["username"].encode(),
-            payload["account"]["password"].encode(),
-            initial[4].encode(),
-            initial[5].encode(),
-        ]
-        for key in redis.scan_iter(count=100):
-            assert all(value not in key for value in forbidden)
-            kind = redis.type(key)
-            # Decode actual values; Redis DUMP may compress a leaked marker.
-            if kind == b"string":
-                values = [redis.get(key)]
-            elif kind == b"hash":
-                values = [part for pair in redis.hscan_iter(key) for part in pair]
-            elif kind == b"list":
-                values = redis.lrange(key, 0, -1)
-            elif kind == b"set":
-                values = redis.smembers(key)
-            elif kind == b"zset":
-                values = redis.zrange(key, 0, -1)
-            else:
-                assert kind == b"none", "Unexpected Redis value type in proof"
-                values = []
-            assert all(needle not in (value or b"") for value in values for needle in forbidden)
-        with engine.connect() as db:
-            for table, column in (("outbox_events", "payload"), ("activity_events", "details")):
-                for value in db.scalars(text("SELECT " + column + " FROM " + table)):
-                    assert payload["private_marker"] not in json.dumps(value)
-                    assert payload["public_marker"] not in json.dumps(value)
+        inspect_worker_metadata(redis, engine, worker_privacy_markers(payload, initial))
 
     process = None
     try:
@@ -914,15 +1140,7 @@ def packaged_smtp_worker_proof(serve):
                     log.flush()
                     log.seek(0)
                     diagnostics = log.read()
-                    for secret in (
-                        payload["private_marker"],
-                        payload["public_marker"],
-                        account["password"],
-                        account["username"],
-                        initial[4],
-                        initial[5],
-                    ):
-                        assert secret.encode() not in diagnostics
+                    assert_worker_diagnostics(diagnostics, worker_privacy_markers(payload, initial))
                     print(
                         json.dumps(
                             {
@@ -941,6 +1159,9 @@ def packaged_smtp_worker_proof(serve):
                                 "restricted_privileges": True,
                                 "private_note_excluded": True,
                                 "redis_events_diagnostics_excluded": True,
+                                "incoming_privacy_canaries_checked": len(
+                                    payload.get("privacy_canaries", ())
+                                ),
                                 "restart_no_second_data": True,
                                 "restarted_main_fresh_heartbeat": True,
                                 "shutdown": shutdown,

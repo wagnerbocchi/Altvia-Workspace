@@ -756,3 +756,9 @@ gets no case text/routing/history grants. Promoted identical aliases retain the
 same case/receipt/incoming row and use explicit private mail.case_aliased schema2;
 ready schema1 aliases remain exact. Collision/revocation preserves receipt/history.
 Contraction refuses durable cases/origins/incoming/email tickets or related history.
+
+Policy1 scan outcome mapping: exact clean alone becomes ready. Known immutable
+policy failures (infected, encrypted or limit) become terminal rejected with no
+manual release. Transport, timeout, protocol, database and other unclassified
+failures retry with the bounded generation budget, then become failed. A protected
+failed retry creates a new generation; immutable prior attempts remain.

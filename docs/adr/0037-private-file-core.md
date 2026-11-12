@@ -304,3 +304,9 @@ encrypted consistent backup/restore. Final changed artifacts require actual targ
 qualification after the remaining MVP; Q02/Q09/Q11 retain real sizing/retention/
 production storage decisions. Continue next with the separate incoming-MIME file
 contract, then ticket/work links, automation, SLA, analytics and guarded import.
+
+Policy1 scan outcome mapping: exact clean alone becomes ready. Known immutable
+policy failures (infected, encrypted or limit) become terminal rejected with no
+manual release. Transport, timeout, protocol, database and other unclassified
+failures retry with the bounded generation budget, then become failed. A protected
+failed retry creates a new generation; immutable prior attempts remain.

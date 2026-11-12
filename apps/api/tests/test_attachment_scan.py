@@ -458,3 +458,28 @@ def test_scan_history_rejects_forged_lease_and_unbounded_reason(
         from uuid import uuid4
 
         db.execute(statement, {**values, "token": uuid4(), "reason": "unavailable"})
+
+
+@pytest.mark.parametrize("days", [-2, 2])
+def test_file_scan_process_clock_skew_uses_database_lease_and_freshness(
+    admin_client, db_engine, seeded_user, tmp_path, monkeypatch, days
+):
+    from datetime import UTC, datetime
+
+    from test_attachments import controlled_ready
+
+    scan = scanner_owner()
+    _, identifier = uploaded(admin_client, db_engine, seeded_user)
+
+    class SkewedDateTime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return super().now(tz) + timedelta(days=days)
+
+    monkeypatch.setattr(scan, "datetime", SkewedDateTime)
+    with db_engine.connect() as db:
+        current = db.scalar(text("SELECT clock_timestamp()"))
+    assert abs((SkewedDateTime.now(UTC) - current).total_seconds()) > 47 * 3600
+    controlled_ready(admin_client, db_engine, identifier, tmp_path)
+    detail = admin_client.get("/api/v1/attachments/" + str(identifier)).json()
+    assert detail["state"] == "ready" and detail["can_download"]

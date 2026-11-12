@@ -127,11 +127,25 @@ corrected36 captures, full logs/failures and298 raw source hashes are preserved
 in the private528-entry archive attested-inbound-task3-931c28c/acceptance.zip,
 SHA256924cff84fdf654cd6a05c7718c037de9a23c07671da60d1f3292f86e78dadb68.
 Minor readability cleanup and existing local runner warnings remain explicit;
-neither is a functional blocker. Hosted a0da5a5 passed993 API/source/images/
-containers but failed one browser focus-order assertion (141/142). Its actual
-deterministic RED/GREEN correction is in Task3; hosted acceptance for the new
-head must still pass. Packaged process/database restart and complete synthetic
-incoming proof remain Task4. No provider, production or target claim is made.
+neither is a functional blocker. Hosted a0da5a5's browser focus failure remains
+historical; its deterministic correction now passed on14f334d with ALL FIVE gates:
+994 API in726.95s,154 browser in5.4m, packaged containers, source security and five
+nonempty zero-vulnerability image inventories66/70/49/16/43. Source has17LOW,
+zero blockers/secrets. Exact hosted11-entry archive SHA256
+4d21fc4b9280c898e4bf9e3de7f8644245057180842c6d12e3c353adac856bc3 is retained
+at the same private Task3 evidence directory/ci-14f334d.zip.
+
+Task4 harness source e91bcc5 locally passed19 focused tests in17.79s and actual
+IMAPS/parser2/owner attestation/scoped HTTPS creation, separate requester proof,
+TLS first reply references, append/explicit reopen, alias collision, table AND
+column denials and API/PG container recreation. Original unclassified v1/v2 and
+all three outgoing uncertainty/shutdown scenarios remain intact. Root verified
+all175 raw source and26 evidence hashes. Fresh API image modules77 match source;
+other local base images were reused, no web service/full Compose/cgroup claim is
+made for that standalone run. Whole-increment independent review, final exact
+hosted Docker/image acceptance and final target qualification remain pending.
+See docs/runbooks/attested-incoming.md for explicit trust/recovery boundaries and
+promotion-aware rollback. No provider, production or target claim is made.
 
 The current engineering contract is ADR-0036 and
 docs/plans/2026-11-12-attested-inbound-conversation.md: owner-attested classified

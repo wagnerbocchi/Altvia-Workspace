@@ -226,6 +226,13 @@ refuses cases/origins/incoming/email tickets or corresponding history. Rollback
 retains expansion/compatible consumers and owner tools; drain incompatible tools,
 never delete history to force downgrade. No new dependency/service/native tuning.
 
+After promotion, rollback also retains a promotion-aware API and its compatible
+web client. The Task1-only reader's ready/collision/revoked enum cannot represent
+promoted cases and is not a safe rollback reader. Keep schema1/2-aware worker and
+provisioning plus version-aware owner tools. Use a tested compatible application
+pair instead of a blind older-image rollback. Operational steps and trust/recovery
+boundaries are in docs/runbooks/attested-incoming.md; this grants no live operation.
+
 Acceptance: actual PG/API spoofing/scope/protocol/replay/races/atomic failure,
 contextual dedup/aliases/late collision/foreign-ID DoS/missing IDs/long text and
 legacy message/note/SMTP compatibility. Actual browser and packaged synthetic

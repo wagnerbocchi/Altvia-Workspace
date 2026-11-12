@@ -212,9 +212,9 @@ requester/send/status APIs. No HTTP owner attestation backdoor.
 
 ### Task 4: Complete synthetic integration and immediate private-files stage
 
-- [ ] Fresh whole-increment source review, consolidated fixes with RED/GREEN and
+- [x] Fresh whole-increment source review, consolidated fixes with RED/GREEN and
   scoped re-review; preserve earlier outgoing clock/privacy/restart evidence.
-- [ ] Packaged IMAPS capture/parser2/owner attestation/scoped HTTPS creation,
+- [x] Packaged IMAPS capture/parser2/owner attestation/scoped HTTPS creation,
   separate requester attestation, real TLS first reply references, verified
   correlated incoming append/explicit reopen, duplicate/collision/role/private
   denial and API/PG restart. Use separate fixtures, preserve old exact assertions.

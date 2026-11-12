@@ -24,7 +24,7 @@ target-VM qualification follows development, not each slice.
 | SLA | Versioned configurable calendars/holidays/timezone/pause/reopen, first accepted public response and resolution/breach proof | Pending; actual policy Q07 |
 | Analytics | Authorized real overview/team/client/project/assignee metrics, explicit reference date, pagination and reconciliation | Pending |
 | Import | Read actual workbook, private staging/dry-run/mapping/reconciliation and idempotent authorized apply capability; do not execute real import | Pending; actual mappings Q05/Q06 |
-| Integrated hardening | Full browser/security/load/backup/file restore/rollback and runbooks | Pending |
+| Integrated hardening | Full browser/security/load/backup/file restore/rollback and runbooks; exercise a compatible API/web/worker rollback pair against retained promoted mail history | Pending |
 | Final target qualification | Isolated final stack on actual x86-64-v1 VM, exact native images/scans, functional/resource/recovery evidence | Pending after development |
 
 Notifications/time tracking/export remain P1 after the core MVP; advanced planning,

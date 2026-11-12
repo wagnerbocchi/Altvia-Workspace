@@ -147,6 +147,17 @@ hosted Docker/image acceptance and final target qualification remain pending.
 See docs/runbooks/attested-incoming.md for explicit trust/recovery boundaries and
 promotion-aware rollback. No provider, production or target claim is made.
 
+The whole-increment review found one Important harness privacy-proof gap, no
+observed application leak. The single d6c3469 fix wave has saved12-failure RED,
+56 passing focused tests in18.74s and one actual packaged152.0s flow. Redis/SQL and
+child/main diagnostics now check complete channel-specific canaries through four
+actual delivered/processed checkpoints19/30/35/35. Scoped independent re-review
+approved R1 with no new issue. Local/source576-entry archive SHA256
+8b3a4aa3ecb589499cbab0049d3ded8ec054dff686095693bf47f62171e6d843 preserves
+earlier source/UI archives and failure history. See
+docs/phase-3h-attested-incoming-evidence.md.
+Final publication/hosted acceptance is pending; private files follows it directly.
+
 The current engineering contract is ADR-0036 and
 docs/plans/2026-11-12-attested-inbound-conversation.md: owner-attested classified
 cases, existing queue/customer scope, protected staff promotion, contextual

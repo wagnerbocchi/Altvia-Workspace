@@ -217,6 +217,21 @@ Proceed directly to persisted assets/scan jobs, content links/MIME2, browser and
 integrated files, then incoming-MIME files. Final target qualification remains
 deferred; no uploaded-file functionality or production acceptance is claimed yet.
 
+Task 2 now has a reviewed local candidate through e7fcefc: real persisted binary
+uploads/private downloads/metadata/retries and fenced durable scans under 00025.
+1132 distinct local passes are independently reconciled across the complete
+invocation, exact 76 missing-tool recoveries and two clock controls; three native
+image checks remain explicit skips with separate producer proof. Eight focused
+checks resolve the review's Important BOM type-filter issue; scoped re-review is
+clean. The route-purpose generated-enum Minor is deferred to the next affected
+contract. Local source SAST22 LOW/zero blockers, secrets zero and API image SCA
+zero findings pass. The new single full-suite CI owner supplies real private S3
+and verifies required cases actually execute. Its actual hosted startup/full
+current-source gates remain pending. This is not full file/MIME/UI completion.
+Task 1 console evidence now has explicit safe v2 review archives after correcting
+an empty-username URL scrubber; original console copies remain private historical
+evidence. Exact outcomes and corrections: docs/phase-3i-private-file-evidence.md.
+
 The accepted incoming increment used ADR-0036 and
 docs/plans/2026-11-12-attested-inbound-conversation.md: owner-attested classified
 cases, existing queue/customer scope, protected staff promotion, contextual

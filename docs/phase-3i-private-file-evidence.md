@@ -77,7 +77,9 @@ requires the same native foreground-console correction. No complete definitions
 or actual scan/reload succeeded in this attempt. The intentional pre-bootstrap
 command9 exit1 was expected; cleanup commands succeeded.
 
-All six full decoded job logs were inspected and sanitized before persistence.
+All six full decoded job logs were inspected. Their first URL sanitizer missed
+empty-username Redis credentials; the correction and safe review copies are
+recorded below. The original console copies remain private historical evidence.
 Action deprecation/cache-reservation and disposable local-initdb diagnostics are
 nonblocking runner conditions. All four downloaded artifacts matched GitHub ZIP
 digests; original incoming/outgoing proof JSON remains retained. The complete
@@ -127,7 +129,7 @@ port controls and real resource limits passed. Updater alone retains definition
 egress. Runtime image IDs and independent image-scan IDs are retained separately;
 no equality or target-CPU qualification is inferred.
 
-All six full decoded/sanitized logs and four digest-verified GitHub artifacts are
+All six full decoded logs and four digest-verified GitHub artifacts are
 in the13-entry ci-a7628bf.zip archive,1949704 bytes, SHA256
 0d0433e9a6254d4a5d5b59fd9e61c3fbca691c1486fcb8777ab165efdc4cca5e,
 beside the earlier immutable evidence. Artifact13951018531 contains136 entries,
@@ -136,13 +138,92 @@ including the full new manifest/streams/inventories; ZIP SHA256
 The old incoming/outgoing proof JSON and packaged regressions also passed. Task1
 is accepted; this is still infrastructure, not the complete file feature.
 
+## Console evidence correction and safe review copies
+
+The first controller URL scrubber required a nonempty username and missed
+temporary synthetic Redis credentials in the API/browser console logs. Revised
+audit found 31 matches per hosted attempt. No credential value was emitted by
+that audit, and no production credential exposure is established. The original
+console files and ci-f171dfa.zip/ci-a7628bf.zip retain their historical hashes and
+are marked private-only. They must not be shared as sanitized review copies.
+
+Use these supplemental archives in the same private evidence directory:
+
+- ci-f171dfa-sanitized-v2.zip: 14 entries, 1918343 bytes, SHA256
+  334821c5f3b69e9737151b832f8c96fb0ea36577eaa92c82a94e7044545378ae.
+- ci-a7628bf-sanitized-v2.zip: 14 entries, 1951088 bytes, SHA256
+  746a7c0a922198d7582ccc035e719c02cab8ac67bbb4536692e4e044ecbe5a58.
+
+Each includes an audit binding the original and corrected hashes and 31 explicit
+redactions; the revised URL audit and ZIP CRC pass. Actual command-byte evidence,
+source hashes, downloaded GitHub ZIP bytes and all validation outcomes remain
+unchanged. Old evidence was preserved rather than rewritten into a false claim.
+
+## Task 2 persisted assets: reviewed local candidate
+
+Contracts 202ea91/4852ba2 and CI-boundary 9b40e75/b0f9f23 preceded source.
+Core d9e9412, history/ingress correction 3f3ebbe and CI harness 8c132fd implement
+migration 00025, concrete ticket-public/note or work assets, real binary upload,
+scoped metadata/download, protected retries and durable scan jobs. File uploads
+preserve the parent version. Original receipts survive scan progression; current
+resource/action/session rights and actual object integrity still gate every use.
+Private events never enter shared activity, and worker grants exclude filenames,
+purpose, uploader, note bodies and raw/preview/origin data. No content links,
+MIME2, incoming-file owner or UI were introduced at this boundary.
+
+The original full local run had 1054 passes, 76 setup errors and three explicit
+native-image skips. All errors were missing OpenSSL: 44 raw exceptions and 32
+explicit TLS-fixture guards. Exact 76-node recovery passed after adding only the
+matching CLI to the ignored test image; all existing SSL/native packages stayed
+unchanged. Two process-clock skew cases then passed. The controller independently
+verified 1132 distinct passing nodes, three skips and 215 identical nonprivate
+inputs across full/recovery cohorts. The original invocation remains exit 1;
+the mandatory current-source hosted full run remains required.
+
+Actual PG/S3/Redis checks cover revocation after transfer, concurrent receipts,
+private orphan preservation, two-transfer/body bounds, corrupt zero-byte refusal,
+immutable history/runtime column grants, database-clock lease/generation fencing,
+late/stop results and definition age after final lock. Actual HTTPS accepts a
+32 KiB binary upload while ordinary 32 KiB JSON retains 413. Source SAST has
+22 LOW/zero blockers; tracked-source secrets zero. The pre-review API image has
+72 inventory entries/zero vulnerabilities on the retained scanner DB. Its outer
+Windows text-copy helper failure and byte-exact successful scan are both retained.
+
+Independent review found one Important UTF8-BOM text-signature bypass, fixed in
+e7fcefc with five real PG/S3 RED cases and eight focused GREEN checks. The fix
+normalizes only the sniffing view; legal BOM text retains exact stored bytes,
+digest and receipt. Scoped re-review marked P2 ADDRESSED/no new breakage. A Minor
+overbroad route-purpose enum remains explicit next-contract work; runtime guards
+already reject owner-incompatible purposes.
+
+Hatch sdist exclusion 88a7563 also resolved an ignored public-template copy in the
+source package. Actual content checks preserve the root template/source/00025,
+exclude the private tree and prove every wheel member's bytes unchanged. An early
+setup log was overwritten by helper filename reuse; the report distinguishes that
+limitation from the retained product RED/GREEN and complete full/recovery records.
+No package was published.
+
+The controller verified 291 initial artifacts/all 26 changed source hashes/Git
+blobs/report, then 27 fix artifacts/two changed sources/report. Initial immutable
+source-88a7563.zip and 301-entry initial-local-evidence.zip remain at
+C:/Users/wagne/.codex/state/evidence/private-file-task2-88a7563/; their hashes are
+f96f47444d28741fc6ae09c3bc86645adbb4457f4244c9ab90cff224df4126ef and
+0a0b48c8a97add8a08a7e3843364c30afd8c5a28f277cbbfad7b726147a3207e.
+The initial archive explicitly records the pre-fix review status. Final exact-
+source hosted gates and the real new S3/full-suite CI harness remain pending.
+Reviewed source-e7fcefc.zip has 561 entries/SHA256
+e99a67876ecbb9590f7c2286a9eb4f14c8aa2d3f0ac19921593e90af4cd48fa3;
+35-entry fix-1-evidence.zip has SHA256
+86c9e3c42a981453bb0cca15cae24f3d0b81aad9e46a669b08ed8875ee6152df.
+Both preserve the pending-hosted scope and the deferred Minor explicitly.
+
 ## Outstanding acceptance and continuation
 
 Local2048MiB Podman was not resized/restarted. Controlled socket replies remain
 transport evidence, separate from the actual accepted hosted signed profile.
 
-Continue with persisted assets/scan leases, concrete
-content links/reviewed MIME2, the Impeccable browser flow and packaged restore/
+Complete Task 2 hosted acceptance, then concrete content links/reviewed MIME2,
+the Impeccable browser flow and packaged restore/
 privacy proof. Owner-bounded incoming-MIME files follow under a separate contract.
 Final actual x86-64-v1 qualification follows remaining MVP development under the
 user's consolidated cadence.

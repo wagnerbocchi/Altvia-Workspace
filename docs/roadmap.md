@@ -169,8 +169,8 @@ operational rollback and final integrated target gates remain separate.
 
 ADR0037 and docs/plans/2026-11-12-private-file-core.md select the next development
 contract: VersityGW1.11.0 S3/POSIX with native narrow policies/conditional immutable
-PUT/fsync/TLS, botocore1.44.1 and signed vendor ClamAV1.4.6-r0. No component has
-been installed, built or ISA/security-qualified by that selection. Existing
+PUT/fsync/TLS, botocore1.44.1 and signed vendor ClamAV1.4.6-r0. That selection alone
+did not install, build or ISA/security-qualify any component. Existing
 resource/session/note authority, bounded streaming and real persisted scan jobs
 precede UI; no placeholder files or raw-mail grants. Staff/outbound file core and
 later owner-bounded incoming-MIME files are distinct required increments.
@@ -181,7 +181,19 @@ choice of future expiry/on-access rescans. Local Podman has2048 MiB; full signed
 standard-definition acceptance uses adequate hosted/final-target resources without
 restarting/resizing that local VM. Continue independent development.
 
-The current engineering contract is ADR-0036 and
+Task1 infrastructure source046eacf and scoped corrections1c4e134 now have actual
+local storage/TLS/policy/integrity/restart and transport evidence. The first review
+found three Important byte-evidence/timeout/safe-error issues;39 focused correction
+tests passed after eight failing RED cases. Scoped independent re-review marked
+all three ADDRESSED with no new breakage. Required hosted full signed-definition/
+update/resource/all-seven/regression acceptance remains pending.
+Initial323 evidence/29 source hashes and supplemental38 artifacts/five sources were
+independently verified. Old26/42 Windows command hash mismatches are preserved as
+a historical evidence defect, with zero differences after newline normalization.
+No file HTTP route/table/UI or full attachment functionality is claimed here.
+See docs/phase-3i-private-file-evidence.md.
+
+The accepted incoming increment used ADR-0036 and
 docs/plans/2026-11-12-attested-inbound-conversation.md: owner-attested classified
 cases, existing queue/customer scope, protected staff promotion, contextual
 identity/correlation and incoming/outgoing conversation. Unknown raw mail stays

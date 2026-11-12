@@ -139,7 +139,7 @@ export function IdentityBoundary({ children, location, headingId, wide = false }
       .finally(() => setChecking(false));
   };
   return <div className={`app-shell${view === "content" ? " authenticated-shell" : ""}`}>
-    <a className="skip-link" href="#main">Ir para o conteúdo</a>
+    <a className="skip-link" href={view === "content" ? "#workspace-content" : "#main"}>Ir para o conteúdo</a>
     <header className="masthead">{view !== "content" && <div className="brand">Altvia <span>Workspace</span></div>}
       <span className="location">{view === "content" ? location : "Acesso"}</span>
       <ThemeToggle />

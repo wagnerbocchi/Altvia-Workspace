@@ -31,7 +31,10 @@ export function WorkspaceNavigation({ children }: { children: ReactNode }) {
     : pathname === href || pathname.startsWith(`${href}/`) || (href === "/my-work" && pathname.startsWith("/work-items/"));
   const links = (items: Destination[]) => items.map(({ href, label, icon: Icon }) =>
     <Link key={href} href={href} className="workspace-nav-link" aria-current={current(href) ? "page" : undefined}
-      onClick={() => setOpen(false)}><Icon size={18} strokeWidth={1.7} aria-hidden="true" /><span>{label}</span></Link>);
+      onClick={() => {
+        setOpen(false);
+        if (open && pathname === href) trigger.current?.focus();
+      }}><Icon size={18} strokeWidth={1.7} aria-hidden="true" /><span>{label}</span></Link>);
   return <div className="workspace-frame" onKeyDown={event => {
     if (event.key === "Escape" && open) { event.preventDefault(); setOpen(false); trigger.current?.focus(); }
   }}>
@@ -52,6 +55,6 @@ export function WorkspaceNavigation({ children }: { children: ReactNode }) {
       <div className="navigation-account">{links([{ href: "/", label: "Minha conta", icon: UserRound }])}
         <span className="navigation-person">{user.display_name}</span></div>
     </nav>
-    <div className="workspace-content">{children}</div>
+    <div id="workspace-content" className="workspace-content" tabIndex={-1}>{children}</div>
   </div>;
 }

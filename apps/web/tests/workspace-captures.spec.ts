@@ -22,8 +22,9 @@ async function create(page: Page, path: string, data: object) {
   expect(response.status()).toBe(201); return response.json();
 }
 
-// Run separately on the guarded disposable database. These are real persisted
-// synthetic records, never runtime demo rows or customer data.
+// Opt in with ALTVIA_REDESIGN_CAPTURE=1 and pass workspace-captures.spec.ts to
+// node apps/web/scripts/browser-test.mjs on a fresh guarded disposable database. These are real
+// persisted synthetic records, never runtime demo rows or customer data.
 test("@redesign-capture all existing routes and representative states", async ({ page }) => {
   test.setTimeout(600_000);
   await mkdir(folder, { recursive: true });

@@ -35,6 +35,30 @@ test("mobile navigation expands with keyboard and Escape restores its trigger", 
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
 });
 
+for (const width of [1440, 390]) {
+  test(`skip link bypasses shared navigation at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/my-work");
+    await expect(page.getByRole("heading", { name: "Meu trabalho", exact: true })).toBeVisible();
+    await page.getByRole("link", { name: "Ir para o conteúdo", exact: true }).focus();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Tab");
+    await expect(page.locator(".workspace-content :focus")).toHaveCount(1);
+  });
+}
+
+test("current mobile destination restores visible focus when closing navigation", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/my-work");
+  const toggle = page.getByRole("button", { name: "Navegacao principal", exact: true });
+  const navigation = page.getByRole("navigation", { name: "Navegacao principal" });
+  await toggle.focus(); await page.keyboard.press("Enter");
+  await expect(navigation.getByRole("link", { name: "Meu trabalho", exact: true })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(navigation).toBeHidden();
+  await expect(toggle).toBeFocused();
+});
+
 test("private navigation disappears during identity failure and after logout", async ({ page }) => {
   await page.goto("/");
   const navigation = page.getByRole("navigation", { name: "Navegacao principal" });

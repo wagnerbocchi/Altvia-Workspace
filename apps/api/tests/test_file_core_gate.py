@@ -168,3 +168,99 @@ def test_native_network_created_boundary_is_verified_before_returning_endpoint()
         native_owner().create_private_network(
             unexpected_public_network, "altvia-api-files-0123456789"
         )
+
+
+# Exact relevant native values retained from hosted Docker command3, cb49780.
+HOSTED_DOCKER_NETWORKS = [
+    {
+        "Name": "bridge",
+        "Driver": "bridge",
+        "IPAM": {
+            "Driver": "default",
+            "Options": None,
+            "Config": [{"Subnet": "172.17.0.0/16", "Gateway": "172.17.0.1"}],
+        },
+    },
+    {
+        "Name": "github_network_fda4034a05794bf08f55e01def2012d0",
+        "Driver": "bridge",
+        "IPAM": {
+            "Driver": "default",
+            "Options": {},
+            "Config": [{"Subnet": "172.18.0.0/16", "Gateway": "172.18.0.1"}],
+        },
+    },
+    {
+        "Name": "host",
+        "Driver": "host",
+        "IPAM": {"Driver": "default", "Options": None, "Config": None},
+    },
+    {
+        "Name": "none",
+        "Driver": "null",
+        "IPAM": {"Driver": "default", "Options": None, "Config": None},
+    },
+]
+
+
+def observed_inventory(rows, occupied=()):
+    native = NativeNetwork(occupied)
+
+    def run(command, **options):
+        if command[1:] == ["network", "ls", "--quiet"]:
+            native.calls.append((command, options))
+            identifiers = "\n".join(f"{index + 1:012x}" for index in range(len(rows)))
+            return subprocess.CompletedProcess(command, 0, identifiers, "")
+        if command[1:3] == ["network", "inspect"] and (
+            native.created is None or command[3] != native.created["Name"]
+        ):
+            native.calls.append((command, options))
+            return subprocess.CompletedProcess(command, 0, json.dumps(rows), "")
+        return native.run(command, **options)
+
+    return native, run
+
+
+def test_retained_docker_null_ipam_shape_preserves_allocated_subnets():
+    owner = native_owner()
+    _, run = observed_inventory(HOSTED_DOCKER_NETWORKS)
+    assert owner.occupied_subnets(run) == [
+        ipaddress.ip_network("172.17.0.0/16"),
+        ipaddress.ip_network("172.18.0.0/16"),
+    ]
+    assert owner.create_private_network(run, "altvia-api-files-0123456789") == (
+        "10.240.0.0/24",
+        "10.240.0.10",
+    )
+
+
+def test_retained_docker_null_rows_do_not_hide_an_overlapping_real_pool():
+    rows = HOSTED_DOCKER_NETWORKS + [
+        {"Name": "allocated", "Driver": "bridge", "IPAM": {"Config": [{"Subnet": "10.240.0.0/24"}]}}
+    ]
+    _, run = observed_inventory(rows, ["172.17.0.0/16", "172.18.0.0/16", "10.240.0.0/24"])
+    assert native_owner().create_private_network(run, "altvia-api-files-0123456789") == (
+        "10.240.1.0/24",
+        "10.240.1.10",
+    )
+
+
+@pytest.mark.parametrize(
+    "row",
+    [
+        {"Name": "bridge", "Driver": "bridge", "IPAM": {"Driver": "default", "Config": None}},
+        {"Name": "foreign", "Driver": "host", "IPAM": {"Driver": "default", "Config": None}},
+        {"Name": "none", "Driver": "bridge", "IPAM": {"Driver": "default", "Config": None}},
+        {"Name": "host", "Driver": "host", "IPAM": {"Driver": "unknown", "Config": None}},
+        {"Name": "host", "Driver": "host", "IPAM": {"Config": None}},
+        {"Name": "host", "Driver": "host", "IPAM": {"Driver": "default"}},
+        {"Name": "host", "Driver": "host", "IPAM": {"Driver": "default", "Config": {}}},
+        {"Name": "host", "Driver": "host", "IPAM": {"Driver": "default", "Config": ""}},
+        {"Name": "host", "Driver": "host", "IPAM": {"Driver": "default", "Config": [None]}},
+    ],
+)
+def test_malformed_or_unknown_native_ipam_is_not_treated_as_empty(row):
+    native, run = observed_inventory([row])
+    with pytest.raises(ValueError, match="private_network_inventory_invalid"):
+        native_owner().create_private_network(run, "altvia-api-files-0123456789")
+    assert not any(command[2] == "create" for command, _ in native.calls)

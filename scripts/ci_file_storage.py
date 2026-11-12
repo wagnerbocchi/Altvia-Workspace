@@ -50,11 +50,21 @@ def occupied_subnets(run):
         networks = json.loads(run(["docker", "network", "inspect", *identifiers]).stdout)
         if not isinstance(networks, list) or len(networks) != len(identifiers):
             raise ValueError
-        return [
-            ipaddress.ip_network(config["Subnet"])
-            for network in networks
-            for config in network["IPAM"]["Config"]
-        ]
+        occupied = []
+        for network in networks:
+            ipam = network["IPAM"]
+            configs = ipam["Config"]
+            if configs is None:
+                if (network.get("Name"), network.get("Driver")) not in {
+                    ("host", "host"),
+                    ("none", "null"),
+                } or ipam.get("Driver") != "default":
+                    raise ValueError
+                continue
+            if not isinstance(configs, list):
+                raise ValueError
+            occupied.extend(ipaddress.ip_network(config["Subnet"]) for config in configs)
+        return occupied
     except (ValueError, TypeError, KeyError):
         raise ValueError("private_network_inventory_invalid") from None
 

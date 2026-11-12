@@ -16,7 +16,7 @@ target-VM qualification follows development, not each slice.
 | Stage | Required outcome | State |
 | --- | --- | --- |
 | Service Desk conversation | Public response drafts separate from private notes; protected review/replay and real browser conversation | Development/CI complete558f4ee;796 API/131 browser, packaged proof; final target deferred |
-| Outbound mail | Explicit verified participant boundary, durable public-only queue, verified TLS SMTP, stable IDs, retry/uncertain reconciliation and browser delivery states | Active: persistence5c6da0d locally checked132 tests; SMTP/worker integration next |
+| Outbound mail | Explicit verified participant boundary, durable public-only queue, verified TLS SMTP, stable IDs, retry/uncertain reconciliation and browser delivery states | Active: persistence5c6da0d; SMTP/worker6ae7e4f with104 affected tests and five hosted gates green869 API/131 browser; browser final correction/review and packaged SMTP proof pending |
 | Inbound mail | Restricted authorized triage, explicit verified sender/thread evidence, safe creation/append/reopen, no subject/From-only trust | Pending |
 | Private files | Private object storage, bounded streaming, fail-closed scanning, authorized ticket/work links and downloads | Pending |
 | Ticket/work links | Same-client N:N authorization of both endpoints, independent state, real browser links | Pending |

@@ -106,20 +106,27 @@ active SMTP; handle DNS/TLS/greeting/read/cleanup within an actual finite budget
 After positive final DATA250, QUIT/cleanup failure never undoes acceptance.
 Unexpected positive/malformed final DATA replies are uncertain, never safe retry.
 
-- [ ] Write/run RED with a real controlled local TLS SMTP server: exact envelope
+- [x] Write/run RED with a real controlled local TLS SMTP server: exact envelope
   and stable plain-text MIME, implicit TLS, required STARTTLS/re-EHLO, certificate
   rejection, no AUTH/DATA before TLS, bad auth, pre-DATA disconnect, 4xx/5xx,
   lost final250, malformed/oversized replies, bounded deadline and changed namespace.
-- [ ] Implement standard-library adapter, finite configuration bounds and private
+- [x] Implement standard-library adapter, finite configuration bounds and private
   safe diagnostics. Freeze bytes once; never build mail from private note inputs.
   Persist transmitting before DATA, accepted only after250 and uncertain on
   ambiguous DATA/crash. Definite rejection alone permits bounded safe retry.
-- [ ] Integrate claim/recovery/public wake-up with the existing worker. Prove
+- [x] Integrate claim/recovery/public wake-up with the existing worker. Prove
   duplicate Redis messages, two workers, restart and broker loss cannot create
   another logical delivery or automatically resend an uncertain attempt.
-- [ ] Run `uv run pytest apps/api/tests/test_smtp_transport.py` and full affected
+- [x] Run `uv run pytest apps/api/tests/test_smtp_transport.py` and full affected
   delivery/worker/runtime tests. Expected: all real wire/state assertions pass,
   safe shutdown and no raw/preview/note privileges. Commit transport integration.
+
+Task2 local completion2026-11-12:6ae7e4f,104 affected tests in271.17s,
+lint/format/mypy46/Bandit/package/optional Compose passed; independent review
+specification and quality PASS. Five exact-source hosted gates passed:869 API
+in634.89s,131 browser, base packaged stack and security. Five image reports have
+zero vulnerabilities; source has nine LOW and zero blockers/secrets. Full SMTP
+packaged shutdown/privacy/restart proof remains Task4; no target claim.
 
 ### Task 3: Real browser send review and delivery state
 

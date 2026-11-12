@@ -71,6 +71,15 @@ engineering contract is ADR-0035 and its verified-mail-delivery plan. Sender and
 requester attestation remain explicit owner operations with real policy Q03/Q16;
 no production verification or sending is authorized or inferred.
 
+ADR-0035 persistence5c6da0d and bounded TLS SMTP/worker6ae7e4f are implemented.
+The transport passed104 affected local tests and all five exact-source hosted
+gates with869 API/131 browser tests. Five image inventories have zero reported
+vulnerabilities; source has nine LOW and zero blockers/secrets. The real browser
+delivery extension is under final correction/review after142 passing full local
+cases. Actual packaged SMTP/restart/privacy/active-shutdown proof remains open;
+the base packaged stack result does not prove it. Full outbound, remaining MVP
+and final integrated target qualification are not yet complete.
+
 The Phase 3E-c policy follow-up delivers ADR-0033: strict Subject/body charset
 ownership, complete HTML token accounting and separate immutable parser2 results.
 Contracts31bbd6f preceded implementation. Final e0e6b06 passed all five hosted

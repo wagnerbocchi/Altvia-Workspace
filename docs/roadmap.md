@@ -4,17 +4,19 @@ Updated 2026-11-12. User authorized incremental development after contracts,
 direct pushes to main and no PR. Continue safe independent work while questions
 await answers. This does not authorize production deployment or real data import.
 
-## Current user stop point
+## Current authorized design scope
 
 User instruction2026-11-12: continue backend development and validation, but stop
 before beginning any design, UI or UX. Private-files Task3 backend is now closed
 on accepteddf3c8bb (immutable content links and explicitly reviewed MIME delivery),
 with relevant checks, independent review and authorized publication complete.
-Execution is STOPPED before the next planned Task4 browser/interface work; do not
-dispatch frontend/design work without a new user instruction.
-Generated API contracts remain permitted backend validation. This boundary
-supersedes the earlier instruction to continue across every remaining MVP stage.
-The MVP and final target qualification remain incomplete at this stop point.
+The user subsequently invoked Impeccable and clarified a whole-system visual
+redesign, selecting Twenty CRM as the reference. The active scope is the26
+existing routes under docs/plans/2026-11-12-workspace-redesign.md. Private-files
+Task4 was stopped before any implementation when that clarification arrived.
+It remains pending separately. The new design preserves existing functionality,
+resource authority and light/dark support. No production deployment or target
+qualification is implied. The MVP remains incomplete.
 
 ## Current validation cadence
 

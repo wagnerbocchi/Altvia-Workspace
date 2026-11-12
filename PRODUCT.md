@@ -77,10 +77,12 @@ Representative capacity and production readiness remain open. No Elasticsearch/O
 
 ## Brand Commitments
 
-The confirmed product name is Altvia Workspace. No approved logo, palette,
-typeface or visual reference was supplied. Visual choices are provisional
-implementation decisions, recorded for later review per the user's instruction
-to continue and register questions instead of pausing development.
+The confirmed product name is Altvia Workspace. On2026-11-12 the user requested
+a whole-system visual redesign and chose Twenty CRM as the visual reference.
+Use its restrained neutral workspace, compact navigation, aligned operational
+content and clear hierarchy as the craft reference, preserving Altvia's own
+identity, capabilities, access boundaries and light/dark modes. No approved logo
+asset or corporate typeface was supplied. Do not copy Twenty source or assets.
 
 ## Evidence on Hand
 

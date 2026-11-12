@@ -12,6 +12,12 @@ publication; then stop before Task4's browser/interface work. API contract
 generation is backend validation, not permission to change interface behavior.
 This explicit boundary supersedes continuous execution across the frontend stage.
 
+Subsequent user instruction2026-11-12 explicitly requests design with Impeccable.
+The user clarified a whole-system redesign with Twenty CRM as visual reference.
+Execute docs/plans/2026-11-12-workspace-redesign.md for the26 existing routes.
+Private-files Task4 remains pending; its implementer stopped before source edits.
+This supersedes the above stop for visual work, not every remaining backend stage.
+
 The master specification was reread completely for this sequence. Its Phase0
 example stop point was superseded by the user's later development authorization.
 Keep contracts before code, small coherent commits and real persisted vertical

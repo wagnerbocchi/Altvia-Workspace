@@ -31,7 +31,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: uv run ruff check scripts
       - run: uv run ruff format --check scripts
-      - run: shellcheck -s sh infra/start-ingress.sh infra/start-postgres.sh infra/postgres-runtime-marker.sh infra/redis-health.sh infra/start-redis.sh scripts/ci_redis.sh
+      - run: shellcheck -s sh infra/start-ingress.sh infra/start-postgres.sh infra/postgres-runtime-marker.sh infra/redis-health.sh infra/start-redis.sh infra/start-storage.sh infra/start-clamd.sh infra/start-freshclam.sh scripts/ci_redis.sh
       - run: pnpm --filter @altvia/web exec playwright install --with-deps chromium
       - run: uv run python scripts/container_smoke.py
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -43,6 +43,40 @@ jobs:
             .superpowers/container-tests/*/incoming-conversation-proof.json
           if-no-files-found: error
           retention-days: 14
+
+  private-file-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      ALTVIA_ALLOW_FILE_INFRA_TEST: '1'
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          python-version: '3.12'
+          enable-cache: true
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: '11.25.0'
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.21.0'
+          cache: pnpm
+      - run: uv sync --locked
+      - run: pnpm install --frozen-lockfile
+      - run: uv run pytest -q apps/api/tests/test_file_storage.py apps/api/tests/test_file_scan_transport.py apps/api/tests/test_private_file_infra_proof.py
+      - run: uv run python scripts/private_file_infra_proof.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: private-file-infra-${{ github.sha }}
+          path: |
+            .superpowers/file-infra/*/manifest.json
+            .superpowers/file-infra/*/inventory-*.txt
+            .superpowers/file-infra/*/[0-9]*.stdout
+            .superpowers/file-infra/*/[0-9]*.stderr
+          if-no-files-found: error
+          retention-days: 30
 
 # Real Docker/Linux image, HTTPS and recovery proof; not target-VM homologation.
 # Smoke cleanup stops only its random task project and never deletes volumes.

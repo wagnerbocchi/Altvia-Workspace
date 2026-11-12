@@ -1,0 +1,119 @@
+# Add to compose.yaml only for the real private-file infrastructure. Existing
+# five-service development stacks stay usable without allocating the AV profile.
+services:
+  api:
+    secrets: [storage_api, storage_ca]
+    networks: [objects]
+  worker:
+    secrets: [storage_scanner, storage_ca]
+    networks: [objects]
+    volumes: [clam_socket:/run/clamav:ro]
+  storage:
+    image: ${ALTVIA_STORAGE_IMAGE:-altvia-storage:local}
+    build: {context: .., dockerfile: infra/storage.Dockerfile}
+    secrets: [storage_root_access, storage_root_secret, storage_cert, storage_key, storage_ca]
+    volumes: [private_objects:/data]
+    networks: [objects]
+    read_only: true
+    tmpfs: ['/tmp:size=32m']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 1.0
+    pids_limit: 128
+    restart: unless-stopped
+  storage-bootstrap:
+    image: ${ALTVIA_API_IMAGE:-altvia-api:local}
+    command: [python, -m, altvia.file_storage_owner]
+    profiles: [files-owner]
+    secrets: [storage_owner, storage_api, storage_scanner]
+    volumes: ['${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/storage_ca:/run/secrets/storage_ca:ro']
+    networks: [objects]
+    depends_on: {storage: {condition: service_healthy}}
+    read_only: true
+    tmpfs: ['/tmp:size=32m']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 32
+    restart: 'no'
+    healthcheck: {disable: true}
+  clamd:
+    image: ${ALTVIA_CLAMAV_IMAGE:-altvia-clamav:local}
+    build: {context: .., dockerfile: infra/clamav.Dockerfile}
+    volumes: [clam_definitions:/var/lib/clamav:ro, clam_socket:/run/clamav]
+    networks: [scan]
+    depends_on: {freshclam: {condition: service_started}}
+    read_only: true
+    tmpfs: ['/tmp:size=64m']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 2048m
+    cpus: 2.0
+    pids_limit: 64
+    restart: on-failure
+  freshclam:
+    image: ${ALTVIA_CLAMAV_IMAGE:-altvia-clamav:local}
+    entrypoint: [/bin/sh, /usr/local/bin/start-freshclam.sh]
+    command: [--daemon]
+    volumes: [clam_definitions:/var/lib/clamav]
+    networks: [definition_download]
+    read_only: true
+    tmpfs: ['/tmp:size=64m']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 1536m
+    cpus: 1.0
+    pids_limit: 32
+    restart: on-failure
+    healthcheck:
+      test: [CMD-SHELL, 'test -s /var/lib/clamav/daily.cvd || test -s /var/lib/clamav/daily.cld']
+      interval: 10s
+      timeout: 5s
+      start_period: 120s
+      retries: 30
+  file-infra-proof:
+    image: ${ALTVIA_API_IMAGE:-altvia-api:local}
+    profiles: [files-proof]
+    entrypoint: [python, /proof/private_file_infra_proof.py]
+    secrets: [storage_owner, storage_api, storage_scanner]
+    volumes:
+      - '../scripts/private_file_infra_proof.py:/proof/private_file_infra_proof.py:ro'
+      - '${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/storage_ca:/run/secrets/storage_ca:ro'
+      - clam_socket:/run/clamav:ro
+    networks: [objects, scan]
+    read_only: true
+    tmpfs: ['/tmp:size=32m']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 1.0
+    pids_limit: 32
+    restart: 'no'
+    healthcheck: {disable: true}
+networks:
+  objects: {internal: true}
+  scan: {internal: true}
+  definition_download: {}
+volumes:
+  private_objects: {}
+  clam_definitions: {}
+  clam_socket: {}
+secrets:
+  storage_root_access:
+    file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/storage_root_access
+  storage_root_secret:
+    file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/storage_root_secret
+  storage_owner:
+    file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/storage_owner
+  storage_api:
+    file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/storage_api
+  storage_scanner:
+    file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/storage_scanner
+  storage_cert:
+    file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/storage_cert
+  storage_key:
+    file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/storage_key
+  storage_ca:
+    file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/storage_ca

@@ -50,6 +50,8 @@ def check_runtime() -> dict[str, str]:
         if any(directory.rglob("*sqlite*.so*")):
             raise RuntimeError("SQLite native object remains in the runtime")
     check_package_installers()
+    if importlib.util.find_spec("awscrt") is not None:
+        raise RuntimeError("Optional native AWS CRT is outside the baseline runtime")
     # Keep the API's required native/stdlib and CLI/migration paths usable.
     for module in (
         "ssl",
@@ -69,6 +71,10 @@ def check_runtime() -> dict[str, str]:
         "altvia.worker",
         "dramatiq.brokers.redis",
         "redis",
+        "botocore",
+        "altvia.file_storage",
+        "altvia.file_scan_transport",
+        "altvia.file_storage_owner",
     ):
         importlib.import_module(module)
     import zlib

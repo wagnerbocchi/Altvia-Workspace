@@ -33,6 +33,30 @@ def summarize_report(report: dict) -> dict[str, int]:
     return dict(counts)
 
 
+def require_service_inventory(report: dict, service: str) -> None:
+    """A green vulnerability count without installed native/Go evidence is void."""
+    rows = report.get("Results", [])
+    packages = [
+        package
+        for row in rows
+        if row.get("Class") == "os-pkgs"
+        for package in row.get("Packages", [])
+    ]
+    if not packages:
+        raise ValueError("Service package inventory missing")
+    if service == "storage" and not any(
+        row.get("Type") == "gobinary" and row.get("Packages") for row in rows
+    ):
+        raise ValueError("Storage Go dependency inventory missing")
+    if service == "clamav":
+        installed = {p.get("Name"): p.get("Version") for p in packages}
+        if any(
+            installed.get(name) != "1.4.6-r0"
+            for name in ("clamav-daemon", "freshclam", "clamav-libs")
+        ):
+            raise ValueError("ClamAV engine/native package inventory missing or mismatched")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--engine", choices=["docker", "podman"], default="docker")
@@ -71,7 +95,7 @@ def main() -> None:
         with (cache / "db/trivy.db").open("rb") as database_file:
             manifest["database_sha256"] = hashlib.file_digest(database_file, "sha256").hexdigest()
         failed = False
-        for service in ("api", "postgres", "ingress", "web", "redis"):
+        for service in ("api", "postgres", "ingress", "web", "redis", "storage", "clamav"):
             tag = f"{prefix}:{service}"
             build = [engine, "build", "-f", f"infra/{service}.Dockerfile", "-t", tag, "."]
             if engine == "podman":
@@ -107,6 +131,8 @@ def main() -> None:
                 }
                 manifest["images"][service] = entry
                 try:
+                    if service in ("storage", "clamav"):
+                        require_service_inventory(json.loads(raw), service)
                     entry["counts"] = summarize_report(json.loads(raw))
                     print(service, json.dumps(entry), flush=True)
                 except (ValueError, RuntimeError) as error:

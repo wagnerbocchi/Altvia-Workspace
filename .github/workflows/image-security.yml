@@ -13,7 +13,7 @@ permissions:
 jobs:
   installed-runtime:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
@@ -33,4 +33,4 @@ jobs:
           retention-days: 30
 
 # Scan every installed OS/Python/Go target. No ignores, no unfixed filter.
-# All four images use one DB. Reports include lower severities and image IDs.
+# All seven images use one DB. Reports include lower severities and image IDs.

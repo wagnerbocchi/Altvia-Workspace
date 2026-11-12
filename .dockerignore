@@ -28,6 +28,13 @@ infra/**
 !infra/gosu.go.sum
 !infra/redis-health.sh
 !infra/start-redis.sh
+!infra/start-storage.sh
+!infra/start-clamd.sh
+!infra/start-freshclam.sh
+!infra/clamd.conf
+!infra/freshclam.conf
+!infra/versitygw.go.mod
+!infra/versitygw.go.sum
 !package.json
 !pnpm-lock.yaml
 !pnpm-workspace.yaml

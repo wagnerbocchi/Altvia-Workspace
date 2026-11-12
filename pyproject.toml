@@ -13,6 +13,8 @@ dependencies = [
   "pydantic-settings>=2.7,<3",
   "dramatiq[redis]==2.2.1",
   "redis==8.1.0",
+  "botocore==1.44.1",
+  "defusedxml==0.7.1",
 ]
 
 [dependency-groups]

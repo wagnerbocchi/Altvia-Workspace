@@ -45,3 +45,9 @@ def test_gate_rejects_findings_in_non_os_targets(severity):
 def test_gate_refuses_incomplete_or_unrecognized_evidence(data):
     with pytest.raises((ValueError, RuntimeError)):
         scan.summarize_report(data)
+
+
+@pytest.mark.parametrize("service", ["storage", "clamav"])
+def test_private_service_gate_refuses_missing_native_or_go_inventory(service):
+    with pytest.raises(ValueError, match="inventory"):
+        scan.require_service_inventory(report(), service)

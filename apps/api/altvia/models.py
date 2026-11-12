@@ -1161,6 +1161,12 @@ class AttachmentScanAttempt(Base):
             name="ck_scan_attempt_bounds",
         ),
         CheckConstraint("disposition IN ('clean','infected','failed')", name="ck_scan_disposition"),
+        CheckConstraint(
+            "reason IN ('clean','infected','encrypted','limit','scan_error','protocol',"
+            "'unavailable','cancelled','timeout','database_invalid','database_changed',"
+            "'storage_unavailable','storage_integrity','lease_expired')",
+            name="ck_scan_reason",
+        ),
     )
 
     attachment_id: Mapped[UUID] = mapped_column(ForeignKey("attachments.id"), primary_key=True)

@@ -91,6 +91,12 @@ def upgrade() -> None:
         sa.CheckConstraint(
             "disposition IN ('clean','infected','failed')", name="ck_scan_disposition"
         ),
+        sa.CheckConstraint(
+            "reason IN ('clean','infected','encrypted','limit','scan_error','protocol',"
+            "'unavailable','cancelled','timeout','database_invalid','database_changed',"
+            "'storage_unavailable','storage_integrity','lease_expired')",
+            name="ck_scan_reason",
+        ),
     )
     op.execute("""CREATE FUNCTION altvia_attachment_guard() RETURNS trigger LANGUAGE plpgsql AS $$
     BEGIN
@@ -134,6 +140,19 @@ def upgrade() -> None:
         "CREATE TRIGGER attachment_guard BEFORE INSERT OR UPDATE OR DELETE ON "
         "attachments FOR EACH ROW EXECUTE FUNCTION altvia_attachment_guard()"
     )
+    op.execute("""CREATE FUNCTION altvia_attachment_attempt_guard()
+    RETURNS trigger LANGUAGE plpgsql AS $$
+    BEGIN
+      PERFORM id FROM attachments WHERE id=NEW.attachment_id AND state='scanning'
+        AND generation=NEW.generation AND attempts=NEW.attempt AND lease_token=NEW.token
+        AND lease_until=NEW.lease_until
+        AND NEW.claimed_at=lease_until-interval '60 seconds' FOR UPDATE;
+      IF NOT FOUND THEN RAISE EXCEPTION 'Invalid attachment attempt lease'; END IF;
+      RETURN NEW; END $$""")
+    op.execute(
+        "CREATE TRIGGER attachment_attempt_guard BEFORE INSERT ON attachment_scan_attempts "
+        "FOR EACH ROW EXECUTE FUNCTION altvia_attachment_attempt_guard()"
+    )
     op.execute(
         "CREATE TRIGGER attachment_attempt_immutable BEFORE UPDATE OR DELETE ON "
         "attachment_scan_attempts FOR EACH ROW EXECUTE FUNCTION "
@@ -155,3 +174,4 @@ def downgrade() -> None:
     op.drop_table("attachment_scan_attempts")
     op.drop_table("attachments")
     op.execute("DROP FUNCTION altvia_attachment_guard()")
+    op.execute("DROP FUNCTION altvia_attachment_attempt_guard()")

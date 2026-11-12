@@ -560,3 +560,21 @@ def test_unowned_work_contribution_can_upload_without_item_update(
     sign_in(admin_client, "file-agent@example.test")
     assert not admin_client.get(parent).json()["can_update"]
     assert upload(admin_client, parent, purpose="work").status_code == 201
+
+
+def test_actual_streamed_size_limit_includes_exact_ten_mib(admin_client, db_engine, seeded_user):
+    refs = setup(admin_client, db_engine, seeded_user)
+    parent = ticket(admin_client, refs)
+    content = b"x" * 10485760
+    assert upload(admin_client, parent, content=content).status_code == 201
+    oversized = admin_client.post(
+        parent + "/attachments?purpose=public&filename=large.txt",
+        content=iter([content, b"x"]),
+        headers={
+            **preconditions(),
+            "Content-Type": "application/octet-stream",
+            "X-File-Bytes": "10485760",
+            "X-File-SHA256": hashlib.sha256(content).hexdigest(),
+        },
+    )
+    assert oversized.status_code == 413

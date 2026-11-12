@@ -216,6 +216,7 @@ def test_worker_file_actor_dispatches_real_redis_and_finite_backlog(
             broker.client.delete("altvia:file:publisher")
             assert worker_owner.dispatch_file_once(db_engine, broker, stop) == 1
             assert worker_owner.dispatch_file_once(db_engine, broker, stop) == 0
+            broker.get_actor("file_scan").send(str(identifier))
             consumer.start()
             broker.join("files", timeout=15000)
             assert received == [b"private text\n"]
@@ -344,3 +345,116 @@ def test_expired_attempt_recovery_preserves_bounded_backoff(admin_client, db_eng
         now = db.scalar(text("SELECT clock_timestamp()"))
         assert 28 <= (row.next_attempt_at - now).total_seconds() <= 30
     assert scan.claim(db_engine, identifier) is None
+
+
+def test_blackholed_socket_stop_is_bounded_and_cannot_release(
+    admin_client, db_engine, seeded_user, tmp_path
+):
+    import socket
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Thread
+
+    from altvia.file_scan_transport import ClamClient
+    from altvia.file_settings import ScannerSettings
+    from altvia.file_storage import S3Store
+    from altvia.file_storage_owner import load_storage
+
+    scan = scanner_owner()
+    _, identifier = uploaded(admin_client, db_engine, seeded_user)
+    owned = scan.claim(db_engine, identifier)
+    socket_path = tmp_path / "blackhole.sock"
+    listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    listener.bind(str(socket_path))
+    listener.listen(1)
+    entered, release, stop = Event(), Event(), Event()
+
+    def blackhole():
+        with listener.accept()[0] as connection:
+            connection.recv(1024)
+            entered.set()
+            release.wait(8)
+
+    server = Thread(target=blackhole)
+    server.start()
+    storage = S3Store(load_storage(file_path("scanner")))
+    try:
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            work = pool.submit(
+                scan.run_claim,
+                db_engine,
+                owned,
+                storage,
+                ClamClient(ScannerSettings(socket_path=socket_path)),
+                stop,
+            )
+            assert entered.wait(5)
+            stop.set()
+            assert not work.result(timeout=6)
+        assert (
+            admin_client.get("/api/v1/attachments/" + str(identifier)).json()["state"] == "scanning"
+        )
+    finally:
+        release.set()
+        server.join(timeout=2)
+        listener.close()
+        storage.close()
+    assert not server.is_alive()
+
+
+def test_definition_age_crossing_while_waiting_for_file_lock_is_not_ready(
+    admin_client, db_engine, seeded_user
+):
+    from concurrent.futures import ThreadPoolExecutor
+    from time import sleep
+
+    scan = scanner_owner()
+    _, identifier = uploaded(admin_client, db_engine, seeded_user)
+    owned = scan.claim(db_engine, identifier)
+    fresh = scan.ScanResult(
+        "clean",
+        "clean",
+        "1.4.6",
+        28181,
+        owned.db_now - timedelta(hours=48) + timedelta(milliseconds=200),
+    )
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        with db_engine.begin() as locked:
+            locked.execute(
+                text("SELECT id FROM attachments WHERE id=:id FOR UPDATE"), {"id": identifier}
+            )
+            waiting = pool.submit(scan.finalize, db_engine, owned, fresh)
+            sleep(0.3)
+        assert waiting.result(timeout=5)
+    assert (
+        admin_client.get("/api/v1/attachments/" + str(identifier)).json()["state"] == "quarantine"
+    )
+
+
+def test_scan_history_rejects_forged_lease_and_unbounded_reason(
+    admin_client, db_engine, seeded_user
+):
+    from sqlalchemy.exc import DBAPIError
+
+    scan = scanner_owner()
+    _, identifier = uploaded(admin_client, db_engine, seeded_user)
+    owned = scan.claim(db_engine, identifier)
+    statement = text(
+        "INSERT INTO attachment_scan_attempts(attachment_id,generation,attempt,token,"
+        "claimed_at,lease_until,finished_at,disposition,reason) VALUES "
+        "(:id,:generation,:attempt,:token,:claimed,:until,clock_timestamp(),'failed',:reason)"
+    )
+    values = {
+        "id": identifier,
+        "generation": owned.generation,
+        "attempt": owned.attempt,
+        "token": owned.token,
+        "claimed": owned.db_now,
+        "until": owned.lease_until,
+        "reason": "unbounded diagnostic",
+    }
+    with db_engine.begin() as db, pytest.raises(DBAPIError):
+        db.execute(statement, values)
+    with db_engine.begin() as db, pytest.raises(DBAPIError):
+        from uuid import uuid4
+
+        db.execute(statement, {**values, "token": uuid4(), "reason": "unavailable"})

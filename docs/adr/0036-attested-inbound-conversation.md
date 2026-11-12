@@ -200,6 +200,14 @@ The scoped list/detail projection includes current client_name and queue_name
 through those authorized parent joins. Staff with case read authority need no
 separate client-registry role or creation-only choice lookup just to read those
 labels; no additional client metadata or registry authority is granted.
+Case DETAIL additionally returns promotion_receipt: PromotionReceipt|null using
+the existing immutable case_id/ticket_id/incoming_message_id receipt, after current
+resulting-ticket READ authorization. Lists omit it. This is current scoped history
+for reload/read-only navigation, including preserved invalidated history; it is
+not acknowledgement of an uncertain browser operation. Pending original intents
+still use their original protected key/body/If-Match and validate the acknowledged
+receipt with the authoritative single incoming read. Another operation's receipt
+must never be presented as proof that the pending original operation succeeded.
 
 One ticket conversation union read combines incoming records and existing public
 outbound messages by ticket version with actor/ticket-bound cursors. Existing

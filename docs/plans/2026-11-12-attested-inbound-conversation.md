@@ -180,6 +180,9 @@ mail_delivery and tests. Regenerate OpenAPI/TypeScript.
 **Files:** Create web mail-case route/components/lib/tests; extend service-desk
 navigation and ticket conversation using generated API types, existing send/status
 and protected intent owner. Add only guarded disposable owner fixtures as needed.
+Extend the existing case detail schema/API and real API tests with detail-only
+promotion_receipt: PromotionReceipt|null after resulting-ticket read authority,
+reusing the already persisted immutable receipt and existing narrow grants.
 
 **Interfaces consumed:** Task1 scoped cases; Task2 strict promotion receipt and
 conversation union; existing ticket creation category/assignee choices and sender/
@@ -193,6 +196,9 @@ requester/send/status APIs. No HTTP owner attestation backdoor.
   case/key/version/body and target ticket version through HTTP/ownership failures.
   Receipt acknowledgement reads actual case+ticket/incoming record before new
   writes; real session/CSRF loss clears private state. No optimistic promotion.
+  A detail-only history receipt enables reload/read-only navigation but cannot
+  replace protected replay of an uncertain original operation or acknowledge a
+  competing operation as that original request.
 - [ ] One conversation display with incoming and public outbound, current delivery
   states/review/composer reused; notes retain their own permission/layout/body.
   Per-message attestation wording never claims a verified global contact/account.

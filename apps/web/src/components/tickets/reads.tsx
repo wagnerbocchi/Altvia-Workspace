@@ -27,7 +27,7 @@ export function TicketHistory({ id, api }: { id: string; api: TicketApi }) {
 export function TicketActivity({ id, api }: { id: string; api: TicketApi }) {
   const paging = usePaging();
   const query = useQuery({ queryKey: ["ticket-activity", id, paging.cursor], queryFn: ({ signal }) => api.activity(id, paging.cursor, signal) });
-  const labels: Record<string, string> = { "ticket.created": "Chamado criado", "ticket.updated": "Chamado editado", "ticket.assigned": "Responsavel atribuido", "ticket.status_changed": "Estado alterado", "ticket.note_added": "Nota interna registrada" };
+  const labels: Record<string, string> = { "ticket.created": "Chamado criado", "ticket.updated": "Chamado editado", "ticket.assigned": "Responsavel atribuido", "ticket.status_changed": "Estado alterado", "ticket.note_added": "Nota interna registrada", "ticket.message_drafted": "Rascunho de resposta salvo" };
   return <section className="admin-section" aria-labelledby="ticket-activity-heading">
     <h2 id="ticket-activity-heading">Atividade do chamado</h2>
     <p className="field-help">Novas atividades podem levar instantes para aparecer.</p>

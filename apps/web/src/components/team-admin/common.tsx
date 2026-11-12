@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
-import { ApiError } from "@/lib/http";
+import { ApiError, isResourceForbidden } from "@/lib/http";
 import type { WorkspaceSession } from "@/components/workspace-session";
 import { Button } from "@/components/ui/button";
 
@@ -94,7 +94,7 @@ export function useTeamWrite<T extends object, R>(session: WorkspaceSession,
     intent.current = null; setSnapshot(null); confirmed(result, variables);
   }, onError(error) {
     if (!session.isCurrent()) return;
-    if (!isUncertain(error) && !(error instanceof ApiError && error.status === 409)) {
+    if (!isUncertain(error) && !isResourceForbidden(error) && !(error instanceof ApiError && error.status === 409)) {
       intent.current = null; setSnapshot(null);
     }
   } });
@@ -107,7 +107,7 @@ export function useTeamWrite<T extends object, R>(session: WorkspaceSession,
       setReloadFailed(false); mutation.mutate(intent.current);
     },
     verify: () => {
-      if (session.isCurrent() && intent.current && !mutation.isPending && !reloading && isUncertain(mutation.error)) {
+      if (session.isCurrent() && intent.current && !mutation.isPending && !reloading && (isUncertain(mutation.error) || isResourceForbidden(mutation.error))) {
         mutation.mutate(intent.current);
       }
     },

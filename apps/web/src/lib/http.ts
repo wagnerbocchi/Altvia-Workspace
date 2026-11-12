@@ -4,6 +4,10 @@ export class ApiError extends Error {
   }
 }
 
+export function isResourceForbidden(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 403 && error.code === "forbidden";
+}
+
 // The only transport origin is the existing edge. Never follow API redirects.
 export async function apiRequest(path: string, init?: RequestInit): Promise<Response> {
   const response = await fetch(`/api/v1${path}`, {

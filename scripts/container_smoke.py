@@ -1066,6 +1066,35 @@ with Session(make_engine(WorkerSettings())) as db:
                                 ).status_code
                                 == 403
                             )
+                            # An independent public draft must neither advance the
+                            # historical note fixture nor require a note grant.
+                            public_ticket = contributor.post(
+                                "/api/v1/tickets",
+                                json={**ticket_body, "subject": "Packaged public response"},
+                                headers={"Idempotency-Key": uuid4().hex},
+                            )
+                            assert public_ticket.status_code == 201
+                            message_ticket_id = public_ticket.json()["ticket_id"]
+                            message_ticket_path = "/api/v1/tickets/" + message_ticket_id
+                            message_body = {"body_text": "Packaged unsent public draft <literal>"}
+                            message_headers = {"If-Match": '"1"', "Idempotency-Key": uuid4().hex}
+                            message_receipt = contributor.post(
+                                message_ticket_path + "/messages",
+                                json=message_body,
+                                headers=message_headers,
+                            )
+                            assert message_receipt.status_code == 201
+                            replayed_message = contributor.post(
+                                message_ticket_path + "/messages",
+                                json=message_body,
+                                headers=message_headers,
+                            )
+                            assert replayed_message.status_code == 200
+                            assert replayed_message.json() == message_receipt.json()
+                            assert (
+                                contributor.get(message_ticket_path + "/notes").status_code == 403
+                            )
+                            assert client.get(message_ticket_path + "/messages").status_code == 404
                             delegated = client.patch(
                                 ticket_queue_path + "/members/" + reader_id,
                                 json={"role_name": "operations_manager", "note_access": "write"},
@@ -1484,6 +1513,31 @@ with Session(make_engine(Settings())) as db,db.begin():
             assert persisted_notes[0]["body_text"] == note_body["body_text"]
             assert persisted_notes[0]["visibility"] == "internal"
             assert persisted_notes[0]["ticket_version"] == 7
+            persisted_messages = client.get(message_ticket_path + "/messages").json()["items"]
+            assert len(persisted_messages) == 1
+            assert persisted_messages[0]["id"] == message_receipt.json()["message_id"]
+            assert persisted_messages[0]["body_text"] == message_body["body_text"]
+            assert persisted_messages[0]["visibility"] == "public"
+            assert persisted_messages[0]["delivery_status"] == "draft"
+            assert persisted_messages[0]["ticket_version"] == 2
+            assert client.get(message_ticket_path).json()["status"] == "new"
+            (work / "public-message-proof.json").write_text(
+                json.dumps(
+                    {
+                        "ticket_id": message_ticket_id,
+                        "draft": True,
+                        "replay": True,
+                        "restart": True,
+                        "note_grant_required": False,
+                        "outbound_delivery": False,
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+            print(
+                "Packaged public draft, independent notes, replay and restart persistence passed."
+            )
             with httpx.Client(
                 base_url=origin,
                 verify=str(secret_dir / "tls_cert"),
@@ -1491,13 +1545,12 @@ with Session(make_engine(Settings())) as db,db.begin():
                 timeout=10,
                 trust_env=False,
             ) as ordinary_reader:
-                assert (
-                    ordinary_reader.post(
-                        "/api/v1/auth/sessions",
-                        json={"email": "note-reader@example.test", "password": password},
-                    ).status_code
-                    == 201
+                public_reader_login = ordinary_reader.post(
+                    "/api/v1/auth/sessions",
+                    json={"email": "note-reader@example.test", "password": password},
                 )
+                assert public_reader_login.status_code == 201
+                ordinary_reader.headers["X-CSRF-Token"] = public_reader_login.json()["csrf_token"]
                 ordinary_ticket = ordinary_reader.get(ticket_path)
                 assert ordinary_ticket.status_code == 200
                 assert not ordinary_ticket.json()["can_read_notes"]
@@ -1522,6 +1575,20 @@ with Session(make_engine(Settings())) as db,db.begin():
                 assert all(row["event_type"] != "ticket.note_added" for row in visible_events)
                 assert note_receipt.json()["note_id"] not in json.dumps(visible_events)
                 assert note_body["body_text"] not in json.dumps(visible_events)
+                public_read = ordinary_reader.get(message_ticket_path + "/messages")
+                assert (
+                    public_read.status_code == 200
+                    and public_read.json()["items"] == persisted_messages
+                )
+                assert not ordinary_reader.get(message_ticket_path).json()["can_add_message"]
+                assert (
+                    ordinary_reader.post(
+                        message_ticket_path + "/messages",
+                        json=message_body,
+                        headers={"If-Match": '"2"', "Idempotency-Key": uuid4().hex},
+                    ).status_code
+                    == 403
+                )
             # Audit/outbox reads intentionally belong to the existing owner-side
             # probe. The API runtime has INSERT only on those tables.
             private_metadata = json.loads(

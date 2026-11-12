@@ -1,4 +1,4 @@
-import { ApiError, apiRequest } from "./http";
+import { ApiError, apiRequest, isResourceForbidden } from "./http";
 
 export const PAGE_SIZE = 10;
 export function pageQuery(cursor: string | null) {
@@ -15,7 +15,7 @@ export function createAdminTransport(csrf: string, onAuthError: (error: unknown)
     async request(path: string, init?: RequestInit) {
       try { return await apiRequest(path, init); }
       catch (error) {
-        if (error instanceof ApiError && [401, 403].includes(error.status)) onAuthError(error);
+        if (error instanceof ApiError && [401, 403].includes(error.status) && !isResourceForbidden(error)) onAuthError(error);
         throw error;
       }
     },

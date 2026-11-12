@@ -39,16 +39,16 @@ generated API types, browser tests and existing ticket surface context.
 Interface: separate public draft section with reviewed original body/key/version,
 receipt/refresh recovery, escaped persisted pages and clear unsent state.
 
-- [ ] Read incumbent UI/Impeccable context and craft floor before UI edits. Keep
+- [x] Read incumbent UI/Impeccable context and craft floor before UI edits. Keep
   private notes isolated; no visual redesign or inactive send controls.
-- [ ] Implement real API reads/writes and errors/loading/empty/read-only states.
+- [x] Implement real API reads/writes and errors/loading/empty/read-only states.
   Add actual browser persistence/uncertainty/ACL/keyboard/axe/light/dark/mobile proof.
-- [ ] Use required Impeccable review/document workflow and fix scored defects;
+- [x] Use required Impeccable review/document workflow and fix scored defects;
   run frontend checks, generated-contract comparison and package proof additions.
 
 ### Task3 Acceptance and immediate continuation
 
-- [ ] Obtain one fresh whole-increment source review; fix Important findings
+- [x] Obtain one fresh whole-increment source review; fix Important findings
   with RED/GREEN and full affected suite. Preserve minor dispositions explicitly.
 - [ ] Publish checked commits to main; inspect all five exact-source gates/full
   logs, packaged restart/privacy and complete security/image inventories.

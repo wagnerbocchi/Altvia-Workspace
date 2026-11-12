@@ -93,7 +93,7 @@ test("@discovery personal queue deduplicates ownership and participation", async
   const title = `Pessoal${crypto.randomUUID().replaceAll("-", "")}`;
   const id = await task(page, title, user.id);
   await page.goto(`/projects/${project}/work`);
-  await page.getByRole("link", { name: "Meu trabalho", exact: true }).click();
+  await page.getByRole("navigation", { name: "Navegacao principal", exact: true }).getByRole("link", { name: "Meu trabalho", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Meu trabalho", exact: true })).toBeVisible();
   await filter(page, title);
   await expect(page.getByLabel("Buscar tarefas", { exact: true })).toHaveValue(title);

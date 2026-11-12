@@ -66,13 +66,14 @@ export function ProjectDirectory({ api, session }: { api: ProjectApi; session: W
   return <div className="admin-workspace"><Link className="text-link" href="/">Voltar à minha conta</Link>
     <h1 id="projects-heading" tabIndex={-1}>Projetos</h1><p className="admin-intro">Acompanhe os projetos liberados para sua conta. Projetos internos têm acesso próprio; projetos de cliente mantêm as permissões desse cliente.</p>
     <p><Link className="text-link" href="/operational-areas">Áreas operacionais</Link></p>
-    <div className="admin-plane">{mayCreate && <ProjectProvisioning api={api} session={session} />}
+    <div className="admin-plane">
       <section className="admin-section" aria-labelledby="project-list-heading"><h2 id="project-list-heading">Projetos disponíveis</h2>
         <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>Atualizar projetos</Button>
         {query.isPending ? <LoadingRows label="Carregando projetos..." /> : query.isError ? <ReadError retry={() => void query.refetch()} /> : query.data.items.length ?
-          <ul className="record-list" aria-label="Projetos disponíveis">{query.data.items.map(row => <li className="team-row" key={row.id}><div className="record-text"><Link className="text-link" href={`/projects/${encodeURIComponent(row.id)}`}>{row.name}</Link><span className="record-meta">{row.scope_kind === "internal" ? "Interno" : "De cliente"} · {row.can_manage ? "Gestão do projeto" : "Somente consulta"}</span></div><span className="record-status">{row.active ? "Ativo" : "Arquivado"}</span></li>)}</ul> : <p>Nenhum projeto disponível nesta página.</p>}
+          <ul className="record-list" aria-label="Projetos disponíveis">{query.data.items.map(row => <li className="team-row" key={row.id}><div className="record-text"><Link className="text-link" href={`/projects/${encodeURIComponent(row.id)}`}>{row.name}</Link><span className="record-meta">{row.scope_kind === "internal" ? "Interno" : "De cliente"} · {row.can_manage ? "Gestão do projeto" : "Somente consulta"}</span></div><span className="record-status" data-state={row.active ? "active" : "inactive"}>{row.active ? "Ativo" : "Arquivado"}</span></li>)}</ul> : <p>Nenhum projeto disponível nesta página.</p>}
         <Paging paging={paging} next={query.data?.next_cursor} label="projetos" disabled={query.isFetching} />
       </section>
+      {mayCreate && <ProjectProvisioning api={api} session={session} />}
     </div>
   </div>;
 }

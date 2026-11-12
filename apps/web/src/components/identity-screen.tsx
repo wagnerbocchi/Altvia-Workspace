@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { LogOut, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,16 +17,6 @@ function Account() {
       <div><dt>Nome</dt><dd>{user.display_name}</dd></div>
       <div><dt>E-mail</dt><dd>{user.email}</dd></div>
     </dl>
-    <div className="account-admin-link"><Button variant="outline" asChild><Link href="/my-work">Meu trabalho</Link></Button></div>
-    <div className="account-admin-link"><Button variant="outline" asChild><Link href="/clients">Clientes</Link></Button></div>
-    <div className="account-admin-link"><Button variant="outline" asChild><Link href="/projects">Projetos</Link></Button></div>
-    <div className="account-admin-link"><Button variant="outline" asChild><Link href="/service-desk/queues">Filas de atendimento</Link></Button></div>
-    <div className="account-admin-link"><Button variant="outline" asChild><Link href="/service-desk/tickets">Chamados</Link></Button></div>
-    <div className="account-admin-link"><Button variant="outline" asChild><Link href="/service-desk/mail-cases">Mensagens recebidas</Link></Button></div>
-    {user.capabilities.includes("identity.manage") && <div className="account-admin-link">
-      <Button variant="outline" asChild><Link href="/admin/teams">Administrar equipes</Link></Button>
-      <Button variant="outline" asChild><Link href="/admin/users">Administrar contas</Link></Button>
-    </div>}
     <div className="session-actions">
       {mutation.isError && <p className="error-message" role="alert">Não foi possível sair. Sua sessão pode continuar ativa. Tente novamente.</p>}
       <Button variant="outline" disabled={mutation.isPending} onClick={() => mutation.mutate()}>

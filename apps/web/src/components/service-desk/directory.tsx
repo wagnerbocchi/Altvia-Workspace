@@ -65,7 +65,7 @@ export function QueueDirectory({ api, session }: { api: QueueApi; session: Works
             <div className="record-text"><Link className="text-link" href={`/service-desk/queues/${row.id}`}>{row.name}</Link>
               <span className="record-meta">{row.team_name}</span>
               <span className="record-meta">{row.can_manage ? "Gestao da fila" : "Somente consulta"}</span>
-            </div><span className="record-status">{row.active ? "Ativa" : "Arquivada"}</span>
+            </div><span className="record-status" data-state={row.active ? "active" : "inactive"}>{row.active ? "Ativa" : "Arquivada"}</span>
           </li>)}</ul> : <p>Nenhuma fila disponivel nesta pagina.</p>}
         <Paging paging={paging} next={query.data?.next_cursor} label="filas" disabled={query.isFetching} />
       </section>

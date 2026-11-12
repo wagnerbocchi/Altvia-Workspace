@@ -66,17 +66,19 @@ export function ClientDirectory({ api, session }: { api: ClientApi; session: Wor
     <h1 id="clients-heading" tabIndex={-1}>Clientes</h1>
     <p className="admin-intro">Consulte os clientes liberados para sua conta. O acesso a cada cliente é definido explicitamente.</p>
     <div className="admin-plane">
-      {session.user.capabilities.includes("identity.manage") && <ClientProvisioning api={api} session={session} />}
+      
       <section className="admin-section" aria-labelledby="client-list-heading">
         <h2 id="client-list-heading">Clientes disponíveis</h2>
         {query.isPending ? <LoadingRows label="Carregando clientes..." /> : query.isError ? <ReadError retry={() => void query.refetch()} />
           : query.data.items.length ? <ul className="record-list" aria-label="Clientes disponíveis">{query.data.items.map(client => <li className="team-row" key={client.id}>
             <div className="record-text"><Link className="text-link" href={`/clients/${encodeURIComponent(client.id)}`}>{client.name}</Link>
               <span className="record-meta">{client.can_manage ? "Gestão do cliente" : "Somente consulta"}</span></div>
-            <span className="record-status">{client.active ? "Ativo" : "Arquivado"}</span></li>)}</ul>
+            <span className="record-status" data-state={client.active ? "active" : "inactive"}>{client.active ? "Ativo" : "Arquivado"}</span></li>)}</ul>
             : <p>{paging.index ? "Nenhum cliente nesta página. Volte à página anterior." : "Nenhum cliente disponível para sua conta."}</p>}
         <Paging paging={paging} next={query.data?.next_cursor} label="clientes" disabled={query.isFetching} />
       </section>
+      
+      {session.user.capabilities.includes("identity.manage") && <ClientProvisioning api={api} session={session} />}
     </div>
   </div>;
 }

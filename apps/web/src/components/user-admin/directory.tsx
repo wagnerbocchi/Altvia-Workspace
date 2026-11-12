@@ -68,7 +68,7 @@ export function AccountDirectory({ api, teams, session }: { api: AccountApi; tea
           : query.data.items.length ? <ul className="record-list" aria-label="Contas cadastradas">
             {query.data.items.map(account => <li className="team-row" key={account.id}><div className="record-text">
               <Link className="team-link" href={`/admin/users/${account.id}`}>{account.display_name}</Link>
-              <span className="record-meta">{account.email}</span></div><span className="record-status">{account.active ? "Ativa" : "Desativada"}</span></li>)}
+              <span className="record-meta">{account.email}</span></div><span className="record-status" data-state={account.active ? "active" : "inactive"}>{account.active ? "Ativa" : "Desativada"}</span></li>)}
           </ul> : <p>{paging.index ? "Nenhuma conta nesta página. Volte à página anterior." : "Nenhuma conta cadastrada."}</p>}
       <Paging paging={paging} next={query.data?.next_cursor} label="contas" disabled={write.locked || query.isFetching} />
     </section><IdentityActivity session={session} /></div>

@@ -31,7 +31,7 @@ export function TicketDirectory({ api, actor }: { api: TicketApi; actor: string 
     <div className="admin-plane">
       <section className="admin-section" aria-labelledby="ticket-filters-heading">
         <h2 id="ticket-filters-heading">Filtrar chamados</h2>
-        <form onSubmit={event => {
+        <form className="ticket-filters" onSubmit={event => {
           event.preventDefault(); paging.reset();
           setFilters({ q: search.trim(), status: status as TicketFilters["status"], priority: priority as TicketFilters["priority"], queue_id: queue || undefined,
             client_id: client?.id, assignee_id: assignment === "mine" ? actor : undefined, unassigned: assignment === "unassigned" });
@@ -44,6 +44,9 @@ export function TicketDirectory({ api, actor }: { api: TicketApi; actor: string 
             <div><label htmlFor="ticket-priority-filter">Prioridade</label><select id="ticket-priority-filter" value={priority} onChange={event => setPriority(event.target.value)}>
               <option value="">Todas as prioridades</option>{Object.entries(ticketPriorities).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </select></div>
+          </div>
+          <details className="ticket-filter-extra"><summary>Mais filtros de chamados</summary>
+          <div className="account-form-grid">
             <div><label htmlFor="ticket-assignment-filter">Atribuicao</label><select id="ticket-assignment-filter" value={assignment} onChange={event => setAssignment(event.target.value)}>
               <option value="">Todos os responsaveis</option><option value="mine">Atribuidos a mim</option><option value="unassigned">Sem responsavel</option>
             </select></div>
@@ -56,6 +59,7 @@ export function TicketDirectory({ api, actor }: { api: TicketApi; actor: string 
                 <Button type="button" variant="outline" disabled={!queues.data?.next_cursor || queues.isFetching} onClick={() => setQueueCursor(queues.data!.next_cursor)}>Proximas filas</Button></div>
             </div>
           </div>
+          </details>
           {client && <p>Cliente selecionado {client.name} <Button type="button" variant="outline" onClick={() => setClient(null)}>Remover filtro de cliente</Button></p>}
           <Button type="submit" className="work-transition-action" disabled={query.isFetching}>Aplicar filtros</Button>
         </form>
@@ -70,7 +74,7 @@ export function TicketDirectory({ api, actor }: { api: TicketApi; actor: string 
               <span className="record-meta">{row.queue_name} - {ticketPriorities[row.priority]}</span>
               <span className="record-meta">{row.assignee_name ?? "Sem responsavel"}</span>
               <Button variant="ghost" aria-label={`Filtrar por ${row.client_name}`} onClick={() => { setClient({ id: row.client_id, name: row.client_name }); setFilters(current => ({ ...current, client_id: row.client_id })); paging.reset(); }}>{row.client_name}</Button>
-            </div><span className="record-status">{ticketStatuses[row.status]}</span>
+            </div><span className="record-status" data-state={row.status}>{ticketStatuses[row.status]}</span>
           </li>)}</ul> : <p>Nenhum chamado disponivel nesta pagina com estes filtros.</p>}
         <Paging paging={paging} next={query.data?.next_cursor} label="chamados" disabled={query.isFetching} />
       </section>

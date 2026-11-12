@@ -51,7 +51,7 @@ export function TeamDirectory({ api, session }: { api: TeamApi; session: Workspa
               {query.data.items.map(team => <li key={team.id} className="team-row">
                 <div className="record-text"><Link className="team-link" href={`/admin/teams/${team.id}`}>{team.name}</Link>
                   <span className="record-meta">Identificador: {team.id}</span></div>
-                <span className="record-status">{team.active ? "Ativa" : "Arquivada"}</span>
+                <span className="record-status" data-state={team.active ? "active" : "inactive"}>{team.active ? "Ativa" : "Arquivada"}</span>
               </li>)}
             </ul> : <p>{paging.index ? "Nenhuma equipe nesta página. Volte à página anterior." : "Nenhuma equipe cadastrada. Crie a primeira equipe para organizar participantes."}</p>}
         <Paging paging={paging} next={query.data?.next_cursor} label="equipes" disabled={query.isFetching || write.locked} />

@@ -63,7 +63,7 @@ export function ContactDirectory({ id, api, session }: { id: string; api: Client
         <Button variant="outline" disabled={query.isFetching || parent.isFetching} onClick={() => void refresh().catch(() => {})}>Atualizar contatos</Button>
         {query.isPending ? <LoadingRows label="Carregando contatos..." /> : query.isError ? <ReadError retry={() => void refresh().catch(() => {})} /> : query.data.items.length ? <ul className="record-list" aria-label="Contatos do cliente">{query.data.items.map(row => <li className="team-row" key={row.id}>
           <div className="record-text"><Link className="text-link" href={`/clients/${id}/contacts/${row.id}`}>{row.display_name}</Link><span className="record-meta">{row.email_normalized}</span></div>
-          <span className="record-status">{row.active ? "Contato ativo" : "Contato arquivado"}</span>
+          <span className="record-status" data-state={row.active ? "active" : "inactive"}>{row.active ? "Contato ativo" : "Contato arquivado"}</span>
         </li>)}</ul> : <p>Nenhum contato cadastrado.</p>}
         <Paging paging={paging} next={query.data?.next_cursor} label="contatos" disabled={query.isFetching} />
       </section>

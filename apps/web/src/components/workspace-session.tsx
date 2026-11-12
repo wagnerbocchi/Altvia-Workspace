@@ -8,6 +8,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { WorkspaceNavigation } from "@/components/workspace-navigation";
 import { createAppQueryClient } from "@/components/providers";
 import { ApiError, currentUser, login, loginError, type CurrentUser } from "@/lib/auth";
 
@@ -137,13 +138,13 @@ export function IdentityBoundary({ children, location, headingId, wide = false }
     void query.refetch().then(result => { if (!result.isError) setChallenge(false); })
       .finally(() => setChecking(false));
   };
-  return <div className="app-shell">
+  return <div className={`app-shell${view === "content" ? " authenticated-shell" : ""}`}>
     <a className="skip-link" href="#main">Ir para o conteúdo</a>
-    <header className="masthead"><div className="brand">Altvia <span>Workspace</span></div>
-      <span className="location"><span className="location-dot" />{authenticated ? location : "Acesso"}</span>
+    <header className="masthead">{view !== "content" && <div className="brand">Altvia <span>Workspace</span></div>}
+      <span className="location">{view === "content" ? location : "Acesso"}</span>
       <ThemeToggle />
     </header>
-    <main id="main" tabIndex={-1} className={wide && view === "content" ? "workspace-main" : undefined}>
+    <main id="main" tabIndex={-1} className={view === "content" ? `workspace-main${wide ? "" : " account-main"}` : undefined}>
       {view === "loading" ? <section className="working-surface state-surface" role="status"><LoaderCircle className="spinner" size={24} aria-hidden="true" /><p>Verificando acesso...</p></section>
         : view === "connection" ? <section className="working-surface" aria-labelledby="connection-heading">
           <h1 id="connection-heading" tabIndex={-1}>Conexão indisponível</h1><p className="intro" role="alert">Não foi possível verificar seu acesso. Confira sua conexão e tente novamente.</p>
@@ -169,7 +170,7 @@ export function IdentityBoundary({ children, location, headingId, wide = false }
           }} onLogout={() => {
             previousUser.current = false; client.clear(); client.setQueryData(identityKey, null);
             setNotice("Você saiu da conta com segurança."); setChallenge(false);
-          }}>{children}</PrivateSession>
+          }}><WorkspaceNavigation>{children}</WorkspaceNavigation></PrivateSession>
       </div>}
     </main>
     <footer>Altvia Workspace <span>Ambiente interno</span></footer>

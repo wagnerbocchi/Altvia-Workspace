@@ -45,7 +45,7 @@ function ProjectResults({ project, api, filters, status, refresh }: { project: s
   const applied = status ? { ...filters, status } : filters;
   const query = useQuery({ queryKey: ["work-items", project, "discovery", applied, paging.cursor], queryFn: ({ signal }) => api.list(project, paging.cursor, signal, applied) });
   const heading = status ? workStatuses[status] : "Tarefas do projeto";
-  return <section className={status ? "task-column" : "task-list-results"} aria-labelledby={`task-results-${status ?? "list"}`}>
+  return <section className={status ? "task-column" : "task-list-results"} data-state={status} aria-labelledby={`task-results-${status ?? "list"}`}>
     {status && <h3 id={`task-results-${status}`}>{heading}</h3>}
     {!status && <h3 id="task-results-list" className="sr-only">{heading}</h3>}
     <Button variant="outline" disabled={query.isFetching} onClick={() => { paging.reset(); refresh(); }}>Atualizar tarefas</Button>
@@ -61,7 +61,7 @@ export function ProjectDiscovery({ project, api, actor, refresh }: { project: st
     <TaskFilters actor={actor} onApply={setFilters} />
     <div className="action-row task-views" role="group" aria-label="Visualização de tarefas"><Button variant="outline" aria-pressed={view === "list"} onClick={() => setView("list")}>Lista</Button><Button variant="outline" aria-pressed={view === "board"} onClick={() => setView("board")}>Quadro</Button></div>
     <p className="field-help">Resultados dos filtros aplicados. Abra uma tarefa para consultar ou alterar seu estado.</p>
-    {view === "list" ? <ProjectResults key={`list:${JSON.stringify(filters)}`} project={project} api={api} filters={filters} refresh={refresh} /> : <div className="task-board" key={JSON.stringify(filters)}>{statuses.map(status => <ProjectResults key={status} status={status} project={project} api={api} filters={filters} refresh={refresh} />)}</div>}
+    {view === "list" ? <ProjectResults key={`list:${JSON.stringify(filters)}`} project={project} api={api} filters={filters} refresh={refresh} /> : <div className="task-board" role="region" aria-label="Quadro de tarefas com rolagem" tabIndex={0} key={JSON.stringify(filters)}>{statuses.map(status => <ProjectResults key={status} status={status} project={project} api={api} filters={filters} refresh={refresh} />)}</div>}
   </section>;
 }
 

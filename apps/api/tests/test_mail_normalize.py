@@ -267,3 +267,20 @@ def test_overflow_header_command_persists_rejection_replays_and_never_echoes(
     with Session(db_engine) as db:
         row = db.get(InboundMailPreview, (raw.variant_id, 2))
         assert row.reason == "invalid_headers" and row.body_text is row.subject is None
+
+
+def test_malformed_word_command_persists_fixed_v2_rejection_without_traceback(
+    db_engine, source, monkeypatch, capsys
+):
+    raw = capture(db_engine, b"Subject: =?utf-8?b?a?=\r\n\r\nprivate-malformed-body")
+    monkeypatch.setenv("ALTVIA_ALLOW_MAIL_NORMALIZE", "1")
+    for replay in (False, True):
+        assert mail_normalize.main(["--variant-id", str(raw.variant_id)]) == 0
+        output = capsys.readouterr()
+        receipt = json.loads(output.out)
+        assert receipt["parser_version"] == 2 and receipt["status"] == "rejected"
+        assert receipt["replayed"] is replay
+        assert not output.err and "private-malformed" not in output.out
+    with Session(db_engine) as db:
+        row = db.get(InboundMailPreview, (raw.variant_id, 2))
+        assert row.reason == "invalid_encoding" and row.subject is row.body_text is None

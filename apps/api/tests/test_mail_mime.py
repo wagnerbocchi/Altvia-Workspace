@@ -244,3 +244,33 @@ def test_html_exact_real_token_budget_and_single_self_closing_count(tokens):
     result = normalize(message(b"Visible" + tokens + b"</void>", b"Content-Type: text/html"))
     assert result.status == "rejected" and result.reason == "html_limit"
     assert result.subject is result.body_text is None
+
+
+@pytest.mark.parametrize(
+    "subject",
+    [
+        b"=?utf-8?b?a?=",
+        b"raw-\xff =?ascii?q?ok?=",
+        b"=?ascii?q?ok?= raw-\xff",
+        b"=?ascii?q?ok?=\r\n raw-\xc3\xa9",
+        b"=?utf-8?b?SG!VsbG8=?=",
+        b"=?utf-8?q?=C3?= =?utf-8?q?=A9?=",
+        b"=?utf-8?b?ww==?= =?utf-8?b?qQ==?=",
+        b"=?ascii?q?bad=ZZ?=",
+    ],
+)
+def test_subject_malformed_words_and_raw_bytes_reject_before_lossy_assembly(subject):
+    result = normalize(message(b"Visible", b"Subject: " + subject))
+    assert result.status == "rejected" and result.subject is result.body_text is None
+
+
+def test_each_repeated_header_value_is_validated():
+    raw = message(
+        b"Visible",
+        b"Date: Wed, 1 Jan 2025 00:00:00 +0000\r\n"
+        b"Date: Wed, 1 Jan 999999999999999999999999999999 00:00:00 +0000",
+    )
+    result = normalize(raw)
+    assert result.status == "rejected" and result.reason == "invalid_headers"
+    valid = message(b"Visible", b"X-Trace: one\r\nX-Trace: two")
+    assert normalize(valid).status == "ready"

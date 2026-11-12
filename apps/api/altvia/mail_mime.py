@@ -3,9 +3,11 @@
 import base64
 import binascii
 import codecs
+import quopri
 import re
 from dataclasses import dataclass
 from email import policy
+from email.errors import HeaderParseError
 from email.header import decode_header
 from email.message import Message
 from email.parser import BytesParser
@@ -54,6 +56,22 @@ def _charset(value: str) -> str:
 
 
 def _subject(value: str) -> str:
+    # Validate the original wire representation before decode_header can turn
+    # surrogateescaped raw bytes into ASCII backslash escapes in mixed chunks.
+    value.encode("ascii", errors="strict")
+    for word in re.finditer(r"=\?([^?]*?)\?([bq])\?(.*?)\?=", value, re.IGNORECASE | re.DOTALL):
+        word_charset = _charset(word.group(1))
+        encoded = word.group(3).encode("ascii")
+        if any(c < 33 or c > 126 for c in encoded) or b"?" in encoded:
+            raise _Rejected("invalid_encoding")
+        if word.group(2).lower() == "b":
+            decoded = base64.b64decode(encoded, validate=True)
+        else:
+            if re.search(rb"=(?![0-9A-Fa-f]{2})", encoded):
+                raise _Rejected("invalid_encoding")
+            decoded = quopri.decodestring(encoded.replace(b"_", b" "))
+        # Each word must be valid independently, before adjacent bytes merge.
+        decoded.decode(word_charset, errors="strict")
     chunks = []
     # decode_header handles RFC2047 transfer encoding without invoking charsets.
     # Decode bytes ourselves before headerregistry can use its broader codecs.
@@ -187,10 +205,12 @@ def _headers(raw: bytes) -> tuple[Message, bytes, str]:
     subject = _subject(next((value for key, value in raw_headers if key.lower() == "subject"), ""))
     # Access structured headers now: policy parses their parameters lazily.
     try:
-        for name, _raw_value in raw_headers:
+        # Parse each actual value through the public policy seam, preserving
+        # repeated fields without ever invoking headerregistry for Subject.
+        for name, raw_value in raw_headers:
             if name.lower() == "subject":
                 continue
-            value = headers[name]
+            value = headers.policy.header_fetch_parse(name, raw_value)
             if getattr(value, "defects", ()):
                 raise _Rejected("invalid_headers")
             str(value)
@@ -300,8 +320,6 @@ class _Normalizer:
         elif encoding == "quoted-printable":
             if re.search(rb"=(?![0-9A-Fa-f]{2}|\r?\n)", body):
                 raise _Rejected("invalid_encoding")
-            import quopri
-
             decoded = quopri.decodestring(body)
         elif encoding in {"7bit", "8bit", "binary"}:
             if encoding == "7bit" and not body.isascii():
@@ -336,5 +354,5 @@ def normalize(raw: bytes) -> NormalizedMail:
         return NormalizedMail("ready", parser.subject, body, parser.parts, parser.attachments)
     except _Rejected as error:
         return NormalizedMail("rejected", reason=str(error))
-    except (ValueError, LookupError, RecursionError):
+    except (ValueError, LookupError, RecursionError, HeaderParseError):
         return NormalizedMail("rejected", reason="invalid_encoding")

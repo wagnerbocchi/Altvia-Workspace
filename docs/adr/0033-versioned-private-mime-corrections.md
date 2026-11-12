@@ -45,6 +45,13 @@ words' semantics and apply the existing subject/control/byte bounds. Unsupported
 charsets reject the entire result with fixed unsupported_charset, never partial
 subject/body. Raw bytes remain available for reviewed future interpretation.
 
+Require raw Subject ASCII before the standard decoder can escape surrogate bytes.
+Validate every encoded word's base64/quoted-printable syntax and strictly decode
+its bytes independently before adjacent-word assembly. Contain HeaderParseError
+as a fixed durable rejection. Other raw header occurrences use the public policy
+header_fetch_parse seam individually, preserving duplicate-value validation while
+avoiding the broader Subject headerregistry path or private parse-tree APIs.
+
 Count every actual HTML start, end and self-closing token toward 4096. A
 self-closing token counts once; an internal synthetic stack closure does not
 consume another token. Count unmatched/void end tags too. Keep nesting64,

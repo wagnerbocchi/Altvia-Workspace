@@ -24,11 +24,11 @@ versioned immutable preview key and compatible private event schemas.
 Files: apps/api/altvia/mail_mime.py, apps/api/tests/test_mail_mime.py.
 Interface: PARSER_VERSION=2; normalize(raw) remains a fixed ready/rejected result.
 
-- [ ] Write/run R3/R4 failing tests, supported aliases/folded words, invalid bytes
+- [x] Write/run R3/R4 failing tests, supported aliases/folded words, invalid bytes
   and exact mixed/start/end/self-closing token boundaries. Expected concrete RED.
-- [ ] Share strict canonical charset validation with body decoding, interpret raw
+- [x] Share strict canonical charset validation with body decoding, interpret raw
   Subject before headerregistry and count real HTML tokens without synthetic doubles.
-- [ ] Run focused pytest/static checks. Expected all pass. Commit coherent fix.
+- [x] Run focused pytest/static checks. Expected all pass. Commit coherent fix.
 
 ### Task 2 Persist separate versioned interpretation and packaged proof
 
@@ -37,12 +37,12 @@ tests/test_mail_normalize.py, packaged_imap_proof.py, container_smoke.py.
 Interface: normalize_variant creates/replays (variant_id,2); CLI receipt includes
 parser_version; event normalized/schema2 has exact parser_version="2" metadata.
 
-- [ ] Observe missing v2 persistence RED. Add populated-v1 upgrade/rollback,
+- [x] Observe missing v2 persistence RED. Add populated-v1 upgrade/rollback,
   same-variant coexisting results, concurrent replay, event1/2 strictness and
   poison rejection, event failure rollback, immutability/runtime denial proofs.
-- [ ] Implement guarded key expansion and explicit v2 write/event/receipt. Update
+- [x] Implement guarded key expansion and explicit v2 write/event/receipt. Update
   current readers/tests to select version explicitly; keep all raw data intact.
-- [ ] Run affected MIME/intake/IMAP/activity/runtime suites, actual command,
+- [x] Run affected MIME/intake/IMAP/activity/runtime suites, actual command,
   lint/types/contracts/build/security. Expected all pass. Add actual packaged
   v1/v2 coexistence/replay/restart proof; no target connection.
 
@@ -51,7 +51,7 @@ parser_version; event normalized/schema2 has exact parser_version="2" metadata.
 Files: runbooks, ADR/roadmap/PRD/evidence and private execution ledger.
 Interface: exact reviewed source and complete real local/hosted/package evidence.
 
-- [ ] Dispatch one fresh whole-increment source review; fix Important findings
+- [x] Dispatch one fresh whole-increment source review; fix Important findings
   once using observed RED/GREEN plus complete affected suite.
 - [ ] Publish checked source, inspect all five hosted gates/full logs/artifacts,
   warnings, severity metadata and nonempty image inventories.

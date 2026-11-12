@@ -162,6 +162,19 @@ MIME display, sender/thread verification, ticket promotion, public replies/SMTP,
 private files, complete native email and final actual-target qualification remain
 outside this increment. Phase 3 and full MVP acceptance remain open.
 
+Phase 3E-c adds ADR-0032's private MIME-to-text portion of FR-007/012. Opt-in owner
+normalization persists an immutable ready/rejected result per raw variant, with
+bounded structure/text, atomic source-version/audit/outbox and safe replay. There
+is no HTML rendering or runtime/public preview grant. Contracts 17fe438 preceded
+implementation; final ae4d25a passed all five hosted gates with 744 API/116 browser
+tests, actual packaged command/replay/restart and private-runtime denial. Five
+nonempty image inventories have zero vulnerabilities; source has four existing
+LOW, zero blockers/secrets. See docs/phase-3e-c-mime-evidence.md. Two reproduced
+minor gaps (encoded Subject charset policy and end-tag counting) must close before
+user-facing previews/production mail acceptance. Sender/thread verification,
+ticket promotion, public replies/SMTP and private files retain later contracts.
+Native end-to-end email, Phase 3/MVP and final actual-target qualification stay open.
+
 Non-goals: SaaS billing/subscriptions, marketplace, local AI/embeddings, external
 search cluster, advanced ITIL/CMDB, advanced Gantt and native mobile applications.
 No speculative scaffolding for these capabilities.

@@ -60,12 +60,16 @@ entry is required while that key is loaded and remains authorized.
 
 ## Milestones and gates
 
-Phase 3E-c selects ADR-0032 before code: bounded private MIME-to-text normalization,
-immutable owner-only ready/rejected results, source-serialized replay and strict
-private events. No sender proof, public route, promotion, attachment extraction or
-outbound mail is implied. All local/hosted/packaged acceptance is recorded before
-closure; Q-03/Q-09/Q-11/Q-16/Q-21 and final actual-target qualification remain open.
-The independent review's two Important findings have RED/GREEN fixes in progress.
+Phase 3E-c delivers ADR-0032's private MIME-to-text boundary: immutable owner-only
+ready/rejected results, source-serialized replay and strict private events. Contract
+17fe438 preceded implementation. Final ae4d25a passed all five hosted gates with
+744 API/116 browser tests, local affected160, actual packaged command/replay/
+restarted text/cursor and runtime-denial proof. Image inventories66/49/70/43/16
+report zero vulnerabilities; source has four existing LOW, zero blockers/secrets.
+See docs/phase-3e-c-mime-evidence.md. No sender proof, public route, promotion,
+attachment extraction or outbound mail is implied. Q-03/Q-09/Q-11/Q-16/Q-21,
+Phase 3/MVP and final actual-target qualification remain open.
+The independent review's two Important findings have executed RED/GREEN fixes.
 Two reproduced minor gaps remain explicit follow-up before any user-facing MIME
 preview: RFC 2047 Subject decoding uses the broader stdlib codec registry, and
 closing tags do not consume the opening/self-closing HTML tag counter. Raw/header/

@@ -53,9 +53,15 @@ Files: scripts/packaged_imap_proof.py, runbooks, evidence, roadmap/PRD, ledger.
 Interface: actual owner command on synthetic data, restarted DB result/runtime
 denial, exact reviewed source and complete hosted artifacts.
 
-- [ ] Add packaged normalization/replay/restart proof; dispatch one fresh source
+- [x] Add packaged normalization/replay/restart proof; dispatch one fresh source
   review. Address Important findings once with observed RED/GREEN and full suite.
-- [ ] Publish checked source to main; inspect all five hosted gates, complete logs,
+- [x] Publish checked source to main; inspect all five hosted gates, complete logs,
   warnings/security findings and nonempty exact-image inventories.
-- [ ] Preserve sanitized hashed evidence and publish Markdown closure. Verify
+- [x] Preserve sanitized hashed evidence and publish Markdown closure. Verify
   remote main, clean tree and unchanged tested code. Keep Phase 3/MVP/VM open.
+
+Evidence: docs/phase-3e-c-mime-evidence.md records exact source ae4d25a, local160,
+hosted744 API/116 browser, actual packaged proof and immutable archive. R1/R2 are
+fixed with RED/GREEN proof. R3/R4 remain explicitly deferred minor contract gaps,
+to close before user-facing preview/production mail acceptance. This is a private
+development increment, not full native email/MVP or final target acceptance.

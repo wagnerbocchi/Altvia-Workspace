@@ -14,14 +14,17 @@ out of further design questions; preserve the incumbent visual world and flow.
 
 THESIS Operators review and save a public response draft with an explicit unsent
 state, then review the exact saved text, ticket-attested recipient and configured sender before explicit queueing. Private notes remain independent.
-OWN-WORLD Inherit navy masthead, flat admin planes, semantic light/dark colors,
-native fields, current typography, visible focus and wrapping plain text.
+OWN-WORLD: Offwhite sidebar, continuous white working field, gray hairlines, system sans,
+restrained blue actions, soft semantic state chips and native labeled fields.
+Dark mode uses neutral charcoal equivalents. Inherit the shared operational
+track, responsive navigation and visible focus recorded in root DESIGN.md.
+
 STORY Chronological persisted drafts follow ticket data/lifecycle. A separate
 composer becomes an inline review, then saves only the reviewed original intent.
 FIRST VIEWPORT Preserve subject/number/state and current operational actions.
 Responses precede private notes without moving or blending their content. Mobile
 keeps the same stacked order; explicit review is the signature interaction.
-FORM Code-led incumbent extension, seed:f6e79c570b8eee00. Reuse record-list,
+FORM Code-led incumbent extension, the user-selected Twenty direction of 2026-11-12. Reuse record-list,
 work-prose, action-row, fields, shared feedback and the single ticket write owner.
 Retain body/version/key through uncertain outcomes and focus/failed refresh.
 Keep acknowledgement ID and block later mutations until authoritative reads pass.

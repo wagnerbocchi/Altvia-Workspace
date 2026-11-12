@@ -129,3 +129,16 @@ accepted validation/publication evidence.
   directly to main, then inspect the required hosted gates and their actual logs.
 - Final report distinguishes visual redesign from unfinished file UI/MVP features
   and deferred target qualification. No whole-MVP completion claim.
+
+## Execution record
+
+Task 1: implemented in 036a99f, d66cc81 and 0956b32. The 158-case full baseline
+passed on frozen source, followed by 47 focused cases for the consolidated review
+fix and a fresh all-route capture run. Default discovery contains 161 functional
+tests; screenshot generation is explicitly opt-in. The source reviewer approved
+the runtime diff and all corrections. Impeccable scored the shared-width finding
+resolved and returned ship. No open runtime or visual finding remains.
+
+Task 2: durable design documentation and publication evidence are recorded in
+docs/workspace-redesign-evidence.md. Backend/private-file MVP work and final
+target qualification remain separate, unfinished stages.

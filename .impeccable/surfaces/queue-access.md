@@ -1,6 +1,7 @@
 # Queue access administration
 
-Mode Operate. Incumbent world and seed f6e79c570b8eee00.
+Mode Operate. Inherit the user-selected Twenty-inspired neutral world of
+2026-11-12 and the actual tokens in root DESIGN.md.
 Routes /service-desk/queues/{id}/members and the queue detail entry link.
 
 A configuration manager adds an existing account by known email, reviews the

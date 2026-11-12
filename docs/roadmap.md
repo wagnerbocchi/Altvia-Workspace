@@ -6,7 +6,7 @@ await answers. This does not authorize production deployment or real data import
 
 ## Current authorized design scope
 
-User instruction2026-11-12: continue backend development and validation, but stop
+Earlier instruction2026-11-12: continue backend development and validation, but stop
 before beginning any design, UI or UX. Private-files Task3 backend is now closed
 on accepteddf3c8bb (immutable content links and explicitly reviewed MIME delivery),
 with relevant checks, independent review and authorized publication complete.
@@ -17,6 +17,13 @@ Task4 was stopped before any implementation when that clarification arrived.
 It remains pending separately. The new design preserves existing functionality,
 resource authority and light/dark support. No production deployment or target
 qualification is implied. The MVP remains incomplete.
+
+The 26-route redesign is implemented through 0956b32. The full pre-correction
+browser suite passed 158 cases; the reviewed correction passed 47 focused cases
+and all-route captures. Source findings are resolved and Impeccable returned ship
+after the shared-width correction. Publication/hosted acceptance and the exact
+scope of evidence are recorded in docs/workspace-redesign-evidence.md. The design
+uses the selected Twenty reference without copying its brand or adding features.
 
 ## Current validation cadence
 
@@ -539,7 +546,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-10 | Support/management: desired Zammad migration/cutover/rollback | Keep current helpdesk; no API/database dependency | Optional future migration |
 | Q-11 | Infrastructure/security: production storage/scanner/proxy acceptance and CPU-approved artifacts | ADR0037 selects VersityGW1.11.0/botocore1.44.1/ClamAV1.4.6-r0 for isolated development, not production or CPU acceptance; bounded private objects and no destructive retention | Production attachment/proxy acceptance |
 | Q-12 | Infrastructure admin: hypervisor ownership and CPU-model change possibility | x86-64-v1 remains mandatory | None: CPU upgrade is not assumed |
-| Q-13 | Product owner: approved logo/brand and visual preferences | Provisional restrained Portuguese interface, system fonts, no invented assets or claims; review after return | Final visual approval only |
+| Q-13 | Product owner: approved logo/brand | Visual reference answered2026-11-12: Twenty CRM. Whole-system neutral redesign authorized; system fonts and provisional Altvia text identity, no invented logo/assets or claims | Corporate logo approval only; does not block the authorized redesign |
 | Q-14 | Engineering/security: ongoing service-image security | All five actual target-tested images have zero reported vulnerabilities; blocking HIGH/CRITICAL CI, SAST medium+ and every detected secret; retained complete severity metadata, no risk acceptance | Remaining production security/readiness gates |
 | Q-15 | Resolved: owner authorized workstation public-key registration, remote Codex login and project registration; fresh noninteractive Windows SSH and actual Phase 2D qualification passed | Reuse agent-backed key with strict known-host checks; one connection per stage because native Windows multiplexing failed its probe; preserve previous environments and server security | None for current qualification; key removal, agent restart or changed host identity may require user action |
 | Q-16 | Support/security owner: trusted contact verification, international mailbox/IDNA and authenticated sender correlation policy | Contacts remain server-only unverified, bounded ASCII mailboxes; no send, account linking, portal grant or client selection by email alone | Future actual email/verification acceptance; registry work can proceed |

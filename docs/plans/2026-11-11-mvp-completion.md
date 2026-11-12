@@ -5,7 +5,7 @@ ending work after each slice to ask whether to continue. Direct commits/pushes t
 main remain authorized; no PR, production deployment, real import or Zammad
 retirement. Record questions in roadmap and continue independent safe work.
 
-Latest user stop point2026-11-12: continue backend development and validation,
+Earlier user stop point2026-11-12: continue backend development and validation,
 but STOP BEFORE starting any design, UI or UX work. Complete the current private-
 files Task3 backend, its relevant checks, independent review and authorized
 publication; then stop before Task4's browser/interface work. API contract
@@ -18,10 +18,15 @@ Execute docs/plans/2026-11-12-workspace-redesign.md for the26 existing routes.
 Private-files Task4 remains pending; its implementer stopped before source edits.
 This supersedes the above stop for visual work, not every remaining backend stage.
 
+Existing-route redesign implemented through 0956b32: full 158-case baseline,
+47-case correction proof and final all-route captures; source review approved
+and visual finding resolved. See docs/workspace-redesign-evidence.md for design
+documentation and hosted acceptance. This does not close any pending stage below.
+
 The master specification was reread completely for this sequence. Its Phase0
 example stop point was superseded by the user's later development authorization.
 Keep contracts before code, small coherent commits and real persisted vertical
-slices. Frontend work uses Impeccable and the incumbent Operate surface. Final
+slices. Frontend work uses Impeccable and the selected Operate design system. Final
 target-VM qualification follows development, not each slice.
 
 ## Ordered completion ledger
@@ -31,7 +36,7 @@ target-VM qualification follows development, not each slice.
 | Service Desk conversation | Public response drafts separate from private notes; protected review/replay and real browser conversation | Development/CI complete558f4ee;796 API/131 browser, packaged proof; final target deferred |
 | Outbound mail | Explicit verified participant boundary, durable public-only queue, verified TLS SMTP, stable IDs, retry/uncertain reconciliation and browser delivery states | Development/CI complete c47fd8a;894 API/142 browser,201 affected, actual packaged SMTP/restart/privacy/active shutdown; final target deferred |
 | Inbound mail | Restricted authorized triage, explicit verified sender/thread evidence, safe creation/append/reopen, no subject/From-only trust | Development/CI complete36e4642:1040 API/154 browser, all five gates; actual IMAPS/HTTPS/TLS reply/append/reopen/alias/privacy/recreation; R1 proof gap corrected/re-reviewed; MIME files follow the private-files stage; final target deferred |
-| Private files | Private object storage, bounded streaming, fail-closed scanning, authorized ticket/work links and downloads | Backend Tasks1-3 accepteddf3c8bb: independent review clean, all five hosted gates,1198 API/154 browser and265 affected local cases. STOPPED before Task4 design/UI/UX by user instruction; browser file flows, incoming-MIME files and integrated qualification remain pending |
+| Private files | Private object storage, bounded streaming, fail-closed scanning, authorized ticket/work links and downloads | Backend Tasks1-3 accepteddf3c8bb: independent review clean, all five hosted gates,1198 API/154 browser and265 affected local cases. Task4 remains pending after the user selected a separate whole-system redesign; browser file flows, incoming-MIME files and integrated qualification remain pending |
 | Ticket/work links | Same-client N:N authorization of both endpoints, independent state, real browser links | Pending |
 | Automation/unified work | Structured durable rules, idempotent assignment/reopen/race behavior, visible failures, consolidated scoped My Work | Pending |
 | SLA | Versioned configurable calendars/holidays/timezone/pause/reopen, first accepted public response and resolution/breach proof | Pending; actual policy Q07 |

@@ -17,8 +17,10 @@ asked to continue without pausing for routine decisions; no new visual world.
 THESIS: Find current authorized tasks before opening their existing detail.
 Avoid replacing the queue with a decorative dashboard or fake totals.
 
-OWN-WORLD: Inherit navy masthead, cool ground, flat bounded surface, system sans,
-blue actions, native labeled controls and established visible focus.
+OWN-WORLD: Offwhite sidebar, continuous white working field, gray hairlines, system sans,
+restrained blue actions, soft semantic state chips and native labeled fields.
+Dark mode uses neutral charcoal equivalents. Inherit the shared operational
+track, responsive navigation and visible focus recorded in root DESIGN.md.
 
 STORY: Choose a project list or board, apply filters deliberately, page real
 matches, then open the detail for protected edits. Personal queue shows tasks
@@ -27,9 +29,10 @@ once when owned or participating; tickets remain a later delivery.
 FIRST VIEWPORT: Context links, task heading and compact filter form lead.
 List/Quadro controls and independently paged state columns follow. Creation
 remains available after discovery without filter changes discarding its intent.
-Narrow screens stack columns; each column names loading, empty and retry states.
+Narrow screens retain columns inside a named bounded horizontal scroll region;
+each column names loading, empty and retry states and keeps independent paging.
 
-FORM: Incumbent Operate extension, code-led. Inherit the established surface's
-seed:f6e79c570b8eee00; no concept tournament for a local extension.
+FORM: Incumbent Operate extension, code-led. Inherit the user-selected Twenty
+direction of 2026-11-12; no concept tournament for a local extension.
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

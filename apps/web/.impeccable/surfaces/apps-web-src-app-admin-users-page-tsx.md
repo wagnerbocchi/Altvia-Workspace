@@ -8,16 +8,18 @@ related_targets: ["apps/web/src/app/admin/users/[userId]/page.tsx"]
 ## Scope
 
 Operate. Extend the existing linked identity administration pages with account
-directory/detail routes. Portuguese, real persisted data, no redesign or assets.
+directory/detail routes. Portuguese, real persisted data, and the shared neutral
+workspace system; no route-specific world or assets.
 
 ## Direction contract
 
 THESIS: Review one named account before changing its access. Refuse decorative
 counts and a crowded all-account editing grid.
 
-OWN-WORLD: Preserve navy wayfinding, cool ground, flat bordered working plane,
-system sans and existing semantic focus/error/action tokens. Office use at desktop
-and on mobile; keep both user-selected light and dark themes.
+OWN-WORLD: Offwhite sidebar, continuous white working field, gray hairlines, system sans,
+restrained blue actions, soft semantic state chips and native labeled fields.
+Dark mode uses neutral charcoal equivalents. Inherit the shared operational
+track, responsive navigation and visible focus recorded in root DESIGN.md.
 
 STORY: Find/create account, review active state and global role, then manage
 credentials or explicit team read grants. Team membership never grants access.
@@ -39,8 +41,8 @@ ADR-0016 authoritative. Passwords only in uncontrolled inputs/private intent ref
 no password in render state, mutation variables, storage, URLs, SSR or logs. No
 automatic retry. Preserve uncertain original intent across independent read
 recovery. Bound paging and fence callbacks to current session. Inline confirmation
-warns of session revocation, with actionable last-admin refusal. No design-system
-change. Existing provisional branding and pre-existing sidecar drift remain.
+warns of session revocation, with actionable last-admin refusal. The shared
+2026-11-12 redesign sets visual tokens; this account flow adds no separate world.
 
 ## Foundation activity extension
 

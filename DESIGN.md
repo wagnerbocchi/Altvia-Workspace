@@ -1,125 +1,152 @@
 ---
-name: Altvia Workspace
-description: A clear entrance to an internal workplace.
+name: "Altvia Workspace"
+description: "A restrained operational workspace inspired by Twenty CRM."
 colors:
-  ground: "#edf3fa"
+  ground: "#f7f7f6"
   surface: "#ffffff"
-  ink: "#14243b"
-  muted: "#52657e"
-  line: "#b7c6d9"
-  primary: "#2459ca"
-  primary-hover: "#1746ab"
-  focus: "#2563eb"
-  error: "#a72336"
-  error-ground: "#fff0f2"
-  notice-ground: "#e9f2ff"
-  header: "#142c4d"
-  header-text: "#f3f7ff"
-  header-muted: "#c0d2ec"
-  dark-ground: "#101f32"
-  dark-surface: "#192e48"
-  dark-ink: "#f1f6ff"
-  dark-muted: "#b5c8e2"
-  dark-line: "#526b8a"
-  dark-primary: "#a7c6ff"
-  dark-primary-hover: "#c1d7ff"
-  dark-focus: "#a7c6ff"
-  dark-error: "#ffc0ca"
-  dark-error-ground: "#492333"
-  dark-notice-ground: "#233f60"
-  dark-header: "#0c192a"
-  location-divider: "#5c7596"
-  location-marker: "#a7c6ff"
-  ghost-hover: "#7b9cc226"
+  ink: "#262626"
+  muted: "#646464"
+  line: "#e1e1df"
+  control-line: "#a6a6a3"
+  primary: "#245bb2"
+  primary-hover: "#19478e"
+  primary-ink: "#ffffff"
+  focus: "#2866c0"
+  error: "#a42f3b"
+  error-ground: "#fcf0f1"
+  notice-ground: "#f0f4fa"
+  selected: "#eaeae8"
+  success: "#286247"
+  success-ground: "#edf5ef"
+  warning: "#825b1a"
+  warning-ground: "#fbf3df"
+  dark-ground: "#202020"
+  dark-surface: "#252525"
+  dark-ink: "#ededeb"
+  dark-muted: "#adadaa"
+  dark-line: "#3e3e3c"
+  dark-control-line: "#777773"
+  dark-primary: "#9ec3ff"
+  dark-primary-hover: "#bdd5ff"
+  dark-primary-ink: "#17283f"
+  dark-focus: "#9ec3ff"
+  dark-error: "#ffb7bf"
+  dark-error-ground: "#402b2e"
+  dark-notice-ground: "#2c3541"
+  dark-selected: "#363635"
+  dark-success: "#a4d5b4"
+  dark-success-ground: "#293b30"
+  dark-warning: "#e9ca86"
+  dark-warning-ground: "#403827"
 typography:
   headline:
-    fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, Arial, sans-serif'
-    fontSize: "28px"
-    fontWeight: 650
-    lineHeight: 1.2
-    letterSpacing: "-0.025em"
-  headline-mobile:
-    fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, Arial, sans-serif'
+    fontFamily: "\"Segoe UI\", -apple-system, BlinkMacSystemFont, Arial, sans-serif"
     fontSize: "26px"
     fontWeight: 650
-    lineHeight: 1.2
+    lineHeight: 1.25
     letterSpacing: "-0.025em"
-  body:
-    fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, Arial, sans-serif'
+  headline-mobile:
+    fontFamily: "\"Segoe UI\", -apple-system, BlinkMacSystemFont, Arial, sans-serif"
+    fontSize: "24px"
+    fontWeight: 650
+    lineHeight: 1.25
+    letterSpacing: "-0.025em"
+  section-title:
+    fontFamily: "\"Segoe UI\", -apple-system, BlinkMacSystemFont, Arial, sans-serif"
+    fontSize: "18px"
+    fontWeight: 650
+    lineHeight: 1.35
+  subheading:
+    fontFamily: "\"Segoe UI\", -apple-system, BlinkMacSystemFont, Arial, sans-serif"
     fontSize: "16px"
+    fontWeight: 650
+    lineHeight: 1.5
+  body:
+    fontFamily: "\"Segoe UI\", -apple-system, BlinkMacSystemFont, Arial, sans-serif"
+    fontSize: "15px"
     fontWeight: 400
     lineHeight: 1.5
   label:
-    fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, Arial, sans-serif'
+    fontFamily: "\"Segoe UI\", -apple-system, BlinkMacSystemFont, Arial, sans-serif"
     fontSize: "14px"
     fontWeight: 600
     lineHeight: 1.5
-  secondary:
-    fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, Arial, sans-serif'
-    fontSize: "14px"
+  navigation:
+    fontFamily: "\"Segoe UI\", -apple-system, BlinkMacSystemFont, Arial, sans-serif"
+    fontSize: "13px"
     fontWeight: 400
     lineHeight: 1.5
-  footer:
-    fontFamily: '"Segoe UI", -apple-system, BlinkMacSystemFont, Arial, sans-serif'
+  metadata:
+    fontFamily: "\"Segoe UI\", -apple-system, BlinkMacSystemFont, Arial, sans-serif"
     fontSize: "12px"
     fontWeight: 400
     lineHeight: 1.5
 rounded:
+  status: "4px"
+  navigation: "5px"
   control: "6px"
-  surface: "12px"
+  surface: "8px"
 spacing:
-  micro: "4px"
-  compact: "8px"
-  control-y: "10px"
-  inset: "12px"
-  control-x: "16px"
-  edge: "20px"
-  group: "24px"
-  separation: "32px"
-  surface: "36px"
+  "4": "4px"
+  "8": "8px"
+  "10": "10px"
+  "12": "12px"
+  "16": "16px"
+  "20": "20px"
+  "24": "24px"
+  "28": "28px"
+  "32": "32px"
+  "36": "36px"
+  "48": "48px"
 components:
   button-primary:
     backgroundColor: "{colors.primary}"
-    textColor: "{colors.surface}"
+    textColor: "{colors.primary-ink}"
     typography: "{typography.label}"
     rounded: "{rounded.control}"
-    padding: "10px 16px"
+    padding: "7px 12px"
   button-primary-hover:
     backgroundColor: "{colors.primary-hover}"
   button-outline:
     backgroundColor: "transparent"
     textColor: "{colors.ink}"
-    typography: "{typography.label}"
     rounded: "{rounded.control}"
-    padding: "10px 16px"
+    padding: "7px 12px"
   button-ghost:
     backgroundColor: "transparent"
     rounded: "{rounded.control}"
-    typography: "{typography.label}"
-    padding: "10px 16px"
+    padding: "7px 12px"
   input:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
-    typography: "{typography.body}"
     rounded: "{rounded.control}"
-    padding: "10px 12px"
-    width: "100%"
+    padding: "8px 10px"
+  navigation-link:
+    textColor: "{colors.muted}"
+    typography: "{typography.navigation}"
+    rounded: "{rounded.navigation}"
+    padding: "8px 10px"
+  navigation-link-current:
+    backgroundColor: "{colors.selected}"
+    textColor: "{colors.ink}"
+  status-chip:
+    backgroundColor: "{colors.ground}"
+    textColor: "{colors.muted}"
+    rounded: "{rounded.status}"
+    padding: "3px 8px"
   working-surface:
     backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
     rounded: "{rounded.surface}"
     padding: "36px"
-    width: "100%"
   notice:
     backgroundColor: "{colors.notice-ground}"
     textColor: "{colors.ink}"
-    typography: "{typography.secondary}"
     rounded: "{rounded.control}"
     padding: "12px"
   error-message:
     backgroundColor: "{colors.error-ground}"
     textColor: "{colors.error}"
-    typography: "{typography.secondary}"
     rounded: "{rounded.control}"
     padding: "12px"
 ---
@@ -128,174 +155,123 @@ components:
 
 ## Overview
 
-**Creative North Star: "Service Desk Wayfinding"**
+**Creative North Star: "The Daily Operations Desk"**
 
-A clear entrance to an internal workplace. A navy masthead establishes identity,
-a cool blue ground separates the working surface, and a compact location marker
-names the current place. The character is calm, readable and operational.
+The Daily Operations Desk makes repeated work legible through a quiet sidebar, a continuous working field and aligned records. The user-selected Twenty CRM reference informs the restraint, density and navigation; Altvia keeps its own name, real capabilities and resource boundaries. This replaces the former navy service-desk wayfinding world.
 
-This is the provisional visual system extracted from the browser identity
-implementation, not approved corporate branding. System typography and familiar
-controls support repeated use in Portuguese. The current surface contains real
-login, account and logout behavior; its composition is recorded in the surface
-brief rather than imposed on future product screens.
+Offwhite and white planes become neutral charcoal in dark mode. System sans, small line icons and deliberate blue actions keep attention on records and their next action. This is a product UI direction, not approved corporate branding: no corporate logo or typeface was supplied.
 
 **Key Characteristics:**
-- Navy identity band and cool blue ground.
-- Flat, bordered working surfaces with a compact control scale.
-- Cobalt action in light mode and pale blue action in dark mode.
-- Explicit labels, visible focus and a state-bearing location marker.
+
+- Neutral sidebar and continuous content with shared desktop alignment.
+- Compact system typography, labeled native fields and line icons.
+- Blue actions and soft semantic chips with explicit state wording.
+- Flat section rules, responsive labeled records and deliberate inline recovery.
 
 ## Colors
 
-The palette uses a blue primary family, cool neutrals and distinct error colors.
-The frontmatter records the source CSS values; dark-prefixed entries are the
-overrides applied to the same semantic properties by the dark theme.
+The palette is predominantly neutral, with an operational blue and soft semantic feedback. Frontmatter records the exact light tokens and their `dark-` counterparts from the stylesheet. At runtime the dark theme overrides the same semantic CSS properties.
 
 ### Primary
 
-- **Cobalt Action:** primary and primary-hover identify the main action; the dark
-  equivalents become pale blue while preserving surface-colored button text.
-- **Focus Blue:** focus supplies the keyboard outline. The masthead theme control
-  uses header-muted for its outline against the dark band.
+- **Operational Blue** (`primary`, `primary-hover`): deliberate actions and links; pale blue in dark mode uses the separate `primary-ink` foreground.
+- **Focus Blue** (`focus`): visible keyboard outline, independent of current navigation selection.
 
 ### Neutral
 
-- **Cool Ground:** ground is the page canvas; surface is the working plane.
-- **Navy Ink:** ink carries content; muted carries supporting text and metadata.
-- **Blue Boundary:** line separates fields, surfaces and session actions.
-- **Masthead Navy:** header anchors identity; header-text and header-muted separate
-  the name from the current location. These two text colors persist in dark mode.
-- **Location Blue:** location-marker and location-divider define the small marker
-  and desktop separator. Ghost-hover supplies a translucent interactive wash.
-- **Notice Blue:** notice-ground supports session status without competing with
-  primary actions. Error and error-ground pair text and field borders with an
-  error message background in each theme.
+- **Offwhite Ground** (`ground`): sidebar, board columns and quiet secondary regions; charcoal in dark mode.
+- **Working Surface** (`surface`): continuous operational field, native inputs and bounded identity surfaces.
+- **Record Ink / Quiet Metadata** (`ink`, `muted`): primary text and readable secondary context.
+- **Hairline / Control Stroke** (`line`, `control-line`): section separation versus the stronger outline needed to recognize fields.
+- **Current Context** (`selected`): navigation hover/current state and ghost-control hover.
+- **Notice Ground** (`notice-ground`): quiet informational feedback, inline confirmations and active operational-state backgrounds.
 
-**The Semantic Theme Rule.** Change semantic colors together through the theme;
-retain the relationship between ground, surface, text, boundary and state.
+Error, success and warning pairs are semantic feedback, not additional brand accents. Error uses `error` / `error-ground`; active/completed records use `success` / `success-ground`; blocked and waiting records use `warning` / `warning-ground`. State words remain visible. New/open/in-progress records use the action color on notice ground. Unmapped states keep the neutral chip.
+
+**The Neutral Context Rule.** Use neutral selection for the current destination; reserve blue for actions and the operational states already mapped to it.
 
 ## Typography
 
-The body, controls and operational headings share the system sans stack in the
-frontmatter. There is no decorative display face. Brand text is a wordmark-like
-text treatment, not a supplied logo asset.
+**Body and UI Font:** Segoe UI, with -apple-system, BlinkMacSystemFont, Arial and sans-serif fallbacks. There is no separate display face or downloaded font. System typography is part of the chosen operational world.
 
 ### Hierarchy
 
-- **Headline:** short operational headings use the headline role and switch to
-  headline-mobile at the narrow breakpoint. Balanced wrapping avoids isolated
-  short lines.
-- **Body:** instructions, field values and account data use the body role;
-  account values add semibold emphasis.
-- **Label:** field names and compact buttons use the label role. The full-width
-  login action uses body-sized text with semibold weight.
-- **Secondary:** location, validation, notices and supporting help use smaller
-  text. Help uses a more open line height (1.7).
-- **Footer:** quiet product and environment identification uses the footer role.
-- **Brand:** the name uses a compact bold treatment (24px, weight 700,
-  letter spacing -0.025em); Workspace is regular. Narrow screens reduce it to
-  20px. This is identity text, not an additional display hierarchy.
+- **Headline:** semibold (650), compact (26px), line-height (1.25), tracking (-0.025em); narrow screens use (24px) at the 540px breakpoint.
+- **Section title:** semibold (650), (18px), line-height (1.35).
+- **Subheading:** semibold (650), (16px).
+- **Body:** regular (400), (15px), line-height (1.5). Narrative work text preserves whitespace and wraps, with a (75ch) maximum; introductions and incoming text use (72ch).
+- **Labels and actions:** (14px), semibold (600). Record cells and secondary metadata also use (14px) with their observed regular weight.
+- **Navigation:** (13px), regular at rest and semibold (600) for the current destination; mobile links use (14px).
+- **Small metadata:** (12px), including table headings, navigation groups, status chips and footer. Chips use medium weight (500).
+
+Use sentence-case operational names and tabular numerals for pagination. No decorative display hierarchy is established.
 
 ## Layout
 
-The shell fills the viewport with a masthead, flexible main region and footer.
-The identity working surface is centered, left-aligned internally and limited to
-440px. Its desktop inset uses the surface spacing token. The main region uses
-64px vertical and 20px horizontal padding. The masthead is at least 80px tall;
-its horizontal inset scales from 20px through 5vw to 72px.
+Desktop authenticated pages use a fixed left sidebar (232px) and a context bar with a minimum height of (56px). The continuous content field starts after the sidebar and takes (28px 32px 48px) padding. Operational content fills the available width up to (1440px); the main element and retained private wrapper both stretch to the track. Account content remains a deliberate narrower exception (640px), with a flat interior rather than an identity card. Unauthenticated identity states use a centered, bounded surface (440px).
 
-Related fields are separated by the group token. Introductory text and session
-action regions use the separation token. Labels sit above their controls with
-the compact gap. Account values and long error content wrap rather than widening
-the surface.
+Sections use horizontal rules and (24px) vertical padding. Forms use wrapping action rows and adaptive grids, with repeated gaps of (12px), (16px), (20px), (24px), (28px) and (32px). Two-column roster work stacks at (900px). Ticket rows align subject/client, queue/priority, responsible person and state; task rows align title, state and deadline. Text may wrap without moving the corresponding column origins.
 
-At a maximum viewport width of 540px, the masthead wraps and the location moves
-to its own row. Its divider disappears. The theme control becomes icon-only,
-the masthead minimum height becomes 72px, the main vertical inset becomes 32px,
-and working-surface padding becomes 28px vertically and 24px horizontally. The
-footer can wrap. The supported CSS minimum width is 320px.
+At or below (900px), the sidebar becomes a named in-flow navigation disclosure, opened by a (44px) trigger. It expands above route content; it is not a modal drawer. Content padding becomes (24px 20px 40px), table headings disappear, record fields gain visible mobile labels and ticket filters stack. At or below (360px), horizontal content padding becomes (16px). The document supports a minimum width of (320px).
+
+At or below (540px), and for coarse pointers, buttons and native fields gain (44px) minimum heights, fields use (16px) type, and the password reveal remains a separate (40px) control. Identity surfaces use (28px 24px) padding, reduced to (24px 20px) below (360px).
+
+Kanban is a named, focusable bounded horizontal scroll region, not stacked columns: columns are (240px), with a (16px) gap and maximum region height of (560px). At (1500px) and above, columns use `minmax(220px, 1fr)`. Each column keeps independent paging. Prose has its own measure regardless of the surrounding working track.
+
+**The Shared Track Rule.** Operational headings, facts, forms and section rules fill the shared content track; bound prose independently.
 
 ## Elevation & Depth
 
-The implemented interface has no shadows. Tonal planes, one-pixel borders and
-spacing establish hierarchy. Focus outlines communicate keyboard position rather
-than simulated elevation. There are no gradients, backdrop effects or decorative
-animations in the identity surface.
+Depth comes from neutral plane changes and one-pixel borders. The shipping stylesheet has no box-shadow vocabulary. Section boundaries stay flat; the sidebar and context bar establish location through tone, position and rules. Confirmation panels use notice ground and a border, while private note/composer regions use ground tone.
 
-**The Flat Working Plane Rule.** Use the established tonal and border hierarchy
-for working surfaces; do not introduce shadow elevation as an inherited default.
+**The Flat Working Field Rule.** Separate work with surface tones and hairlines, without decorative shadows.
+
+Motion is limited to existing loading indicators (`spin 1s linear infinite`). Reduced-motion preference disables that animation. There is no transition or decorative entrance system.
 
 ## Shapes
 
-Controls and messages use the control radius; working surfaces use the larger
-surface radius. Borders are one pixel. The location marker is a small circle
-(6px by 6px), aligned with its current-place label. It communicates place through
-the adjacent words, not through color alone. Icons are conventional line SVGs.
+Use modest corners: status chips (4px), navigation links (5px), controls/feedback/board cards (6px), bounded identity surfaces (8px). Operational sections remain continuous rectangular planes. The simple square Altvia letter mark uses (6px) corners and the current ink/surface pair; it is a UI identifier, not an approved corporate logo. Tiny state dots and spinner geometry are functional exceptions to the mostly rectangular form language.
 
 ## Components
 
 ### Buttons
 
-Buttons are compact, explicit and familiar. Their shared minimum height is 44px;
-the login action is full-width and at least 48px tall. Primary uses the action
-colors, outline uses the boundary color and a notice-colored hover, and ghost
-uses a translucent hover wash. Disabled controls reduce opacity to 0.65 and use
-a waiting cursor. Hover does not change disabled buttons.
+Compact and explicit. Primary buttons use the action/foreground pair; hover uses the dedicated action-hover token. Outline buttons use ink, a hairline border and notice-ground hover. Ghost buttons are transparent with selected-ground hover; the theme control supplies muted foreground. Shared padding is (7px 12px), radius (6px), and minimum height (36px), with the responsive target rule from Layout. Login submit is full width with a (48px) minimum height. Disabled controls use opacity (.65) and a waiting cursor. Keyboard focus uses a (2px) outline with a (3px) offset.
 
-Keyboard focus uses a solid 3px outline offset by 4px. There is no animated hover
-transition. Loading actions retain descriptive text and may add the spinner.
+### Chips
+
+State is a readable word on a soft semantic ground, not a clickable badge. Neutral chips use muted/ground; mapped colors follow Colors. Type is (12px), weight (500), padding (3px 8px), radius (4px). Preserve wrapping and maximum width rather than truncating state meaning.
 
 ### Cards / Containers
 
-The working surface is a bounded task container with a surface-colored fill,
-one-pixel boundary and larger radius. It has no shadow. Identity content uses
-the centered maximum width and responsive insets described in Layout. The
-session-ending action sits below its own divider and spacing.
+The identity form is the bounded working surface, with a hairline, (8px) radius and (36px) padding. Authenticated operational content uses continuous flat sections, not repeated cards. Board columns use ground and (12px) padding; task cards use surface, a hairline, (6px) corners and (12px) padding. Inline confirmations use notice ground, a border, (6px) corners and (20px) padding.
 
 ### Inputs / Fields
 
-Fields have explicit labels, surface fill, ink text, a one-pixel boundary and a
-minimum height of 48px. Placeholder text uses muted ink. Invalid fields use the
-error boundary and adjacent explanatory text; global failures use a colored
-message block. The password control reserves 56px for its 44px reveal action,
-which has an accessible name and pressed state.
+Native labeled fields use surface/ink, the stronger control-line border, (6px) radius, (8px 10px) padding and a (40px) minimum height before responsive adaptation. Labels are explicit and sit (8px) above controls. Placeholders use muted ink; invalid input borders use error ink with explanatory text. Preserve keyboard focus, select semantics and resizable textareas.
 
-### Masthead and Location Marker
+### Navigation
 
-The masthead pairs the text identity with a current-place label, separated on
-desktop by a line. The marker reads Acesso before authentication and Minha conta
-after it. This is a state-bearing identity pattern, not a navigation menu. The
-theme control stays at the trailing edge and retains its accessible name when
-the visible label is hidden on mobile.
+The fixed desktop sidebar groups real destinations with small Lucide line icons (18px, stroke width 1.7), quiet group labels and the account region at its bottom. Links use (8px 10px) padding and a (36px) minimum height; current and hover states use selected ground and ink. Current state also uses semibold type and `aria-current`. Below (900px), links grow to (44px). Opening the disclosure focuses its first link; Escape closes it and returns focus to the trigger. Selecting the exact current destination restores trigger focus; real route changes retain the page-heading focus owner. The authenticated skip link targets route content after navigation. Link visibility follows capabilities while API resource scope remains authoritative.
 
-### Notices and Recovery
+### Records, Facts and Recovery
 
-Session notices use the notice plane and ink text. Errors pair the error plane
-with error text, expose an alert and explain the next action. Connection failure
-offers Tentar novamente. New login, account and connection views move focus to
-their heading. Ordinary query refreshes do not move focus out of an active field.
-The skip link becomes visible on focus and targets the main content.
-
-### Motion
-
-Only loading indicators rotate: one full turn over one second, linear and
-repeating. Reduced-motion preference disables the rotation while descriptive
-loading text remains visible.
+List rows use hairlines, neutral linked titles and muted scope metadata. Desktop column alignment becomes labeled wrapped fields on mobile. Fact grids use adaptive tracks with (240px) minimums bounded by available width. Recovery feedback retains status/alert text and actual next actions. Public responses, private notes and received text remain visibly separate even when they share typography and section rhythm. Received text uses a bounded scroll area (22rem), a hairline, ground tone and preserved whitespace; it is not HTML rendering.
 
 ## Do's and Don'ts
 
 ### Do:
 
-- **Do** use the semantic theme relationships for every state and control.
-- **Do** preserve visible keyboard focus and labeled controls in both themes.
-- **Do** keep the location label tied to the real identity state.
-- **Do** wrap long account values and messages within the available width.
-- **Do** keep session-ending actions visibly separated from account data.
+- **Do** use semantic light/dark tokens for surfaces, controls, feedback and state.
+- **Do** align operational headings and section rules on the shared content track while keeping prose readable.
+- **Do** preserve explicit labels, visible keyboard focus and text alongside state color.
+- **Do** wrap long records, retain mobile field labels and keep Kanban overflow inside its named region.
+- **Do** keep exact review, uncertain-result recovery and session-ending confirmations legible beside the action.
 
 ### Don't:
 
-- **Don't** present this provisional palette or text identity as approved corporate branding.
-- **Don't** replace explicit state and error wording with color or icons alone.
-- **Don't** inherit decorative shadows or motion into the flat working surfaces.
-- **Don't** move focus during an ordinary background identity refresh.
+- **Don't** restore the former navy masthead or cool-blue page ground.
+- **Don't** invent metrics, CRM features, imagery or an approved Altvia logo from the reference.
+- **Don't** replace native semantic controls or named actions with decorative glyphs.
+- **Don't** turn each operational section into an elevated card or add decorative motion.
+- **Don't** use a navigation destination, assignment or visual state as an access grant.

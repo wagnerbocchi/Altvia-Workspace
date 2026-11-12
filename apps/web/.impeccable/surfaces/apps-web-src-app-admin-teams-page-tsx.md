@@ -16,8 +16,10 @@ forms, keyboard use and responsive themes. No business metrics or fabricated row
 THESIS: Organize a team and its roster through clear linked records. Refuse the
 dashboard of decorative counts and the cramped all-teams editing grid.
 
-OWN-WORLD: Preserve Service Desk Wayfinding: navy masthead, cool ground, flat
-bordered working plane, system sans, semantic action/focus/error tokens.
+OWN-WORLD: Offwhite sidebar, continuous white working field, gray hairlines, system sans,
+restrained blue actions, soft semantic state chips and native labeled fields.
+Dark mode uses neutral charcoal equivalents. Inherit the shared operational
+track, responsive navigation and visible focus recorded in root DESIGN.md.
 
 STORY: Find or create the correct team, review its status, then manage named
 participants. Membership and content access remain distinct. Uncertain writes
@@ -37,7 +39,9 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 ## Constraints and open decisions
 
-Inherited brand remains provisional (Q-13). No new assets/raster art are needed.
+The user-selected Twenty UI direction supersedes the provisional world; no
+approved corporate logo or typeface was supplied. No assets/raster art are needed.
 States: loading, empty, denied, unknown record, inactive, pending, transport
 uncertainty, version conflict, saved/reloaded, long/Unicode/HTML-like text.
-No server search or total counts. No durable design-system change is requested.
+No server search or total counts. This local behavior stays within the shared
+neutral design system documented after the whole-workspace redesign.

@@ -135,6 +135,8 @@ mail_delivery and tests. Regenerate OpenAPI/TypeScript.
   The browser uses this authoritative receipt read independently of pagination.
   Case detail now adds actual can_create/can_append/safely correlated candidate
   fields, never a hidden target identity or a placeholder capability.
+  Summary/detail add current client_name/queue_name through the same scoped
+  parent joins, without requiring client-registry roles or creation choices.
 - resolve_candidate(db,case,actor_id) resolves all same-context known incoming or
   accepted outbound anchors before action filtering. Include all relevant case
   locks in stable order and re-resolve invalidation after lock. Foreign/unknown

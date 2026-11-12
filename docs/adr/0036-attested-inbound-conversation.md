@@ -196,6 +196,10 @@ Provide paged scoped case list/detail and a protected promotion POST. Unclassifi
 mail remains owner-only; do not add a broad triage content role. List omits bodies,
 evidence and routing internals; detail gives authorized immutable text, bounded
 review choices and honest current eligibility. Return no hidden target identity.
+The scoped list/detail projection includes current client_name and queue_name
+through those authorized parent joins. Staff with case read authority need no
+separate client-registry role or creation-only choice lookup just to read those
+labels; no additional client metadata or registry authority is granted.
 
 One ticket conversation union read combines incoming records and existing public
 outbound messages by ticket version with actor/ticket-bound cursors. Existing

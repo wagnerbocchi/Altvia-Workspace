@@ -762,3 +762,13 @@ policy failures (infected, encrypted or limit) become terminal rejected with no
 manual release. Transport, timeout, protocol, database and other unclassified
 failures retry with the bounded generation budget, then become failed. A protected
 failed retry creates a new generation; immutable prior attempts remain.
+
+Task2 mandatory hosted API validation keeps one full-suite owner. The API job
+starts a bounded real S3-only fixture from the exact ADR0037 storage build, with
+verified TLS and the existing native bootstrap. It publishes no storage port; the
+Linux test caller reaches only its isolated bridge address covered by the synthetic
+certificate SAN. Required file-test enablement/configuration is fail-closed and
+proves the attachment suites ran in the existing single full pytest run. Local
+developer runs may explicitly skip these external-service suites when no file
+fixture is configured. No AV definitions are loaded by this harness. Task1 signed
+AV proof stays separate; task containers stop without deleting durable volumes.

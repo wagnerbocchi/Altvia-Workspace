@@ -1,0 +1,13 @@
+# Explicit optional outbound SMTP only. The base stack has no SMTP egress.
+services:
+  worker:
+    environment:
+      ALTVIA_SMTP_ACCOUNTS_FILE: /run/secrets/smtp_accounts
+    secrets:
+      - smtp_accounts
+    networks: [database, queue, smtp_egress]
+networks:
+  smtp_egress: {}
+secrets:
+  smtp_accounts:
+    file: ${ALTVIA_SECRET_DIR:?Set restricted external secret directory}/smtp_accounts.json

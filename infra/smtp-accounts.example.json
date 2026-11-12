@@ -1,0 +1,12 @@
+[
+  {
+    "source_id": "00000000-0000-0000-0000-000000000001",
+    "host": "smtp.example.test",
+    "port": 465,
+    "tls_mode": "implicit",
+    "username": "synthetic-example-only",
+    "password": "replace-in-external-secret-file",
+    "from_email": "support@example.test",
+    "ca_file": null
+  }
+]

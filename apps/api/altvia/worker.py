@@ -18,22 +18,35 @@ from pydantic import ValidationError
 from redis.backoff import NoBackoff
 from redis.exceptions import RedisError
 from redis.retry import Retry
-from sqlalchemy import Engine, func, select, text
+from sqlalchemy import Engine, func, or_, select, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from altvia import mail_delivery
 from altvia.activity import CONSUMER, claim_events, consume_event, publication_failed, replay_event
 from altvia.config import WorkerSettings
 from altvia.database import make_engine
-from altvia.models import OutboxEvent
+from altvia.mail_settings import SMTPAccount, load_accounts
+from altvia.models import OutboundMessage, OutboxEvent
 from altvia.observability import configure_logging
+from altvia.smtp_transport import ActiveTransports, deliver_once
 
 LOGGER = logging.getLogger("altvia.worker")
 
 
 def build_worker(
-    engine: Engine, settings: WorkerSettings
+    engine: Engine,
+    settings: WorkerSettings,
+    *,
+    accounts: dict[UUID, SMTPAccount] | None = None,
+    active: ActiveTransports | None = None,
 ) -> tuple[RedisBroker, Worker, Actor[[str], None]]:
+    accounts = (
+        accounts
+        if accounts is not None
+        else (load_accounts(settings.smtp_accounts_file) if settings.smtp_accounts_file else {})
+    )
+    active = active or ActiveTransports()
     # Dramatiq's typed distribution leaves this constructor unannotated.
     broker = RedisBroker(  # type: ignore[no-untyped-call]
         url=settings.redis_url.get_secret_value(),
@@ -73,7 +86,75 @@ def build_worker(
     registered = actor(broker=broker, actor_name=CONSUMER, queue_name="identity", max_retries=0)(
         project_identity
     )
-    return broker, Worker(broker, queues={"identity"}, worker_threads=2), registered
+    queues = {"identity"}
+    if accounts:
+
+        def send_mail(delivery_id: str) -> None:
+            try:
+                identifier = UUID(delivery_id)
+            except (TypeError, ValueError, AttributeError):
+                LOGGER.warning("", extra={"event_code": "invalid_message"})
+                return
+            try:
+                deliver_once(engine, identifier, accounts, active=active)
+            except SQLAlchemyError:
+                # Persisted stage/expiry owns restart recovery; no broker retry.
+                LOGGER.error("", extra={"event_code": "mail_database_unavailable"})
+
+        actor(broker=broker, actor_name="mail_delivery", queue_name="mail", max_retries=0)(
+            send_mail
+        )
+        queues.add("mail")
+    return broker, Worker(broker, queues=queues, worker_threads=2), registered
+
+
+def dispatch_mail_once(
+    engine: Engine,
+    broker: RedisBroker,
+    accounts: dict[UUID, SMTPAccount],
+    stop: Event | None = None,
+) -> int:
+    if stop is not None and stop.is_set():
+        return 0
+    mail_delivery.recover(engine)
+    if not accounts:
+        return 0
+    # One short global publication window and a finite broker backlog. The
+    # broker's own queue-size command includes outstanding acknowledgements.
+    if not broker.client.set("altvia:mail:publisher", "1", nx=True, ex=10):
+        return 0
+    size = int(broker.do_qsize("mail"))
+    capacity = max(0, min(2, 8 - size))
+    if not capacity:
+        return 0
+    with Session(engine) as db:
+        identifiers = list(
+            db.scalars(
+                select(OutboundMessage.id)
+                .where(
+                    OutboundMessage.state == "queued",
+                    OutboundMessage.attempts < 8,
+                    or_(
+                        *(
+                            (OutboundMessage.source_id == identifier)
+                            & (OutboundMessage.namespace_hash == account.namespace_hash)
+                            for identifier, account in accounts.items()
+                        )
+                    ),
+                    OutboundMessage.next_attempt_at <= func.clock_timestamp(),
+                )
+                .order_by(OutboundMessage.next_attempt_at, OutboundMessage.id)
+                .limit(capacity)
+            )
+        )
+    registered = broker.get_actor("mail_delivery")
+    sent = 0
+    for identifier in identifiers:
+        if stop is not None and stop.is_set():
+            break
+        registered.send(str(identifier))
+        sent += 1
+    return sent
 
 
 def dispatch_once(
@@ -116,10 +197,14 @@ def main() -> int:
     engine = None
     broker = None
     worker = None
+    active = ActiveTransports()
     try:
         settings = WorkerSettings()
-        engine = make_engine(settings)
-        broker, worker, registered = build_worker(engine, settings)
+        accounts = load_accounts(settings.smtp_accounts_file) if settings.smtp_accounts_file else {}
+        engine = make_engine(settings, worker_timeouts=True)
+        broker, worker, registered = build_worker(
+            engine, settings, accounts=accounts, active=active
+        )
         heartbeat = settings.worker_state_dir / "heartbeat"
         if args.command == "health":
             return 0 if healthy(engine, broker, heartbeat) else 1
@@ -150,6 +235,7 @@ def main() -> int:
         while not stop.is_set():
             try:
                 count = dispatch_once(engine, registered, datetime.now(UTC), stop)
+                count += dispatch_mail_once(engine, broker, accounts, stop)
                 if stop.is_set():
                     break
                 if (
@@ -165,6 +251,7 @@ def main() -> int:
             stop.wait(1)
         # Dramatiq applies this budget separately to worker and consumer joins.
         # Leave room within Compose's 30s grace for bounded broker I/O as well.
+        active.cancel()
         worker.stop(timeout=5000)
         worker = None
         LOGGER.info("", extra={"event_code": "worker_stopped"})
@@ -173,6 +260,7 @@ def main() -> int:
         LOGGER.error("", extra={"event_code": "worker_configuration_or_dependency_failure"})
         return 1
     finally:
+        active.cancel()
         if worker is not None and worker.workers:
             worker.stop(timeout=5000)
         if broker is not None:

@@ -47,6 +47,7 @@ class Settings(DatabaseSettings):
 class WorkerSettings(DatabaseSettings):
     redis_url: SecretStr
     worker_state_dir: Path = Path("/run/altvia")
+    smtp_accounts_file: Path | None = None
 
     @field_validator("redis_url")
     @classmethod

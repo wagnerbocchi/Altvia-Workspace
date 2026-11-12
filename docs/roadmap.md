@@ -71,14 +71,25 @@ engineering contract is ADR-0035 and its verified-mail-delivery plan. Sender and
 requester attestation remain explicit owner operations with real policy Q03/Q16;
 no production verification or sending is authorized or inferred.
 
-ADR-0035 persistence5c6da0d and bounded TLS SMTP/worker6ae7e4f are implemented.
-The transport passed104 affected local tests and all five exact-source hosted
-gates with869 API/131 browser tests. Five image inventories have zero reported
-vulnerabilities; source has nine LOW and zero blockers/secrets. The real browser
-delivery extension is under final correction/review after142 passing full local
-cases. Actual packaged SMTP/restart/privacy/active-shutdown proof remains open;
-the base packaged stack result does not prove it. Full outbound, remaining MVP
-and final integrated target qualification are not yet complete.
+ADR-0035 development is complete on accepted source c47fd8a. Persisted5c6da0d,
+SMTP/worker6ae7e4f, browser e58c786, clock correction51ad72a and packaged c47fd8a
+passed all five final hosted gates:894 API/142 browser and actual TLS SMTP,
+uncertainty/restart/privacy/API-PG recreation/active SIGTERM. Active DATA shutdown
+exited0 in1.116s; each scenario had one attempt/DATA and no restart resend.
+All three fresh review findings have RED/GREEN and independent ADDRESSED/PASS;
+final local201 passed706.44s. Five image inventories have zero vulnerabilities;
+source has nine LOW and zero blockers/secrets. Sanitized252-entry evidence is
+hash-bound in docs/phase-3g-verified-delivery-evidence.md. Full incoming mail,
+private files, remaining MVP and final integrated target qualification stay open.
+
+The next engineering contract is ADR-0036 and
+docs/plans/2026-11-12-attested-inbound-conversation.md: owner-attested classified
+cases, existing queue/customer scope, protected staff promotion, contextual
+identity/correlation and incoming/outgoing conversation. Unknown raw mail stays
+private; per-message proof never verifies a global contact or grants an account.
+Foreign claimed IDs cannot poison another customer's anchors. First SMTP reply
+references and late alias collisions are explicit acceptance cases. Q03/Q16 real
+trust/provider policy remains open; no live operation is inferred.
 
 The Phase 3E-c policy follow-up delivers ADR-0033: strict Subject/body charset
 ownership, complete HTML token accounting and separate immutable parser2 results.

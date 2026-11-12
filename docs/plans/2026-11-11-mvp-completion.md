@@ -16,8 +16,8 @@ target-VM qualification follows development, not each slice.
 | Stage | Required outcome | State |
 | --- | --- | --- |
 | Service Desk conversation | Public response drafts separate from private notes; protected review/replay and real browser conversation | Development/CI complete558f4ee;796 API/131 browser, packaged proof; final target deferred |
-| Outbound mail | Explicit verified participant boundary, durable public-only queue, verified TLS SMTP, stable IDs, retry/uncertain reconciliation and browser delivery states | Active: persistence5c6da0d; SMTP/worker6ae7e4f with104 affected tests and five hosted gates green869 API/131 browser; browser final correction/review and packaged SMTP proof pending |
-| Inbound mail | Restricted authorized triage, explicit verified sender/thread evidence, safe creation/append/reopen, no subject/From-only trust | Pending |
+| Outbound mail | Explicit verified participant boundary, durable public-only queue, verified TLS SMTP, stable IDs, retry/uncertain reconciliation and browser delivery states | Development/CI complete c47fd8a;894 API/142 browser,201 affected, actual packaged SMTP/restart/privacy/active shutdown; final target deferred |
+| Inbound mail | Restricted authorized triage, explicit verified sender/thread evidence, safe creation/append/reopen, no subject/From-only trust | ADR0036/2026-11-12 implementation plan selected after outbound acceptance; development next |
 | Private files | Private object storage, bounded streaming, fail-closed scanning, authorized ticket/work links and downloads | Pending |
 | Ticket/work links | Same-client N:N authorization of both endpoints, independent state, real browser links | Pending |
 | Automation/unified work | Structured durable rules, idempotent assignment/reopen/race behavior, visible failures, consolidated scoped My Work | Pending |

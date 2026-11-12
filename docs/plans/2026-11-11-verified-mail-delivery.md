@@ -156,12 +156,22 @@ directly to main; exact-source hosted and packaged SMTP gates remain Task4.
 
 ### Task 4: Integrated acceptance and immediate next stage
 
-- [ ] Obtain one fresh whole-increment source review. Fix Important findings
+- [x] Obtain one fresh whole-increment source review. Fix Important findings
   with RED/GREEN and affected full suites; explicitly record remaining rulings.
-- [ ] Add actual packaged synthetic TLS delivery/restart/uncertain/no-note proof,
+- [x] Add actual packaged synthetic TLS delivery/restart/uncertain/no-note proof,
   narrow runtime privilege proof and runbook including safe operator drain.
-- [ ] Publish authorized checked commits and inspect all five exact-source hosted
+- [x] Publish authorized checked commits and inspect all five exact-source hosted
   gates, complete logs and image/source security inventories. Preserve sanitized
   hashed evidence; keep final target qualification separate.
-- [ ] Update completion ledger and immediately start the restricted authorized
+- [x] Update completion ledger and immediately start the restricted authorized
   inbound triage/thread-correlation stage. Do not ask whether to continue.
+
+Task4 development acceptance2026-11-12:c47fd8a, all five exact-source hosted
+gates passed with894 API/142 browser and actual packaged TLS SMTP/uncertainty/
+restart/privacy/active DATA SIGTERM1.116s exit0. Final local201 passed706.44s;
+whole review R1/R2/R3 all ADDRESSED after actual RED/GREEN and scoped PASS. Five
+image inventories66/49/70/43/16 have zero findings; source9 LOW/0 blockers/secrets.
+252-entry sanitized immutable archive SHA8a7308d20b5e6622b9b9ea7d64fd6ec810190a634df048ddeaa1c972fa75fca3.
+See docs/phase-3g-verified-delivery-evidence.md for full failures/limits/provenance.
+Next ADR0036/2026-11-12 attested inbound plan selected; full email/MVP/actual-target
+qualification remain separate and open. No live provider, production or target SSH.

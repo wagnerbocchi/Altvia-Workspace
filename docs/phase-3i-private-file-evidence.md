@@ -217,6 +217,92 @@ e99a67876ecbb9590f7c2286a9eb4f14c8aa2d3f0ac19921593e90af4cd48fa3;
 86c9e3c42a981453bb0cca15cae24f3d0b81aad9e46a669b08ed8875ee6152df.
 Both preserve the pending-hosted scope and the deferred Minor explicitly.
 
+## Task 2 hosted startup failure and reviewed H2 correction
+
+Source 515d379 passed Source43254378386, Images43254378335,
+Browser43254378524 and Containers43254378343. Browser154 passed in5.4m;
+source22 LOW/zero blockers/secrets and all seven nonempty inventories reported
+zero vulnerabilities. Existing packaged regressions and the actual signed/current
+ClamAV producer/reload proof passed. These do not substitute for the API gate.
+
+API43254378356/job131308515614 failed before pytest: Docker command5 exited125
+because a static endpoint requires a user-configured subnet. No API test ran.
+The subsequent absent-container stop1 is benign idempotent cleanup. The controller
+inspected all six complete decoded logs, verified197 failed-API source hashes and
+14 raw streams, plus18 signed-infrastructure source hashes and132 raw streams.
+The revised credential-URL audit found zero remaining matches in sanitized logs.
+
+Five digest-verified downloaded artifacts and those logs are retained in
+ci-515d379.zip at the Task2 evidence directory above:13 entries,1936532 bytes,
+SHA256 b10d31d5a01d2da45d0c6cd2874a5b579264b518480f177c8f52b72b6cf0b86e.
+Its status remains NOT ACCEPTED/H2. Failed API artifact13959848806 has15 entries,
+SHA25699f96239b21b0046105928c93d8dfd49b69669937fb68094d96cf071ad5013e9.
+
+Fix cb49780 inspects existing native network subnets, selects a nonoverlapping
+private /24, explicitly requests an internal bridge/subnet and verifies the created
+boundary before assigning its TLS endpoint. Only known overlap races retry,
+with fresh inventory and at most three creates. No host/daemon network, DNS, SSH,
+published port, dependency or production configuration changed.
+
+Five new construction/preflight RED cases failed before implementation; ten
+focused GREEN controls and Ruff/format passed. Actual Podman private S3 startup,
+verified IP-SAN TLS, native bootstrap and original27-byte PUT/GET passed using the
+accepted prebuilt storage image. This is Podman evidence, not Docker acceptance.
+Independent scoped review marked H2 ADDRESSED, specification/quality PASS and no
+new breakage. Root verified52 artifact hashes, two source hashes/Git blobs,
+seven frozen runs and the report digest. Source has only CRLF/LF checkout
+normalization relative to the exact committed Git blobs.
+
+Reviewed source-cb49780.zip:561 entries,1355338 bytes,SHA256
+d70709ab558de18697d467e358af93296949c5a171957299558dd549535c8774.
+fix-2-evidence.zip:60 entries,265179 bytes,SHA256
+74d55a8c1d32db151d9845caac602a6feee27d216eb92949cad1b0887dec19e6.
+Both CRC pass and explicitly retain the pending hosted-Docker/full-API gate.
+Actual cb49780 hosted validation is recorded below; Task2 stays open.
+
+## Task 2 hosted native-inventory failure and H3 correction
+
+All four non-API cb49780 workflows passed: Source43259514648,
+Images43259514902, Browser43259514747 and Containers43259515676. Browser154
+passed in4.6m; source22 LOW/zero blockers/secrets and all seven named nonempty
+inventories retain zero vulnerabilities. Actual signed/current scanner/update/
+reload and existing packaged regressions passed. Root verified18 infrastructure
+source hashes and132 raw command streams, including expected pre-bootstrap and
+stopped-scanner refusal outcomes.
+
+API43259514813/job131326705384 failed before network creation or pytest. Native
+Docker inspect succeeded but returned IPAM.Config:null for its valid built-in
+host/none networks. The inventory parser refused that shape. Docker commands0..3
+all exited0; absent-container cleanup stop1 is benign. No API tests ran. Root
+verified197 immutable source hashes and10 raw streams in the11-entry failed
+artifact13962842894, ZIP SHA256
+32ce7b4b744007bb22dcba7c5eb52fa5451fb39c631c7ad4c821a70c3b458d1f.
+
+All six complete decoded/sanitized job logs and five digest-verified artifacts
+remain in ci-cb49780.zip:13 entries,1989060 bytes,SHA256
+181dc95abe4c27cb1ab118a0dee62d7b27089e137f211d8a0b665835112f4661.
+Its immutable manifest explicitly says NOT ACCEPTED/H3; revised credential-URL
+audit found zero remaining matches. Action deprecations and disposable initdb
+diagnostics are benign runner conditions, separate from the actual parser failure.
+
+Correction160c886 accepts null IPAM configuration only for exact native built-in
+host/none name/driver pairs with default IPAM driver. All actual configured
+subnets still contribute to overlap avoidance; unknown, missing or malformed
+inventory remains refused. The existing explicit internal subnet, bounded retry,
+TLS, no-port and runtime-security controls are preserved. Two retained-native-shape
+RED cases reproduce the actual failure; all21 focused GREEN tests and Ruff/format
+pass. Root verified17 artifacts, two source hashes/Git blobs, five frozen runs and
+the report digest. Scoped independent review marks H3 ADDRESSED/specification
+and quality PASS/no new breakage. Actual hosted Docker/full API acceptance
+remains pending; no application/DTO/dependency/image/scanner code changed.
+
+source-160c886.zip:561 entries,1356066 bytes,SHA256
+aad929648fa936ed4d69caa7849b9f13b7ea51c21b55c16cc69bc5bf465d30f1.
+fix-3-evidence.zip:25 entries,190389 bytes,SHA256
+f70285367507bef7124a5e7793da9655a321aacb14e4a0616ff873239121e624.
+Both CRC pass and retain the reviewed-fix/pending-hosted scope. Root-owned public
+documentation edits stayed separate from the implementer's two-file correction.
+
 ## Outstanding acceptance and continuation
 
 Local2048MiB Podman was not resized/restarted. Controlled socket replies remain

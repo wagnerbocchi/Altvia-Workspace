@@ -232,6 +232,23 @@ Task 1 console evidence now has explicit safe v2 review archives after correctin
 an empty-username URL scrubber; original console copies remain private historical
 evidence. Exact outcomes and corrections: docs/phase-3i-private-file-evidence.md.
 
+Actual515d379 API CI failed before pytest: Docker static IP requires an explicit
+user subnet (H2). The other four workflows passed, including154 browser cases,
+signed/current ClamAV/reload and all seven zero-vulnerability inventories. No API
+pass is inferred. Reviewed fix cb49780 reserves and verifies a nonoverlapping
+internal /24 through native IPAM with at most three overlap-only retries. Ten
+focused checks and actual Podman verified-TLS/bootstrap/PUT/GET pass; scoped
+specification/quality review is clean. Failed hosted artifacts are immutable.
+Actual cb49780 API CI then found H3: Docker's valid built-in host/none networks
+have null IPAM.Config. It failed before network creation/pytest; the other four
+workflows again passed, including154 browser cases and actual signed scanner/
+reload. Correction160c886 accepts only those exact native name/driver/null forms,
+retaining strict malformed rejection and all configured allocated subnets.
+Retained-native-shape RED2 and focused GREEN21/Ruff/format pass; scoped independent
+specification/quality review is clean. Actual Docker/full-suite acceptance remains
+pending before Task3. No target
+operation, global network change, full-file completion or CPU claim is implied.
+
 The accepted incoming increment used ADR-0036 and
 docs/plans/2026-11-12-attested-inbound-conversation.md: owner-attested classified
 cases, existing queue/customer scope, protected staff promotion, contextual

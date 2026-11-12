@@ -321,3 +321,45 @@ def test_restart_without_smtp_config_still_recovers_expired_sql_stage(
             assert commands == [] and messages == []
         finally:
             broker.client.close()
+
+
+@pytest.mark.parametrize("days", [-2, 2])
+def test_transport_process_clock_skew_keeps_real_db_tls_acceptance(
+    certificate, admin_client, db_engine, seeded_user, monkeypatch, days
+):
+    from altvia import smtp_transport
+    from test_mail_clock import skew
+
+    with smtp_server(certificate) as (account, _, messages, _):
+        identifier, account, _ = queued(admin_client, db_engine, seeded_user, account)
+        original = state(db_engine, identifier)
+        skew(monkeypatch, days)
+        monkeypatch.setattr(smtp_transport, "datetime", mail_delivery.datetime, raising=False)
+        assert deliver_once(db_engine, identifier, {account.source_id: account})
+        assert state(db_engine, identifier)[:2] == ("accepted", 1)
+        assert messages == [original[2]]
+        assert state(db_engine, identifier)[2:4] == original[2:4]
+
+
+def test_pre_send_elapsed_budget_exhaustion_never_starts_transport(
+    certificate, admin_client, db_engine, seeded_user, monkeypatch
+):
+    from types import SimpleNamespace
+
+    from altvia import smtp_transport
+
+    with smtp_server(certificate) as (account, commands, messages, _):
+        identifier, account, _ = queued(admin_client, db_engine, seeded_user, account)
+        original = state(db_engine, identifier)
+        ticks = iter((0.0, smtp_transport.ATTEMPT_SECONDS + 1))
+        monkeypatch.setattr(smtp_transport, "time", SimpleNamespace(monotonic=lambda: next(ticks)))
+
+        def forbidden(*args, **kwargs):
+            pytest.fail("An exhausted pre-send budget must not start SMTP")
+
+        monkeypatch.setattr(smtp_transport, "transmit", forbidden)
+        assert deliver_once(db_engine, identifier, {account.source_id: account})
+        assert state(db_engine, identifier)[:2] == ("queued", 1)
+        assert state(db_engine, identifier)[4] == "transport"
+        assert state(db_engine, identifier)[2:4] == original[2:4]
+        assert commands == [] and messages == []

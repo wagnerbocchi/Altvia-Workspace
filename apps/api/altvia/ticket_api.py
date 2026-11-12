@@ -108,14 +108,21 @@ def _version_cursor(value: str | None, scope: str) -> int | None:
 
 
 def _event(
-    db: Session, actor: User, item: Ticket, request: Request, event: str, **details: str | None
+    db: Session,
+    actor: User,
+    item: Ticket,
+    request: Request,
+    event: str,
+    *,
+    now: datetime | None = None,
+    **details: str | None,
 ) -> None:
     identity.record_event(
         db,
         actor.id,
         item.id,
         "ticket." + event,
-        datetime.now(UTC),
+        now if now is not None else datetime.now(UTC),
         request.state.correlation_id,
         item.version,
         aggregate_type="ticket",

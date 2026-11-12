@@ -70,6 +70,12 @@ expired transmitting leases become uncertain. A persistence failure leaves the
 lease for that same SQL recovery, never broker-side retry. Backoff starts at30
 seconds and doubles, capped at1 hour. Frozen bytes/Message-ID survive safe retries.
 
+Delivery creation, due times, leases, recovery, finalization and reconciliation
+use the PostgreSQL wall clock by default. Process wall-clock skew must not expire
+a live lease or delay a newly queued response; SMTP duration budgets remain
+monotonic. Frozen historical MIME, Date, creation time and Message-ID are never
+rewritten to correct a clock discrepancy.
+
 Before owner reconciliation, stop and drain all relevant mail workers, account
 for any in-flight operation and inspect external evidence using the stable
 Message-ID. Use the existing owner-only `altvia.mail_participants reconcile`
@@ -84,6 +90,55 @@ No worker receives note, raw quarantine, private MIME preview, attestation
 evidence, credential-table or sender/attestation mutation grants. Logs/events
 contain fixed safe error codes and identifiers, never SMTP reply text or wire.
 
+## Operator drain and reviewed reconciliation
+
+Run these procedures only for an independently authorized installation, with its
+existing external settings and exact Compose overlays. First stop every mail
+worker sharing that database/account, including any workers on other hosts. For
+the single-stack SMTP configuration above:
+
+```sh
+docker compose -f infra/compose.yaml -f infra/compose.smtp.yaml stop -t 30 worker
+docker compose -f infra/compose.yaml -f infra/compose.smtp.yaml ps -a worker
+```
+
+Verify stopped containers and their actual exit status; a forced kill or missing
+worker does not prove clean drain. Account for outstanding network operations
+and check the provider using the stable Message-ID. SQL state and the presence
+of that ID alone do not prove acceptance or non-acceptance. Keep all senders
+stopped while selecting and committing the reviewed decision.
+
+Set DELIVERY_ID, DELIVERY_VERSION and EVIDENCE_REF to the reviewed delivery UUID,
+current positive delivery version and bounded opaque evidence reference. Keep
+provider replies, addresses and message bodies out of those values. For proven
+acceptance, ACCEPTED_AT must be the actual aware provider acceptance timestamp,
+within the delivery's recorded lifetime. Execute the owner command through the
+existing owner-secret-only migrate service:
+
+```sh
+docker compose -f infra/compose.yaml -f infra/compose.smtp.yaml run --rm --no-deps migrate \
+  python -m altvia.mail_participants reconcile \
+  --delivery-id "$DELIVERY_ID" --version "$DELIVERY_VERSION" \
+  --decision accepted --evidence "$EVIDENCE_REF" \
+  --workers-drained --accepted-at "$ACCEPTED_AT"
+```
+
+Only independently confirmed non-acceptance permits the same command with
+`--decision not_accepted` and without `--accepted-at`. It requeues the same frozen
+delivery; it does not create a second public response. An inconclusive provider
+result remains uncertain. The flag records the operator's drain assertion; it
+does not stop or discover workers. Read the resulting persisted state before
+restarting workers with the exact configuration above. A version conflict or
+refusal requires renewed review, never an invented evidence reference.
+
+Historical rows created by an advanced API clock can have a recorded creation
+time after genuine provider acceptance. The existing creation-to-current-DB-time
+evidence bound safely refuses that timestamp. Keep such a row uncertain, retain
+the immutable snapshot and seek a separately reviewed evidence/recovery procedure.
+Do not invent an acceptance timestamp, rewrite creation/MIME, or requeue/create
+another delivery to bypass the refusal. Clock correction changes new writes;
+it does not authorize automatic repair of historical acceptance evidence.
+
 ## Controlled local validation
 
 `apps/api/tests/test_smtp_transport.py` creates fresh TLS keys under ignored
@@ -91,5 +146,12 @@ temporary paths and exercises loopback-only TLS SMTP, hostile replies and
 deadlines. `test_smtp_worker.py` adds real disposable PostgreSQL/Redis, restricted
 worker credentials, duplicate actors, broker loss, current authority revocation,
 safe retries and uncertain recovery. No real provider or recipient is contacted.
-Packaged integration, browser status/review and final actual x86-64-v1 target
-qualification remain distinct later gates; these local results do not prove them.
+The browser uses the actual PostgreSQL/API/Redis/worker and a disposable TLS
+relay, with exact saved-body review, server-acceptance wording and protected
+recovery. The packaged smoke adds independent synthetic delivery tickets, real
+worker-main processes under worker-only secrets/privileges, final250/lost/held
+DATA replies, restart without another DATA and active SIGTERM timing. Its
+sanitized mail-delivery-proof.json is the only new container artifact retained
+alongside screenshots; account files, TLS keys and raw command logs stay private.
+Executed results belong to the increment's acceptance evidence, not this runbook.
+Final actual x86-64-v1 qualification remains separate after MVP development.

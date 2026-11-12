@@ -2,7 +2,7 @@
 
 import secrets
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from email.message import EmailMessage
 from email.policy import SMTP
 from email.utils import format_datetime
@@ -135,7 +135,8 @@ def freeze(
         )
     )
     references.reverse()
-    now = datetime.now(UTC)
+    # The API caller already holds the identity/parent/ticket write locks.
+    now = _clock(db)
     smtp_id = f"<{uuid4().hex}@{sender.from_email.rsplit('@', 1)[1]}>"
     row = OutboundMessage(
         ticket_id=item.id,
@@ -280,7 +281,9 @@ def _clock(db: Session, requested: datetime | None = None) -> datetime:
     return max(current, requested) if requested else current
 
 
-def _live(db: Session, identifier: UUID, token: UUID, now: datetime) -> OutboundMessage | None:
+def _live(
+    db: Session, identifier: UUID, token: UUID, now: datetime | None
+) -> OutboundMessage | None:
     row = db.scalar(
         select(OutboundMessage)
         .where(
@@ -305,10 +308,10 @@ def claim(
 ) -> Claim | None:
     if not accounts:
         return None
-    now = now or datetime.now(UTC)
     with Session(engine) as db, db.begin():
         lock_identity_writes(db)
-        now = _clock(db, now)
+        requested = now
+        now = _clock(db, requested)
         for row in db.scalars(
             select(OutboundMessage)
             .where(
@@ -325,6 +328,7 @@ def claim(
             account = accounts.get(row.source_id)
             if account is None or account.namespace_hash != row.namespace_hash:
                 continue
+            now = _clock(db, requested)
             if not eligible(db, row):
                 row.state, row.last_error_code = "failed", "eligibility_revoked"
                 row.version += 1
@@ -346,7 +350,7 @@ def frozen_delivery(
     engine: Engine, identifier: UUID, token: UUID, now: datetime | None = None
 ) -> FrozenDelivery | None:
     with Session(engine) as db, db.begin():
-        row = _live(db, identifier, token, now or datetime.now(UTC))
+        row = _live(db, identifier, token, now)
         if row is None or row.state != "preparing":
             return None
         return FrozenDelivery(
@@ -355,7 +359,6 @@ def frozen_delivery(
 
 
 def pre_data(engine: Engine, identifier: UUID, token: UUID, now: datetime | None = None) -> bool:
-    now = now or datetime.now(UTC)
     with Session(engine) as db, db.begin():
         lock_identity_writes(db)
         row = _live(db, identifier, token, now)
@@ -382,7 +385,6 @@ def finalize(
 ) -> bool:
     if outcome not in {"accepted", "temporary", "permanent", "transport", "data_unknown"}:
         raise ValueError("invalid_outcome")
-    now = now or datetime.now(UTC)
     with Session(engine) as db, db.begin():
         row = _live(db, identifier, token, now)
         if (
@@ -411,18 +413,22 @@ def finalize(
 
 
 def recover(engine: Engine, now: datetime | None = None) -> list[UUID]:
-    now = now or datetime.now(UTC)
     result = []
     with Session(engine) as db, db.begin():
+        due = _clock(db, now)
         for row in db.scalars(
             select(OutboundMessage)
             .where(
                 OutboundMessage.state.in_({"preparing", "transmitting"}),
-                OutboundMessage.lease_until <= now,
+                OutboundMessage.lease_until <= due,
             )
             .limit(100)
             .with_for_update(skip_locked=True)
         ):
+            # Recheck the current lease only after owning its row lock.
+            current = _clock(db, now)
+            if row.lease_until is None or row.lease_until > current:
+                continue
             row.state = (
                 "uncertain"
                 if row.state == "transmitting"
@@ -434,9 +440,9 @@ def recover(engine: Engine, now: datetime | None = None) -> list[UUID]:
                 else ("retry_exhausted" if row.state == "failed" else "lease_expired")
             )
             row.lease_token = row.lease_until = None
-            row.next_attempt_at = now
+            row.next_attempt_at = current
             row.version += 1
-            attempt_event(db, row, now)
+            attempt_event(db, row, current)
             result.append(row.id)
     return result
 
@@ -481,7 +487,7 @@ def reconcile(
     )
     row.accepted_at = accepted_at if decision == "accepted" else None
     row.last_error_code = "retry_exhausted" if row.state == "failed" else None
-    row.next_attempt_at = datetime.now(UTC)
+    row.next_attempt_at = now
     row.version += 1
     # External evidence is retained only in owner audit, never shared events.
     from altvia.models import AuditLog
@@ -491,12 +497,12 @@ def reconcile(
             actor_id=None,
             action="mail.delivery_reconciled",
             resource_id=row.id,
-            occurred_at=datetime.now(UTC),
+            occurred_at=now,
             correlation_id=uuid4().hex,
             details={"evidence": evidence, "decision": decision},
         )
     )
-    attempt_event(db, row, datetime.now(UTC), actor_kind="management_command")
+    attempt_event(db, row, now, actor_kind="management_command")
 
 
 def validate_delivery_event(event: object) -> None:

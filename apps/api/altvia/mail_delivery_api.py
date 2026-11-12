@@ -106,6 +106,7 @@ def create_mail_delivery_router(engine: Engine, settings: Settings) -> APIRouter
                 item,
                 request,
                 "delivery_queued",
+                now=row.created_at,
                 message_id=str(message_id),
                 delivery_id=str(row.id),
             )

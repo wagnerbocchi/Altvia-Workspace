@@ -6,7 +6,6 @@ import socket
 import ssl
 import time
 from collections.abc import Buffer, Callable, Sequence
-from datetime import UTC, datetime
 from threading import BoundedSemaphore, Event, Lock, Thread
 from typing import Literal
 from uuid import UUID
@@ -245,20 +244,25 @@ def deliver_once(
 ) -> bool:
     if active is not None and active.stopped.is_set():
         return False
+    began = time.monotonic()
     claimed = mail_delivery.claim(engine, accounts, identifier=delivery_id)
     if claimed is None:
         return False
     item = mail_delivery.frozen_delivery(engine, delivery_id, claimed.token)
     if item is None:
         return False
-    budget = min(ATTEMPT_SECONDS, (claimed.lease_until - datetime.now(UTC)).total_seconds() - 10)
-    outcome = transmit(
-        accounts[claimed.source_id],
-        item,
-        lambda: mail_delivery.pre_data(engine, delivery_id, claimed.token),
-        active=active,
-        budget=budget,
-    )
+    # SQL alone decides lease expiry. Charge preparation time to the finite
+    # monotonic attempt budget, leaving the other half of its lease to persist.
+    budget = ATTEMPT_SECONDS - (time.monotonic() - began)
+    outcome: Outcome | None = "transport"
+    if budget > 0:
+        outcome = transmit(
+            accounts[claimed.source_id],
+            item,
+            lambda: mail_delivery.pre_data(engine, delivery_id, claimed.token),
+            active=active,
+            budget=budget,
+        )
     if outcome is None:
         return False
     return mail_delivery.finalize(engine, delivery_id, claimed.token, outcome)

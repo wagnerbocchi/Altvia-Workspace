@@ -53,10 +53,10 @@ Actual signed combined execution requires the provisioned hosted Docker runner.
 
 ## Review observations and remaining gates
 
-Two nonblocking source observations are retained for whole-increment review:
-include the timeout file's name in diagnostic canaries, and broaden the hosted
-source inventory beyond its current subset of build inputs. The full Git source
-archive and broader local frozen maps remain distinct from that subset.
+The whole-increment review confirmed two nonblocking proof observations. The
+consolidated source correction below addresses the timeout filename canary and
+the omitted build inputs. Historical subset inventories retain their original
+limited scope; the full Git archive and actual local frozen maps remain separate.
 
 Required next gate:
 
@@ -155,3 +155,68 @@ failed-run evidence is preserved in
 24 entries, 1746836 bytes, CRC passed, SHA256
 `343f57c7ceaf60b136a896b37276d67c961176857fa7dcc18b6b528a496580a4`.
 No target operation, new dependency or application schema/runtime change occurred.
+
+## Third hosted boundary and consolidated source correction
+
+At exact 6d620f2, API checks passed 1244 cases with 3 explicit native console
+skips and 2 Pydantic alias warnings in existing concurrent queue tests; browser
+checks passed 175. Source/image security and the historical packaged job passed.
+The combined run completed native browser scanning, eight actual scanner
+timeouts, protected generation2 retry/actual clean, public MIME2 and processed
+event/privacy checks. It then preserved the old packaged checks through search.
+
+The first positive file-content assertion after service recreation failed.
+Historical logs do not disclose its HTTP status or which status/byte condition
+failed. No matching file restore or final combined proof JSON was reached.
+Complete failed evidence is retained in
+`C:/Users/wagne/.codex/state/evidence/private-file-task5-ef6b9f9/ci-6d620f2-failed.zip`:
+24 entries, 1813499 bytes, CRC passed, SHA256
+`4a9c24b9444a6d3304846d1c8e6962cb6da7bc8a452caf2554bd637ef798c9fa`.
+
+An actual PostgreSQL/API/S3 differential reproduced a fixture ownership defect:
+the file author is the baseline reader, whose later team-role mutation correctly
+invalidates every old session. The baseline already logs that reader in again;
+the file proof incorrectly retained the earlier cookie. Locally, real quarantine
+metadata/content were 200/409 before mutation, the saved cookie then received
+401, and ordinary fresh authentication restored 200/409. Stored bytes remained
+unchanged. This does not retrospectively prove the historical hosted status and
+does not fabricate a ready scan result.
+
+Source correction 133e163 reuses that existing fresh baseline login, bound to
+the exact original actor. Recreation and matching restore both retain the old
+session's 401 denial before selecting the current session. Original/replacement
+tokens and CSRF remain private diagnostic canaries. All current resource/note
+permissions and exact ready-file byte checks remain. No grant, authentication
+workflow, runtime, schema or dependency change was introduced.
+
+The same consolidated wave addresses both whole-increment Minor findings:
+authoritative snapshot names and keys cover the fourth timeout file, and the
+source map now enumerates 260 current build/proof inputs, including migrations,
+CSS, manifests, configuration, context policy and invoked native/runtime checks.
+Nineteen temporary-tree mutation controls detect formerly omitted inputs; a
+separate control excludes generated/private/operational files. Actual diagnostic
+negative controls reject disclosure of the fourth filename.
+
+Final covering checks passed 22 cases, with 46 intentionally deselected and no
+skips, in 11.49 seconds. Lint/format/whitespace checks passed. Independent scoped
+review addressed all three findings without new Critical/Important breakage.
+Root verified both 354-input frozen maps, all four raw process channels and the
+three changed source bindings. All 260 enumerated disk inputs match the final
+map and Git clean-filter equivalents; existing Windows CRLF conversion means
+some raw local bytes differ from Git blobs. Those distinct hashes are preserved.
+
+The whole-increment source review approved the bounded core. Final positive
+combined signed recreation/restore execution is still required for the corrected
+source. Earlier failures remain failed; no CPU, encrypted backup, compatible
+image rollback, incoming-file or full MVP acceptance is inferred.
+
+## Retained tooling observations
+
+The accepted browser runner still emits the Next standalone-start notice; the
+older local color-setting notice was absent from the checked hosted output.
+Keep both as runner-maintenance follow-up. Historical Pydantic alias warnings
+were absent at 8bcd446 and recurred twice at 6d620f2 in existing tests that
+construct applications concurrently. Their cause is not established here;
+follow up at those test/schema owners during integrated hardening. Pinned action
+Node20 deprecation/forced Node24 remains external action maintenance. None is
+hidden, called warning-free or used to justify an unrelated runtime change.

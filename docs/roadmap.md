@@ -61,27 +61,19 @@ passed at 2da7788: 1198 API cases/3 explicit skips, 175 browser cases, both cont
 jobs, zero blocking source findings and seven zero-vulnerability image inventories. Task5 packaged signed-scanner/restore proof and incoming-MIME files remain
 open. See docs/phase-3i-private-file-browser-evidence.md for exact evidence limits.
 
-Task5 packaged proof implementation ef6b9f9 is source-reviewed: final26 local
-checker cases passed, including actual PG grants/sender coexistence; surrounding
-123 passed with20 explicit platform/image skips. Two minor proof-hardening
-observations are recorded. Combined signed browser/MIME2/recreation/restore hosted
-execution is still pending; see docs/phase-3i-private-file-packaged-evidence.md.
-First exact56fc6d7 run passed four workflows and historical packaged/signedinfra
-checks, but the new combined browser failed. A real HTTPS differential exposed
-its Node-versus-Chromium transport mismatch; b6e6095 reuses browser fetch and adds
-strict bounded failure diagnostics. Local 18/2/3 focused checks and scoped review pass;
-new actual combined hosted acceptance remains required. Preserve failed evidence.
-
-Second8bcd446 hosted result:1242 API/3 explicit skips and175 browser cases pass;
-source/images/historical packaged/signed scanner proof pass. Combined browser
-completed, then the synthetic timeout scheduler failed. Actual PG reproduced
-its due-only UPDATE being correctly refused by the runtime immutable guard.
-Proof-onlyfc8a80e uses the existing opted-in disposable owner fixture pattern,
-with exclusive lock/transactional guard restoration and due-time-only change.
-Actual PG RED then2 GREEN cases plus independent scoped review pass. Runtime
-rules/eight actual timeouts/clean retry remain unchanged. Combined positive
-acceptance and whole-increment review remain open; complete failed evidence is
-preserved in the packaged-evidence record above. No target operation occurred.
+Task5 packaged core has task-scoped and whole-increment source approval, with
+consolidated proof-only corrections through133e163. Final22 covering cases pass;
+all354 local frozen inputs remain unchanged, and the expanded260-input build/
+proof map is separately bound. The third6d620f2 hosted run passed1244 API cases/
+3 native opt-in skips,175 browser and both security gates. The combined run
+advanced through real eight-timeout/clean retry/MIME2/privacy, then its first
+post-recreation file read failed. Actual PG/API/S3 reproduced reuse of an
+intentionally revoked baseline session. The correction reuses the existing fresh
+actor-bound login, preserves the old401 denial and every current ACL/byte check.
+It also closes both filename-canary/build-input Minor findings. Final corrected
+combined signed recreation/restore acceptance remains OPEN. Exact failed history,
+hashes, skips and retained tooling notices are in
+docs/phase-3i-private-file-packaged-evidence.md. No target operation occurred.
 
 Task3 closure: all five exact-df3c8bb hosted gates passed,1198 API cases/three
 explicit opt-in native-image skips and154 browser cases. All25 new file-link/MIME

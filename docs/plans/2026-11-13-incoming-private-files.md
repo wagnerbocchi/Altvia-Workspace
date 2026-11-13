@@ -4,9 +4,11 @@
 > at a time with independent task review and one final increment review. The user
 > already authorizes continuous MVP work/direct main publication without PR.
 
-**State:** All four source increments are independently approved. Tasks1-3 hosted
-gates passed. Task4 visual/documentation gates are approved; actual new signed
-incoming/restore/full hosted acceptance and final increment review remain pending.
+**State:** Development accepted at exact62dbeeb. All four source increments,
+Task4 visual/documentation and all five hosted gates passed. New signed incoming/
+matching6-object restore and final whole-increment review are approved with0
+actionable findings. Target CPU/encrypted backup/compatible-image rollback remain
+separate. Full scope and retained failures: docs/phase-3j-incoming-files-evidence.md.
 ADR0038's fresh builder
 check found nothing important left; finite MIME parameter choices are pinned.
 Private-file core's exactc12d6e1 corrected full CI passed:1266 API cases/3 explicit
@@ -62,8 +64,9 @@ Task4 UIcf74597/native prooff16b62a has source/spec/quality approval through
 documentation6a0e2fd. Shipped Impeccable review inspected all52 captures and returned
 ship; only existing surface briefs changed after tests. Local split35+corrected1
 browser/native/helper evidence preserves failed runs and their limits. Actual new
-signed incoming/restore/full hosted gates and final increment review remain
-pending. See docs/phase-3j-incoming-files-evidence.md. No Podman/target/production
+signed incoming/restore/full hosted gates and final increment review were pending
+at that source handoff; exact62dbeeb now closes them as recorded above.
+See docs/phase-3j-incoming-files-evidence.md. No Podman/target/production
 qualification is inferred.
 
 ## Global constraints
@@ -277,26 +280,26 @@ routes. Core actual storage/scanner/browser/MIME/restore owners remain the seam.
   pending/rejected/failed/unavailable/legacy, current denied roles and session
   disposal. Original protected retry replay plus current read acknowledges intent;
   a GET alone cannot acknowledge an uncertain POST. Cover keyboard/axe/themes/mobile.
-- [ ] Add a NEW packaged synthetic incoming-file context under --files using
+- [x] Add a NEW packaged synthetic incoming-file context under --files using
   existing owner tool and actual signed-current scanner. Preserve all old contexts,
   root references, wires, identities, clocks and deliberate session invalidations.
   Reuse capture_current_file_author/select_current_file_author and the existing
   fresh actor-bound proof session rather than stale cookies. Snapshot output,
   objects, routing IDs and receiving context stay in private channels; export
   only bounded proof metadata/hashes through the existing allowlist.
-- [ ] After actual delivered/processed file events and recreation, check every
+- [x] After actual delivered/processed file events and recreation, check every
   incoming name/bytes/hash/key/credential canary in decoded metadata/diagnostics
   and exact API/worker table AND column/query denials. No raw channels in artifacts.
-- [ ] Extend the EXISTING matching snapshot/restore owner with concrete case file
+- [x] Extend the EXISTING matching snapshot/restore owner with concrete case file
   identity/header and immutable incoming relationship. Verify every referenced
   object/link/wire/current ACL after isolated restore, with unchanged old401/fresh
   session requirements. No duplicate snapshot protocol or production retention.
-- [ ] GREEN scoped then full relevant browser/build/contracts/security/native
+- [x] GREEN scoped then full relevant browser/build/contracts/security/native
   gates; exact hosted signed combined evidence with hashes and complete logs.
   Local controlled faults stay distinct from signed-profile success; no local2GiB
   VM resize or per-slice target operation. Independent source and Impeccable finish
   reviews, one increment review/fix disposition, docs/roadmap update and publication.
-- [ ] Record incoming-file development acceptance separately from final CPU/
+- [x] Record incoming-file development acceptance separately from final CPU/
   encrypted backup/compatible rollback/real-provider gates. Then continue actual
   ticket/work links and remaining MVP without asking whether to continue.
 

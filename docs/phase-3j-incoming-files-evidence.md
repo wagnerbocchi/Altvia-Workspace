@@ -1,9 +1,9 @@
 # Incoming private-file development evidence
 
-Updated2026-11-13. Source/interface review is approved through UIcf74597, native
-prooff16b62a and documentation6a0e2fd. Exact-head hosted signed incoming/full
-acceptance and final increment review remain pending. This is not complete MVP,
-production, real-provider or target-CPU acceptance.
+Updated2026-11-13. Incoming private-file development is accepted at exact62dbeeb:
+all five hosted gates and final whole-increment review passed. UIcf74597/native
+prooff16b62a and diagnostic-only50539e8 retain their separately reviewed scope.
+This is not complete MVP, production, real-provider or target-CPU acceptance.
 
 ## Behavior, persistence and security
 
@@ -85,7 +85,7 @@ resolved those causes. Next standalone/color/Git notices remain visible. The
 task-scoped local Podman SSH forward closed by exact identity; other sessions and
 retained volumes/configuration were preserved. No VM restart/resize occurred.
 
-## Pending integrated acceptance
+## Integrated acceptance history
 
 The source adds a NEW synthetic IMAPS/MIME case to --files with the actual signed
 scanner/native browser/current actor-bound session. Shared matching snapshot now
@@ -112,7 +112,7 @@ for that test. Failed RED and first broader runs remain retained. Independent re
 approved the diagnostic gap with no new source finding. This instrumentation does
 not repair an identified runtime defect. The next exact hosted execution must pass
 or supply its bounded signal; new incoming signed/recreation/restore acceptance and
-final increment review remain open.
+final increment review remained open at that diagnostic handoff.
 
 Failed a91f33d archive SHA256:
 9a1792a96db161966abe589ce11e6bdd910d3c9e9cbeea3d06fe12b13ec37269.
@@ -120,8 +120,8 @@ Its219 entries passed CRC;213 API/263 combined/18 infrastructure source inputs m
 the exact Git archive. This failed archive is not accepted evidence of completion.
 
 Expected Podman refusal is not signature acceptance; WSL host memory does not prove
-capacity of the configured2048MiB machine. Exact new source needs full API/browser,
-both container jobs, source/image security and final increment review.
+capacity of the configured2048MiB machine. The exact new hosted run below supplies
+the required development evidence without a local-machine resize or target visit.
 Relevant workflow checks include web:check/build, Ruff, contract
 generation, node --test scripts/packaged_file_browser.test.mjs and the opted-in
 scripts/container_smoke.py --files. Private evidence retains exact argv/raw hashes.
@@ -130,3 +130,68 @@ Actual x86-64-v1 qualification follows remaining MVP development. Encrypted back
 compatible rollback, real provider/identity policy, retention, import and production
 rollout retain separate gates. No credentials, raw client data or private snapshots
 are committed by this evidence document.
+
+## Exact62dbeeb acceptance
+
+| Gate | Run | Observed result |
+| --- | --- | --- |
+| API |43484893008|1469 passed,3 explicit native-console skips,1 existing Pydantic alias/body metadata warning; required real S3 suites46 passed |
+| Browser |43484893172|185 passed; generated contracts, checks/build and dependency audit passed |
+| Containers |43484892897|Common and private-file runtime passed;296 combined commands all exit0 |
+| Source security |43484893343|27 LOW findings,0 policy blockers,0 secrets |
+| Image security |43484893353|Seven nonempty hash-verified package reports,0 reported vulnerabilities |
+
+The three API skips require a supplied pinned native scanner image; the actual
+signed-current profile separately executes that behavior. This is not a claim of
+zero source findings or entirely warning-free channels. Pinned action Node20/
+forced24 and url.parse/punycode deprecations remain disclosed maintenance work.
+Complete API/browser/container/source/image logs contain2636/6299/1443/371/348 lines,
+with no error annotations. Both controller and final reviewer inspected evidence.
+
+The NEW synthetic incoming context passed verified IMAPS/owner replay, native
+triage/promotion/conversation, two immutable files, exact downloads, signed clean
+scan/EICAR rejection and preservation of old contexts/wires. Existing eight-timeout/
+protected-retry/ready-after-retry and old401/current-actor checks remain intact.
+Four decoded SQL/Redis/diagnostic privacy checkpoints include incoming processing
+and recreation, each with13 actual API and19 worker denial queries. Matching
+isolated restore verifies all6 objects, exact links/wires/headers/relationships,
+current ACL and13 restored API denial queries. No implicit outbound copy occurs.
+
+Root and independent reviewer matched213 API/18 infrastructure/263 combined source
+inputs to git archive62dbeeb. API initial/final maps agree. All164 retained command
+channels and48 collection channels match their hashes; infrastructure retains66
+commands including its two deliberate negative controls. Seven image inventories
+are nonempty with72/49/70/43/16/107/38 packages respectively. Archive280 entries
+passed CRC; SHA256:
+68daea861e534c68f67fdb7b00fea3461eababd1148138109d4107c66b42fae7.
+Later derived warning indexes are outside that archived snapshot; original logs
+remain unchanged.
+
+Final whole-increment review covered56ba094..62dbeeb,49 files, with0 Critical,
+0 Important and0 Minor actionable findings. It independently checked the exact
+336799-byte diff package, source maps, channels, image reports, proof and archive.
+Earlier local split/failure evidence remains qualified, and the old lost-final-
+reply cause remains unknown. The successful new run is acceptance evidence;
+instrumentation is not retrospectively described as repairing that old failure.
+
+## Engineering decisions and retained boundaries
+
+The four recorded controller rulings were: use directly authorized main commits
+and pushes (cost if wrong: reversible source/documentation rework); exercise the
+user's delegated finite engineering choices without another routine approval
+(cost: revise the draft before dependent code); establish actual case ownership
+through ADR0038 after ADR0037's narrower core stage (cost: revise ownership before
+execution); and reuse the unchanged complete CaseDetail GET (cost: a missing
+adaptation would require correction, guarded by source/browser/contract checks).
+
+The final review's declined scopes are explicitly carried forward: actual CPU
+qualification follows remaining development; encrypted backup, compatible-image
+rollback and operational recovery remain integrated-hardening/production gates;
+real identity/provider/customer mapping/retention/import/SLA policy remains
+unselected. No original SMTP root cause or recurrence rate is inferred. Whole-
+product redesign/sidecar drift is outside this precise extension; extra MIME
+types/obsolete encodings/backfill/forwarding remain excluded with raw preservation.
+A separate future resulting-ticket grant model is not invented. Whole MVP,
+production rollout and Zammad retirement remain unaccepted. Being wrong about
+those boundaries would require further engineering or policy work before their
+own acceptance, never a silent production operation or data deletion.

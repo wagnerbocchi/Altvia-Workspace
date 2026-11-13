@@ -7,8 +7,9 @@ await answers. This does not authorize production deployment or real data import
 ## Current authorized development scope
 
 Latest user continuation resumes the remaining MVP after the accepted redesign.
-The staff-file core is now accepted atc12d6e1; next is the separate incoming-file
-contract and the remaining ordered stages in docs/plans/2026-11-11-mvp-completion.md.
+The staff-file core is accepted atc12d6e1 and incoming files at62dbeeb. Next are
+same-client ticket/work links and the remaining ordered stages in
+docs/plans/2026-11-11-mvp-completion.md.
 Use the established Twenty-inspired Operate interface. The earlier stop-before-
 design boundary is superseded. Keep local/CI validation per slice and final
 consolidated target qualification after development; no production rollout or
@@ -142,7 +143,7 @@ both container/security jobs and seven nonempty zero-vulnerability image reports
 The prior signed core/MIME/privacy/recreation/matching restore passed. Archive
 SHA25675006062ad95f80ef05ec67f185a0fcc57a5675bc0acd744aa56c6951549b18e.
 
-Incoming Task4 UIcf74597/native prooff16b62a is source-approved through
+Historical Task4 source handoff: UIcf74597/native prooff16b62a was approved through
 documentation6a0e2fd. Shipped Impeccable review returned ship after all52 captures;
 source/spec/quality review found no blockers. Local browser evidence is35 passes
 plus one separately corrected fixture case, not one green36-case run. Native/helper
@@ -153,10 +154,22 @@ security gates, but private-file runtime failed in the existing SMTP lost-final-
 reply child before reaching new incoming proof. Reviewed diagnostic-only50539e8
 preserves private channels/nonzero and adds bounded phase/error reporting;151 local
 covering passes/1 unchanged Node-only deselection do not establish a runtime fix.
-Next exact hosted execution and new incoming restore remain required.
+Next exact hosted execution and new incoming restore were required at that handoff.
 See docs/phase-3j-incoming-files-evidence.md for failures, corrections,
 boundaries and known tooling notices. Final increment review and remaining MVP
 stages follow; no complete-MVP or target qualification is claimed.
+
+Incoming-file development is now ACCEPTED at exact62dbeeb:1469 API passes/3 explicit
+native-console skips/1 metadata warning,185 browser,both container jobs,both
+security gates and seven nonempty zero-vulnerability image reports. New synthetic
+IMAPS/native incoming/signed clean+EICAR/download proof and matching6-object restore
+passed. All296 combined commands succeeded;213/18/263 source maps match the exact
+Git archive. Whole-increment review56ba094..62dbeeb found0 Critical/Important/Minor
+actionable issues. Archive SHA25668daea861e534c68f67fdb7b00fea3461eababd1148138109d4107c66b42fae7.
+This closes incoming development, not the old unknown SMTP cause, final target,
+encrypted backup or compatible-image rollback. Next manual ticket/work contract
+is privately prepared; no link implementation is inferred. Evidence and retained
+engineering/deferred-scope dispositions are in the page linked above.
 
 Task3 closure: all five exact-df3c8bb hosted gates passed,1198 API cases/three
 explicit opt-in native-image skips and154 browser cases. All25 new file-link/MIME

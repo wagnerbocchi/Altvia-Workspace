@@ -565,3 +565,165 @@ def test_packaged_timeout_acceleration_error_restores_guard_and_schedule(
                 {"id": identifier},
             )
     assert guarded.value.orig.sqlstate == "P0001"
+
+
+def test_packaged_saved_session_is_revoked_by_later_team_role_change(
+    admin_client,
+    db_engine,
+    seeded_user,
+):
+    import os
+
+    from altvia.file_storage import S3Store
+    from altvia.file_storage_owner import load_storage
+    from altvia.management import set_team_role
+    from altvia.models import Attachment, TicketQueue
+    from test_attachments import upload
+    from test_team_api import sign_in
+
+    refs = setup(admin_client, db_engine, seeded_user)
+    parent = ticket(admin_client, refs)
+    uploaded = upload(admin_client, parent)
+    assert uploaded.status_code == 201
+    identifier = uploaded.json()["attachment_id"]
+    route = "/api/v1/attachments/" + identifier
+    original_session = admin_client.cookies.get("__Host-altvia_session")
+    file_proof = {
+        "session": original_session,
+        "author_id": str(seeded_user),
+        "context": {"ticket_id": parent.rsplit("/", 1)[1], "markers": [original_session]},
+        "browser": {"ids": [identifier, identifier]},
+        "public_body": "private text\n",
+        "note_body": "unused",
+    }
+    assert admin_client.get(route).status_code == 200
+    # No fake-ready result: the real uploaded object remains quarantined.
+    assert admin_client.get(route + "/content").status_code == 409
+    with Session(db_engine) as db, db.begin():
+        team = db.get(TicketQueue, UUID(refs["queue_id"])).team_id
+        assert set_team_role(db, "employee@example.test", team, "viewer", True)
+    assert admin_client.get("/api/v1/auth/me").status_code == 401
+    assert admin_client.get(route).status_code == 401
+    assert admin_client.get(route + "/content").status_code == 401
+    with pytest.raises(AssertionError):
+        proof.assert_current_access(admin_client, admin_client, file_proof)
+    sign_in(admin_client, "employee@example.test")
+    assert admin_client.cookies.get("__Host-altvia_session") != original_session
+    proof.capture_current_file_author(admin_client, file_proof)
+    assert file_proof["current_session"] in file_proof["context"]["markers"]
+    assert original_session in file_proof["context"]["markers"]
+    assert proof.select_current_file_author(admin_client, file_proof) == {
+        "revoked_file_session_status": 401,
+        "current_actor_bound": True,
+    }
+    assert admin_client.get(route).status_code == 200
+    assert admin_client.get(route + "/content").status_code == 409
+    with pytest.raises(AssertionError):
+        proof.capture_current_file_author(admin_client, {**file_proof, "author_id": str(uuid4())})
+    with pytest.raises(AssertionError):
+        proof.select_current_file_author(
+            admin_client, {**file_proof, "current_session": original_session}
+        )
+    proof.select_current_file_author(admin_client, file_proof)
+    # Independently prove the actual S3 bytes survived the identity mutation.
+    with Session(db_engine) as db:
+        row = db.get(Attachment, UUID(identifier))
+        store = S3Store(load_storage(Path(os.environ["ALTVIA_STORAGE_FILE"])))
+        try:
+            with store.verified_spool(row.object_key, size=row.bytes, sha256=row.sha256) as content:
+                assert content.read() == b"private text\n"
+        finally:
+            store.close()
+
+
+def test_snapshot_fourth_timeout_filename_is_rejected_by_actual_diagnostic_guard():
+    fourth = "timeout-authoritative-" + uuid4().hex + ".txt"
+    snapshot = {
+        "files": [
+            {"filename": "browser-public.txt", "key": "objects/first"},
+            {"filename": "browser-note.txt", "key": "objects/second"},
+            {"filename": "browser-eicar.txt", "key": "objects/third"},
+            {"filename": fourth, "key": "objects/fourth"},
+        ]
+    }
+    context = {
+        "ids": [str(uuid4())],
+        "ticket_id": str(uuid4()),
+        "markers": proof.snapshot_file_markers(snapshot),
+    }
+    logs = "safe"
+
+    def run(command, **kwargs):
+        if "logs" in command:
+            return logs
+        if "run" in command:
+            return json.dumps({"event_ids": [str(uuid4())]})
+        return json.dumps({"delivered_and_processed": True})
+
+    proof.privacy_checkpoint(run, [], SCRIPTS.parent, context, "after-recreation")
+    logs = json.dumps({"details": {"filename": fourth}})
+    with pytest.raises(AssertionError):
+        proof.privacy_checkpoint(run, [], SCRIPTS.parent, context, "after-recreation")
+
+
+@pytest.mark.parametrize(
+    "relative",
+    [
+        "apps/api/migrations/versions/owner.py",
+        "apps/api/migrations/env.py",
+        "apps/api/migrations/script.py.mako",
+        "apps/api/alembic.ini",
+        "apps/web/src/app/globals.css",
+        "apps/web/package.json",
+        "apps/web/next.config.ts",
+        "apps/web/tsconfig.json",
+        "apps/web/next-env.d.ts",
+        "apps/web/postcss.config.mjs",
+        "package.json",
+        "pnpm-workspace.yaml",
+        ".dockerignore",
+        "scripts/check_api_runtime.py",
+        "scripts/check_web_native.mjs",
+        "scripts/check_web_runtime.mjs",
+        "scripts/container_tls.mjs",
+        "apps/api/tests/imap_fixture.py",
+        "infra/nginx.conf",
+    ],
+)
+def test_source_inventory_detects_actual_build_and_proof_input_mutation(tmp_path, relative):
+    target = tmp_path / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("first input", encoding="utf-8")
+    before = proof.source_hashes(tmp_path)
+    target.write_text("other input", encoding="utf-8")
+    after = proof.source_hashes(tmp_path)
+    assert before[str(Path(relative))] != after[str(Path(relative))]
+    assert before != after
+
+
+def test_source_inventory_excludes_generated_private_and_operational_files(tmp_path):
+    included = tmp_path / "apps/web/src/app/page.tsx"
+    included.parent.mkdir(parents=True)
+    included.write_text("source", encoding="utf-8")
+    before = proof.source_hashes(tmp_path)
+    for relative in (
+        "apps/web/.next/cache/generated.ts",
+        "apps/web/node_modules/package/index.ts",
+        "apps/web/src/.next/generated.ts",
+        "apps/api/altvia/__pycache__/generated.py",
+        "apps/api/migrations/__pycache__/generated.py",
+        "scripts/.env.private.py",
+        "apps/web/src/.env.private.ts",
+        "apps/web/tsconfig.tsbuildinfo",
+        "infra/storage.key",
+        "infra/smtp-accounts.json",
+        "infra/production.conf",
+        "infra/compose.local.yaml",
+        ".env.browser-session",
+        ".superpowers/private/owner.py",
+        "docs/raw-client.xlsx",
+    ):
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("private/generated fixture", encoding="utf-8")
+    assert proof.source_hashes(tmp_path) == before

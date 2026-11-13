@@ -138,25 +138,65 @@ def run_file_browser(run, work, payload):
 
 
 def source_hashes(root):
-    paths = {
-        *root.glob("apps/api/altvia/*.py"),
-        *root.glob("infra/*"),
-        *root.glob("apps/web/src/**/*.tsx"),
-        *root.glob("apps/web/src/**/*.ts"),
-        *root.glob("scripts/packaged*"),
-        *root.glob("apps/api/tests/test_packaged*.py"),
-        root / ".github/workflows/container-ci.yml",
-        root / "scripts/container_smoke.py",
-        root / "scripts/private_file_infra_proof.py",
-        root / "scripts/file_test_certificate.mjs",
-        root / "pyproject.toml",
-        root / "uv.lock",
-        root / "pnpm-lock.yaml",
-    }
+    """Current explicit local COPY/context/Compose and invoked proof/check inputs.
+
+    Patterns follow infra/*.Dockerfile and .dockerignore, not a custom ignore
+    parser. Downloaded inputs are separately pinned/inventoried by those builds.
+    """
+    patterns = (
+        "apps/api/altvia/*.py",
+        "apps/api/migrations/**/*.py",
+        "apps/api/migrations/*.mako",
+        "apps/web/src/**/*.ts",
+        "apps/web/src/**/*.tsx",
+        "apps/web/src/**/*.css",
+        "infra/*.Dockerfile",
+        "infra/*.sh",
+        "infra/*.go.mod",
+        "infra/*.go.sum",
+        "scripts/*.py",
+        "scripts/*.mjs",
+        "scripts/*.sh",
+        "apps/api/tests/test_packaged*.py",
+    )
+    paths = {p for pattern in patterns for p in root.glob(pattern)}
+    paths.update(
+        root / name
+        for name in (
+            ".dockerignore",
+            "pyproject.toml",
+            "uv.lock",
+            "package.json",
+            "pnpm-lock.yaml",
+            "pnpm-workspace.yaml",
+            "apps/api/alembic.ini",
+            "apps/api/tests/imap_fixture.py",
+            "apps/api/tests/test_file_storage.py",
+            "apps/api/tests/test_file_scan_transport.py",
+            "apps/api/tests/test_private_file_infra_proof.py",
+            "apps/web/package.json",
+            "apps/web/next.config.ts",
+            "apps/web/tsconfig.json",
+            "apps/web/next-env.d.ts",
+            "apps/web/postcss.config.mjs",
+            "infra/nginx.conf",
+            "infra/clamd.conf",
+            "infra/freshclam.conf",
+            "infra/compose.yaml",
+            "infra/compose.files.yaml",
+            "infra/compose.smtp.yaml",
+            ".github/workflows/container-ci.yml",
+        )
+    )
+    generated = {"node_modules", ".next", "__pycache__", ".pytest_cache", ".git", ".superpowers"}
     return {
         str(p.relative_to(root)): digest(p.read_bytes())
         for p in sorted(paths)
-        if p.is_file() and not p.name.startswith(".env")
+        if p.is_file()
+        and not any(
+            part in generated or part.startswith(".env") for part in p.relative_to(root).parts
+        )
+        and p.suffix not in {".pem", ".key"}
     }
 
 
@@ -512,6 +552,8 @@ def prepare_packaged_files(
     client, reader, ticket_body, run, compose, root, secret_dir, work, existing_account
 ):
     require_opt_in()
+    author = client.get("/api/v1/auth/me")
+    assert author.status_code == 200
     storage = storage_checkpoint(run, compose)
     created = client.post(
         "/api/v1/tickets",
@@ -627,7 +669,7 @@ def prepare_packaged_files(
     ]
     for file in files:
         markers.extend([file["filename"], file["body"].strip(), digest(file["body"].encode())])
-    markers.extend(row["key"] for row in snapshot["files"])
+    markers.extend(snapshot_file_markers(snapshot))
     for role in ("owner", "api", "scanner"):
         config = json.loads((secret_dir / ("storage_" + role)).read_text())
         markers.extend([config["access_key"], config["secret_key"]])
@@ -712,12 +754,47 @@ def prepare_packaged_files(
         "public_body": files[0]["body"],
         "note_body": files[1]["body"],
         "session": browser_input["session"],
+        "author_id": author.json()["id"],
         "reader_session": reader.cookies.get("__Host-altvia_session"),
         "storage": storage,
         "scan_evidence": [
             {k: v for k, v in row.items() if k != "id"} for row in snapshot["attempts"]
         ],
     }
+
+
+def snapshot_file_markers(snapshot):
+    return [value for row in snapshot["files"] for value in (row["filename"], row["key"])]
+
+
+def capture_current_file_author(client, proof):
+    """Reuse baseline's ordinary fresh login, bound to the original file actor."""
+    current = client.get("/api/v1/auth/me")
+    assert current.status_code == 200 and current.json()["id"] == proof["author_id"]
+    session = client.cookies.get("__Host-altvia_session")
+    assert session and session != proof["session"]
+    proof["current_session"] = session
+    proof["context"]["markers"].extend([session, current.json()["csrf_token"]])
+
+
+def select_current_file_author(client, proof):
+    # Baseline's team-role mutation correctly revoked the old saved session.
+    # Prove that denial, then use its already-authenticated replacement. This
+    # changes only this proof client's cookie, never a grant or session row.
+    client.cookies.clear()
+    client.cookies.set(
+        "__Host-altvia_session", proof["session"], domain=client.base_url.host, path="/"
+    )
+    assert client.get("/api/v1/auth/me").status_code == 401
+    denied = client.get("/api/v1/attachments/" + proof["browser"]["ids"][0] + "/content")
+    assert denied.status_code == 401, f"Revoked file session status={denied.status_code}"
+    client.cookies.clear()
+    client.cookies.set(
+        "__Host-altvia_session", proof["current_session"], domain=client.base_url.host, path="/"
+    )
+    current = client.get("/api/v1/auth/me")
+    assert current.status_code == 200 and current.json()["id"] == proof["author_id"]
+    return {"revoked_file_session_status": 401, "current_actor_bound": True}
 
 
 SNAPSHOT = """
@@ -788,9 +865,14 @@ def object_snapshot(run, compose, rows, mode):
 def assert_current_access(client, reader, proof):
     ticket = "/api/v1/tickets/" + proof["context"]["ticket_id"]
     ids = proof["browser"]["ids"]
-    for identifier, body in ((ids[0], proof["public_body"]), (ids[1], proof["note_body"])):
+    for slot, (identifier, body) in enumerate(
+        ((ids[0], proof["public_body"]), (ids[1], proof["note_body"]))
+    ):
         content = client.get("/api/v1/attachments/" + identifier + "/content")
-        assert content.status_code == 200 and content.content == body.encode()
+        equal = content.content == body.encode()
+        assert content.status_code == 200 and equal, (
+            f"Current file access slot={slot} status={content.status_code} bytes_equal={equal}"
+        )
     notes = client.get(ticket + "/notes").json()["items"]
     assert len(notes) == 1 and [r["id"] for r in notes[0]["attachments"]] == [ids[1]]
     messages = client.get(ticket + "/messages").json()["items"]
@@ -851,6 +933,7 @@ def verify_packaged_files(run, compose, root, secret_dir, work, proof, origin):
             time.sleep(0.5)
         else:
             raise RuntimeError("Combined recreated API did not become ready")
+        session_evidence = select_current_file_author(client, proof)
         assert_current_access(client, reader, proof)
         storage_recreated = storage_checkpoint(run, compose, proof["storage"])
         proof["checkpoints"].append(
@@ -914,6 +997,7 @@ def verify_packaged_files(run, compose, root, secret_dir, work, proof, origin):
                 [*restored, "up", "-d", "--no-build", "--wait", "api", "web", "ingress"],
                 timeout=180,
             )
+            assert select_current_file_author(client, proof) == session_evidence
             assert_current_access(client, reader, proof)
             restored_snapshot = owner(run, restored, SNAPSHOT)
             assert restored_snapshot == snapshot
@@ -941,6 +1025,7 @@ def verify_packaged_files(run, compose, root, secret_dir, work, proof, origin):
         "smtp": proof["smtp"],
         "privacy_checkpoints": proof["checkpoints"],
         "timeout_retry": proof["timeout_retry"],
+        "current_session_continuity": session_evidence,
         "actual_scan_history": proof["scan_evidence"],
         "actual_current_storage_credentials": {
             "initial": proof["storage"]["checks"],

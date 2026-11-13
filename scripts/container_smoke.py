@@ -13,6 +13,7 @@ from uuid import uuid4
 
 import httpx
 from packaged_file_proof import (
+    capture_current_file_author,
     configure_files,
     inventory_files,
     prepare_packaged_files,
@@ -1552,6 +1553,8 @@ with Session(make_engine(Settings())) as db,db.begin():
             )
             assert login.status_code == 201 and login.json()["user"]["capabilities"] == []
             client.headers["X-CSRF-Token"] = login.json()["csrf_token"]
+            if args.files:
+                capture_current_file_author(client, file_proof)
             assert [row["id"] for row in client.get("/api/v1/teams").json()["items"]] == [teams[0]]
             assert client.get(f"/api/v1/teams/{teams[1]}").status_code == 404
             persisted_queue = client.get(queue_paths[0]).json()

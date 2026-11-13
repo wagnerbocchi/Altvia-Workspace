@@ -25,6 +25,11 @@ standard-library MIME, accepted S3/ClamAV adapters. No new dependency/image/daem
 **Spec:** docs/adr/0038-incoming-private-files.md, master specification and affected
 ADR0030-0033/0036/0037. Contracts precede code; real-provider policy stays Q03/Q16.
 
+Task1 pure interpretation is implemented in561d22c and independently source/spec/
+quality approved:170 local passes (109 new,61 existing parser2), Ruff/format/mypy
+pass and old12 normalizer AST owners unchanged. Hosted verification is pending;
+owner publication, HTTP and interface are not implemented by that pure increment.
+
 ## Global constraints
 
 - Preserve x86-64-v1. No -march=native, AVX/SSE4.2 requirement or prohibited engine.
@@ -101,6 +106,8 @@ Extend apps/api/altvia/models.py, provision.py, mail_cases_owner.py and
 attachment_scan.py in that same altvia directory; infra/compose.files.yaml,
 docs/runbooks/attested-incoming.md, apps/api/tests/test_mail_cases.py and
 apps/api/tests/test_attachment_scan.py.
+Also extend apps/api/altvia/attachments.py with the narrow unsupported-parent404
+compatibility guard before producer writes become possible; Task3 adds real reads.
 
 **Consumes:** Task1 extract_files; existing require_owner, exact CaseReceipt and
 attestation intent, S3Store.put_new/verified_spool, current scan actor/history.
@@ -117,6 +124,10 @@ load/validate it only after preflight and only when actual files need storage.
 - [ ] RED actual PG checks: exact three-parent/provenance rules, owner-only case
   INSERT, unique ordered positions, deferred count equality/immutability, old
   staff creator requirements and legacy0 defaults; migration preservation/refusal.
+- [ ] RED new case-owned IDs receive the same404 as missing IDs at existing
+  detail/content/retry routes until Task3. Make scoped() explicitly choose ticket
+  or work, else404 before purpose validation; no new read grant or422 existence
+  distinction. Preserve normal staff behavior and no S3 access for this denial.
 - [ ] RED actual worker credentials still claim/finalize a case asset with no
   case-table/parent/name grant; creation-only count/provenance checks must never
   run for ordinary scan updates. Do not repair a trigger by broadening grants.

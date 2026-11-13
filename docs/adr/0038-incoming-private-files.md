@@ -103,6 +103,13 @@ purposes/versions; no account is fabricated or external contact impersonated.
 Case/position plus primary raw variant and extraction version identify the exact
 ordered part. Existing immutable identity guards cover the new columns as well.
 
+During staged rollout, the producer migration/publication increment must also
+make the old global file reader fail closed for an unsupported parent. It checks
+ticket then work ownership explicitly and returns indistinguishable404 otherwise,
+before validating a purpose for an unrelated parent. The subsequent authorized
+read increment adds the concrete case branch. Publishing case assets while the
+old reader falls through to work/purpose validation is not an acceptable phase.
+
 Only the actual table owner may INSERT a case-owned asset, enforced in SQL as
 well as the finite owner command. The API never gains case-file INSERT authority
 through an HTTP path. Deferred guards require exactly file_count case rows with

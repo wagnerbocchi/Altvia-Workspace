@@ -95,6 +95,14 @@ The fresh builder check found no consequential open planning question. Preserve
 legacy parser2/receipts/wires, worker least privilege and provider/retention
 boundaries. Execute incrementally; the contract itself is not implementation.
 
+Incoming Task1 pure extraction is implemented in561d22c with170 local passes
+(109 new file cases and61 parser2 regressions), clean lint/types and independent
+source/spec/quality approval. All12 existing normalizer AST owners are unchanged.
+Hosted verification is pending. Next is immutable owner publication/real S3/SQL
+guards; HTTP file reads and the interface remain later tasks, not a completed
+incoming-files feature. Its producer stage also adds fail-closed unsupported-parent
+handling before any case assets exist behind the old global reader.
+
 Task3 closure: all five exact-df3c8bb hosted gates passed,1198 API cases/three
 explicit opt-in native-image skips and154 browser cases. All25 new file-link/MIME
 cases actually executed; separate mandatory signed/current scanner/update/reload

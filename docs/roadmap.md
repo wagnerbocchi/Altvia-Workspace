@@ -61,6 +61,12 @@ passed at 2da7788: 1198 API cases/3 explicit skips, 175 browser cases, both cont
 jobs, zero blocking source findings and seven zero-vulnerability image inventories. Task5 packaged signed-scanner/restore proof and incoming-MIME files remain
 open. See docs/phase-3i-private-file-browser-evidence.md for exact evidence limits.
 
+Task5 packaged proof implementation ef6b9f9 is source-reviewed: final26 local
+checker cases passed, including actual PG grants/sender coexistence; surrounding
+123 passed with20 explicit platform/image skips. Two minor proof-hardening
+observations are recorded. Combined signed browser/MIME2/recreation/restore hosted
+execution is still pending; see docs/phase-3i-private-file-packaged-evidence.md.
+
 Task3 closure: all five exact-df3c8bb hosted gates passed,1198 API cases/three
 explicit opt-in native-image skips and154 browser cases. All25 new file-link/MIME
 cases actually executed; separate mandatory signed/current scanner/update/reload

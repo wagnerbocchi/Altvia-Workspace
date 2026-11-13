@@ -14,6 +14,99 @@ from email.parser import BytesParser
 from pathlib import Path
 from uuid import UUID, uuid4
 
+SMTP_FAILURE_PREFIX = "ALTVIA_SMTP_PROOF_FAILURE="
+SMTP_PHASES = {
+    "unknown",
+    "setup",
+    "privileges",
+    "initial",
+    "relay_start",
+    "worker_start",
+    "delivery_wait",
+    "metadata",
+    "delivery_state",
+    "shutdown",
+    "wire",
+    "final_reply",
+    "restart_start",
+    "restart_ready",
+    "restart_stability",
+    "restart_shutdown",
+    "diagnostics",
+}
+SMTP_SCENARIOS = {"unknown", "accepted", "lost", "held"}
+
+
+def smtp_failure_summary(stderr):
+    """Project one bounded child signal; raw stderr and tracebacks remain private."""
+    lines = [
+        line[len(SMTP_FAILURE_PREFIX) :]
+        for line in stderr.splitlines()
+        if line.startswith(SMTP_FAILURE_PREFIX)
+    ]
+    if len(lines) != 1 or len(lines[0]) > 512:
+        return ""
+
+    def unique_object(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("Duplicate diagnostic field")
+            result[key] = value
+        return result
+
+    try:
+        data = json.loads(lines[0], object_pairs_hook=unique_object)
+        if (
+            type(data) is not dict
+            or set(data) != {"schema", "scenario", "phase", "error_kind"}
+            or type(data["schema"]) is not int
+            or data["schema"] != 1
+        ):
+            return ""
+        for field, allowed in (
+            ("scenario", SMTP_SCENARIOS),
+            ("phase", SMTP_PHASES),
+            ("error_kind", {"assertion", "timeout", "os", "runtime", "other"}),
+        ):
+            if type(data[field]) is not str or data[field] not in allowed:
+                return ""
+        return f"SMTP scenario={data['scenario']} phase={data['phase']} error={data['error_kind']}"
+    except (ValueError, TypeError, RecursionError):
+        return ""
+
+
+def smtp_worker_diagnostic(function):
+    """Keep the original exception/nonzero; emit no exception text or payload."""
+
+    def wrapped(serve):
+        diagnostic = {"scenario": "unknown", "phase": "setup"}
+        try:
+            return function(serve, diagnostic)
+        except Exception as error:
+            kind = "other"
+            for cls, label in (
+                (AssertionError, "assertion"),
+                (subprocess.TimeoutExpired, "timeout"),
+                (TimeoutError, "timeout"),
+                (OSError, "os"),
+                (RuntimeError, "runtime"),
+            ):
+                if isinstance(error, cls):
+                    kind = label
+                    break
+            safe = {"schema": 1, "error_kind": kind}
+            for field, allowed in (("scenario", SMTP_SCENARIOS), ("phase", SMTP_PHASES)):
+                value = diagnostic.get(field)
+                safe[field] = value if type(value) is str and value in allowed else "unknown"
+            try:
+                print(SMTP_FAILURE_PREFIX + json.dumps(safe), file=sys.stderr, flush=True)
+            except OSError:
+                pass  # A diagnostic write cannot replace the original failure.
+            raise
+
+    return wrapped
+
 
 def assert_incoming_wire(wire, root, body, private_marker):
     """Inspect real decoded MIME, including the first attested incoming root."""
@@ -972,7 +1065,8 @@ def verify_packaged_smtp_restart(client, proof, run, compose, work):
     )
 
 
-def packaged_smtp_worker_proof(serve):
+@smtp_worker_diagnostic
+def packaged_smtp_worker_proof(serve, diagnostic):
     """Run inside an ordinary worker-service container, with no owner secret mounted."""
     from altvia.config import WorkerSettings
     from altvia.database import make_engine
@@ -981,11 +1075,13 @@ def packaged_smtp_worker_proof(serve):
 
     assert os.environ.get("ALTVIA_ALLOW_CONTAINER_TEST") == "1"
     payload = json.load(sys.stdin)
+    diagnostic["scenario"] = payload["mode"]
     identifier = UUID(payload["delivery_id"])
     settings = WorkerSettings()
     engine = make_engine(settings, worker_timeouts=True)
     redis = Redis.from_url(settings.redis_url.get_secret_value(), socket_timeout=2)
     marker = payload["private_marker"].encode()
+    diagnostic["phase"] = "privileges"
     with engine.connect() as db:
         assert db.scalar(text("SELECT current_user")) == "altvia_worker"
         for table in (
@@ -1037,6 +1133,7 @@ def packaged_smtp_worker_proof(serve):
             ).one()
 
     def inspect_metadata():
+        diagnostic["phase"] = "metadata"
         inspect_worker_metadata(redis, engine, worker_privacy_markers(payload, initial))
 
     process = None
@@ -1079,28 +1176,38 @@ def packaged_smtp_worker_proof(serve):
                     assert code == 0 and elapsed < 30
                     return {"exit_code": code, "elapsed_seconds": round(elapsed, 3)}
 
+                diagnostic["phase"] = "initial"
                 initial = state()
                 assert initial[0:2] == ("queued", 0)
+                diagnostic["phase"] = "relay_start"
                 with serve(cert, key, mode=payload["mode"], port=account["port"]) as relay:
+                    diagnostic["phase"] = "worker_start"
                     process = start()
                     deadline = time.monotonic() + 55
                     expected = "accepted" if payload["mode"] == "accepted" else "uncertain"
                     while time.monotonic() < deadline:
+                        diagnostic["phase"] = "delivery_wait"
                         assert process.poll() is None, "Packaged worker exited early"
                         inspect_metadata()
+                        diagnostic["phase"] = "delivery_state"
                         current = state()
                         if payload["mode"] == "held" and relay.received.is_set():
                             assert current[0] == "transmitting"
+                            diagnostic["phase"] = "shutdown"
                             shutdown = stop()
                             break
                         if payload["mode"] != "held" and current[0] == expected:
+                            diagnostic["phase"] = "shutdown"
                             shutdown = stop()
                             break
                         time.sleep(0.05)
                     else:
+                        diagnostic["phase"] = "delivery_wait"
                         raise RuntimeError("Packaged SMTP scenario timed out")
+                    diagnostic["phase"] = "delivery_state"
                     current = state()
                     assert current[0:2] == (expected, 1)
+                    diagnostic["phase"] = "wire"
                     assert relay.data_count == 1 and relay.messages == [initial[2]]
                     assert relay.envelopes == [(initial[4], initial[5])]
                     message = BytesParser(policy=policy.default).parsebytes(relay.messages[0])
@@ -1142,26 +1249,33 @@ def packaged_smtp_worker_proof(serve):
                             payload["body_text"],
                             payload["private_marker"],
                         )
+                    diagnostic["phase"] = "final_reply"
                     if payload["mode"] == "accepted":
                         assert relay.accepted_reply.wait(2)
                     assert relay.final_250_count == (payload["mode"] == "accepted")
                     # A real new main process sees terminal/uncertain SQL and emits no DATA.
+                    diagnostic["phase"] = "restart_start"
                     process = start()
                     deadline = time.monotonic() + 15
                     while not heartbeat.is_file():
+                        diagnostic["phase"] = "restart_ready"
                         assert process.poll() is None, "Restarted main exited before readiness"
                         assert time.monotonic() < deadline, "Restarted main did not become ready"
                         inspect_metadata()
                         time.sleep(0.1)
                     deadline = time.monotonic() + 12
                     while time.monotonic() < deadline:
+                        diagnostic["phase"] = "restart_stability"
                         assert process.poll() is None
                         inspect_metadata()
+                        diagnostic["phase"] = "restart_stability"
                         assert state()[0:4] == current[0:4]
                         assert relay.data_count == 1
                         time.sleep(0.1)
+                    diagnostic["phase"] = "restart_shutdown"
                     restarted_shutdown = stop()
                     inspect_metadata()
+                    diagnostic["phase"] = "diagnostics"
                     log.flush()
                     log.seek(0)
                     diagnostics = log.read()

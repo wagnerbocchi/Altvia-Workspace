@@ -25,6 +25,7 @@ from packaged_incoming_file_proof import prepare_packaged_incoming_files
 from packaged_smtp_proof import (
     prepare_packaged_incoming,
     prepare_packaged_smtp,
+    smtp_failure_summary,
     verify_packaged_incoming_restart,
     verify_packaged_smtp_restart,
 )
@@ -157,8 +158,10 @@ def main():
             # Exact output stays private; exceptions never echo SQL, URLs or secrets.
             (work / "last-command.stdout").write_text(result.stdout, encoding="utf-8")
             (work / "last-command.stderr").write_text(result.stderr, encoding="utf-8")
+            summary = smtp_failure_summary(result.stderr)
             raise RuntimeError(
                 f"Container command failed ({result.returncode}); private logs: {work}"
+                + ("; " + summary if summary else "")
             )
         return result.stdout
 

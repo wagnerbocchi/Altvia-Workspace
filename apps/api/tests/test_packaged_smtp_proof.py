@@ -3,7 +3,11 @@
 import ast
 import importlib.util
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from altvia.models import ActivityEvent, AuditLog, OutboxEvent
@@ -21,6 +25,81 @@ def execute(nodes, namespace):
             ast.fix_missing_locations(ast.Module(body=nodes, type_ignores=[])), str(PROOF), "exec"
         ),
         namespace,
+    )
+
+
+def test_smtp_failure_actual_child_preserves_private_channels_and_bounded_host_error(tmp_path):
+    secret = "private-filename-body-key-credential-canary"
+    child = (
+        "import sys;sys.path.insert(0,'scripts');"
+        "from packaged_smtp_proof import smtp_worker_diagnostic\n"
+        "@smtp_worker_diagnostic\n"
+        "def fail(serve, diagnostic):\n"
+        " diagnostic.update(scenario='lost', phase='restart_stability')\n"
+        f" raise AssertionError('{secret}')\n"
+        "fail(None)\n"
+    )
+    tree = ast.parse(PROOF.with_name("container_smoke.py").read_text(encoding="utf-8"))
+    main = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "main")
+    run = next(n for n in main.body if isinstance(n, ast.FunctionDef) and n.name == "run")
+    namespace = {
+        **vars(proof),
+        "args": SimpleNamespace(files=True),
+        "file_commands": [],
+        "ROOT": PROOF.parents[1],
+        "env": dict(os.environ),
+        "work": tmp_path,
+    }
+    execute([run], namespace)
+    with pytest.raises(RuntimeError) as caught:
+        namespace["run"]([sys.executable, "-c", child])
+    assert "SMTP scenario=lost phase=restart_stability error=assertion" in str(caught.value)
+    assert secret not in str(caught.value)
+    assert namespace["file_commands"][0]["exit"] == 1
+    private = (tmp_path / "last-command.stderr").read_text()
+    assert secret in private and "AssertionError" in private
+    assert (tmp_path / "last-command.stdout").read_text() == ""
+    safe = proof.smtp_failure_summary(private)
+    assert safe == "SMTP scenario=lost phase=restart_stability error=assertion"
+
+
+@pytest.mark.parametrize("field", ["schema", "phase", "scenario", "error_kind", "extra"])
+def test_smtp_failure_rejects_untrusted_fields_and_duplicate_diagnostics(field):
+    data = {"schema": 1, "phase": "initial", "scenario": "lost", "error_kind": "assertion"}
+    valid = "ALTVIA_SMTP_PROOF_FAILURE=" + json.dumps(data)
+    assert proof.smtp_failure_summary(valid + "\n" + valid) == ""
+    data[field] = "private-body-key-credential"
+    assert proof.smtp_failure_summary("ALTVIA_SMTP_PROOF_FAILURE=" + json.dumps(data)) == ""
+    assert proof.smtp_failure_summary(valid[:-1] + ', "phase": "initial"}') == ""
+    assert proof.smtp_failure_summary("ALTVIA_SMTP_PROOF_FAILURE=" + "x" * 513) == ""
+
+
+def test_smtp_failure_diagnostic_does_not_replace_original_exception(capsys):
+    original = subprocess.TimeoutExpired("private-command", 1, stderr="private-credentials")
+
+    @proof.smtp_worker_diagnostic
+    def fail(serve, diagnostic):
+        diagnostic.update(phase="private-body", scenario="private-name", extra="private-key")
+        raise original
+
+    with pytest.raises(subprocess.TimeoutExpired) as caught:
+        fail(None)
+    assert caught.value is original
+    channels = capsys.readouterr()
+    assert channels.out == "" and "private-" not in channels.err
+    assert proof.smtp_failure_summary(channels.err) == (
+        "SMTP scenario=unknown phase=unknown error=timeout"
+    )
+
+
+def test_smtp_failure_actual_owner_entrypoint_reports_setup_denial(monkeypatch, capsys):
+    monkeypatch.delenv("ALTVIA_ALLOW_CONTAINER_TEST", raising=False)
+    with pytest.raises(AssertionError):
+        proof.packaged_smtp_worker_proof(None)
+    channels = capsys.readouterr()
+    assert channels.out == ""
+    assert proof.smtp_failure_summary(channels.err) == (
+        "SMTP scenario=unknown phase=setup error=assertion"
     )
 
 
@@ -157,6 +236,7 @@ def test_incoming_canaries_reject_actual_worker_checker_multiline_json(canary, b
         "redis": RedisValue(b"safe"),
         "engine": MetadataDB({}),
         "diagnostics": b"safe",
+        "diagnostic": {},
         "text": text,
     }
     worker = next(
@@ -344,6 +424,7 @@ def test_full_multiline_body_leak_is_rejected(boundary, table):
         "AuditLog": AuditLog,
         "account": {"username": "synthetic-user", "password": "synthetic-password"},
         "diagnostics": b"safe",
+        "diagnostic": {},
     }
     payload["account"] = namespace["account"]
     tree = ast.parse(PROOF.read_text(encoding="utf-8"))

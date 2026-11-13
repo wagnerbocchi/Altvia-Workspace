@@ -63,7 +63,11 @@ timeouts/clean retry/MIME2/privacy, then failed after recreation. Actual PG/API/
 reproduced its saved baseline session being intentionally revoked by later tests.
 The fix reuses existing actor-bound fresh authentication, retains old401 and
 current ACL/byte assertions, and closes both canary/inventory Minor findings.
-Final corrected combined signed recreation/restore positive remains required.
+Exactd4de86c then PASSED actual combined signed recreation/4-object matching
+restore, but its full API suite failed a new packaged fixture under the CI
+single-label host. Reviewed test-only7c92c9a aligns that fixture with the actual
+FQDN and has68 affected passes plus1 focused FQDN pass. Corrected full API/CI
+acceptance remains required; incoming ADR0038/plan are unaccepted local drafts.
 See docs/phase-3i-private-file-packaged-evidence.md for complete failed history,
 warnings and source/evidence limits; no incoming-file completion or final target
 qualification is inferred.

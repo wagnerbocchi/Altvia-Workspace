@@ -1,8 +1,10 @@
 # Phase 3I combined packaged file proof
 
-Updated 2026-11-13. Task5 implementation ef6b9f9 is source-reviewed and locally
-checked. The combined hosted positive run is PENDING. This document does not
-claim successful packaged file restoration, final MVP or target-CPU acceptance.
+Updated 2026-11-13. The combined signed packaged/restore proof PASSED at exact
+d4de86c. Full increment acceptance remains OPEN because that source's API suite
+failed a new packaged-regression fixture. Its reviewed test-only correction
+7c92c9a has affected-scope passes; the corrected full API/CI gate is pending.
+No final MVP, production or target-CPU acceptance is claimed.
 
 ## Implemented proof and scope
 
@@ -220,3 +222,53 @@ construct applications concurrently. Their cause is not established here;
 follow up at those test/schema owners during integrated hardening. Pinned action
 Node20 deprecation/forced Node24 remains external action maintenance. None is
 hidden, called warning-free or used to justify an unrelated runtime change.
+
+## Actual combined positive and remaining API qualification
+
+Both exact-d4de86c container jobs passed. The new combined proof records actual
+native browser uploads/downloads, clean/EICAR results, private note linking and
+explicit public MIME2 review. Immutable scan history contains 3 clean results,
+1 infected result and 8 real transport timeouts; protected generation2 retry
+obtained an actual clean result. Every recorded privacy phase waited for delivered
+and processed events and checked current API/worker table/column/query denials.
+
+The run recreated API/PostgreSQL/storage/worker, retained the original-session401
+denial and used the current actor-bound session. It then quiesced writers and
+restored matching DB/object data into an isolated project: all4 referenced objects,
+immutable links, old/new frozen wires and current public/private HTTP ACLs matched.
+Restored API grants were checked again. This is actual logical restore evidence;
+encrypted production backup/compatible-image rollback and target CPU flags remain
+false as intended.
+
+Root collected complete logs/artifacts, verified207 API source/32 stream hashes,
+278 combined+infrastructure source/132 infrastructure stream hashes and the
+287-command record digest. Every combined child command exited0. Private combined
+raw channels remain excluded and were not independently verified. All seven
+nonempty image inventories reported zero vulnerabilities; browser175 and source
+security passed. The proof JSON in artifact14048532123 has SHA256
+`646b79d74c3205e3073ca563eb087e899fceef337198517b5709bb0742f645a3`.
+It remains evidence for exact d4de86c, not an unexecuted future source.
+
+The API suite nevertheless failed:1 failed,1265 passed,3 explicit native opt-in
+skips in805.85 seconds. Its sole failure was the new packaged saved-session
+regression under ambient https://testserver. An actual PG/API/S3 differential
+reproduced the standard cookie jar's effective testserver.local domain: login
+sends a valid cookie, but explicitly restoring it under testserver sends none,
+so /auth/me returns401. The unchanged actual packaged FQDN sends it and passes.
+The API never received and rejected that missing fresh token.
+
+Reviewed correction7c92c9a changes ONLY the regression test. Its dedicated fixture
+configures application and TestClient to the actual packaged FQDN, preserving
+ordinary login, role-driven invalidation, original401, exact actor and S3 bytes.
+Other tests retain their inherited CI origin. An opaque test mapping also avoids
+synthetic session values in default failed argument rendering; intentional failed
+rendering probes still exit1. Product authentication, global fixtures, runtime,
+permissions, proof helpers and signed scanner/restore assertions are unchanged.
+
+The entire affected module passed68 cases in the hosted-style environment;
+the focused FQDN regression passed1 separately. All four354-input before/after
+maps remained unchanged, eight raw process channels and final source bindings
+were verified. Independent scoped source/spec/quality review approved H4 without
+new breakage. Corrected full API/CI acceptance remains required before closing
+Task5. Incoming files remain a separate unaccepted draft contract, with no runtime
+implementation or production/target operation inferred here.

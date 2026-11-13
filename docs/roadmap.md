@@ -70,9 +70,15 @@ advanced through real eight-timeout/clean retry/MIME2/privacy, then its first
 post-recreation file read failed. Actual PG/API/S3 reproduced reuse of an
 intentionally revoked baseline session. The correction reuses the existing fresh
 actor-bound login, preserves the old401 denial and every current ACL/byte check.
-It also closes both filename-canary/build-input Minor findings. Final corrected
-combined signed recreation/restore acceptance remains OPEN. Exact failed history,
-hashes, skips and retained tooling notices are in
+It also closes both filename-canary/build-input Minor findings. Actual combined
+signed recreation/4-object matching restore PASSED atd4de86c, with all287 child
+commands successful. However, full API had1 failure/1265 passes/3 native skips:
+the new packaged-session regression used CI's single-label host instead of its
+actual FQDN. Actual PG/API/S3 reproduced the cookie-scope difference. Reviewed
+test-only7c92c9a passed the entire affected68-case module plus focused FQDN check,
+without changing product/proof helpers. Corrected full API/CI acceptance remains
+OPEN. Incoming-file ADR0038/plan are local unaccepted drafts only; no new runtime
+work begins before core closure. Exact history, hashes, skips and tooling notices are in
 docs/phase-3i-private-file-packaged-evidence.md. No target operation occurred.
 
 Task3 closure: all five exact-df3c8bb hosted gates passed,1198 API cases/three

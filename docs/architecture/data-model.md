@@ -202,7 +202,7 @@ docs/phase-2e-contact-evidence.md; no ticket/email table or account link is adde
 | ticket_participants | ticket_id + contact_id UNIQUE; contact must belong to same client |
 | ticket_messages | ticket_id, author_user_id/contact_id nullable, direction inbound/outbound/internal, visibility public/internal, body_text, sanitized_html, message_id, received_at/sent_at, delivery_status; exactly one author except audited system actor |
 | ticket_status_history | ticket_id, from/to, actor_id, occurred_at, reason, policy_version; append-only |
-| ticket_work_items | ADR0039 selected manual-link shape: PK(ticket_id,work_item_id), non-null client_id/queue_id/project_id, fixed related, created_at/by; three composite FKs enforce same-client scope; not yet implemented |
+| ticket_work_items | ADR0039 schema b4c31e5: PK(ticket_id,work_item_id), non-null client_id/queue_id/project_id, fixed related, created_at/by; three composite FKs enforce same-client scope; API/UI still pending |
 | attachments | storage_key UNIQUE opaque, sha256, original_filename, media_type, bytes, state quarantine/ready/rejected, uploader_id, scan_result/version |
 | attachment_links | attachment_id plus exactly one concrete message/work_comment target FK; UNIQUE target/link; target ACL dominates, no public bucket ACL |
 | mailboxes | address UNIQUE, queue_id, IMAP/SMTP host/port/TLS mode, secret_reference, UIDVALIDITY/checkpoint; never password in table/log |

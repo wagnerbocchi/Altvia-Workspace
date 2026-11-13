@@ -53,6 +53,12 @@ real imports and Zammad retirement still require their separate authorization.
 Earlier qualification entries below remain historical evidence, not instructions
 to repeat server homologation during each new delivery.
 
+User steering2026-11-13 selects existing altvia-vm as the development/test host.
+Reuse its configured public-key connection with task-scoped client multiplexing;
+keep tests in isolated private fixtures and preserve remote work/data. This is
+development verification, distinct from the final integrated target qualification
+above. No production rollout or general SSH/security configuration is implied.
+
 ## Delivery status
 
 Private-files Task4 is implemented in c5c668c with reviewed corrections 039a631.
@@ -175,8 +181,15 @@ ADR0039 and docs/plans/2026-11-13-ticket-work-links.md select manual same-client
 N:N links under both existing endpoint update permissions, native composite FKs,
 two reviewed versions/protected POST+DELETE and current counterpart activity
 privacy before pagination. Independent builder review found nothing Important
-remaining before the schema task. Implementation is not started; actual SQL,
-API/events, Operate/browser and packaged recreation gates follow incrementally.
+remaining before the schema task. Task1 schema is now independently approved in
+b4c31e5 with84 native altvia-vm tests/0 skips/warnings and passing lint/types/
+Alembic checks. API/events, Operate/browser and packaged relationship proof remain
+unimplemented. A post-closure6dd5eb2 browser run184/1 exposed an existing manager-
+pagination test oracle: it expected the first raw account even when not selectable.
+Correction9a3e225 has independent approval, frozen controlled RED/GREEN and5
+canonical project passes. Original failed-row metadata remains unknown. All old
+failures/limits are retained; exact full current hosted gates are pending.
+See docs/ticket-work-link-evidence.md for scope, archives and follow-through.
 No state synchronization, task creation, automation or unified My Work is implied.
 Retain a link-aware compatible API/worker; actual image rollback rehearsal and
 encrypted backup remain mandatory integrated hardening, with final target later.

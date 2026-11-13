@@ -11,9 +11,11 @@
 **Spec:** docs/adr/0039-ticket-work-links.md, master specification and affected
 ADR0007/0020/0021/0028. Contracts precede code.
 
-**State:** Selected contract/plan; independent builder check is ready with0
-actionable findings. No source implementation or acceptance is claimed.
-Incoming-file development is accepted
+**State:** Task1 schema atb4c31e5 is independently approved after84 remote tests
+with0 skips/warnings and native lint/type/Alembic checks. Separate test-only
+project-manager correction9a3e225 has source approval and controlled/canonical
+browser proof. Exact full current hosted gates remain pending; Tasks2-4 are not
+implemented. See docs/ticket-work-link-evidence.md. Incoming-file development is accepted
 at62dbeeb/closure6dd5eb2. Use one implementer and independent task reviews, then
 one final whole-increment review. User's existing main/noPR/continuous-work
 instructions supersede routine approval or execution-choice pauses.
@@ -83,12 +85,12 @@ Full hosted workflows also use `sh scripts/ci_redis.sh` and `uv run python scrip
 
 **Interfaces:** Produces models.TicketWorkItem with PK(ticket_id,work_item_id), required client_id/queue_id/project_id, relation_type Literal related, created_by and UTC created_at. Produces fixture LinkContext(ticket_id:UUID,work_item_id:UUID,project_id:UUID,client_id:UUID,queue_id:UUID), and make_link_context(client:TestClient,db_engine:Engine,seeded_user:UUID)->LinkContext. Compose test_tickets.setup/ticket, test_project_registry.project(...,customer=...), test_work_items.create_work and test_team_api.preconditions/sign_in. Existing setup_project helper creates INTERNAL work, so cannot establish a valid pair. Test implementation may follow incumbent untyped fixture conventions.
 
-- [ ] Step1: Confirm accepted ADR0039/plan, completed independent builder check and recorded controller preflight BEFORE source. Recheck full migration parentb46087000027 and reserved numberb46087000028. Contract promotion is controller-owned and must already be committed; do not repeat its commit or alter legacy contracts during a test.
-- [ ] Step2: Write test_native_ticket_work_same_client_and_null_guard (RF3): actual owner INSERT succeeds only for same client; work/project, ticket/client/queue, internal project and each nullable identity mismatch raises DBAPIError with no row. Add test_ticket_work_pair_unique_and_parent_key_restricted, test_ticket_work_runtime_privileges and test_empty_roundtrip_preserves_existing_parent_keys. Use real SQL, not mocked FKs.
-- [ ] Step3: Run `uv run pytest -q apps/api/tests/test_ticket_work_storage.py`. Expected red is missing model/table/privilege behavior; record actual diagnostic. Unavailable disposable DB is a blocker, not useful red.
-- [ ] Step4: Implement model/migration: reuse existing unique keys from migrations00010:13,00008:35,00024:15; three non-null RESTRICT composite FKs, pair PK, reverse(work_item_id,ticket_id) index, relation_type='related' CHECK and created_by actor FK. Add API SELECT/INSERT/DELETE only. No new customer column, cross-table CHECK or ownership trigger.
-- [ ] Step5: Implement downgrade lock-and-refuse for rows OR new event/audit/activity history OR link/unlink receipt namespaces, including after all links deleted. Add test_downgrade_refuses_unlinked_history_or_receipt with exact Task2 names and valid raw fixtures. Never drop earlier parent unique keys or restore stale privilege maps.
-- [ ] Step6: Run storage suite plus `uv run pytest -q apps/api/tests/test_runtime_provision.py apps/api/tests/test_work_storage.py apps/api/tests/test_tickets.py`, native lint/type/schema commands above. Expected exit0/no Alembic drift; retain warnings/skips. Fresh SQL/privilege review; stage only owned files and commit `feat: persist same-client ticket work links`.
+- [x] Step1: Confirm accepted ADR0039/plan, completed independent builder check and recorded controller preflight BEFORE source. Recheck full migration parentb46087000027 and reserved numberb46087000028. Contract promotion is controller-owned and must already be committed; do not repeat its commit or alter legacy contracts during a test.
+- [x] Step2: Write test_native_ticket_work_same_client_and_null_guard (RF3): actual owner INSERT succeeds only for same client; work/project, ticket/client/queue, internal project and each nullable identity mismatch raises DBAPIError with no row. Add test_ticket_work_pair_unique_and_parent_key_restricted, test_ticket_work_runtime_privileges and test_empty_roundtrip_preserves_existing_parent_keys. Use real SQL, not mocked FKs.
+- [x] Step3: Run `uv run pytest -q apps/api/tests/test_ticket_work_storage.py`. Expected red is missing model/table/privilege behavior; record actual diagnostic. Unavailable disposable DB is a blocker, not useful red.
+- [x] Step4: Implement model/migration: reuse existing unique keys from migrations00010:13,00008:35,00024:15; three non-null RESTRICT composite FKs, pair PK, reverse(work_item_id,ticket_id) index, relation_type='related' CHECK and created_by actor FK. Add API SELECT/INSERT/DELETE only. No new customer column, cross-table CHECK or ownership trigger.
+- [x] Step5: Implement downgrade lock-and-refuse for rows OR new event/audit/activity history OR link/unlink receipt namespaces, including after all links deleted. Add test_downgrade_refuses_unlinked_history_or_receipt with exact Task2 names and valid raw fixtures. Never drop earlier parent unique keys or restore stale privilege maps.
+- [x] Step6: Run storage suite plus `uv run pytest -q apps/api/tests/test_runtime_provision.py apps/api/tests/test_work_storage.py apps/api/tests/test_tickets.py`, native lint/type/schema commands above. Expected exit0/no Alembic drift; retain warnings/skips. Fresh SQL/privilege review; stage only owned files and commit `feat: persist same-client ticket work links`.
 
 ### Task 2: Protected API, SQL lists and reciprocal activity
 

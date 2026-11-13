@@ -86,7 +86,14 @@ try {
   process.loadEnvFile(resolve(root, ".env.browser-session"));
   const python = resolve(root, process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python");
   run(python, ["-m", "uvicorn", "altvia.main:create_app", "--factory", "--host", "127.0.0.1", "--port", "8000", "--no-proxy-headers", "--no-access-log"]);
-  if (process.env.ALTVIA_REDIS_URL) run(python, ["-m", "altvia.worker", "run"]);
+  if (process.env.ALTVIA_REDIS_URL) {
+    // The explicit browser protocol fixture owns scan claims. Keep ordinary
+    // activity/SMTP workers real while leaving their file actor unregistered.
+    const scannerStorage = process.env.ALTVIA_SCANNER_STORAGE_FILE;
+    if (process.env.ALTVIA_E2E_FILE_PROTOCOL === "1") delete process.env.ALTVIA_SCANNER_STORAGE_FILE;
+    run(python, ["-m", "altvia.worker", "run"]);
+    if (scannerStorage !== undefined) process.env.ALTVIA_SCANNER_STORAGE_FILE = scannerStorage;
+  }
   run(process.execPath, [require.resolve("next/dist/bin/next"), "start", "--hostname", "127.0.0.1"], web);
   const certificates = await selfsigned.generate([{ name: "commonName", value: "localhost" }], {
     keySize: 2048, algorithm: "sha256", extensions: [{ name: "subjectAltName", altNames: [

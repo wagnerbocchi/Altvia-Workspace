@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+import { LinkedAttachments } from "@/components/attachments";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { LoadingRows, Paging, ReadError, usePaging } from "@/components/team-admin/common";
@@ -17,19 +19,20 @@ export function TicketNotes({ id, api }: { id: string; api: TicketApi }) {
         <div className="record-text">
           <strong>{note.author_name}</strong>
           <time className="record-meta" dateTime={note.created_at}>{new Date(note.created_at).toLocaleString("pt-BR")}</time>
-          <p className="work-prose">{note.body_text}</p>
+          <p className="work-prose">{note.body_text}</p><LinkedAttachments files={note.attachments} />
         </div>
       </li>)}</ul> : <p>Nenhuma nota interna nesta pagina.</p>}
     <Paging paging={paging} next={query.data?.next_cursor} label="notas" disabled={query.isFetching} />
   </section>;
 }
 
-export function TicketNoteForm({ body, disabled, error, change, submit }: {
-  body: string; disabled: boolean; error: string; change: (value: string) => void; submit: () => void;
+export function TicketNoteForm({ body, disabled, error, change, submit, attachments }: {
+  body: string; disabled: boolean; error: string; change: (value: string) => void; submit: () => void; attachments: ReactNode;
 }) {
   return <section className="admin-section" aria-labelledby="ticket-compose-heading">
     <h2 id="ticket-compose-heading">Registrar nota interna</h2>
     <p id="ticket-note-help" className="field-help">Somente uso interno. Nao sera enviada ao solicitante. A nota registrada nao pode ser editada ou removida.</p>
+    {attachments}
     <form noValidate onSubmit={event => { event.preventDefault(); submit(); }}>
       <fieldset className="work-fields" disabled={disabled}>
         <label htmlFor="ticket-note">Nota interna</label>

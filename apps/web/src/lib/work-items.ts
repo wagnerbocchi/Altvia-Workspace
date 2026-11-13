@@ -44,8 +44,8 @@ export function createWorkApi(csrf: string, onAuthError: (error: unknown) => voi
     async comments(id: string, cursor: string | null, signal?: AbortSignal): Promise<components["schemas"]["CommentPage"]> {
       return (await request(`${path(id)}/comments${pageQuery(cursor)}`, { signal })).json();
     },
-    async comment(id: string, body: string, version: number, key: string): Promise<components["schemas"]["CommentOutput"]> {
-      return (await request(`${path(id)}/comments`, write("POST", { body }, version, key))).json();
+    async comment(id: string, body: string, version: number, key: string, attachmentIds: string[] = []): Promise<components["schemas"]["CommentOutput"]> {
+      return (await request(`${path(id)}/comments`, write("POST", { body, ...(attachmentIds.length ? { attachment_ids: attachmentIds } : {}) }, version, key))).json();
     },
     async activity(id: string, cursor: string | null, signal?: AbortSignal): Promise<components["schemas"]["ActivityPage"]> {
       return (await request(`${path(id)}/activity${pageQuery(cursor)}`, { signal })).json();

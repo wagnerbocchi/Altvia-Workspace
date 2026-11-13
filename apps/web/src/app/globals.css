@@ -298,3 +298,25 @@ footer { display: flex; justify-content: space-between; gap: 16px; padding: 20px
   .work-row > .record-text { grid-column: 1 / -1; }
   .client-filter.button { min-height: 44px; }
 }
+
+/* Private file operations share the flat record and native control vocabulary. */
+.attachment-picker { margin-block: 24px; padding-block: 16px; border-block: 1px solid var(--line); min-width: 0; }
+.attachment-upload { display: grid; gap: 12px; margin-block: 16px; }
+.attachment-upload input { width: 100%; min-width: 0; }
+.attachment-upload > button { justify-self: start; }
+.attachment-list, .attachment-links, .attachment-names { padding: 0; margin-block: 12px; list-style: none; }
+.attachment-row, .attachment-links > li { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: 12px 24px; padding-block: 12px; border-bottom: 1px solid var(--line); min-width: 0; }
+.attachment-filename { display: flex; gap: 8px; align-items: baseline; overflow-wrap: anywhere; }
+.attachment-filename svg { flex-shrink: 0; }
+.attachment-actions { display: flex; align-items: start; flex-wrap: wrap; gap: 12px; max-width: 100%; }
+.attachment-actions button, .attachment-links button { white-space: normal; overflow-wrap: anywhere; max-width: 100%; }
+.attachment-review { margin-block: 16px; overflow-wrap: anywhere; }
+.attachment-links > li > span { overflow-wrap: anywhere; min-width: 0; }
+
+@media (max-width: 540px) {
+  .attachment-row, .attachment-links > li { flex-direction: column; }
+  .attachment-row > .record-text, .attachment-actions { width: 100%; }
+  .attachment-actions .work-checkbox { margin-top: 0; }
+  .attachment-actions label { overflow-wrap: anywhere; min-width: 0; }
+  .attachment-actions input { flex-shrink: 0; }
+}

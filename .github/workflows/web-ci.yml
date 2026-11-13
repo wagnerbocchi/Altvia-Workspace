@@ -11,7 +11,7 @@ permissions:
 jobs:
   browser-identity:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     services:
       postgres:
         image: postgres:17-bookworm@sha256:73bedc9eaa0121b92b9b26bb52e5141b3f6f37479c7ef913c0160455763ca80a
@@ -30,6 +30,7 @@ jobs:
       ALTVIA_REDIS_URL: redis://:test-${{ github.run_id }}-${{ github.run_attempt }}@127.0.0.1:6379/0
       ALTVIA_CI_REDIS_PASSWORD: test-${{ github.run_id }}-${{ github.run_attempt }}
       ALTVIA_WORKER_STATE_DIR: /tmp/altvia-ci-worker
+      ALTVIA_E2E_FILE_PROTOCOL: "1"
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -57,7 +58,12 @@ jobs:
       - run: pnpm web:build
       - run: pnpm audit --audit-level=moderate
       - run: pnpm --filter @altvia/web exec playwright install --with-deps chromium
+      - run: uv run python scripts/ci_file_storage.py start
       - run: uv run node apps/web/scripts/browser-test.mjs
+        env:
+          ALTVIA_FILE_PROTOCOL_STORAGE_FILE: ${{ env.ALTVIA_SCANNER_STORAGE_FILE }}
+      - if: always()
+        run: uv run python scripts/ci_file_storage.py stop
       - if: always()
         run: docker rm -f altvia-ci-redis
 

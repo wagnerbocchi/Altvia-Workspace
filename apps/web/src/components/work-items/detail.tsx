@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { AttachmentPicker } from "@/components/attachments";
+import { sameAttachments, type AttachmentSummary } from "@/lib/attachments";
+import { useCallback, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import type { WorkspaceSession } from "@/components/workspace-session";
@@ -13,7 +15,7 @@ import { Comments, StateHistory, WorkActivity } from "./reads";
 
 type Intent = { kind: "edit"; body: WorkPatch; version: number }
   | { kind: "transition"; body: WorkTransition; version: number; key: string }
-  | { kind: "comment"; body: string; version: number; key: string };
+  | { kind: "comment"; body: string; files: AttachmentSummary[]; version: number; key: string };
 const transitions: Record<string, WorkTransition["target_status"][]> = { todo: ["in_progress","blocked","cancelled"], in_progress: ["blocked","done","cancelled"], blocked: ["todo","in_progress","cancelled"], done: ["in_progress"], cancelled: ["todo"] };
 export function WorkDetail({ id, api, session }: { id: string; api: WorkApi; session: WorkspaceSession }) {
   const cache = useQueryClient();
@@ -23,16 +25,21 @@ export function WorkDetail({ id, api, session }: { id: string; api: WorkApi; ses
   const [editor, setEditor] = useState<WorkRecord | null>(null), [notice, setNotice] = useState("");
   const [target, setTarget] = useState<WorkTransition["target_status"] | "">("");
   const [reason, setReason] = useState(""), [end, setEnd] = useState(false), [body, setBody] = useState("");
+  const [files, setFiles] = useState<AttachmentSummary[]>([]), [filesBusy, setFilesBusy] = useState(false);
+  const busyChanged = useCallback((busy: boolean) => setFilesBusy(busy), []);
+  const [commentVersion, setCommentVersion] = useState<number | null>(null);
   const [formError, setFormError] = useState("");
   const write = useTeamWrite(session, async (intent: Intent) => {
     if (intent.kind === "edit") return { kind: "edit" as const, row: await api.update(id, intent.body, intent.version) };
     if (intent.kind === "transition") return { kind: "transition" as const, row: await api.transition(id, intent.body, intent.version, intent.key) };
-    return { kind: "comment" as const, comment: await api.comment(id, intent.body, intent.version, intent.key) };
+    const comment = await api.comment(id, intent.body, intent.version, intent.key, intent.files.map(file => file.id));
+    if (comment.work_item_id !== id || comment.body !== intent.body || !sameAttachments(comment.attachments ?? [], intent.files)) throw Error("Comment receipt not confirmed");
+    return { kind: "comment" as const, comment };
   }, result => {
     if (result.kind !== "comment") cache.setQueryData<WorkRecord>(["work-item", id], current => !current || current.version <= result.row.version ? result.row : current);
     if (result.kind === "edit") { setEditor(null); requestAnimationFrame(() => document.getElementById("work-heading")?.focus()); }
     if (result.kind === "transition") { setTarget(""); setReason(""); setEnd(false); }
-    if (result.kind === "comment") setBody("");
+    if (result.kind === "comment") { setBody(""); setFiles([]); setCommentVersion(null); }
     setNotice(result.kind === "comment" ? "Comentário registrado." : "Alteração confirmada.");
     void Promise.all([
       cache.invalidateQueries({ queryKey: ["work-item", id] }),
@@ -43,9 +50,9 @@ export function WorkDetail({ id, api, session }: { id: string; api: WorkApi; ses
   const reload = async () => {
     await query.refetch({ throwOnError: true });
     await cache.refetchQueries({ queryKey: ["work-candidates", row?.project_id], type: "active" }, { throwOnError: true });
-    if (session.isCurrent()) { setEditor(null); setNotice(""); setFormError(""); }
+    if (session.isCurrent()) { setEditor(null); setBody(""); setFiles([]); setCommentVersion(null); setNotice(""); setFormError(""); }
   };
-  const blocked = write.locked || query.isFetching || query.isError || row?.project_writable === false;
+  const blocked = filesBusy || write.locked || query.isFetching || query.isError || row?.project_writable === false;
   const available = row ? transitions[row.status].filter(value => row.status !== "cancelled" || row.can_manage || value !== "todo") : [];
   const selected = available.includes(target as WorkTransition["target_status"]) ? target : "";
   if (!row) return <div className="admin-workspace"><Link className="text-link" href="/projects">Voltar aos projetos</Link><h1 id="work-heading" tabIndex={-1}>Tarefa</h1>{query.isPending ? <LoadingRows label="Carregando tarefa..." /> : <ReadError retry={() => void query.refetch()} />}</div>;
@@ -75,7 +82,8 @@ export function WorkDetail({ id, api, session }: { id: string; api: WorkApi; ses
       </form>
     </section>}
     <section className="admin-section" aria-labelledby="work-comments-heading"><h2 id="work-comments-heading">Comentários internos</h2><p className="field-help">Visíveis a quem tem acesso ao projeto. Não enviam e-mail nem mensagem ao cliente.</p>
-      {row.can_comment && <form className="work-comment-form" onSubmit={event => { event.preventDefault(); if (body.trim()) { setNotice(""); write.submit({ kind: "comment", body: body.trim(), version: row.version, key: crypto.randomUUID() }); } }}><label htmlFor="work-comment">Comentário interno</label><textarea id="work-comment" value={body} maxLength={10000} rows={4} disabled={blocked || editor !== null} onChange={event => setBody(event.target.value)} /><Button type="submit" disabled={blocked || editor !== null || !body.trim()}>Registrar comentário</Button></form>}
+      <AttachmentPicker scope={{ owner: "work_item", id, purpose: "work" }} version={row.version} selected={files} change={next => { setFiles(next); setCommentVersion(commentVersion ?? row.version); }} disabled={write.locked || query.isFetching || query.isError || !row.can_comment || editor !== null} busyChanged={busyChanged} />
+      {row.can_comment && <form className="work-comment-form" onSubmit={event => { event.preventDefault(); if (body.trim()) { setNotice(""); write.submit({ kind: "comment", body: body.trim(), files: [...files], version: commentVersion ?? row.version, key: crypto.randomUUID() }); } }}><label htmlFor="work-comment">Comentário interno</label><textarea id="work-comment" value={body} maxLength={10000} rows={4} disabled={blocked || editor !== null} onChange={event => { setBody(event.target.value); setCommentVersion(commentVersion ?? row.version); }} /><Button type="submit" disabled={blocked || editor !== null || !body.trim()}>Registrar comentário</Button></form>}
       <Comments id={id} api={api} />
     </section><StateHistory id={id} api={api} /><WorkActivity id={id} api={api} /></div>
   </div>;

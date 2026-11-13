@@ -1,5 +1,6 @@
 "use client";
 
+import { LinkedAttachments } from "@/components/attachments";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { LoadingRows, Paging, ReadError, usePaging } from "@/components/team-admin/common";
@@ -9,7 +10,7 @@ export function Comments({ id, api }: { id: string; api: WorkApi }) {
   const paging = usePaging();
   const query = useQuery({ queryKey: ["work-comments", id, paging.cursor], queryFn: ({ signal }) => api.comments(id, paging.cursor, signal) });
   return <><h3>Comentários registrados</h3><Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>Atualizar comentários</Button>
-    {query.isPending ? <LoadingRows label="Carregando comentários..." /> : query.isError ? <ReadError retry={() => void query.refetch()} /> : query.data.items.length ? <ul className="record-list" aria-label="Comentários internos">{query.data.items.map(row => <li className="team-row" key={row.id}><div className="record-text"><p className="work-prose">{row.body}</p><span className="record-meta">Autor: {row.author_id}</span><time className="record-meta" dateTime={row.created_at}>{new Date(row.created_at).toLocaleString("pt-BR")}</time></div></li>)}</ul> : <p>Nenhum comentário nesta página.</p>}
+    {query.isPending ? <LoadingRows label="Carregando comentários..." /> : query.isError ? <ReadError retry={() => void query.refetch()} /> : query.data.items.length ? <ul className="record-list" aria-label="Comentários internos">{query.data.items.map(row => <li className="team-row" key={row.id}><div className="record-text"><p className="work-prose">{row.body}</p><LinkedAttachments files={row.attachments} /><span className="record-meta">Autor: {row.author_id}</span><time className="record-meta" dateTime={row.created_at}>{new Date(row.created_at).toLocaleString("pt-BR")}</time></div></li>)}</ul> : <p>Nenhum comentário nesta página.</p>}
     <Paging paging={paging} next={query.data?.next_cursor} label="comentários" disabled={query.isFetching} />
   </>;
 }

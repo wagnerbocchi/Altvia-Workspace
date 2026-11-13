@@ -47,7 +47,7 @@ export function Paging({ paging, next, label, disabled = false }: {
     "cliente do chamado": ["Clientes anteriores", "Proximos clientes"],
     "equipe da fila": ["Equipes anteriores", "Proximas equipes"],
   };
-  const [previousLabel, nextLabel] = labels[aliases[label] ?? label] ?? ["Participantes anteriores", "Próximos participantes"];
+  const [previousLabel, nextLabel] = labels[aliases[label] ?? label] ?? (label.startsWith("arquivos de ") ? ["Arquivos anteriores", "Proximos arquivos"] : ["Participantes anteriores", "Próximos participantes"]);
   return <nav className="paging" aria-label={`Páginas de ${label}`}>
     <Button type="button" variant="outline" disabled={disabled || paging.index === 0} onClick={paging.previous}>
       {previousLabel}

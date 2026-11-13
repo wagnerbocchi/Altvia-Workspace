@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { AttachmentPicker } from "@/components/attachments";
+import { sameAttachments, type AttachmentSummary } from "@/lib/attachments";
+import { useCallback, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import type { WorkspaceSession } from "@/components/workspace-session";
@@ -18,9 +20,9 @@ import { type DeliveryReview, TicketDeliveryReview, TicketMessageForm, TicketMes
 type Intent = { kind: "edit"; body: TicketPatch; version: number }
   | { kind: "claim"; version: number; key: string }
   | { kind: "transition"; body: TicketTransition; version: number; key: string }
-  | { kind: "note"; body: { body_text: string }; version: number; key: string }
+  | { kind: "note"; body: { body_text: string; attachment_ids?: string[] }; files: AttachmentSummary[]; version: number; key: string }
   | { kind: "delivery"; review: DeliveryReview; version: number; key: string }
-  | { kind: "message"; body: { body_text: string }; version: number; key: string };
+  | { kind: "message"; body: { body_text: string; attachment_ids?: string[] }; files: AttachmentSummary[]; version: number; key: string };
 
 export function TicketDetail({ id, api, queues, session }: { id: string; api: TicketApi; queues: QueueApi; session: WorkspaceSession }) {
   const cache = useQueryClient();
@@ -28,15 +30,18 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
   const row = query.error instanceof ApiError && query.error.status === 404 ? undefined : query.data;
   const [editor, setEditor] = useState<TicketRecord | null>(null);
   const [awaiting, setAwaiting] = useState(false);
-  const acknowledgedNote = useRef<string | null>(null);
+  const [messageFiles, setMessageFiles] = useState<AttachmentSummary[]>([]), [noteFiles, setNoteFiles] = useState<AttachmentSummary[]>([]);
+  const [messageFilesBusy, setMessageFilesBusy] = useState(false), [noteFilesBusy, setNoteFilesBusy] = useState(false);
+  const messageBusyChanged = useCallback((busy: boolean) => setMessageFilesBusy(busy), []), noteBusyChanged = useCallback((busy: boolean) => setNoteFilesBusy(busy), []);
+  const acknowledgedNote = useRef<{ id: string; body: string; files: AttachmentSummary[] } | null>(null);
   const [noteDraft, setNoteDraft] = useState<{ body: string; version: number } | null>(null);
   const [noteError, setNoteError] = useState("");
   const acknowledgedDelivery = useRef<{ message: string; delivery: string } | null>(null);
   const [deliveryAcknowledged, setDeliveryAcknowledged] = useState(false);
   const [deliveryReview, setDeliveryReview] = useState<DeliveryReview | null>(null);
-  const acknowledgedMessage = useRef<string | null>(null);
+  const acknowledgedMessage = useRef<{ id: string; body: string; files: AttachmentSummary[] } | null>(null);
   const [messageDraft, setMessageDraft] = useState<{ body: string; version: number } | null>(null);
-  const [messageReview, setMessageReview] = useState<{ body: string; version: number } | null>(null);
+  const [messageReview, setMessageReview] = useState<{ body: string; version: number; files: AttachmentSummary[] } | null>(null);
   const [messageError, setMessageError] = useState("");
   const [notice, setNotice] = useState("");
   const [target, setTarget] = useState<TicketRecord["status"] | "">("");
@@ -46,13 +51,13 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
   const refresh = async () => {
     const fresh = await query.refetch({ throwOnError: true });
     if (acknowledgedNote.current) {
-      const note = await api.note(id, acknowledgedNote.current);
-      if (!fresh.data || note.ticket_version > fresh.data.version) throw Error("Note version not confirmed");
+      const note = await api.note(id, acknowledgedNote.current.id);
+      if (!fresh.data || note.ticket_version > fresh.data.version || note.body_text !== acknowledgedNote.current.body || !sameAttachments(note.attachments ?? [], acknowledgedNote.current.files)) throw Error("Note version not confirmed");
       await cache.refetchQueries({ queryKey: ["ticket-notes", id], type: "active" }, { throwOnError: true });
     }
     if (acknowledgedMessage.current) {
-      const message = await api.message(id, acknowledgedMessage.current);
-      if (!fresh.data || message.ticket_version > fresh.data.version) throw Error("Message version not confirmed");
+      const message = await api.message(id, acknowledgedMessage.current.id);
+      if (!fresh.data || message.ticket_version > fresh.data.version || message.body_text !== acknowledgedMessage.current.body || !sameAttachments(message.attachments ?? [], acknowledgedMessage.current.files)) throw Error("Message version not confirmed");
     }
     if (acknowledgedDelivery.current) {
       const receipt = acknowledgedDelivery.current;
@@ -73,18 +78,18 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
     await Promise.all(["tickets", "ticket-states", "ticket-activity"].map(key => cache.invalidateQueries({ queryKey: key === "tickets" ? [key] : [key, id] })));
   };
   const write = useTeamWrite(session, async (intent: Intent) => {
-    if (intent.kind === "delivery") return { kind: "delivery" as const, receipt: await api.send(id, intent.review.message.id, { participant_id: intent.review.choices.participant!.participant_id, source_id: intent.review.choices.sender!.source_id }, intent.version, intent.key) };
+    if (intent.kind === "delivery") return { kind: "delivery" as const, receipt: await api.send(id, intent.review.message.id, { participant_id: intent.review.choices.participant!.participant_id, source_id: intent.review.choices.sender!.source_id, ...(intent.review.message.attachments?.length ? { attachment_ids: intent.review.message.attachments.map(file => file.id) } : {}) }, intent.version, intent.key) };
     if (intent.kind === "edit") return { kind: "edit" as const, row: await api.update(id, intent.body, intent.version) };
     if (intent.kind === "note") return { kind: "note" as const, receipt: await api.addNote(id, intent.body, intent.version, intent.key) };
     if (intent.kind === "message") return { kind: "message" as const, receipt: await api.addMessage(id, intent.body, intent.version, intent.key) };
     if (intent.kind === "claim") await api.claim(id, intent.version, intent.key);
     else await api.transition(id, intent.body, intent.version, intent.key);
     return { kind: "receipt" as const };
-  }, result => {
+  }, (result, intent) => {
     setEditor(null); setTarget(""); setReason(""); setTransitionReview(null); setError("");
     if (result.kind === "edit") cache.setQueryData(["ticket", id], result.row);
-    if (result.kind === "note") { acknowledgedNote.current = result.receipt.note_id; setNoteDraft(null); setNoteError(""); }
-    if (result.kind === "message") { acknowledgedMessage.current = result.receipt.message_id; setMessageDraft(null); setMessageReview(null); setMessageError(""); }
+    if (result.kind === "note") { acknowledgedNote.current = { id: result.receipt.note_id, body: intent.kind === "note" ? intent.body.body_text : "", files: intent.kind === "note" ? intent.files : [] }; setNoteDraft(null); setNoteFiles([]); setNoteError(""); }
+    if (result.kind === "message") { acknowledgedMessage.current = { id: result.receipt.message_id, body: intent.kind === "message" ? intent.body.body_text : "", files: intent.kind === "message" ? intent.files : [] }; setMessageDraft(null); setMessageFiles([]); setMessageReview(null); setMessageError(""); }
     if (result.kind === "delivery") { acknowledgedDelivery.current = { message: result.receipt.message_id, delivery: result.receipt.delivery_id }; setDeliveryAcknowledged(true); }
     setAwaiting(true);
     setNotice(result.kind === "delivery" ? "Solicitacao de envio registrada. Atualize o chamado para consultar o estado confirmado." : result.kind === "message" ? "Rascunho salvo, nao enviado. Atualize o chamado antes de continuar." : result.kind === "note" ? "Nota registrada. Atualize o chamado antes de continuar." : "Operacao confirmada. Atualize o chamado antes de continuar.");
@@ -92,9 +97,10 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
   });
   const reload = async () => {
     await refresh();
-    if (session.isCurrent()) { setEditor(null); setTarget(""); setReason(""); setTransitionReview(null); setNoteDraft(null); setNoteError(""); setMessageDraft(null); setMessageReview(null); setDeliveryReview(null); setMessageError(""); setError(""); setNotice(""); }
+    if (session.isCurrent()) { setEditor(null); setTarget(""); setReason(""); setTransitionReview(null); setNoteDraft(null); setNoteFiles([]); setMessageFiles([]); setNoteError(""); setMessageDraft(null); setMessageReview(null); setDeliveryReview(null); setMessageError(""); setError(""); setNotice(""); }
   };
-  const blocked = write.locked || awaiting || query.isFetching || query.isError;
+  const fileBusy = messageFilesBusy || noteFilesBusy;
+  const blocked = fileBusy || write.locked || awaiting || query.isFetching || query.isError;
   const reviewed = transitionReview ?? row;
   const startTransition = () => {
     if (row && transitionReview === null) setTransitionReview({ version: row.version, status: row.status, allowed_transitions: [...row.allowed_transitions] });
@@ -172,30 +178,34 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
           if (blocked || !row.can_add_message) return;
           write.submit({ kind: "delivery", review: deliveryReview, version: deliveryReview.version, key: deliveryReview.key });
         }} />}
-        {(row.can_add_message || messageDraft !== null || messageReview !== null) && <TicketMessageForm body={messageDraft?.body ?? ""} reviewed={messageReview?.body ?? null} disabled={blocked || editor !== null || !row.can_add_message} error={messageError}
+        {(row.can_add_message || messageDraft !== null || messageReview !== null || messageFilesBusy) && <TicketMessageForm body={messageDraft?.body ?? ""} reviewed={messageReview?.body ?? null} disabled={blocked || editor !== null || !row.can_add_message} error={messageError} reviewedFiles={messageReview?.files ?? []}
+          attachments={<AttachmentPicker scope={{ owner: "ticket", id, purpose: "public" }} version={row.version} selected={messageFiles} change={files => { setMessageFiles(files); setMessageDraft({ body: messageDraft?.body ?? "", version: messageDraft?.version ?? row.version }); }} disabled={write.locked || awaiting || query.isFetching || query.isError || editor !== null || messageReview !== null || noteFilesBusy || !row.can_add_message} busyChanged={messageBusyChanged} />}
           change={body => { setMessageDraft({ body, version: messageDraft?.version ?? row.version }); setMessageError(""); }}
           review={() => {
             if (blocked || !row.can_add_message) return;
             const body = messageDraft?.body.trim() ?? "";
             if (!body || Array.from(body).length > 10000 || body.includes("\u0000")) { setMessageError("Use de 1 a 10000 caracteres, sem caracteres nulos."); return; }
-            setMessageReview({ body, version: messageDraft!.version }); setMessageError("");
+            setMessageReview({ body, version: messageDraft!.version, files: [...messageFiles] }); setMessageError("");
             requestAnimationFrame(() => document.getElementById("ticket-message-review-heading")?.focus());
           }}
           cancel={() => { setMessageReview(null); requestAnimationFrame(() => document.getElementById("ticket-message")?.focus()); }}
           submit={() => {
             if (blocked || !row.can_add_message || !messageReview) return;
             setNotice("");
-            write.submit({ kind: "message", body: { body_text: messageReview.body }, version: messageReview.version, key: crypto.randomUUID() });
+            write.submit({ kind: "message", body: { body_text: messageReview.body, ...(messageReview.files.length ? { attachment_ids: messageReview.files.map(file => file.id) } : {}) }, files: [...messageReview.files], version: messageReview.version, key: crypto.randomUUID() });
           }} />}
+        {!row.can_add_message && !messageDraft && !messageReview && !messageFilesBusy && <AttachmentPicker scope={{ owner: "ticket", id, purpose: "public" }} version={row.version} selected={[]} change={() => {}} disabled busyChanged={messageBusyChanged} />}
+        {row.can_read_notes && !row.can_add_note && !noteDraft && !noteFilesBusy && !noteFiles.length && <AttachmentPicker scope={{ owner: "ticket", id, purpose: "note" }} version={row.version} selected={[]} change={() => {}} disabled busyChanged={noteBusyChanged} />}
         {row.can_read_notes && <TicketNotes id={id} api={api} />}
-        {row.can_add_note && <TicketNoteForm body={noteDraft?.body ?? ""} disabled={blocked || editor !== null} error={noteError}
+        {(row.can_add_note || noteDraft !== null || noteFilesBusy || noteFiles.length > 0) && <TicketNoteForm body={noteDraft?.body ?? ""} disabled={blocked || editor !== null || !row.can_add_note} error={noteError}
+          attachments={<AttachmentPicker scope={{ owner: "ticket", id, purpose: "note" }} version={row.version} selected={noteFiles} change={files => { setNoteFiles(files); setNoteDraft({ body: noteDraft?.body ?? "", version: noteDraft?.version ?? row.version }); }} disabled={write.locked || awaiting || query.isFetching || query.isError || editor !== null || messageFilesBusy || !row.can_add_note} busyChanged={noteBusyChanged} />}
           change={body => { setNoteDraft({ body, version: noteDraft?.version ?? row.version }); setNoteError(""); }}
           submit={() => {
-            if (blocked || !noteDraft) { setNoteError("Escreva a nota interna."); return; }
+            if (blocked || !row.can_add_note || !noteDraft) { setNoteError("Escreva a nota interna."); return; }
             const body = noteDraft.body.trim();
             if (!body || Array.from(body).length > 10000 || body.includes("\u0000")) { setNoteError("Use de 1 a 10000 caracteres, sem caracteres nulos."); return; }
             setNotice(""); setNoteError("");
-            write.submit({ kind: "note", body: { body_text: body }, version: noteDraft.version, key: crypto.randomUUID() });
+            write.submit({ kind: "note", body: { body_text: body, ...(noteFiles.length ? { attachment_ids: noteFiles.map(file => file.id) } : {}) }, files: [...noteFiles], version: noteDraft.version, key: crypto.randomUUID() });
           }} />}
         <TicketHistory id={id} api={api} /><TicketActivity id={id} api={api} />
       </div>

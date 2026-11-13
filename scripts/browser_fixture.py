@@ -398,6 +398,19 @@ if not os.environ.get("ALTVIA_E2E_EXPIRE") and not os.environ.get("ALTVIA_E2E_DI
             target.write(
                 f"ALTVIA_E2E_NOTE_{kind}_SESSION={token}\nALTVIA_E2E_NOTE_{kind}_ID={account_id}\nALTVIA_E2E_NOTE_{kind}_EMAIL={account_email}\n"
             )
+            if kind == "AUTHOR" and os.environ.get("ALTVIA_E2E_FILE_PROTOCOL") == "1":
+                # Dedicated revocable sessions for the existing author. No new
+                # account/admin or HTTP login consumes the shared identity budget.
+                for purpose in ["UPLOAD", "DOWNLOAD"]:
+                    with Session(engine) as db:
+                        _, _, file_token = login(
+                            db,
+                            account_email,
+                            account_password,
+                            "file-fixture",
+                            "file_fixture_session",
+                        )
+                    target.write(f"ALTVIA_E2E_FILE_{purpose}_SESSION={file_token}\n")
         for kind, (account_email, account_password, account_id) in ticket_accounts.items():
             with Session(engine) as db:
                 _, _, token = login(

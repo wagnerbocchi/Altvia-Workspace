@@ -1,5 +1,8 @@
 "use client";
 
+import type { ReactNode } from "react";
+import { AttachmentReview, LinkedAttachments } from "@/components/attachments";
+import type { AttachmentSummary } from "@/lib/attachments";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { LoadingRows, ReadError, usePaging } from "@/components/team-admin/common";
@@ -30,6 +33,7 @@ export function TicketDeliveryReview({ review, disabled, confirm, cancel }: { re
     <dl className="account-details work-facts"><div><dt>De</dt><dd>{review.choices.sender?.from_email}</dd></div><div><dt>Para</dt><dd>{review.choices.participant?.display_name} - {review.choices.participant?.email}</dd></div></dl>
     <p className="field-help">Destinatario atestado somente para este chamado. Isso nao verifica sua conta ou contato em outros contextos.</p>
     <h3 className="work-subheading">Texto salvo que sera enviado</h3><p className="work-prose">{review.message.body_text}</p>
+    <AttachmentReview files={review.message.attachments} />
     <p className="field-help">Confirmar coloca esta resposta na fila de envio. Notas internas nao fazem parte da mensagem.</p>
     <div className="action-row"><Button disabled={disabled} onClick={confirm}>Confirmar envio</Button><Button variant="outline" disabled={disabled} onClick={cancel}>Cancelar revisao de envio</Button></div>
   </section>;
@@ -71,23 +75,24 @@ function OutboundMessage({ message, id, api, canAdd, choices, blocked, review, p
             {recoveryAvailable && <Button variant="outline" disabled={recoveryBusy} onClick={recoverDelivery}>{pendingDelivery.acknowledged ? "Confirmar estado deste envio" : "Recuperar resultado deste envio"}</Button>}
           </div> : <DeliveryStatus id={id} message={message} api={api} />}
           <time className="record-meta" dateTime={message.created_at}>{new Date(message.created_at).toLocaleString("pt-BR")}</time>
-          <p className="work-prose">{message.body_text}</p>
+          <p className="work-prose">{message.body_text}</p><LinkedAttachments files={message.attachments} />
           {message.delivery_status === "draft" && pendingDelivery?.messageId !== message.id && canAdd && choices.data?.can_send && choices.data.sender && choices.data.participant && <Button variant="outline" disabled={blocked || choices.isFetching || choices.isError} onClick={() => review(message, choices.data!)}>Revisar envio</Button>}
         </div>
       </li>;
 }
 
-export function TicketMessageForm({ body, reviewed, disabled, error, change, review, cancel, submit }: {
-  body: string; reviewed: string | null; disabled: boolean; error: string; change: (body: string) => void;
+export function TicketMessageForm({ body, reviewed, disabled, error, change, review, cancel, submit, attachments, reviewedFiles }: {
+  body: string; reviewed: string | null; disabled: boolean; error: string; change: (body: string) => void; attachments: ReactNode; reviewedFiles: readonly AttachmentSummary[];
   review: () => void; cancel: () => void; submit: () => void;
 }) {
   return <section className="admin-section" aria-labelledby="ticket-message-compose-heading">
     <h2 id="ticket-message-compose-heading">Preparar resposta</h2>
     <p id="ticket-message-help" className="field-help">Salve um rascunho de resposta, separado das notas internas. Nao sera enviado. Depois de salvo, nao pode ser editado ou removido.</p>
+    {attachments}
     {reviewed !== null ? <div role="group" aria-labelledby="ticket-message-review-heading">
       <h3 id="ticket-message-review-heading" className="work-subheading" tabIndex={-1}>Revisar rascunho de resposta</h3>
       <p className="field-help">Rascunho - nao enviado. Confira o texto antes de salvar.</p>
-      <p className="work-prose">{reviewed}</p>
+      <p className="work-prose">{reviewed}</p><AttachmentReview files={reviewedFiles} />
       <div className="action-row">
         <Button disabled={disabled} onClick={submit}>Salvar rascunho</Button>
         <Button variant="outline" disabled={disabled} onClick={cancel}>Voltar ao texto</Button>

@@ -107,7 +107,10 @@ test("@work uncertain comment and version conflict retain original intent",async
   await expect(page.getByRole("button",{name:"Verificar comentário",exact:true})).toBeVisible();
   await stateCapture(page,"uncertain");
   await page.getByRole("button",{name:"Verificar comentário",exact:true}).click();
-  await expect(page.getByText("Efeito único",{exact:true})).toBeVisible();
+  // A list refresh can reveal committed history while protected replay is still
+  // pending. Only the acknowledged write may clear the retained composer.
+  await expect(page.getByLabel("Comentário interno",{exact:true})).toHaveValue("");
+  await expect(page.getByRole("list",{name:"Comentários internos",exact:true}).getByText("Efeito único",{exact:true})).toBeVisible();
   expect(intents).toHaveLength(2);expect(intents[1]).toEqual(intents[0]);
   const transitions:{key?:string,version?:string,body:string|null}[]=[];
   let lostTransition=true;

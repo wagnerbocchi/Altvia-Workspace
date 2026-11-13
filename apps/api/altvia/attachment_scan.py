@@ -291,6 +291,25 @@ def validate_event(event: OutboxEvent) -> None:
         attachment_id: UUID
         state: State
 
+    if event.schema_version == 2:
+
+        class OwnerPayload(BaseModel):
+            model_config = ConfigDict(extra="forbid")
+            actor_id: None
+            actor_kind: Literal["management_command"]
+            attachment_id: UUID
+            state: Literal["quarantine"]
+
+        owner = OwnerPayload.model_validate(event.payload)
+        if (
+            event.aggregate_type != "attachment"
+            or event.event_type != "file.uploaded"
+            or event.aggregate_version != 1
+            or owner.attachment_id != event.aggregate_id
+        ):
+            raise ValueError("invalid_file_event")
+        return
+
     payload = Payload.model_validate(event.payload)
     if (
         event.aggregate_type != "attachment"

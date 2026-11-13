@@ -577,3 +577,43 @@ def test_same_id_same_mailbox_other_client_remains_independent_and_hidden(
         admin_client.get("/api/v1/mail-cases", params={"client_id": str(client_id)}).json()["items"]
         == []
     )
+
+
+def test_owner_cli_lazy_storage_fixed_refusal_and_no_stdin(db_engine, context, monkeypatch, capsys):
+    import sys
+
+    from altvia import mail_cases_owner
+    from test_mail_case_files import message, variant
+
+    class NoStdin:
+        def read(self, *args):
+            pytest.fail("Owner classification must not consume stdin")
+
+        @property
+        def buffer(self):
+            pytest.fail("Owner classification must not consume binary stdin")
+
+    monkeypatch.setattr(sys, "stdin", NoStdin())
+    monkeypatch.setenv("ALTVIA_ALLOW_MAIL_CASES", "1")
+    monkeypatch.setenv("ALTVIA_STORAGE_FILE", "/private-unavailable-storage-marker")
+    # The owner subtype needs only DB and optional storage, never API/worker config.
+    monkeypatch.delenv("ALTVIA_PUBLIC_ORIGIN", raising=False)
+    args = [
+        "attest",
+        "--variant-id",
+        str(variant(db_engine, RAW)),
+        "--contact-id",
+        context["requester_id"],
+        "--contact-version",
+        "1",
+        "--evidence",
+        "synthetic:proof",
+    ]
+    assert mail_cases_owner.main(args) == 0
+    output = capsys.readouterr()
+    assert "private-" not in output.out and output.err == ""
+    args[2] = str(variant(db_engine, message().replace(b"<incoming@", b"<files@"), uid=2))
+    assert mail_cases_owner.main(args) == 1
+    output = capsys.readouterr()
+    assert output.out == ""
+    assert output.err == "Mail case command refused; no classification acknowledged.\n"

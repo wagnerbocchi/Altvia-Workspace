@@ -66,7 +66,15 @@ def scoped(
     row = db.get(Attachment, identifier)
     if row is None:
         raise identity.IdentityError(404, "not_found")
-    owner: OwnerType = "ticket" if row.ticket_id else "work_item"
+    owner: OwnerType
+    if row.ticket_id is not None:
+        owner = "ticket"
+    elif row.work_item_id is not None:
+        owner = "work_item"
+    else:
+        # Producer rollout precedes authorized incoming-file reads. Never fall
+        # through to another parent's purpose validation (an existence leak).
+        raise identity.IdentityError(404, "not_found")
     scope = parent(
         db,
         actor,

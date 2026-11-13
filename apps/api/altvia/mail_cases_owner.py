@@ -6,6 +6,7 @@ import re
 import sys
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 from uuid import UUID, uuid4
 
 from sqlalchemy import Engine, select, text
@@ -14,9 +15,12 @@ from sqlalchemy.orm import Session
 
 from altvia.config import DatabaseSettings
 from altvia.database import make_engine
+from altvia.file_storage import StorageError
+from altvia.mail_case_files import PreparedCaseFiles, persist_case_files, stage_case_files
 from altvia.mail_cases import validate_case_event
 from altvia.mail_intake import MAX_VERSION, SafeMailParser
-from altvia.mail_routing import RoutingError, parse_routing
+from altvia.mail_mime import extract_files
+from altvia.mail_routing import RoutingError, RoutingHeaders, parse_routing
 from altvia.management import lock_identity_writes
 from altvia.models import (
     AuditLog,
@@ -35,6 +39,10 @@ from altvia.models import (
     TicketParticipant,
     TicketQueue,
 )
+
+
+class CaseOwnerSettings(DatabaseSettings):
+    storage_file: Path | None = None
 
 
 class CaseError(ValueError):
@@ -118,7 +126,13 @@ def _advance(source: MailboxSource, case: MailTriageCase | None = None) -> None:
 
 
 def attest_case(
-    engine: Engine, variant_id: UUID, contact_id: UUID, contact_version: int, evidence: str
+    engine: Engine,
+    variant_id: UUID,
+    contact_id: UUID,
+    contact_version: int,
+    evidence: str,
+    *,
+    storage_file: Path | None = None,
 ) -> CaseReceipt:
     if (
         type(contact_version) is not int
@@ -136,158 +150,204 @@ def attest_case(
         routing = parse_routing(raw)
     except RoutingError as error:
         raise CaseError("invalid_routing") from error
-    with Session(engine) as db, db.begin():
-        require_owner(db)
-        lock_identity_writes(db)
-        variant = db.get(InboundMailVariant, variant_id)
-        contact = db.get(ClientContact, contact_id)
-        envelope = db.get(InboundMailEnvelope, variant.envelope_id) if variant else None
-        source = db.get(MailboxSource, envelope.source_id) if envelope else None
-        if not variant or not contact or not envelope or not source:
-            raise CaseError("case_input_unavailable")
-        _parents(db, contact.client_id, source.queue_id)
-        source = db.scalar(
-            select(MailboxSource)
-            .where(MailboxSource.id == source.id)
+
+    def publish(prepared: PreparedCaseFiles | None = None) -> CaseReceipt | None:
+        with Session(engine) as db, db.begin():
+            return _publish_locked(
+                db, variant_id, contact_id, contact_version, evidence, raw, routing, prepared
+            )
+
+    receipt = publish()
+    if receipt is not None:
+        return receipt
+    # Both interpretation and network work happen outside database transactions.
+    extracted = extract_files(raw)
+    try:
+        prepared = stage_case_files(extracted, storage_file)
+    except (StorageError, ValueError, OSError):
+        # An alias/collision winner must commit even if our staging failed.
+        # Raise only AFTER this transaction ends, so its invalidation is durable.
+        receipt = publish()
+        if receipt is not None:
+            return receipt
+        raise CaseError("case_storage_unavailable") from None
+    receipt = publish(prepared)
+    assert receipt is not None
+    return receipt
+
+
+def _publish_locked(
+    db: Session,
+    variant_id: UUID,
+    contact_id: UUID,
+    contact_version: int,
+    evidence: str,
+    raw: bytes,
+    routing: RoutingHeaders,
+    prepared: PreparedCaseFiles | None,
+) -> CaseReceipt | None:
+    """Single current-context protocol for preflight, finalization and I/O failure."""
+    require_owner(db)
+    lock_identity_writes(db)
+    variant = db.get(InboundMailVariant, variant_id)
+    contact = db.get(ClientContact, contact_id)
+    envelope = db.get(InboundMailEnvelope, variant.envelope_id) if variant else None
+    source = db.get(MailboxSource, envelope.source_id) if envelope else None
+    if not variant or not contact or not envelope or not source:
+        raise CaseError("case_input_unavailable")
+    _parents(db, contact.client_id, source.queue_id)
+    source = db.scalar(
+        select(MailboxSource)
+        .where(MailboxSource.id == source.id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    assert source is not None
+    envelope = db.get(InboundMailEnvelope, envelope.id, populate_existing=True)
+    assert envelope is not None
+    existing = db.get(MailCaseOrigin, variant_id)
+    query = select(MailTriageCase).where(
+        MailTriageCase.source_id == source.id,
+        MailTriageCase.client_id == contact.client_id,
+        MailTriageCase.contact_id == contact.id,
+        MailTriageCase.email_snapshot == routing.from_email,
+        MailTriageCase.message_id == routing.message_id,
+    )
+    if existing:
+        query = select(MailTriageCase).where(MailTriageCase.id == existing.case_id)
+    case = (
+        db.scalar(
+            query.order_by(MailTriageCase.id)
             .with_for_update()
             .execution_options(populate_existing=True)
         )
-        assert source is not None
-        envelope = db.get(InboundMailEnvelope, envelope.id, populate_existing=True)
-        assert envelope is not None
-        existing = db.get(MailCaseOrigin, variant_id)
-        query = select(MailTriageCase).where(
-            MailTriageCase.source_id == source.id,
-            MailTriageCase.client_id == contact.client_id,
-            MailTriageCase.contact_id == contact.id,
-            MailTriageCase.email_snapshot == routing.from_email,
-            MailTriageCase.message_id == routing.message_id,
-        )
-        if existing:
-            query = select(MailTriageCase).where(MailTriageCase.id == existing.case_id)
-        case = (
-            db.scalar(
-                query.order_by(MailTriageCase.id)
-                .with_for_update()
-                .execution_options(populate_existing=True)
-            )
-            if routing.message_id or existing
-            else None
-        )
-        contact = db.scalar(
-            select(ClientContact)
-            .where(ClientContact.id == contact_id)
-            .with_for_update()
-            .execution_options(populate_existing=True)
-        )
+        if routing.message_id or existing
+        else None
+    )
+    contact = db.scalar(
+        select(ClientContact)
+        .where(ClientContact.id == contact_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if (
+        not contact
+        or not contact.active
+        or contact.version != contact_version
+        or contact.email_normalized != routing.from_email
+    ):
+        raise CaseError("reviewed_contact_unavailable")
+    if existing:
         if (
-            not contact
-            or not contact.active
-            or contact.version != contact_version
-            or contact.email_normalized != routing.from_email
+            existing.contact_id != contact_id
+            or existing.contact_version != contact_version
+            or existing.evidence != evidence
+            or existing.email_snapshot != routing.from_email
         ):
-            raise CaseError("reviewed_contact_unavailable")
-        if existing:
-            if (
-                existing.contact_id != contact_id
-                or existing.contact_version != contact_version
-                or existing.evidence != evidence
-                or existing.email_snapshot != routing.from_email
-            ):
-                raise CaseError("variant_intent_conflict")
-            assert case is not None
-            return CaseReceipt(case.id, case.state, existing.disposition, True)
-        if envelope.state != "quarantine":
-            raise CaseError("receipt_collision")
-        preview = db.get(InboundMailPreview, (variant_id, 2))
-        if (
-            not preview
-            or preview.status != "ready"
-            or preview.subject is None
-            or preview.body_text is None
-        ):
-            raise CaseError("parser2_required")
-        # Outgoing IDs are reserved for every persisted delivery state, scoped
-        # before lookup. Intake and outgoing sources may differ in this queue.
-        reserved = (
-            db.scalar(
-                select(OutboundMessage.id)
-                .join(Ticket, Ticket.id == OutboundMessage.ticket_id)
-                .join(TicketParticipant, TicketParticipant.id == OutboundMessage.participant_id)
-                .where(
-                    Ticket.queue_id == source.queue_id,
-                    Ticket.client_id == contact.client_id,
-                    TicketParticipant.contact_id == contact.id,
-                    OutboundMessage.envelope_to == contact.email_normalized,
-                    OutboundMessage.smtp_message_id == routing.message_id,
-                )
-            )
-            if routing.message_id
-            else None
-        )
-        if reserved:
-            raise CaseError("reserved_message_id")
-        disposition = "primary"
-        if case:
-            primary = db.get(InboundMailVariant, case.primary_variant_id)
-            assert primary is not None
-            equivalent = primary.raw_sha256 == variant.raw_sha256 and primary.raw_message == raw
-            disposition = "alias" if equivalent else "collision"
-            if equivalent and case.state not in {"ready", "promoted"}:
-                raise CaseError("case_invalidated")
-            _advance(source, case)
-            if not equivalent:
-                case.state = "collision"
-        else:
-            _advance(source)
-            case = MailTriageCase(
-                source_id=source.id,
-                queue_id=source.queue_id,
-                client_id=contact.client_id,
-                contact_id=contact.id,
-                primary_variant_id=variant_id,
-                email_snapshot=contact.email_normalized,
-                contact_name=contact.display_name,
-                subject=preview.subject,
-                body_text=preview.body_text,
-                routing_version=1,
-                message_id=routing.message_id,
-                in_reply_to=routing.in_reply_to,
-                references_ids=list(routing.references),
-                thread_token=routing.thread_token,
-                received_at=envelope.created_at,
-                state="ready",
-                version=1,
-            )
-            db.add(case)
-        db.flush()
-        db.add(
-            MailCaseOrigin(
-                variant_id=variant_id,
-                case_id=case.id,
-                source_id=source.id,
-                envelope_id=envelope.id,
-                raw_sha256=variant.raw_sha256,
-                client_id=contact.client_id,
-                contact_id=contact.id,
-                email_snapshot=contact.email_normalized,
-                contact_version=contact_version,
-                evidence=evidence,
-                routing_version=1,
-                parser_version=2,
-                disposition=disposition,
+            raise CaseError("variant_intent_conflict")
+        assert case is not None
+        return CaseReceipt(case.id, case.state, existing.disposition, True)
+    if envelope.state != "quarantine":
+        raise CaseError("receipt_collision")
+    preview = db.get(InboundMailPreview, (variant_id, 2))
+    if (
+        not preview
+        or preview.status != "ready"
+        or preview.subject is None
+        or preview.body_text is None
+    ):
+        raise CaseError("parser2_required")
+    # Outgoing IDs are reserved for every persisted delivery state, scoped
+    # before lookup. Intake and outgoing sources may differ in this queue.
+    reserved = (
+        db.scalar(
+            select(OutboundMessage.id)
+            .join(Ticket, Ticket.id == OutboundMessage.ticket_id)
+            .join(TicketParticipant, TicketParticipant.id == OutboundMessage.participant_id)
+            .where(
+                Ticket.queue_id == source.queue_id,
+                Ticket.client_id == contact.client_id,
+                TicketParticipant.contact_id == contact.id,
+                OutboundMessage.envelope_to == contact.email_normalized,
+                OutboundMessage.smtp_message_id == routing.message_id,
             )
         )
-        _event(
-            db,
-            case,
-            {
-                "primary": "mail.case_published",
-                "alias": "mail.case_aliased",
-                "collision": "mail.case_collided",
-            }[disposition],
+        if routing.message_id
+        else None
+    )
+    if reserved:
+        raise CaseError("reserved_message_id")
+    disposition = "primary"
+    if case:
+        primary = db.get(InboundMailVariant, case.primary_variant_id)
+        assert primary is not None
+        equivalent = primary.raw_sha256 == variant.raw_sha256 and primary.raw_message == raw
+        disposition = "alias" if equivalent else "collision"
+        if equivalent and case.state not in {"ready", "promoted"}:
+            raise CaseError("case_invalidated")
+        _advance(source, case)
+        if not equivalent:
+            case.state = "collision"
+    else:
+        if prepared is None:
+            # A genuinely new intent has no database effect during preflight.
+            return None
+        _advance(source)
+        case = MailTriageCase(
+            file_extraction_version=1,
+            file_set_status=prepared.status,
+            file_count=len(prepared.files),
+            file_rejection_reason=prepared.reason,
+            source_id=source.id,
+            queue_id=source.queue_id,
+            client_id=contact.client_id,
+            contact_id=contact.id,
+            primary_variant_id=variant_id,
+            email_snapshot=contact.email_normalized,
+            contact_name=contact.display_name,
+            subject=preview.subject,
+            body_text=preview.body_text,
+            routing_version=1,
+            message_id=routing.message_id,
+            in_reply_to=routing.in_reply_to,
+            references_ids=list(routing.references),
+            thread_token=routing.thread_token,
+            received_at=envelope.created_at,
+            state="ready",
+            version=1,
         )
-        return CaseReceipt(case.id, case.state, disposition, False)
+        db.add(case)
+    db.flush()
+    if disposition == "primary":
+        assert prepared is not None
+        persist_case_files(db, case, prepared)
+    db.add(
+        MailCaseOrigin(
+            variant_id=variant_id,
+            case_id=case.id,
+            source_id=source.id,
+            envelope_id=envelope.id,
+            raw_sha256=variant.raw_sha256,
+            client_id=contact.client_id,
+            contact_id=contact.id,
+            email_snapshot=contact.email_normalized,
+            contact_version=contact_version,
+            evidence=evidence,
+            routing_version=1,
+            parser_version=2,
+            disposition=disposition,
+        )
+    )
+    _event(
+        db,
+        case,
+        {
+            "primary": "mail.case_published",
+            "alias": "mail.case_aliased",
+            "collision": "mail.case_collided",
+        }[disposition],
+    )
+    return CaseReceipt(case.id, case.state, disposition, False)
 
 
 def revoke_case(engine: Engine, case_id: UUID, expected_version: int) -> None:
@@ -337,11 +397,17 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     engine = None
     try:
-        engine = make_engine(DatabaseSettings())
+        settings = CaseOwnerSettings()
+        engine = make_engine(settings)
         if args.command == "attest":
             output = asdict(
                 attest_case(
-                    engine, args.variant_id, args.contact_id, args.contact_version, args.evidence
+                    engine,
+                    args.variant_id,
+                    args.contact_id,
+                    args.contact_version,
+                    args.evidence,
+                    storage_file=settings.storage_file,
                 )
             )
         elif args.command == "revoke":

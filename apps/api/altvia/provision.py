@@ -83,6 +83,8 @@ APP_COLUMN_UPDATES = {
     "attachments": RETRY_UPDATES,
 }
 WORKER_COLUMN_READS = {
+    # Incoming file publication adds no worker parent/name/case privileges.
+    # Creation-only case-set triggers must not run on these scan updates.
     "attachments": SCAN_COLUMNS,
     "users": {"id", "active"},
     "tickets": {"id", "client_id", "queue_id", "requester_id", "assignee_id", "status"},

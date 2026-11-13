@@ -979,6 +979,16 @@ class OutboundMessage(Base):
 class MailTriageCase(Base):
     __tablename__ = "mail_triage_cases"
     __table_args__ = (
+        CheckConstraint(
+            "(file_extraction_version=0 AND file_set_status='legacy' AND file_count=0 AND "
+            "file_rejection_reason IS NULL) OR (file_extraction_version=1 AND "
+            "((file_set_status='complete' AND file_count BETWEEN 0 AND 20 AND "
+            "file_rejection_reason IS NULL) OR (file_set_status='unavailable' AND file_count=0 AND "
+            "file_rejection_reason IS NOT NULL AND file_rejection_reason IN "
+            "('file_structure','file_count','file_size','file_encoding','file_filename',"
+            "'file_type','file_parameter'))))",
+            name="ck_case_files",
+        ),
         UniqueConstraint("id", "client_id", "queue_id", name="uq_case_ticket_context"),
         ForeignKeyConstraint(
             ["incoming_message_id", "ticket_id", "id"],
@@ -1048,6 +1058,10 @@ class MailTriageCase(Base):
     client_id: Mapped[UUID] = mapped_column(ForeignKey("clients.id"))
     contact_id: Mapped[UUID]
     primary_variant_id: Mapped[UUID] = mapped_column(ForeignKey("inbound_mail_variants.id"))
+    file_extraction_version: Mapped[int] = mapped_column(server_default="0", deferred=True)
+    file_set_status: Mapped[str] = mapped_column(String(11), server_default="legacy", deferred=True)
+    file_count: Mapped[int] = mapped_column(server_default="0", deferred=True)
+    file_rejection_reason: Mapped[str | None] = mapped_column(String(20), deferred=True)
     email_snapshot: Mapped[str] = mapped_column(String(254))
     contact_name: Mapped[str] = mapped_column(String(150))
     subject: Mapped[str] = mapped_column(String(998))
@@ -1144,14 +1158,18 @@ class Attachment(Base):
 
     __tablename__ = "attachments"
     __table_args__ = (
+        UniqueConstraint("mail_case_id", "file_position", name="uq_attachment_case_position"),
         UniqueConstraint("id", "ticket_id", "purpose", name="uq_attachment_ticket_id_purpose"),
         UniqueConstraint(
             "id", "work_item_id", "purpose", name="uq_attachment_work_item_id_purpose"
         ),
         CheckConstraint(
-            "(ticket_id IS NOT NULL AND work_item_id IS NULL AND purpose IN "
-            "('public','note')) OR (ticket_id IS NULL AND work_item_id IS NOT NULL AND "
-            "purpose='work')",
+            "(mail_case_id IS NULL AND file_position IS NULL AND creator_id IS NOT NULL AND "
+            "((ticket_id IS NOT NULL AND work_item_id IS NULL AND purpose IN ('public','note')) OR "
+            "(ticket_id IS NULL AND work_item_id IS NOT NULL AND purpose='work'))) OR "
+            "(mail_case_id IS NOT NULL AND ticket_id IS NULL AND work_item_id IS NULL AND "
+            "purpose='incoming' AND creator_id IS NULL AND parent_version=1 AND "
+            "file_position IS NOT NULL AND file_position BETWEEN 0 AND 19)",
             name="ck_attachment_owner",
         ),
         CheckConstraint(
@@ -1178,13 +1196,17 @@ class Attachment(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     ticket_id: Mapped[UUID | None] = mapped_column(ForeignKey("tickets.id"))
     work_item_id: Mapped[UUID | None] = mapped_column(ForeignKey("work_items.id"))
+    mail_case_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("mail_triage_cases.id", name="fk_attachment_mail_case", ondelete="RESTRICT")
+    )
+    file_position: Mapped[int | None]
     purpose: Mapped[str] = mapped_column(String(10))
     filename: Mapped[str] = mapped_column(String(255))
     media_type: Mapped[str] = mapped_column(String(30))
     bytes: Mapped[int] = mapped_column(BigInteger)
     sha256: Mapped[str] = mapped_column(String(64))
     object_key: Mapped[str] = mapped_column(String(72), unique=True)
-    creator_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"))
+    creator_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"))
     parent_version: Mapped[int]
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     policy_version: Mapped[int] = mapped_column(default=1)

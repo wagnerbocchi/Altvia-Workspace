@@ -43,6 +43,31 @@ services:
     pids_limit: 32
     restart: 'no'
     healthcheck: {disable: true}
+  mail-cases-owner:
+    image: ${ALTVIA_API_IMAGE:-altvia-api:local}
+    entrypoint: [python, -m, altvia.mail_cases_owner]
+    profiles: [mail-cases-owner]
+    environment:
+      ALTVIA_ALLOW_MAIL_CASES: '1'
+      ALTVIA_STORAGE_FILE: /run/secrets/storage_api
+    secrets:
+      - source: owner_database_url
+        target: ALTVIA_DATABASE_URL
+      - storage_api
+      - storage_ca
+    networks: [database, objects]
+    depends_on:
+      postgres: {condition: service_healthy}
+      storage: {condition: service_healthy}
+    read_only: true
+    tmpfs: ['/tmp:size=32m']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    cpus: 1.0
+    pids_limit: 32
+    restart: 'no'
+    healthcheck: {disable: true}
   clamd:
     image: ${ALTVIA_CLAMAV_IMAGE:-altvia-clamav:local}
     build: {context: .., dockerfile: infra/clamav.Dockerfile}

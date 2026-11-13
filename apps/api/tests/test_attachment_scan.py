@@ -483,3 +483,72 @@ def test_file_scan_process_clock_skew_uses_database_lease_and_freshness(
     controlled_ready(admin_client, db_engine, identifier, tmp_path)
     detail = admin_client.get("/api/v1/attachments/" + str(identifier)).json()
     assert detail["state"] == "ready" and detail["can_download"]
+
+
+@pytest.mark.parametrize(
+    "poison", ["extra", "actor", "kind", "state", "type", "schema", "aggregate", "version", "id"]
+)
+def test_file_owner_event_schema_is_strict_and_legacy_envelopes_unchanged(poison):
+    from uuid import uuid4
+
+    from altvia.attachment_scan import validate_event
+    from altvia.models import OutboxEvent
+
+    identifier = uuid4()
+    payload = {
+        "actor_id": None,
+        "actor_kind": "management_command",
+        "attachment_id": str(identifier),
+        "state": "quarantine",
+    }
+    event = OutboxEvent(
+        aggregate_type="attachment",
+        aggregate_id=identifier,
+        aggregate_version=1,
+        event_type="file.uploaded",
+        schema_version=2,
+        payload=payload,
+    )
+    validate_event(event)
+    if poison == "extra":
+        event.payload = {**payload, "filename": "private.txt"}
+    elif poison == "actor":
+        event.payload = {**payload, "actor_id": str(uuid4())}
+    elif poison == "kind":
+        event.payload = {**payload, "actor_kind": "file_worker"}
+    elif poison == "state":
+        event.payload = {**payload, "state": "ready"}
+    elif poison == "type":
+        event.event_type = "file.scan_changed"
+    elif poison == "schema":
+        event.schema_version = 1
+    elif poison == "aggregate":
+        event.aggregate_type = "mail_case"
+    elif poison == "version":
+        event.aggregate_version = 2
+    else:
+        event.aggregate_id = uuid4()
+    with pytest.raises(ValueError):
+        validate_event(event)
+    for event_type, kind, actor, state in (
+        ("file.uploaded", "user", str(uuid4()), "quarantine"),
+        ("file.scan_retried", "user", str(uuid4()), "quarantine"),
+        ("file.scan_changed", "file_worker", None, "ready"),
+    ):
+        legacy = OutboxEvent(
+            aggregate_type="attachment",
+            aggregate_id=identifier,
+            aggregate_version=3,
+            event_type=event_type,
+            schema_version=1,
+            payload={
+                "actor_id": actor,
+                "actor_kind": kind,
+                "attachment_id": str(identifier),
+                "state": state,
+            },
+        )
+        validate_event(legacy)
+        legacy.schema_version = 2
+        with pytest.raises(ValueError):
+            validate_event(legacy)

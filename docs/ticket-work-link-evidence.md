@@ -1,9 +1,10 @@
 # Ticket/work link development evidence
 
-Updated2026-11-13. ADR0039 and the four-task plan are selected. Task1 schema at
-b4c31e5 has independent source approval and real remote PostgreSQL proof. The
-separate existing browser-oracle correction9a3e225 also has source approval.
-Exact current full hosted acceptance is pending. Manual link API/events/UI,
+Updated2026-11-13. ADR0039 Tasks1/2 schema and protected API are implemented and
+independently reviewed atb4c31e5 and9a45874/657167d. The earlier exact5c0d423
+hosted gates all passed. Current API source has208 relevant native passes plus
+two covering passes for its generated-response correction; current full hosted
+acceptance remains pending. Operate panels, packaged relationship proof,
 whole-feature/MVP acceptance and final target qualification are not claimed.
 
 ## Native schema slice
@@ -100,14 +101,96 @@ volumes/images/evidence remain retained. Client SSH masters were verified and
 closed with client-only keepalives; no server SSH/security change occurred.
 Credentials/env contents were excluded from exported evidence and Git.
 
+## Exact prior hosted acceptance
+
+All five workflows at exact5c0d423b6212aa73fda322f6e7a8c855d6504d5e passed:
+API43506966976, browser43506966432, containers43506966468, source43506966806
+and images43506966655. API1493 passed with3 explicit native-console opt-in skips
+and no warnings; browser185 passed. Both container jobs passed, including real
+signed incoming-file scanning and6-object matching restore/current ACL proof.
+Seven nonempty hash-verified image reports contained no reported vulnerabilities.
+
+Complete logs/artifacts,216 API/18 infrastructure/264 combined source hashes,
+all290 combined successful commands and66 infrastructure commands were verified;
+only intentional negative infrastructure commands9/63 returned nonzero. There
+were no error annotations. The279-entry CRC-verified archive has SHA256
+02d397ca51d97a3c4f5f9535ea42421ffac898298b3f7b37a7569be43d9312cc.
+The old184/1 run and its unavailable row metadata remain retained. These gates
+cover the earlier schema/browser correction, not the subsequently added API.
+
+## Protected API and reciprocal history
+
+Source9a4587464ce18b50ed8891b22365e2ca36363c96 implements both-endpoint read/
+update authorization, canonical ticket-before-work locks and explicit refreshed
+work columns/assignments. Protected POST/DELETE intents include both original
+versions and IDs. Delayed unlink replay cannot delete a later relink; historical
+link replay cannot recreate a removed link. Current authority precedes receipts.
+No-op changes neither aggregate nor events; effects atomically advance both and
+record two strict events. Either overflow, native constraint, second-event or
+receipt failure rolls back all effects. State, ownership and deadlines stay
+independent.
+
+Both direction lists and choices apply current SQL scope before pagination.
+Both activity feeds require current readable counterpart and recorded customer/
+queue/project context before LIMIT; unlink history needs no surviving join.
+The worker validates and projects each of four strict event families once.
+No note/file grant, hidden count, broad worker privilege or dependency is added.
+
+| Scope | Actual result and limit |
+| --- | --- |
+| Required10-module native PostgreSQL suite |208 passed in692.81s,0 skips/warnings;73 new cases included |
+| Privacy/freshness mutation check |Three expected failures; exact restoration followed by8 focused passes |
+| Concurrency |Separate HTTP/DB clients observed real lock waits for revoke/archive/reassign/transition/logout; refreshed assignment denial covered |
+| Native static/schema |Ruff,format172,mypy65,Alembic upgrade/drift passed |
+| Generation |OpenAPI/TypeScript generated twice, repeat byte-identical; web check passed |
+| Independent backend review |Quality approved0 Critical/Important; one Minor HTTP200 declaration omission corrected below |
+
+Correction657167ddc31ca6e8dd0c364b2b64b0dfd8e4d6cc adds only POST HTTP200
+response metadata and its generated OpenAPI/TypeScript entries, preserving201.
+Actual native contract assertions failed with KeyError200 before the correction,
+then confirmed both statuses use TicketWorkReceipt. Removing just the new200
+entry makes the entire OpenAPI equal to9a. Repeat generation/web check and native
+Ruff/format/mypy passed; the two existing creation/replay/delayed-intent tests
+passed in11.21s without skips/warnings. The unchanged208-case behavior evidence
+was reused. Scoped re-review approved M1, with no new or remaining finding.
+
+FastAPI query models remain native typed inline operation parameters, matching
+existing filters. Eight JSON DTOs are generated named components; no unused query
+components were added. This is a recorded generation clarification, not a missing
+typed query contract.
+
+The user-selected altvia-vm ran new private capped PG/Redis/API and offline
+generation fixtures, nonroot, with pinned existing tool images and no public
+ports or host/security changes. Windows remained canonical; remote published main
+and old fixtures/data/evidence were preserved. Real persistent native Windows
+OpenSSH sessions were verified and closed; Git-SSH master checks alone were not
+treated as proof of actual multiplex reuse.
+
+Root verified all536 Git source bytes, all82 original plus6 correction native
+raw/map records, both sets of6 generation records, and29/39 final checker file hashes.
+All303 original and81 correction archive members matched extracted proof.
+Every final native source/checker/config map stayed unchanged during its check.
+Archive SHA256 values:
+
+- Original:593f15c15476284894a8cf0d2f6e63bf2e956dfe830f41f43fba6d45174d40c7.
+- Correction:5a68c275d893055e967ec084c5d9d9b43a4573395018470d01d50bef43202782.
+
+Retained failed attempts include the initial nonroot UV cache error before tests,
+actual missing-route/unsupported-family RED, two early pytest cache warnings,
+format preparation failures, a mypy internal error of unconfirmed cause, and a
+constraint-test oracle expecting an exception where native HTTP returns503.
+Writable private caches, corrected formatting and the accurate503/no-effects
+assertion preceded final passing checks. Controlled mutation failures and archive/
+transport preparation errors also remain preserved; none is counted green.
+
 ## Remaining gates
 
-Publish the reviewed source and observe all five exact-source hosted workflows,
-including both container jobs. Record full failures/skips/warnings/artifacts;
-the historical184/1 run is not relabeled green. Then continue Task2 API, current
-both-endpoint authorization, two reviewed versions/protected link+unlink,
-strict reciprocal events/privacy before pagination, followed by the real Operate
-panels and packaged relationship proof. Link lifecycle stays independent.
+Observe current exact-source hosted workflows and continue the real Operate
+panels, browser recovery/accessibility/visual checks and packaged relationship
+recreation/current-ACL proof. Obtain independent task and whole-increment reviews.
+Link lifecycle remains independent; task creation/automation/unified My Work
+require the next contract. Passing native backend checks alone does not close
+manual-link feature acceptance.
 
 Minimum compatible API/worker readers, guarded contraction and retained-history
 privacy remain required. Actual encrypted backup/compatible-image rollback and

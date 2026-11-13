@@ -2,7 +2,9 @@
 
 Date2026-11-13. Selected engineering contract after independent builder review;
 nothing Important remains before the schema task. This is not runtime proof.
-Implementation is not started. The complete master specification was read.
+Native schema and protected API are implemented and independently reviewed;
+browser and packaged relationship proof remain pending. See the feature evidence
+page for exact source/checks/limits. The complete master specification was read.
 ADR0007/0020/0021/0028 and current customer/queue/project/session policy remain
 binding. The user authorizes continuous development and finite engineering
 choices, local commits and direct main publication without PR. This contract

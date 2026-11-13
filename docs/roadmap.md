@@ -183,12 +183,19 @@ two reviewed versions/protected POST+DELETE and current counterpart activity
 privacy before pagination. Independent builder review found nothing Important
 remaining before the schema task. Task1 schema is now independently approved in
 b4c31e5 with84 native altvia-vm tests/0 skips/warnings and passing lint/types/
-Alembic checks. API/events, Operate/browser and packaged relationship proof remain
-unimplemented. A post-closure6dd5eb2 browser run184/1 exposed an existing manager-
+Alembic checks. API/events9a45874/correction657167d are independently approved
+after208 relevant native cases, two covering correction cases and native static/
+schema/repeated-generation checks, with no final skips/warnings. Both endpoints'
+current authority, two reviewed versions, protected unlink-after-relink replay,
+SQL history privacy and real concurrency/rollback are covered. Operate/browser
+and packaged relationship proof remain pending. A post-closure6dd5eb2 browser
+run184/1 exposed an existing manager-
 pagination test oracle: it expected the first raw account even when not selectable.
 Correction9a3e225 has independent approval, frozen controlled RED/GREEN and5
 canonical project passes. Original failed-row metadata remains unknown. All old
-failures/limits are retained; exact full current hosted gates are pending.
+failures/limits are retained. All five prior exact5c0d423 hosted gates passed:
+1493 API/3 explicit native-console skips/no warnings,185 browser,both container
+jobs/source/image security. New API-source full hosted acceptance remains pending.
 See docs/ticket-work-link-evidence.md for scope, archives and follow-through.
 No state synchronization, task creation, automation or unified My Work is implied.
 Retain a link-aware compatible API/worker; actual image rollback rehearsal and

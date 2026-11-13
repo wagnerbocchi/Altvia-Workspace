@@ -6,9 +6,9 @@ ticket version and UTC creation, with RESTRICT FKs and unique ticket/version.
 API receives SELECT/INSERT; worker projects redacted IDs without note table grants.
 Downgrade preserves note data, permission history and prior queue/ticket receipts.
 
-Design contract for the complete product. Applied development schema is limited
-to identity, team/idempotency and ADR-0017 activity migrations; other tables below
-remain planned. Execution evidence is in the Phase 1/1C reports, not this ERD.
+Design contract for the complete product, combining historical applied increments
+and planned tables. The current migration chain, each ADR and its development
+evidence define implementation status; this ERD is not an acceptance ledger.
 UUID primary keys unless stated. Timestamps
 are TIMESTAMPTZ in UTC; business calendars name an IANA timezone. Mutable
 aggregates have positive integer version and created_at/updated_at. State
@@ -202,15 +202,16 @@ docs/phase-2e-contact-evidence.md; no ticket/email table or account link is adde
 | ticket_participants | ticket_id + contact_id UNIQUE; contact must belong to same client |
 | ticket_messages | ticket_id, author_user_id/contact_id nullable, direction inbound/outbound/internal, visibility public/internal, body_text, sanitized_html, message_id, received_at/sent_at, delivery_status; exactly one author except audited system actor |
 | ticket_status_history | ticket_id, from/to, actor_id, occurred_at, reason, policy_version; append-only |
-| ticket_work_items | PK(ticket_id,work_item_id), relation_type implements/related, created_at/by; same non-null client enforced by DB trigger |
+| ticket_work_items | ADR0039 selected manual-link shape: PK(ticket_id,work_item_id), non-null client_id/queue_id/project_id, fixed related, created_at/by; three composite FKs enforce same-client scope; not yet implemented |
 | attachments | storage_key UNIQUE opaque, sha256, original_filename, media_type, bytes, state quarantine/ready/rejected, uploader_id, scan_result/version |
 | attachment_links | attachment_id plus exactly one concrete message/work_comment target FK; UNIQUE target/link; target ACL dominates, no public bucket ACL |
 | mailboxes | address UNIQUE, queue_id, IMAP/SMTP host/port/TLS mode, secret_reference, UIDVALIDITY/checkpoint; never password in table/log |
 | inbound_messages | mailbox_id, uidvalidity, uid, message_id, raw_hash, raw_storage_key, state, ticket_message_id; UNIQUE(mailbox_id,uidvalidity,uid) |
 | outbound_messages | ticket_message_id UNIQUE, stable message_id UNIQUE, envelope recipients snapshot, delivery_state, attempts, next_attempt_at, last_safe_error, accepted_at |
 
-Requester/contact composite FK ensures same client as ticket. Ticket/work/client
-scope-changing operations revalidate all links under row locks. Queue transitions
+Requester/contact composite FK ensures same client as ticket. Current project and
+work/ticket scope contracts remain immutable. ADR0039 uses native composite FKs
+to restrict conflicting parent changes while linked. Queue transitions
 recheck assignee membership. Internal notes cannot create outbound deliveries.
 Attachment links cannot be moved to a broader ACL without explicit reauthorization.
 Polymorphic attachment/event identifiers never replace actual FK checks.
@@ -268,7 +269,8 @@ policy is awaiting management, so no destructive TTL job is authorized.
 | identity + sessions + scoped grants + audit/idempotency/outbox kernel | 1 | Empty DB upgrade, constraints, auth/ACL, downgrade on disposable DB |
 | clients/contacts/areas/projects/members/work/history | 2 | Composite scope FKs, cycles under concurrency, optimistic versions, restart persistence |
 | queues/tickets/messages/files/mailboxes/delivery | 3 | Requester scope, private download, UID/replay, quarantine |
-| links/rules/executions/processed consumers | 4 | Same-client trigger, stable effect key, restart/race/replay |
+| manual ticket/work links | 3 / ADR0039 | Three composite same-client FKs, both reviewed aggregates, protected link/unlink, current counterpart history privacy |
+| rules/executions/processed consumers | 4 | Stable effect key, restart/race/replay, ADR0007 full-set projection |
 | calendars/SLA/import/analytics indexes | 5 | Reference-date reconciliation, mapping revisions, rollback dry-run |
 | time tracking/export/advanced planning | after core | Separate P1/P2 scope, no precreated unused tables |
 

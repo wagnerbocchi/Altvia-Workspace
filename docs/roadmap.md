@@ -168,8 +168,18 @@ Git archive. Whole-increment review56ba094..62dbeeb found0 Critical/Important/Mi
 actionable issues. Archive SHA25668daea861e534c68f67fdb7b00fea3461eababd1148138109d4107c66b42fae7.
 This closes incoming development, not the old unknown SMTP cause, final target,
 encrypted backup or compatible-image rollback. Next manual ticket/work contract
-is privately prepared; no link implementation is inferred. Evidence and retained
+is selected below; no link implementation is inferred. Evidence and retained
 engineering/deferred-scope dispositions are in the page linked above.
+
+ADR0039 and docs/plans/2026-11-13-ticket-work-links.md select manual same-client
+N:N links under both existing endpoint update permissions, native composite FKs,
+two reviewed versions/protected POST+DELETE and current counterpart activity
+privacy before pagination. Independent builder review found nothing Important
+remaining before the schema task. Implementation is not started; actual SQL,
+API/events, Operate/browser and packaged recreation gates follow incrementally.
+No state synchronization, task creation, automation or unified My Work is implied.
+Retain a link-aware compatible API/worker; actual image rollback rehearsal and
+encrypted backup remain mandatory integrated hardening, with final target later.
 
 Task3 closure: all five exact-df3c8bb hosted gates passed,1198 API cases/three
 explicit opt-in native-image skips and154 browser cases. All25 new file-link/MIME

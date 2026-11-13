@@ -387,8 +387,8 @@ filters; unsupported/repeated/invalid parameters return422. See ADR for boundari
 | GET/PATCH `/tickets/{id}` | ticket.read/update | 200, assignment writes outbox; state via transition |
 | POST `/tickets/{id}/transitions` | ticket.transition | 200, explicit reason/policy; closure independent of work |
 | GET/POST `/tickets/{id}/messages` | ticket.read/reply or note.read/write | 200/201; internal note must not create outbound mail |
-| POST `/tickets/{id}/work-items` | ticket.link + work.link/create | 201 new effect / 200 existing link or replay; cross-client 404/409 without leaked identifiers |
-| DELETE `/tickets/{id}/work-items/{work_id}` | ticket.link + work.link | 204, expected ticket version; audit unlinks, no resource deletion |
+| POST `/tickets/{id}/work-items` | Existing update authority on BOTH endpoints | ADR0039 manual-link contract:201 inserted/200 existing or replay, two reviewed versions and protected key; not implemented yet |
+| DELETE `/tickets/{id}/work-items/{work_id}` | Existing update authority on BOTH endpoints | ADR0039:204, ticket AND work versions plus protected key; remove only relationship; not implemented yet |
 | GET/POST `/tickets/{id}/attachments`, `/work-items/{id}/attachments` | Current parent/purpose read or original-action write | Explicit purpose list; bounded binary upload201 / protected replay200 |
 | POST `/attachments/{id}/scan-retries` | Current original-purpose write | Empty object, FILE version, protected201 / replay200; failed only |
 | GET `/attachments/{id}` | target read + note.read if applicable | 200 metadata; pending not downloadable |
@@ -433,6 +433,34 @@ Task deadline category order: completed/cancelled (report separately), ongoing,
 no_due_date, overdue, due_soon (0..3 local days), on_track. Date-only overdue
 starts at the following local midnight. Instant deadlines compare real instants.
 No due date is fabricated from SLA, creation date or calendar views.
+
+## ADR0039 selected manual ticket/work protocol (not implemented)
+
+Read the selected engineering contract in docs/adr/0039-ticket-work-links.md.
+GET `/tickets/{id}/work-items` and `/work-items/{id}/tickets` return only currently
+readable counterparts, UUID-paged with limit50/max100, no total count and bound
+cursors. GET `/tickets/{id}/work-item-choices` requires current ticket update
+authority and returns eligible same-client work before paging; project/q filters
+never broaden access. Fresh capabilities are independent of collection pagination.
+
+POST body is exactly `{work_item_id}`. POST and bodyless DELETE require Origin,
+CSRF, Idempotency-Key, ticket If-Match and companion If-Match-Work-Item. Both
+versions use quoted integers1..2147483647. Missing companion header is428/
+work_item_version_required; malformed/repeated is422/invalid_work_item_version.
+Legacy header errors/fingerprints stay unchanged. New fingerprints include both
+IDs and BOTH original reviewed versions. Receipt replay requires current authority
+on both endpoints and never repeats a historical effect; POST replay200 returns
+the original minimal pair, DELETE replay204 has no body. New effects require both
+current versions; stale is409/version_conflict. Same-client mismatch is409/
+ticket_work_client_mismatch after both scopes are readable, without foreign data.
+
+Real insert/delete advances both aggregates and commits two strict events, audit,
+outbox and receipt atomically. Coherent no-op leaves versions/events unchanged.
+No state/assignment/deadline/SLA synchronization or task creation occurs here.
+Counterpart titles/IDs and reciprocal history require BOTH current scopes before
+pagination; unlink history does not depend on a surviving live relationship.
+Full fields, authority, locking, replay and compatibility are pinned in ADR0039
+and its implementation plan. Automation/unified My Work remains a later contract.
 
 ## My Work and analytics
 

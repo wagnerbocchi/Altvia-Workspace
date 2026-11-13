@@ -207,3 +207,24 @@ Namespace binding follows successful authentication/selection and excludes rotat
 passwords. Current lease token/expiry fences all cursor/epoch/capture writes with
 no network-held transaction. Preserve old receipts on UIDVALIDITY reset. Actual
 mailbox/provider use remains separately authorized and subject to Q-03/Q-16/Q-21.
+
+## ADR0039 manual ticket/work relationship boundary
+
+Selected contract; implementation/negative proof is not yet claimed. Reads require
+current read authority on both endpoints. Writes require existing ticket update
+AND work update authority, identical non-null customer scope and new-effect active/
+closed eligibility. A link grants nothing and never synchronizes either lifecycle.
+Native composite FKs independently enforce ticket/customer/queue, work/project and
+project/customer identity; no cross-table CHECK or privileged broad role is added.
+API receives only SELECT/INSERT/DELETE on the join; worker receives no join grant.
+
+The identity-before-auth and canonical ticket-before-work-graph/row lock protocol
+owns both versions, atomic effects and two strict reciprocal audit/outbox events.
+Protected POST/DELETE intents retain BOTH original reviewed versions; current
+authority precedes receipts. A historical unlink retry must not delete a relink.
+New activity is filtered by current counterpart scope before pagination, including
+after unlink. Hidden counterpart IDs/titles/counts/events/cursors remain absent.
+Retain compatible API feed filters and worker event readers on rollback; a pre-
+link API can expose counterpart history and is not a safe rollback image. Refuse
+contraction with links, history or receipts; no purge is authorized. Actual image-
+pair rollback rehearsal remains a consolidated integrated-hardening gate.

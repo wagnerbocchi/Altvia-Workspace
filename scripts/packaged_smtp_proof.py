@@ -1105,10 +1105,35 @@ def packaged_smtp_worker_proof(serve):
                     assert relay.envelopes == [(initial[4], initial[5])]
                     message = BytesParser(policy=policy.default).parsebytes(relay.messages[0])
                     assert message["Message-ID"] == initial[3] == current[3]
-                    assert message.get_content_type() == "text/plain" and not message.is_multipart()
-                    assert (
-                        message.get_content().replace("\r\n", "\n") == payload["body_text"] + "\n"
-                    )
+                    if "mime_files" in payload:
+                        import base64
+
+                        assert message.get_content_type() == "multipart/mixed"
+                        parts = list(message.iter_parts())
+                        assert len(parts) == 1 + len(payload["mime_files"])
+                        assert parts[0].get_content_type() == "text/plain"
+                        assert (
+                            parts[0].get_content().replace("\r\n", "\n")
+                            == payload["body_text"] + "\n"
+                        )
+                        for part, expected_file in zip(
+                            parts[1:], payload["mime_files"], strict=True
+                        ):
+                            assert part.get_content_disposition() == "attachment"
+                            assert part.get_filename() == expected_file["filename"]
+                            assert part.get_content_type() == expected_file["media_type"]
+                            assert part.get_payload(decode=True) == base64.b64decode(
+                                expected_file["base64"]
+                            )
+                    else:
+                        assert (
+                            message.get_content_type() == "text/plain"
+                            and not message.is_multipart()
+                        )
+                        assert (
+                            message.get_content().replace("\r\n", "\n")
+                            == payload["body_text"] + "\n"
+                        )
                     assert marker not in relay.messages[0]
                     if "incoming_root" in payload:
                         assert_incoming_wire(

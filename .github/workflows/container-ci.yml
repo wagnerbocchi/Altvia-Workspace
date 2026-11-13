@@ -46,9 +46,10 @@ jobs:
 
   private-file-runtime:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 75
     env:
       ALTVIA_ALLOW_FILE_INFRA_TEST: '1'
+      ALTVIA_ALLOW_CONTAINER_TEST: '1'
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
@@ -66,6 +67,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: uv run pytest -q apps/api/tests/test_file_storage.py apps/api/tests/test_file_scan_transport.py apps/api/tests/test_private_file_infra_proof.py
       - run: uv run python scripts/private_file_infra_proof.py
+      - run: pnpm --filter @altvia/web exec playwright install --with-deps chromium
+      - run: uv run python scripts/container_smoke.py --files
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
@@ -75,6 +78,10 @@ jobs:
             .superpowers/file-infra/*/inventory-*.txt
             .superpowers/file-infra/*/[0-9]*.stdout
             .superpowers/file-infra/*/[0-9]*.stderr
+            .superpowers/container-tests/*/packaged-file-proof.json
+            .superpowers/container-tests/*/file-command-proof.json
+            .superpowers/container-tests/*/file-source-proof.json
+            .superpowers/container-tests/*/file-inventory-*.txt
           if-no-files-found: error
           retention-days: 30
 

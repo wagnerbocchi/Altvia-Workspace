@@ -1,6 +1,7 @@
 """Guarded black-box proof of the actual image/Compose/TLS/persistence boundary."""
 
 import argparse
+import hashlib
 import json
 import os
 import secrets
@@ -11,6 +12,14 @@ from pathlib import Path
 from uuid import uuid4
 
 import httpx
+from packaged_file_proof import (
+    configure_files,
+    inventory_files,
+    prepare_packaged_files,
+    source_hashes,
+    start_files,
+    verify_packaged_files,
+)
 from packaged_smtp_proof import (
     prepare_packaged_incoming,
     prepare_packaged_smtp,
@@ -51,6 +60,11 @@ def check_legacy_volume_refusal(engine, image):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--engine", choices=["docker", "podman"], default="docker")
+    parser.add_argument(
+        "--files",
+        action="store_true",
+        help="Combined actual signed scanner/file profile (Docker >=6 GiB)",
+    )
     args = parser.parse_args()
     if os.environ.get("ALTVIA_ALLOW_CONTAINER_TEST") != "1":
         raise SystemExit("Explicit ALTVIA_ALLOW_CONTAINER_TEST=1 required")
@@ -103,9 +117,17 @@ def main():
         "ALTVIA_WEB_IMAGE": project + ":web",
         "ALTVIA_REDIS_IMAGE": project + ":redis",
     }
+    if args.files:
+        env.update(
+            ALTVIA_STORAGE_IMAGE=project + ":storage", ALTVIA_CLAMAV_IMAGE=project + ":clamav"
+        )
     # Never inherit a host DB credential into the test stack.
     env.pop("ALTVIA_DATABASE_URL", None)
     compose = [args.engine, "compose", "-f", str(ROOT / "infra/compose.yaml"), "-p", project]
+    if args.files:
+        compose[4:4] = ["-f", str(ROOT / "infra/compose.files.yaml")]
+    file_commands = []
+    file_sources = source_hashes(ROOT) if args.files else None
 
     def run(command, *, data=None, timeout=240):
         result = subprocess.run(
@@ -118,6 +140,17 @@ def main():
             env=env,
             timeout=timeout,
         )
+        if args.files:
+            # The actual stdout/stderr may contain snapshot bytes, names or
+            # credentials. Export only command/result hashes, never these channels.
+            file_commands.append(
+                {
+                    "command_sha256": hashlib.sha256(json.dumps(command).encode()).hexdigest(),
+                    "exit": result.returncode,
+                    "stdout_sha256": hashlib.sha256(result.stdout.encode()).hexdigest(),
+                    "stderr_sha256": hashlib.sha256(result.stderr.encode()).hexdigest(),
+                }
+            )
         if result.returncode:
             # Exact output stays private; exceptions never echo SQL, URLs or secrets.
             (work / "last-command.stdout").write_text(result.stdout, encoding="utf-8")
@@ -175,6 +208,8 @@ def main():
         run(["node", "scripts/container_tls.mjs", str(secret_dir)])
         env["ALTVIA_ALLOW_IMAP_TEST"] = "1"
         run(["node", "scripts/imap_test_certificate.mjs", str(secret_dir)])
+        if args.files:
+            configure_files(run, args.engine, env, secret_dir)
         with canary.open("x", encoding="utf-8") as source:
             source.write(password)
         with web_canary.open("x", encoding="utf-8") as source:
@@ -192,7 +227,9 @@ def main():
             # OCI output discards Docker HEALTHCHECK metadata in Podman builds.
             build.insert(2, "--format=docker")
         run(build, timeout=600)
-        for service in ("postgres", "ingress", "web", "redis"):
+        for service in ("postgres", "ingress", "web", "redis") + (
+            ("storage", "clamav") if args.files else ()
+        ):
             service_build = [
                 args.engine,
                 "build",
@@ -312,7 +349,11 @@ def main():
         ):
             raise RuntimeError("Untrimmed builder installer rejection proof failed")
         started = True
+        if args.files:
+            start_files(run, compose)
         run([*compose, "up", "-d", "--no-build", "--wait", "--wait-timeout", "150"])
+        if args.files:
+            file_inventory = inventory_files(run, compose, args.engine, project, work)
         for service in ["api", "ingress", "web", "worker", "redis"]:
             inspect = container(service)
             assert inspect["Config"]["User"] not in ("", "0", "root")
@@ -340,7 +381,7 @@ def main():
         assert set(container("worker")["NetworkSettings"]["Networks"]) == {
             project + "_queue",
             project + "_database",
-        }
+        } | ({project + "_objects"} if args.files else set())
         assert (
             run(
                 [args.engine, "network", "inspect", "--format", "{{.Internal}}", project + "_queue"]
@@ -1188,6 +1229,18 @@ with Session(make_engine(Settings())) as db,db.begin():
                                     secret_dir,
                                     delivery_proof["private_account"],
                                 )
+                                if args.files:
+                                    file_proof = prepare_packaged_files(
+                                        contributor,
+                                        incoming_reader,
+                                        ticket_body,
+                                        run,
+                                        compose,
+                                        ROOT,
+                                        secret_dir,
+                                        work,
+                                        delivery_proof["private_account"],
+                                    )
                     work_body = {
                         "project_id": project_id,
                         "title": f"Packaged work {index}",
@@ -1850,6 +1903,8 @@ SELECT json_build_object(
         assert search_plan[0]["Plan"]["Actual Rows"] == 1
         (work / "work-search-plan.json").write_text(json.dumps(search_plan, indent=2))
         print("Authorized personal/filter/search persistence and native task GIN proof passed.")
+        if args.files:
+            verify_packaged_files(run, compose, ROOT, secret_dir, work, file_proof, origin)
         run(
             ["node", "scripts/container_browser.mjs", args.engine, project, str(work)],
             data=json.dumps(
@@ -1889,6 +1944,27 @@ SELECT json_build_object(
         web_canary.unlink(missing_ok=True)
         if started:
             run([*compose, "down"], timeout=90)
+        if args.files:
+            (work / "file-command-proof.json").write_text(
+                json.dumps(file_commands, indent=2) + "\n", encoding="utf-8"
+            )
+            assert source_hashes(ROOT) == file_sources, (
+                "Source changed during combined packaged test"
+            )
+            (work / "file-source-proof.json").write_text(
+                json.dumps(
+                    {
+                        "source_hashes": file_sources,
+                        "inventory": locals().get("file_inventory"),
+                        "commands_sha256": hashlib.sha256(
+                            (work / "file-command-proof.json").read_bytes()
+                        ).hexdigest(),
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
         print(f"Task stack stopped; volumes preserved. Private test configuration: {work}")
 
 

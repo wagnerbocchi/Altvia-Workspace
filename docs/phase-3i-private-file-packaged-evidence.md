@@ -113,3 +113,45 @@ Independent scoped review approved both the diagnostic boundary and transport
 correction, with no new Critical/Important findings. A new combined hosted run
 remains required before claiming actual file restoration success. Earlier failed evidence
 stays failed. No product runtime or target operation was changed.
+
+## Second hosted run and synthetic scheduling correction
+
+At source 8bcd446, API checks passed 1242 cases with 3 explicit native console
+skips; browser checks passed 175. Source/image security and the historical
+packaged job passed. All seven nonempty image inventories reported zero
+vulnerabilities. The separate signed-current scanner/update proof passed.
+The combined browser completed, but the following synthetic timeout-scheduling
+owner command failed at packaged_file_proof.py:563. Task5 remains unaccepted.
+
+Its private stderr was not exported; the exact historical exception remains
+unobserved. A fresh actual PostgreSQL regression reproduced the scheduling
+defect: updating only next_attempt_at without a lifecycle/version transition
+is correctly rejected by attachment_guard, with SQLSTATE P0001 and its fixed
+immutable-identity diagnostic. Finished timeout history is present only after
+finalization, so the existing wait for that history remains appropriate.
+
+Proof-only correction fc8a80e reuses the existing synthetic scheduling fixture
+pattern. It requires explicit host/container opt-in, actual table ownership,
+the disposable altvia_test database and one matching synthetic public attachment
+with a completed timeout. An exclusive table lock, temporary guard disable,
+due-time-only Core UPDATE and guard reenable share one transaction. Failure
+rolls back both DDL and schedule; no concurrent writer sees a committed unguarded
+table. Runtime guards, scan state, versions, generations, attempt history and
+all eight actual transport-timeout/clean-retry assertions remain unchanged.
+
+The actual PostgreSQL reproduction failed before the correction. Final covering
+checks passed 2 cases, with 44 intentionally deselected and no skips, in 13.60
+seconds. They verify refusal outside the intended context and guard enforcement
+after success and injected rollback. Lint, format and whitespace checks passed.
+Independent scoped source review approved the correction. Root verified both
+354-input frozen maps, four raw channel hashes and the two final Git bindings.
+Full combined signed execution still requires a new positive hosted result.
+
+Root verified all collected API source/stream bindings, the separate scanner
+source/stream bindings and the combined command-record digest. Combined private
+raw channels remain excluded and were not independently verified. Complete
+failed-run evidence is preserved in
+`C:/Users/wagne/.codex/state/evidence/private-file-task5-ef6b9f9/ci-8bcd446-failed.zip`:
+24 entries, 1746836 bytes, CRC passed, SHA256
+`343f57c7ceaf60b136a896b37276d67c961176857fa7dcc18b6b528a496580a4`.
+No target operation, new dependency or application schema/runtime change occurred.

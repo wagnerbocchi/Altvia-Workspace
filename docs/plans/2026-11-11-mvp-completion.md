@@ -56,6 +56,14 @@ portal, mobile, AI/search engines and billing stay outside this completion scope
 
 ## Boundaries while answers are pending
 
+Private-file Task5 follow-up2026-11-13: exact8bcd446 passed1242 API/3 explicit
+skips,175 browser and both security gates, but combined proof failed after the
+browser at synthetic timeout scheduling. Reviewed proof-only correctionfc8a80e
+has actual PG RED/2 GREEN evidence and leaves runtime guards/lifecycle unchanged.
+Combined signed hosted positive and whole-increment review remain required.
+See docs/phase-3i-private-file-packaged-evidence.md; no incoming-file completion
+or final target qualification is inferred.
+
 Q03/Q16: build explicit verified-recipient/trusted-evidence contracts and controlled
 SMTP/IMAP tests; never fabricate production authentication policy, credentials or
 verified contacts. Actual provider acceptance stays separate until configured.

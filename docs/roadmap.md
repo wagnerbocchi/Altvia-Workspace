@@ -72,6 +72,17 @@ its Node-versus-Chromium transport mismatch; b6e6095 reuses browser fetch and ad
 strict bounded failure diagnostics. Local 18/2/3 focused checks and scoped review pass;
 new actual combined hosted acceptance remains required. Preserve failed evidence.
 
+Second8bcd446 hosted result:1242 API/3 explicit skips and175 browser cases pass;
+source/images/historical packaged/signed scanner proof pass. Combined browser
+completed, then the synthetic timeout scheduler failed. Actual PG reproduced
+its due-only UPDATE being correctly refused by the runtime immutable guard.
+Proof-onlyfc8a80e uses the existing opted-in disposable owner fixture pattern,
+with exclusive lock/transactional guard restoration and due-time-only change.
+Actual PG RED then2 GREEN cases plus independent scoped review pass. Runtime
+rules/eight actual timeouts/clean retry remain unchanged. Combined positive
+acceptance and whole-increment review remain open; complete failed evidence is
+preserved in the packaged-evidence record above. No target operation occurred.
+
 Task3 closure: all five exact-df3c8bb hosted gates passed,1198 API cases/three
 explicit opt-in native-image skips and154 browser cases. All25 new file-link/MIME
 cases actually executed; separate mandatory signed/current scanner/update/reload

@@ -32,6 +32,67 @@ try {
   await context.addCookies([{ name: "__Host-altvia_session", value: p.session, url: p.origin, secure: true, httpOnly: true, sameSite: "Lax" }]);
   const page = await context.newPage();
   let errors = 0; page.on("pageerror", () => { errors++; diagnostic.page_errors = Math.min(errors, 1000); });
+  if (p.incoming) {
+    diagnostic.phase = "incoming_navigate";
+    await page.goto(`/service-desk/mail-cases/${p.incoming.case_id}`);
+    const group = page.getByRole("group", { name: "Arquivos recebidos", exact: true });
+    await expect(group).toBeVisible();
+    await expect(group.locator('input[type="file"],input[type="checkbox"]')).toHaveCount(0);
+    const original = await browserGet(page, `/api/v1/mail-cases/${p.incoming.case_id}`);
+    diagnostic.http_status = original.status; assert.equal(original.status, 200);
+    assert.equal(original.body.files.status, "complete");
+    assert.equal(original.body.files.extraction_version, 1);
+    const ids = original.body.files.items.map(file => file.id);
+    assert.equal(ids.length, p.incoming.files.length);
+    diagnostic.phase = "incoming_review";
+    await page.getByLabel("Assunto do novo chamado", { exact: true }).fill("Reviewed packaged incoming files");
+    await page.getByRole("button", { name: "Revisar criacao", exact: true }).click();
+    for (const [slot, file] of p.incoming.files.entries()) {
+      diagnostic.file_slot = slot + 1; diagnostic.phase = "scan_metadata";
+      await expect.poll(async () => {
+        const meta = await browserGet(page, `/api/v1/attachments/${ids[slot]}`);
+        diagnostic.http_status = meta.status;
+        diagnostic.scan_state = scanStates.includes(meta.body?.state) ? meta.body.state : "invalid";
+        assert.equal(meta.status, 200); return meta.body.state;
+      }, { timeout: 150000 }).toBe(file.state);
+      diagnostic.phase = "refresh_files";
+      await group.getByRole("button", { name: "Atualizar arquivos recebidos", exact: true }).click();
+      await expect(page.getByRole("heading", { name: "Revisar inclusao da mensagem", exact: true })).toBeVisible();
+      if (file.state === "ready") {
+        diagnostic.phase = "download";
+        const downloaded = page.waitForEvent("download");
+        await group.getByRole("button", { name: `Baixar ${file.filename}`, exact: true }).click();
+        const download = await downloaded; assert.equal(download.suggestedFilename(), file.filename);
+        assert.deepEqual(await readFile(await download.path()), Buffer.from(file.body));
+      } else {
+        diagnostic.phase = "rejected_block";
+        await expect(group.getByRole("button", { name: `Baixar ${file.filename}`, exact: true })).toHaveCount(0);
+        const denied = await browserGet(page, `/api/v1/attachments/${ids[slot]}/content`);
+        diagnostic.http_status = denied.status; assert.equal(denied.status, 409);
+      }
+    }
+    diagnostic.phase = "incoming_promote";
+    const promoted = page.waitForResponse(response => response.url().endsWith(`/mail-cases/${p.incoming.case_id}/promotion`) && response.request().method() === "POST");
+    await page.getByRole("button", { name: "Confirmar criacao", exact: true }).click();
+    const response = await promoted; diagnostic.http_status = response.status(); assert.equal(response.status(), 201);
+    const receipt = await response.json();
+    await page.getByRole("link", { name: "Abrir chamado confirmado", exact: true }).click();
+    diagnostic.phase = "incoming_conversation";
+    await page.waitForURL(`**/service-desk/tickets/${receipt.ticket_id}`);
+    await expect(group).toBeVisible();
+    const incoming = await browserGet(page, `/api/v1/tickets/${receipt.ticket_id}/incoming-messages/${receipt.incoming_message_id}`);
+    diagnostic.http_status = incoming.status; assert.equal(incoming.status, 200);
+    assert.deepEqual(incoming.body.files.items.map(file => file.id), ids);
+    assert.equal(incoming.body.case_id, p.incoming.case_id);
+    diagnostic.phase = "download";
+    const downloaded = page.waitForEvent("download");
+    await group.getByRole("button", { name: `Baixar ${p.incoming.files[0].filename}`, exact: true }).click();
+    assert.deepEqual(await readFile(await (await downloaded).path()), Buffer.from(p.incoming.files[0].body));
+    assert.equal(errors, 0);
+    diagnostic.phase = "close"; await context.close();
+    console.log(JSON.stringify({ ids, ticket_id: receipt.ticket_id, incoming_id: receipt.incoming_message_id,
+      native_incoming_browser: true, frozen_review_current_files: true, exact_incoming_download: true }));
+  } else {
   diagnostic.phase = "navigate";
   await page.goto(`/service-desk/tickets/${p.ticket_id}`);
   const ids = [];
@@ -111,6 +172,7 @@ try {
   const deliveryId = (await delivery.json()).delivery_id;
   diagnostic.phase = "close"; await context.close();
   console.log(JSON.stringify({ ids, ticket_id: p.ticket_id, message_id: messageId, delivery_id: deliveryId, delivery_path: deliveryPath, native_browser_upload: true, actual_worker_scan: true, clean_and_eicar: true, exact_private_download: true, private_note_link: true, explicit_public_send_review: true }));
+  }
 } catch (error) {
   // Do not print error.message/stack: native locator diagnostics can contain
   // session, filename and fill/body arguments. Preserve a fixed failure code.

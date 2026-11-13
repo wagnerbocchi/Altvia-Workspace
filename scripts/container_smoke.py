@@ -21,6 +21,7 @@ from packaged_file_proof import (
     start_files,
     verify_packaged_files,
 )
+from packaged_incoming_file_proof import prepare_packaged_incoming_files
 from packaged_smtp_proof import (
     prepare_packaged_incoming,
     prepare_packaged_smtp,
@@ -1555,6 +1556,9 @@ with Session(make_engine(Settings())) as db,db.begin():
             client.headers["X-CSRF-Token"] = login.json()["csrf_token"]
             if args.files:
                 capture_current_file_author(client, file_proof)
+                prepare_packaged_incoming_files(
+                    client, run, compose, ROOT, secret_dir, work, file_proof
+                )
             assert [row["id"] for row in client.get("/api/v1/teams").json()["items"]] == [teams[0]]
             assert client.get(f"/api/v1/teams/{teams[1]}").status_code == 404
             persisted_queue = client.get(queue_paths[0]).json()

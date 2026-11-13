@@ -2,7 +2,7 @@
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-export const phases = Object.freeze(["unknown", "launch", "context", "cookie", "navigate", "select_file", "upload", "scan_metadata", "refresh_files", "rejected_block", "download", "select_note", "note_fill", "note_save", "note_reload", "select_public", "draft_fill", "draft_review", "draft_save", "send_review", "send_confirm", "complete", "close"]);
+export const phases = Object.freeze(["unknown", "launch", "context", "cookie", "navigate", "select_file", "upload", "scan_metadata", "refresh_files", "rejected_block", "download", "select_note", "note_fill", "note_save", "note_reload", "select_public", "draft_fill", "draft_review", "draft_save", "send_review", "send_confirm", "incoming_navigate", "incoming_review", "incoming_promote", "incoming_conversation", "complete", "close"]);
 export const scanStates = Object.freeze(["unknown", "invalid", "quarantine", "scanning", "ready", "rejected", "failed"]);
 export const initialDiagnostic = () => ({ phase: "launch", file_slot: 0, http_status: 0, scan_state: "unknown", page_errors: 0 });
 const integer = (value, max) => Number.isInteger(value) && value >= 0 && value <= max ? value : 0;

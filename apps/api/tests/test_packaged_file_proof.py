@@ -13,13 +13,15 @@ from uuid import UUID, uuid4
 
 import pytest
 from altvia.file_storage import StorageError
+from file_core_support import file_path, file_services
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
+from test_mail_cases import context as incoming_context
 from test_team_api import admin_client
 from test_tickets import setup, ticket
 
-__all__ = ["admin_client"]
+__all__ = ["admin_client", "file_services", "incoming_context"]
 
 SCRIPTS = Path(__file__).resolve().parents[3] / "scripts"
 sys.path.insert(0, str(SCRIPTS))
@@ -60,6 +62,105 @@ def test_combined_profile_refuses_missing_opt_in_and_small_vm(monkeypatch, tmp_p
 @pytest.mark.parametrize("name", ["OWNER_FILES", "PRIVILEGES", "SNAPSHOT", "OBJECTS"])
 def test_embedded_container_programs_compile(name):
     compile(getattr(proof, name), name, "exec")
+
+
+def test_new_incoming_context_preserves_supported_original_mime():
+    from altvia.mail_mime import extract_files
+    from packaged_incoming_file_proof import CASE_CONTEXT, PRIVATE_IMAP_RESULT, incoming_message
+
+    compile(CASE_CONTEXT, "CASE_CONTEXT", "exec")
+    compile(PRIVATE_IMAP_RESULT, "PRIVATE_IMAP_RESULT", "exec")
+    files = [
+        {"filename": "incoming-caf\u00e9-" + "a" * 32 + ".txt", "body": "original bytes\n"},
+        {"filename": "incoming-second.txt", "body": "second original bytes\n"},
+    ]
+    raw = incoming_message({"email": "requester@example.test"}, "synthetic", files).encode()
+    result = extract_files(raw)
+    assert result.status == "complete"
+    assert [(f.filename, f.content) for f in result.files] == [
+        (f["filename"], f["body"].encode()) for f in files
+    ]
+
+
+@pytest.mark.usefixtures("file_services")
+def test_matching_snapshot_contains_concrete_case_header_and_immutable_incoming_relation(
+    db_engine, incoming_context, admin_client, capsys
+):
+    from test_mail_case_files import assets, attest, variant
+    from test_mail_promotion import promote
+
+    case = attest(db_engine, incoming_context, variant(db_engine), file_path("api"))
+    asset = assets(db_engine)[0]
+    promoted = promote(admin_client, case.case_id)
+    assert promoted.status_code == 201
+    receipt = promoted.json()
+    # Execute the production snapshot queries on real PG. Its top-level signed
+    # SMTP acceptance assertion remains in the full native owner, not this fixture.
+    tree = ast.parse(proof.SNAPSHOT)
+    body = next(node for node in tree.body if isinstance(node, ast.With)).body
+    with db_engine.connect() as db:
+        execute(
+            [node for node in body if not isinstance(node, ast.Assert)],
+            {"db": db, "text": text, "json": json, "UUID": UUID},
+        )
+    snapshot = json.loads(capsys.readouterr().out)
+    row = next(r for r in snapshot["files"] if r["id"] == str(asset.id))
+    assert row["mail_case_id"] == str(case.case_id) and row["file_position"] == 0
+    assert row["creator_id"] is None and row["parent_version"] == 1
+    header = json.loads(snapshot["case_headers"][0])
+    assert (header["file_extraction_version"], header["file_set_status"], header["file_count"]) == (
+        1,
+        "complete",
+        1,
+    )
+    assert header["id"] == row["mail_case_id"]
+    assert header["incoming_message_id"] == receipt["incoming_message_id"]
+    incoming = json.loads(snapshot["incoming"][0])
+    assert incoming["id"] == receipt["incoming_message_id"]
+    assert incoming["case_id"] == header["id"] and incoming["ticket_id"] == receipt["ticket_id"]
+
+
+@pytest.mark.usefixtures("file_services")
+def test_incoming_restore_checker_uses_current_api_and_rejects_identity_drift(
+    db_engine, incoming_context, admin_client
+):
+    from packaged_incoming_file_proof import assert_incoming_access
+    from test_mail_case_files import assets, attest, variant
+    from test_mail_promotion import promote
+    from test_team_api import sign_in
+
+    case = attest(db_engine, incoming_context, variant(db_engine), file_path("api"))
+    asset = assets(db_engine)[0]
+    result = promote(admin_client, case.case_id)
+    assert result.status_code == 201
+    receipt = result.json()
+    incoming = {
+        "case_id": str(case.case_id),
+        "ticket_id": receipt["ticket_id"],
+        "incoming_id": receipt["incoming_message_id"],
+        "ids": [str(asset.id)],
+        "files": [{"filename": asset.filename, "body": "private file\n", "state": "quarantine"}],
+    }
+    # Real PG/API/S3 publication, still quarantined. This validates the native
+    # checker's identities/ACL/blocked bytes, not a synthetic clean-scan claim.
+    assert_incoming_access(admin_client, incoming)
+    for field in ("case_id", "ticket_id", "incoming_id"):
+        with pytest.raises(AssertionError):
+            assert_incoming_access(admin_client, {**incoming, field: str(uuid4())})
+    with pytest.raises(AssertionError):
+        assert_incoming_access(admin_client, {**incoming, "ids": [str(uuid4())]})
+    sign_in(admin_client, "admin@example.test")
+    with pytest.raises(AssertionError):
+        assert_incoming_access(admin_client, incoming)
+
+
+@pytest.mark.parametrize(
+    "phase", ["incoming_navigate", "incoming_review", "incoming_promote", "incoming_conversation"]
+)
+def test_incoming_browser_failure_phase_is_a_bounded_public_enum(phase):
+    diagnostic = browser_diagnostic()
+    diagnostic["phase"] = phase
+    assert proof.validate_browser_diagnostic(diagnostic) == diagnostic
 
 
 @pytest.mark.parametrize("failure", ["body", "filename", "media", "extra", "plain"])
@@ -180,6 +281,14 @@ def test_matching_object_export_restore_checks_actual_streamed_integrity(
     "role,table,column,privilege",
     [
         ("altvia_worker", "attachments", "filename", "SELECT"),
+        ("altvia_worker", "attachments", "mail_case_id", "SELECT"),
+        ("altvia_worker", "attachments", "file_position", "SELECT"),
+        ("altvia_worker", "mail_triage_cases", "file_set_status", "SELECT"),
+        ("altvia_worker", "ticket_incoming_messages", "case_id", "SELECT"),
+        ("altvia_app", "mail_triage_cases", "file_count", "SELECT"),
+        ("altvia_app", "mail_triage_cases", "file_rejection_reason", "SELECT"),
+        ("altvia_app", "mail_triage_cases", "primary_variant_id", "SELECT"),
+        ("altvia_app", "mail_case_origins", "variant_id", "SELECT"),
         ("altvia_worker", "ticket_notes", "body_text", "SELECT"),
         ("altvia_worker", "ticket_note_attachments", "attachment_id", "SELECT"),
         ("altvia_app", "attachment_scan_attempts", "reason", "SELECT"),
@@ -717,6 +826,8 @@ def test_snapshot_fourth_timeout_filename_is_rejected_by_actual_diagnostic_guard
         "scripts/check_web_native.mjs",
         "scripts/check_web_runtime.mjs",
         "scripts/container_tls.mjs",
+        "scripts/packaged_incoming_file_proof.py",
+        "scripts/packaged_file_browser_support.mjs",
         "apps/api/tests/imap_fixture.py",
         "infra/nginx.conf",
     ],

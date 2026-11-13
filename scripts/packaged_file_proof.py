@@ -63,6 +63,10 @@ def validate_browser_diagnostic(data):
         "draft_save",
         "send_review",
         "send_confirm",
+        "incoming_navigate",
+        "incoming_review",
+        "incoming_promote",
+        "incoming_conversation",
         "complete",
         "close",
     }
@@ -418,7 +422,8 @@ with Session(make_engine(DatabaseSettings())) as db,db.begin():
             serialized=json.dumps(value)
             assert all(v not in serialized for v in p.get('markers',[]))
     events=[str(v) for v in db.scalars(select(OutboxEvent.event_id).where(
-        OutboxEvent.aggregate_id.in_(ids+[UUID(p['ticket_id'])])))]
+        OutboxEvent.aggregate_id.in_(ids+[UUID(p['ticket_id'])]+
+                                    [UUID(v) for v in p.get('extra_aggregate_ids',[])])))]
     assert files and events
     print(json.dumps({'files':files,'attempts':attempts,'event_ids':events}))
 """
@@ -433,9 +438,18 @@ p=json.load(sys.stdin)
 with make_engine(DatabaseSettings()).connect() as db:
     assert db.scalar(text('SELECT current_user'))==p['role']
     checks=[]
+    for table in ('mailbox_sources','inbound_mail_envelopes','inbound_mail_variants',
+                  'mailbox_poll_states','inbound_mail_previews','mail_case_origins'):
+        for privilege in ('SELECT','INSERT','UPDATE','DELETE'):
+            assert not db.scalar(text('SELECT has_table_privilege(current_user,:t,:p)'),
+                                 {'t':table,'p':privilege})
+            if privilege!='DELETE':
+                assert not db.scalar(text('SELECT has_any_column_privilege(current_user,:t,:p)'),
+                                     {'t':table,'p':privilege})
+        checks.append('SELECT * FROM '+table+' LIMIT 0')
     if p['role']=='altvia_worker':
         for table in ('ticket_notes','ticket_note_attachments','ticket_message_attachments',
-                      'work_comment_attachments','inbound_mail_variants'):
+                      'work_comment_attachments','mail_triage_cases','ticket_incoming_messages'):
             for privilege in ('SELECT','INSERT','UPDATE','DELETE'):
                 assert not db.scalar(text('SELECT has_table_privilege(current_user,:t,:p)'),
                                      {'t':table,'p':privilege})
@@ -444,12 +458,18 @@ with make_engine(DatabaseSettings()).connect() as db:
                         'SELECT has_any_column_privilege(current_user,:t,:p)'),
                                          {'t':table,'p':privilege})
             checks.append('SELECT * FROM '+table+' LIMIT 0')
-        for column in ('filename','purpose','creator_id','ticket_id','work_item_id'):
+        for column in ('filename','purpose','creator_id','ticket_id','work_item_id',
+                       'mail_case_id','file_position'):
             assert not db.scalar(text(
                 "SELECT has_column_privilege(current_user,'attachments',:c,'SELECT')"),
                 {'c':column})
             checks.append('SELECT '+column+' FROM attachments LIMIT 0')
     else:
+        for column in ('source_id','primary_variant_id','file_count','file_rejection_reason'):
+            assert not db.scalar(text(
+                "SELECT has_column_privilege(current_user,'mail_triage_cases',:c,'SELECT')"),
+                {'c':column})
+            checks.append('SELECT '+column+' FROM mail_triage_cases LIMIT 0')
         for privilege in ('SELECT','INSERT','UPDATE','DELETE'):
             assert not db.scalar(text(
                 "SELECT has_table_privilege(current_user,'attachment_scan_attempts',:p)"),
@@ -799,14 +819,25 @@ def select_current_file_author(client, proof):
 
 SNAPSHOT = """
 import hashlib,json
+from uuid import UUID
 from sqlalchemy import text
 from altvia.config import DatabaseSettings
 from altvia.database import make_engine
 with make_engine(DatabaseSettings()).connect() as db:
     files=[dict(r) for r in db.execute(text(
-        'SELECT id,object_key,bytes,sha256,state,purpose,filename FROM attachments ORDER BY id'
+        'SELECT id,object_key,bytes,sha256,state,purpose,filename,media_type,'
+        'ticket_id,work_item_id,mail_case_id,file_position,parent_version,creator_id,'
+        'version,generation FROM attachments ORDER BY id'
     )).mappings()]
-    for r in files: r['id']=str(r['id'])
+    for r in files:
+        for key,value in r.items():
+            if isinstance(value,UUID): r[key]=str(value)
+    case_headers=[r[0] for r in db.execute(text(
+        'SELECT row_to_json(t)::text FROM (SELECT id,source_id,primary_variant_id,'
+        'file_extraction_version,file_set_status,file_count,file_rejection_reason,'
+        'ticket_id,incoming_message_id FROM mail_triage_cases ORDER BY id) t'))]
+    incoming=[r[0] for r in db.execute(text(
+        'SELECT row_to_json(t)::text FROM ticket_incoming_messages t ORDER BY id'))]
     links={}
     for table in ('ticket_message_attachments','ticket_note_attachments',
                   'work_comment_attachments'):
@@ -819,7 +850,8 @@ with make_engine(DatabaseSettings()).connect() as db:
                'SELECT id,wire_format,wire,state,attempts,accepted_at '
                'FROM outbound_messages ORDER BY id'))]
     assert files and any(w['format']==2 and w['state']=='accepted' for w in wires)
-    print(json.dumps({'files':files,'links':links,'wires':wires},sort_keys=True))
+    print(json.dumps({'files':files,'links':links,'wires':wires,
+                      'case_headers':case_headers,'incoming':incoming},sort_keys=True))
 """
 
 OBJECTS = """
@@ -886,6 +918,11 @@ def assert_current_access(client, reader, proof):
     assert reader.get(ticket + "/notes").status_code == 403
     for suffix in ("", "/content"):
         assert reader.get("/api/v1/attachments/" + ids[1] + suffix).status_code == 404
+    if "incoming" in proof:
+        from packaged_incoming_file_proof import assert_incoming_access
+
+        assert_incoming_access(client, proof["incoming"])
+        assert_incoming_access(reader, proof["incoming"])
 
 
 def verify_packaged_files(run, compose, root, secret_dir, work, proof, origin):
@@ -1027,6 +1064,7 @@ def verify_packaged_files(run, compose, root, secret_dir, work, proof, origin):
         "timeout_retry": proof["timeout_retry"],
         "current_session_continuity": session_evidence,
         "actual_scan_history": proof["scan_evidence"],
+        "incoming_files": proof.get("incoming", {}).get("safe"),
         "actual_current_storage_credentials": {
             "initial": proof["storage"]["checks"],
             "after_recreation": storage_recreated["checks"],
@@ -1038,6 +1076,7 @@ def verify_packaged_files(run, compose, root, secret_dir, work, proof, origin):
             "objects": len(objects),
             "snapshot_sha256": digest(json.dumps(snapshot, sort_keys=True).encode()),
             "links_and_frozen_wires_identical": True,
+            "incoming_headers_and_immutable_relationships_identical": "incoming" in proof,
             "current_acl": True,
             "restored_api_grants": restored_grants,
         },

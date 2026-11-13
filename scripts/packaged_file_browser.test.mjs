@@ -46,3 +46,11 @@ test("failure projection drops arbitrary error, state and response disclosure", 
   assert.equal(JSON.stringify(safe).includes(secret), false);
   assert.deepEqual(safe, { schema: 1, phase: "unknown", file_slot: 0, http_status: 0, scan_state: "invalid", page_errors: 0, error_kind: "browser" });
 });
+
+for (const phase of ["incoming_navigate", "incoming_review", "incoming_promote", "incoming_conversation"]) test(`incoming phase ${phase} exports bounded failure only`, () => {
+  const secret = "incoming-name-bytes-hash-key-cookie";
+  const result = boundedFailure({ phase, file_slot: 2, http_status: 409, scan_state: "rejected", page_errors: 0, context: secret }, { name: "AssertionError", message: secret, stack: secret });
+  assert.equal(result.phase, phase); assert.equal(result.error_kind, "assertion");
+  assert.equal(JSON.stringify(result).includes(secret), false);
+  assert.deepEqual(Object.keys(result).sort(), ["schema", "phase", "file_slot", "http_status", "scan_state", "page_errors", "error_kind"].sort());
+});

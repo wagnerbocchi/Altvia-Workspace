@@ -4,8 +4,9 @@
 > at a time with independent task review and one final increment review. The user
 > already authorizes continuous MVP work/direct main publication without PR.
 
-**State:** Tasks1-3 have independent source approval; Task4 interface/native proof
-is next. Tasks1/2 hosted gates passed; Task3 hosted verification remains pending.
+**State:** All four source increments are independently approved. Tasks1-3 hosted
+gates passed. Task4 visual/documentation gates are approved; actual new signed
+incoming/restore/full hosted acceptance and final increment review remain pending.
 ADR0038's fresh builder
 check found nothing important left; finite MIME parameter choices are pinned.
 Private-file core's exactc12d6e1 corrected full CI passed:1266 API cases/3 explicit
@@ -53,8 +54,17 @@ Task3 current read/retry API is implemented ine0fc3e4 with independent spec/qual
 approval,342 affected actual PG/S3/API/SMTP/scan/migration passes and no test
 skips/warnings. Lint/format/types/frontend type check and exact generated-contract
 compatibility passed. Two nonblocking evidence observations are retained in the
-execution ledger for final review. Hosted checks remain pending. Incoming-file
-interface and actual signed incoming-case/restoration proof remain Task4.
+execution ledger for final review. All five exact00b2dd1 hosted gates passed:
+1444 API/3 explicit native-console skips/no warnings,175 browser,both container/
+security jobs and seven nonempty zero-vulnerability image inventories.
+
+Task4 UIcf74597/native prooff16b62a has source/spec/quality approval through
+documentation6a0e2fd. Shipped Impeccable review inspected all52 captures and returned
+ship; only existing surface briefs changed after tests. Local split35+corrected1
+browser/native/helper evidence preserves failed runs and their limits. Actual new
+signed incoming/restore/full hosted gates and final increment review remain
+pending. See docs/phase-3j-incoming-files-evidence.md. No Podman/target/production
+qualification is inferred.
 
 ## Global constraints
 
@@ -258,11 +268,11 @@ scripts/packaged_file_browser.test.mjs as affected.
 **Consumes:** Task3 scoped files blocks/capabilities and existing global byte/retry
 routes. Core actual storage/scanner/browser/MIME/restore owners remain the seam.
 
-- [ ] Impeccable context/brief/craft workflow first in accepted Operate world.
+- [x] Impeccable context/brief/craft workflow first in accepted Operate world.
   Add read-only incoming file sets with safe original names and honest per-file
   state, current download and manager-only failed retry. No case upload/inline
   renderer, count inference, persistent File/Blob cache or decorative progress.
-- [ ] RED real PG/Redis/API/S3 browser: raw multipart -> owner attestation ->
+- [x] RED real PG/Redis/API/S3 browser: raw multipart -> owner attestation ->
   triage files -> promotion -> same immutable incoming set -> exact download;
   pending/rejected/failed/unavailable/legacy, current denied roles and session
   disposal. Original protected retry replay plus current read acknowledges intent;

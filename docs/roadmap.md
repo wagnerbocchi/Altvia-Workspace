@@ -136,9 +136,21 @@ denials, prefetch collision/revocation/session loss and no automatic forwarding
 are covered. The resulting-ticket-only denial branch uses a controlled real SQL
 predicate; today's immutable client/queue grants naturally hide both resources on
 real revocation. No separate production grant is invented. Two nonblocking
-evidence observations remain recorded for final review. Hosted verification is
-pending; Task4 incoming-file interface and signed native/matching restore proof
-are next, under the accepted Twenty-inspired Impeccable world.
+evidence observations remain recorded for final review. All five exact00b2dd1
+hosted gates passed:1444 API/3 explicit native-console skips/no warnings,175 browser,
+both container/security jobs and seven nonempty zero-vulnerability image reports.
+The prior signed core/MIME/privacy/recreation/matching restore passed. Archive
+SHA25675006062ad95f80ef05ec67f185a0fcc57a5675bc0acd744aa56c6951549b18e.
+
+Incoming Task4 UIcf74597/native prooff16b62a is source-approved through
+documentation6a0e2fd. Shipped Impeccable review returned ship after all52 captures;
+source/spec/quality review found no blockers. Local browser evidence is35 passes
+plus one separately corrected fixture case, not one green36-case run. Native/helper
+and actual PG/S3 checks, build/contracts/security policy passed within recorded
+split scopes. New actual signed incoming/restore and full hosted acceptance remain
+pending. See docs/phase-3j-incoming-files-evidence.md for failures, corrections,
+boundaries and known tooling notices. Final increment review and remaining MVP
+stages follow; no complete-MVP or target qualification is claimed.
 
 Task3 closure: all five exact-df3c8bb hosted gates passed,1198 API cases/three
 explicit opt-in native-image skips and154 browser cases. All25 new file-link/MIME

@@ -53,6 +53,13 @@ to repeat server homologation during each new delivery.
 
 ## Delivery status
 
+Private-files Task4 is implemented in c5c668c with reviewed corrections 039a631.
+Local full175 at c5 and final scoped9 browser/3 child-output tests passed; final
+lint/types/build and contracts passed. Independent source review approved fixes;
+Impeccable's capability-copy finding is resolved. Exact-final hosted gates remain
+pending. Task5 packaged signed-scanner/restore proof and incoming-MIME files remain
+open. See docs/phase-3i-private-file-browser-evidence.md for exact evidence limits.
+
 Task3 closure: all five exact-df3c8bb hosted gates passed,1198 API cases/three
 explicit opt-in native-image skips and154 browser cases. All25 new file-link/MIME
 cases actually executed; separate mandatory signed/current scanner/update/reload
@@ -61,8 +68,9 @@ zero-vulnerability inventories pass. Independent source/spec review has zero
 findings; prior M1 request-purpose enums are resolved. The original local257/8
 stale-schema run remains failed; full265-case rerun on fresh correct PG passed.
 Full source/hash/raw-evidence/restore-scope record: docs/phase-3i-private-file-evidence.md.
-Private-file UI, incoming-MIME file ownership and final target qualification remain
-pending. The separate existing-route redesign is accepted as recorded above.
+Private-file UI now has the local implementation/review evidence above; hosted
+acceptance, incoming-MIME ownership and final target qualification remain pending.
+The separate existing-route redesign is accepted as recorded above.
 
 Phase 1 is closed on 2026-11-09. Final source 2f6ba60 passed all five hosted gates,
 290 API and 31 browser tests, and the full five-image/six-service stack passed on

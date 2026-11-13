@@ -1,7 +1,10 @@
 Private files are development scope under ADR-0037. Migration00025 and the API/
 worker now implement private ticket public/note and work assets, binary uploads,
-metadata/download, protected failed-scan retry and durable fenced scanning. No
-content-link, outbound MIME-file path or manual clean override is included here.
+metadata/download, protected failed-scan retry and durable fenced scanning.
+Task3 adds immutable content links and explicitly reviewed outbound MIME files.
+Task4 adds native browser upload, scoped selection/download and protected recovery;
+exact-final hosted gates remain pending in
+docs/phase-3i-private-file-browser-evidence.md. There is no manual clean override.
 Production rollout, real data import, deletion/retention policy and final target
 CPU qualification remain separate gates.
 

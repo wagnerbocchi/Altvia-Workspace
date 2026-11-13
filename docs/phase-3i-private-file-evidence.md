@@ -5,6 +5,10 @@ accepted ADR-0036 incoming conversation. Infrastructure, usable file functionali
 and final qualification are separate gates. No production or real-data operation
 is implied.
 
+Task4 browser implementation and its separate local/hosted acceptance record are
+documented in docs/phase-3i-private-file-browser-evidence.md. Earlier backend
+evidence below retains its original scope.
+
 ## Task 1: Private storage and scanner infrastructure
 
 Contracts: 0ef1187, with native bucket-list/conditional-operation clarifications

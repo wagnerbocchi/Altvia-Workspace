@@ -285,9 +285,24 @@ def start_files(run, compose):
 
 
 def owner(run, compose, code, payload=None):
+    fixture_environment = []
+    if payload and payload.get("accelerate") is True:
+        require_opt_in()
+        fixture_environment = ["-e", "ALTVIA_ALLOW_CONTAINER_TEST=1"]
     return json.loads(
         run(
-            [*compose, "run", "--rm", "--no-deps", "-T", "migrate", "python", "-c", code],
+            [
+                *compose,
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                *fixture_environment,
+                "migrate",
+                "python",
+                "-c",
+                code,
+            ],
             data=json.dumps(payload),
         )
     )
@@ -315,9 +330,9 @@ def storage_checkpoint(run, compose, previous=None):
 
 
 OWNER_FILES = """
-import json,sys
+import json,os,sys
 from uuid import UUID
-from sqlalchemy import select
+from sqlalchemy import select,text,func,update
 from sqlalchemy.orm import Session
 from altvia.config import DatabaseSettings
 from altvia.database import make_engine
@@ -326,10 +341,26 @@ p=json.load(sys.stdin)
 with Session(make_engine(DatabaseSettings())) as db,db.begin():
     ids=[UUID(v) for v in p['ids']]
     if p.get('accelerate'):
-        from sqlalchemy import func
-        for row in db.scalars(select(Attachment).where(Attachment.id.in_(ids)).with_for_update()):
-            assert row.state=='quarantine' and row.attempts<8
-            row.next_attempt_at=func.clock_timestamp()
+        assert p['accelerate'] is True and os.environ.get('ALTVIA_ALLOW_CONTAINER_TEST')=='1'
+        assert len(ids)==1
+        assert db.scalar(text("SELECT current_database()='altvia_test' AND "
+            "current_user=pg_get_userbyid(relowner) FROM pg_class "
+            "WHERE oid='attachments'::regclass"))
+        # Owner-only synthetic due-time fixture, matching test_attachment_scan.
+        # The exclusive lock/DDL/update/reenable share this transaction. No
+        # concurrent writer sees an unguarded table; any error rolls back DDL.
+        db.execute(text('LOCK TABLE attachments IN ACCESS EXCLUSIVE MODE'))
+        row=db.get(Attachment,ids[0])
+        assert row is not None and row.ticket_id==UUID(p['ticket_id'])
+        assert row.purpose=='public' and row.filename.startswith('timeout-')
+        assert row.state=='quarantine' and 1<=row.attempts<8
+        finished=db.get(AttachmentScanAttempt,(row.id,row.generation,row.attempts))
+        assert finished is not None and finished.reason=='timeout'
+        db.execute(text('ALTER TABLE attachments DISABLE TRIGGER attachment_guard'))
+        db.execute(update(Attachment.__table__).where(
+            Attachment.id==row.id,Attachment.ticket_id==row.ticket_id
+        ).values(next_attempt_at=func.clock_timestamp()))
+        db.execute(text('ALTER TABLE attachments ENABLE TRIGGER attachment_guard'))
     files=[{'id':str(r.id),'filename':r.filename,'bytes':r.bytes,'sha256':r.sha256,
             'key':r.object_key,'purpose':r.purpose,'state':r.state,'generation':r.generation}
            for r in db.scalars(select(Attachment).where(Attachment.id.in_(ids))

@@ -407,3 +407,161 @@ def test_browser_failure_missing_diagnostic_remains_failure_with_explicit_unavai
         "schema": 1,
         "diagnostic_status": "unavailable",
     }
+
+
+def test_packaged_timeout_acceleration_preserves_completed_lifecycle(
+    admin_client,
+    db_engine,
+    seeded_user,
+    monkeypatch,
+    capsys,
+):
+    from altvia import attachment_scan as scan
+    from altvia.models import Attachment, AttachmentScanAttempt
+    from sqlalchemy import select
+    from test_attachments import upload
+
+    parent = ticket(admin_client, setup(admin_client, db_engine, seeded_user))
+    uploaded = upload(admin_client, parent, filename="timeout-packaged-owner.txt")
+    assert uploaded.status_code == 201
+    identifier = UUID(uploaded.json()["attachment_id"])
+    payload = {"ids": [str(identifier)], "ticket_id": parent.rsplit("/", 1)[1]}
+    monkeypatch.setattr("altvia.database.make_engine", lambda settings: db_engine)
+    monkeypatch.setenv("ALTVIA_ALLOW_CONTAINER_TEST", "1")
+
+    def run(command, *, data=None):
+        monkeypatch.setattr(sys, "stdin", io.StringIO(data))
+        if json.loads(data).get("accelerate"):
+            assert "ALTVIA_ALLOW_CONTAINER_TEST=1" in command
+        exec(command[-1], {})
+        return capsys.readouterr().out
+
+    claimed = scan.claim(db_engine, identifier)
+    assert claimed is not None
+    pending = proof.owner(run, [], proof.OWNER_FILES, payload)
+    assert pending["files"][0]["state"] == "scanning" and pending["attempts"] == []
+    with pytest.raises(AssertionError):
+        proof.owner(run, [], proof.OWNER_FILES, {**payload, "accelerate": True})
+    # Controlled negative result exercises the real DB lifecycle only. This
+    # regression is not actual timeout/signed-scanner positive acceptance.
+    assert scan.finalize(db_engine, claimed, scan.Failure("timeout"))
+    completed = proof.owner(run, [], proof.OWNER_FILES, payload)
+    assert completed["files"][0]["state"] == "quarantine"
+    assert len(completed["attempts"]) == 1 and completed["attempts"][0]["reason"] == "timeout"
+    with Session(db_engine) as db:
+        row = db.get(Attachment, identifier)
+        before = (row.version, row.state, row.attempts, row.generation, row.next_attempt_at)
+        history = db.scalar(
+            select(AttachmentScanAttempt).where(AttachmentScanAttempt.attachment_id == identifier)
+        )
+        immutable_history = (history.token, history.claimed_at, history.finished_at, history.reason)
+    failure = None
+    try:
+        accelerated = proof.owner(run, [], proof.OWNER_FILES, {**payload, "accelerate": True})
+    except DBAPIError as error:
+        # RED evidence is bounded: never print live SQL parameters/identifiers.
+        failure = (
+            type(error).__name__,
+            error.orig.sqlstate,
+            "immutable_identity"
+            if error.orig.diag.message_primary == "Immutable attachment identity"
+            else "unclassified",
+        )
+    assert failure is None, f"Owner acceleration refused: {failure}"
+    assert accelerated == completed
+    with Session(db_engine) as db:
+        row = db.get(Attachment, identifier)
+        assert (row.version, row.state, row.attempts, row.generation) == before[:4]
+        assert row.next_attempt_at < before[4]
+        assert row.next_attempt_at <= db.scalar(text("SELECT clock_timestamp()"))
+        history = db.scalar(
+            select(AttachmentScanAttempt).where(AttachmentScanAttempt.attachment_id == identifier)
+        )
+        assert (
+            history.token,
+            history.claimed_at,
+            history.finished_at,
+            history.reason,
+        ) == immutable_history
+        assert (
+            db.scalar(text("SELECT tgenabled FROM pg_trigger WHERE tgname='attachment_guard'"))
+            == "O"
+        )
+    with pytest.raises(DBAPIError) as guarded:
+        with db_engine.begin() as db:
+            db.execute(
+                text("UPDATE attachments SET next_attempt_at=clock_timestamp() WHERE id=:id"),
+                {"id": identifier},
+            )
+    assert guarded.value.orig.sqlstate == "P0001"
+    with monkeypatch.context() as missing_opt_in:
+        missing_opt_in.delenv("ALTVIA_ALLOW_CONTAINER_TEST")
+        with pytest.raises(RuntimeError, match="synthetic"):
+            proof.owner(run, [], proof.OWNER_FILES, {**payload, "accelerate": True})
+        monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps({**payload, "accelerate": True})))
+        with pytest.raises(AssertionError):
+            exec(proof.OWNER_FILES, {})
+    for refused in (
+        {**payload, "ticket_id": str(uuid4()), "accelerate": True},
+        {**payload, "ids": [str(identifier), str(identifier)], "accelerate": True},
+    ):
+        with pytest.raises(AssertionError):
+            proof.owner(run, [], proof.OWNER_FILES, refused)
+
+
+def test_packaged_timeout_acceleration_error_restores_guard_and_schedule(
+    admin_client,
+    db_engine,
+    seeded_user,
+    monkeypatch,
+    capsys,
+):
+    from altvia import attachment_scan as scan
+    from altvia.models import Attachment
+    from sqlalchemy import event
+    from test_attachments import upload
+
+    parent = ticket(admin_client, setup(admin_client, db_engine, seeded_user))
+    uploaded = upload(admin_client, parent, filename="timeout-rollback-owner.txt")
+    assert uploaded.status_code == 201
+    identifier = UUID(uploaded.json()["attachment_id"])
+    claimed = scan.claim(db_engine, identifier)
+    assert scan.finalize(db_engine, claimed, scan.Failure("timeout"))
+    with Session(db_engine) as db:
+        row = db.get(Attachment, identifier)
+        before = (row.version, row.state, row.attempts, row.generation, row.next_attempt_at)
+    monkeypatch.setattr("altvia.database.make_engine", lambda settings: db_engine)
+    monkeypatch.setenv("ALTVIA_ALLOW_CONTAINER_TEST", "1")
+    payload = {"ids": [str(identifier)], "ticket_id": parent.rsplit("/", 1)[1], "accelerate": True}
+    monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps(payload)))
+    disabled = False
+
+    def fail_update(conn, cursor, statement, parameters, context, executemany):
+        nonlocal disabled
+        if statement.startswith("ALTER TABLE attachments DISABLE TRIGGER"):
+            disabled = True
+        if statement.startswith("UPDATE attachments SET next_attempt_at"):
+            assert disabled
+            raise RuntimeError("synthetic_schedule_failure")
+
+    event.listen(db_engine, "before_cursor_execute", fail_update)
+    try:
+        with pytest.raises(RuntimeError, match="synthetic_schedule_failure"):
+            exec(proof.OWNER_FILES, {})
+    finally:
+        event.remove(db_engine, "before_cursor_execute", fail_update)
+    assert disabled
+    with Session(db_engine) as db:
+        row = db.get(Attachment, identifier)
+        assert (row.version, row.state, row.attempts, row.generation, row.next_attempt_at) == before
+        assert (
+            db.scalar(text("SELECT tgenabled FROM pg_trigger WHERE tgname='attachment_guard'"))
+            == "O"
+        )
+    with pytest.raises(DBAPIError) as guarded:
+        with db_engine.begin() as db:
+            db.execute(
+                text("UPDATE attachments SET next_attempt_at=clock_timestamp() WHERE id=:id"),
+                {"id": identifier},
+            )
+    assert guarded.value.orig.sqlstate == "P0001"

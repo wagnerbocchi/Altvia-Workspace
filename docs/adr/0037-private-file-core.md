@@ -6,8 +6,9 @@ security requirements and existing domain authorization/replay contracts apply.
 This is a development contract. Tasks1-3 backend infrastructure, private assets,
 scanning, immutable content links and reviewed outbound MIME files are implemented
 and development/CI accepted throughdf3c8bb. Browser file workflows and incoming-MIME
-file ownership remain pending. The user explicitly stopped execution before
-design/UI/UX/Task4. This is not production/CPU acceptance. No target connection, production deployment, real data import or
+file ownership remain pending. The latest user continuation resumes Task4 after
+the accepted whole-system redesign, superseding the earlier stop-before-design.
+This is not production/CPU acceptance. No target connection, production deployment, real data import or
 retention/deletion policy is authorized here.
 
 ## Goal and bounded sequence

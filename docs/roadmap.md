@@ -4,17 +4,24 @@ Updated 2026-11-12. User authorized incremental development after contracts,
 direct pushes to main and no PR. Continue safe independent work while questions
 await answers. This does not authorize production deployment or real data import.
 
-## Current authorized design scope
+## Current authorized development scope
+
+Latest user continuation on2026-11-12 resumes the remaining MVP sequence after
+the accepted redesign. Resume private-files Task4 in the established Twenty-
+inspired Operate interface, then Task5 and the remaining ordered stages in
+docs/plans/2026-11-11-mvp-completion.md. The earlier stop-before-design boundary
+is superseded. Keep local/CI validation per slice and final consolidated target
+qualification after development; no production rollout or real import is granted.
 
 Earlier instruction2026-11-12: continue backend development and validation, but stop
 before beginning any design, UI or UX. Private-files Task3 backend is now closed
 on accepteddf3c8bb (immutable content links and explicitly reviewed MIME delivery),
 with relevant checks, independent review and authorized publication complete.
 The user subsequently invoked Impeccable and clarified a whole-system visual
-redesign, selecting Twenty CRM as the reference. The active scope is the26
+redesign, selecting Twenty CRM as the reference. That scope covered the26
 existing routes under docs/plans/2026-11-12-workspace-redesign.md. Private-files
 Task4 was stopped before any implementation when that clarification arrived.
-It remains pending separately. The new design preserves existing functionality,
+It now resumes under the latest continuation. The new design preserves existing functionality,
 resource authority and light/dark support. No production deployment or target
 qualification is implied. The MVP remains incomplete.
 
@@ -54,7 +61,8 @@ zero-vulnerability inventories pass. Independent source/spec review has zero
 findings; prior M1 request-purpose enums are resolved. The original local257/8
 stale-schema run remains failed; full265-case rerun on fresh correct PG passed.
 Full source/hash/raw-evidence/restore-scope record: docs/phase-3i-private-file-evidence.md.
-No UI/design work, incoming-MIME file ownership or target qualification is complete.
+Private-file UI, incoming-MIME file ownership and final target qualification remain
+pending. The separate existing-route redesign is accepted as recorded above.
 
 Phase 1 is closed on 2026-11-09. Final source 2f6ba60 passed all five hosted gates,
 290 API and 31 browser tests, and the full five-image/six-service stack passed on

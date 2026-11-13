@@ -5,6 +5,11 @@ ending work after each slice to ask whether to continue. Direct commits/pushes t
 main remain authorized; no PR, production deployment, real import or Zammad
 retirement. Record questions in roadmap and continue independent safe work.
 
+Latest continuation2026-11-12 resumes this full ordered sequence after accepted
+redesign7164a61. Start private-files Task4 in the current Twenty-inspired Operate
+world, then Task5 and remaining stages. Earlier stop/design-only scope below is
+historical and superseded. Final target qualification follows development.
+
 Earlier user stop point2026-11-12: continue backend development and validation,
 but STOP BEFORE starting any design, UI or UX work. Complete the current private-
 files Task3 backend, its relevant checks, independent review and authorized
@@ -59,8 +64,7 @@ never invent the company's real hours/holidays/targets. Q05/Q06: preserve workbo
 facts, require approved mappings before real import. Q09/Q11/Q21: no destructive
 retention; fail closed for files; bound mail/storage and qualify selected CPU builds.
 
-After each slice record evidence and move to the next independent stage within
-the latest user stop point. Stop before design/UI/UX and report that boundary,
-without claiming the whole MVP complete. Only claim the
+After each slice record evidence and move to the next independent stage under
+the latest continuation, without claiming the whole MVP complete. Only claim the
 whole MVP complete after integrated gates and actual target proof; clearly retain
 external policy/production/pilot gates that require the user's real information.

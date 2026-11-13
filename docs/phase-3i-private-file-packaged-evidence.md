@@ -1,10 +1,11 @@
 # Phase 3I combined packaged file proof
 
-Updated 2026-11-13. The combined signed packaged/restore proof PASSED at exact
-d4de86c. Full increment acceptance remains OPEN because that source's API suite
-failed a new packaged-regression fixture. Its reviewed test-only correction
-7c92c9a has affected-scope passes; the corrected full API/CI gate is pending.
-No final MVP, production or target-CPU acceptance is claimed.
+Updated 2026-11-13. The bounded staff-file core is development/CI ACCEPTED at
+exactc12d6e1af5f3dcf61b03fa22e4ff1d1735cbdec4. All five corrected hosted gates
+passed after independent task, whole-increment and correction reviews. Actual
+signed scanning, private browser/MIME flows, recreation and matching logical
+restore passed. Incoming-MIME files remain the next separate increment. No full
+MVP, production, encrypted-backup/compatible rollback or target-CPU acceptance.
 
 ## Implemented proof and scope
 
@@ -60,7 +61,7 @@ consolidated source correction below addresses the timeout filename canary and
 the omitted build inputs. Historical subset inventories retain their original
 limited scope; the full Git archive and actual local frozen maps remain separate.
 
-Required next gate:
+Implemented acceptance command:
 
 ```sh
 ALTVIA_ALLOW_CONTAINER_TEST=1 uv run python scripts/container_smoke.py --files
@@ -69,10 +70,10 @@ ALTVIA_ALLOW_CONTAINER_TEST=1 uv run python scripts/container_smoke.py --files
 The private-file-runtime CI job now executes that command after the separate
 signed-current scanner/update proof. It explicitly uploads bounded file proof,
 command/source manifests and storage/scanner inventories; private dump/object
-and diagnostic contents are excluded. All five exact-source workflows and their
-complete logs/artifacts still require verification before acceptance.
+and diagnostic contents are excluded. All five exactc12d6e1 workflows and their
+complete logs/artifacts are verified in the final acceptance record below.
 
-Whole-increment review, a matching logical restore's actual positive result,
+Whole-increment review and actual matching logical restore are accepted below;
 separate incoming-MIME attachments and remaining MVP development remain open.
 Encrypted backup and compatible image rollback belong to integrated hardening.
 Final actual x86-64-v1 qualification follows development. No production rollout,
@@ -272,3 +273,45 @@ were verified. Independent scoped source/spec/quality review approved H4 without
 new breakage. Corrected full API/CI acceptance remains required before closing
 Task5. Incoming files remain a separate unaccepted draft contract, with no runtime
 implementation or production/target operation inferred here.
+
+## Final corrected acceptance at c12d6e1
+
+All five workflows at exactc12d6e1af5f3dcf61b03fa22e4ff1d1735cbdec4 succeeded:
+
+| Gate | Run | Observed result |
+| --- | --- | --- |
+| API | 43451406365 | 1266 passed,3 native console opt-in skips,1 existing Pydantic limit-alias warning;744.41s |
+| Browser | 43451406443 | 175 passed,7.2m; existing standalone/action notices retained |
+| Containers | 43451406367 | Historical and combined private-file jobs both passed; real signed scanner/update proof and matching restore |
+| Source security | 43451406626 | No blocking source/secret findings |
+| Service image security | 43451406584 | Seven nonempty inventories,zero reported vulnerabilities |
+
+The three skips are explicit prebuilt native-console opt-ins. Mandatory actual
+signed/current ClamAV infrastructure and combined acceptance ran in the container
+gate; these skips are not presented as executed. Required real S3 API suites ran.
+The one Pydantic warning belongs to the preexisting concurrent queue atomic/
+competing-version test; it remains tooling-hardening follow-up, not a hidden
+warning-free claim. Source/whole-increment/scoped reviews have no open blocking
+finding; both original Minor observations and all H1-H4 corrections are dispositioned.
+
+Root inspected the actual final proof, not only workflow colors: exact clean3,
+infected1 and8 timeout outcomes, protected actual clean retry, three delivered/
+processed/diagnostic phases, both current-role grant probes, original401/current
+actor continuity and matching4-object restore with immutable links/frozen wires/
+current ACL. CPU and encrypted-backup/compatible rollback flags remain false.
+The final proof JSON SHA256 is
+`456858d1ce0f0bedd4215b0b94aaffae67dd7f38ec1472cf59e6e95feeb9f044`.
+
+Independent controller checks verified207 API source/32 process stream hashes,
+278 infrastructure+combined source/130 infrastructure stream hashes and the
+303-command combined record digest,all exits0. Combined private raw channels
+remain excluded and were not independently verified. The seven actual package
+inventories contain72/38/70/49/16/107/43 packages and zero vulnerabilities each.
+
+Complete accepted CI evidence, six logs, five digest-verified ZIPs and bounded
+controller checks are preserved in
+`C:/Users/wagne/.codex/state/evidence/private-file-task5-ef6b9f9/ci-c12d6e1-accepted.zip`:
+25 entries,1831746 bytes,CRC passed,SHA256
+`7ea4be96aefc96b176c9b3a0fce3563c8c58c32f6f88d7d8c0cc437a2d3ba0e0`.
+Earlier failed runs remain failed, including d4's passed combined but failed API
+result. No production/provider/target action or real data import occurred.

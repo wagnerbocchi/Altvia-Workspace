@@ -6,12 +6,13 @@ await answers. This does not authorize production deployment or real data import
 
 ## Current authorized development scope
 
-Latest user continuation on2026-11-12 resumes the remaining MVP sequence after
-the accepted redesign. Resume private-files Task4 in the established Twenty-
-inspired Operate interface, then Task5 and the remaining ordered stages in
-docs/plans/2026-11-11-mvp-completion.md. The earlier stop-before-design boundary
-is superseded. Keep local/CI validation per slice and final consolidated target
-qualification after development; no production rollout or real import is granted.
+Latest user continuation resumes the remaining MVP after the accepted redesign.
+The staff-file core is now accepted atc12d6e1; next is the separate incoming-file
+contract and the remaining ordered stages in docs/plans/2026-11-11-mvp-completion.md.
+Use the established Twenty-inspired Operate interface. The earlier stop-before-
+design boundary is superseded. Keep local/CI validation per slice and final
+consolidated target qualification after development; no production rollout or
+real import is granted.
 
 Earlier instruction2026-11-12: continue backend development and validation, but stop
 before beginning any design, UI or UX. Private-files Task3 backend is now closed
@@ -59,7 +60,8 @@ lint/types/build and contracts passed. Independent source review approved fixes;
 Impeccable's capability-copy finding is resolved. All five exact-source hosted gates
 passed at 2da7788: 1198 API cases/3 explicit skips, 175 browser cases, both container
 jobs, zero blocking source findings and seven zero-vulnerability image inventories. Task5 packaged signed-scanner/restore proof and incoming-MIME files remain
-open. See docs/phase-3i-private-file-browser-evidence.md for exact evidence limits.
+pending in that historical Task4 record. Task5 is now accepted below; incoming-
+MIME files remain separate. See docs/phase-3i-private-file-browser-evidence.md.
 
 Task5 packaged core has task-scoped and whole-increment source approval, with
 consolidated proof-only corrections through133e163. Final22 covering cases pass;
@@ -76,9 +78,13 @@ commands successful. However, full API had1 failure/1265 passes/3 native skips:
 the new packaged-session regression used CI's single-label host instead of its
 actual FQDN. Actual PG/API/S3 reproduced the cookie-scope difference. Reviewed
 test-only7c92c9a passed the entire affected68-case module plus focused FQDN check,
-without changing product/proof helpers. Corrected full API/CI acceptance remains
-OPEN. Incoming-file ADR0038/plan are local unaccepted drafts only; no new runtime
-work begins before core closure. Exact history, hashes, skips and tooling notices are in
+without changing product/proof helpers. Corrected full exactc12d6e1 API/CI is now
+ACCEPTED:1266 API passes/3 explicit native console skips/1 existing queue metadata
+warning,175 browser passes,both packaged jobs and both security gates. Actual
+combined signed scanning/recreation/matching4-object restore passed; root verified
+all collected hashes and final proof JSON. Incoming-file ADR0038/plan are the next
+separate engineering contract; no incoming implementation is inferred from core
+acceptance. Exact history, hashes, skips and tooling notices are in
 docs/phase-3i-private-file-packaged-evidence.md. No target operation occurred.
 
 Task3 closure: all five exact-df3c8bb hosted gates passed,1198 API cases/three
@@ -89,9 +95,8 @@ zero-vulnerability inventories pass. Independent source/spec review has zero
 findings; prior M1 request-purpose enums are resolved. The original local257/8
 stale-schema run remains failed; full265-case rerun on fresh correct PG passed.
 Full source/hash/raw-evidence/restore-scope record: docs/phase-3i-private-file-evidence.md.
-Private-file UI has local, independent review and hosted acceptance above. Task5
-combined packaged proof, incoming-MIME ownership and final target qualification
-remain pending.
+Private-file UI and Task5 combined packaged proof are accepted above. Incoming-
+MIME ownership and final integrated target qualification remain pending.
 The separate existing-route redesign is accepted as recorded above.
 
 Phase 1 is closed on 2026-11-09. Final source 2f6ba60 passed all five hosted gates,

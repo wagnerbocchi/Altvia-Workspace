@@ -42,7 +42,8 @@ target-VM qualification follows development, not each slice.
 | Service Desk conversation | Public response drafts separate from private notes; protected review/replay and real browser conversation | Development/CI complete558f4ee;796 API/131 browser, packaged proof; final target deferred |
 | Outbound mail | Explicit verified participant boundary, durable public-only queue, verified TLS SMTP, stable IDs, retry/uncertain reconciliation and browser delivery states | Development/CI complete c47fd8a;894 API/142 browser,201 affected, actual packaged SMTP/restart/privacy/active shutdown; final target deferred |
 | Inbound mail | Restricted authorized triage, explicit verified sender/thread evidence, safe creation/append/reopen, no subject/From-only trust | Development/CI complete36e4642:1040 API/154 browser, all five gates; actual IMAPS/HTTPS/TLS reply/append/reopen/alias/privacy/recreation; R1 proof gap corrected/re-reviewed; MIME files follow the private-files stage; final target deferred |
-| Private files | Private object storage, bounded streaming, fail-closed scanning, authorized ticket/work links and downloads | Backend Tasks1-3 accepteddf3c8bb. Task4c5c668c/039a631 implemented and independently reviewed: full175 baseline and final scoped9 browser/3 output tests pass; all five hosted gates accepted at2da7788 with1198 API/3 explicit skips and175 browser cases. Task5 packaged signed-scanner/restore, incoming-MIME files and final qualification remain pending |
+| Private files | Private object storage, bounded streaming, fail-closed scanning, authorized ticket/work links and downloads | Staff-file core development/CI completec12d6e1:1266 API/3 explicit native skips,175 browser,both packaged/security jobs; actual signed scanner/MIME/privacy/recreation/4-object matching restore; independent reviews accepted; final target deferred |
+| Incoming files | Concrete immutable case-owned files, owner extraction/publication, current scoped triage/conversation/download | Next separate ADR0038/plan prepared; no incoming runtime implementation yet |
 | Ticket/work links | Same-client N:N authorization of both endpoints, independent state, real browser links | Pending |
 | Automation/unified work | Structured durable rules, idempotent assignment/reopen/race behavior, visible failures, consolidated scoped My Work | Pending |
 | SLA | Versioned configurable calendars/holidays/timezone/pause/reopen, first accepted public response and resolution/breach proof | Pending; actual policy Q07 |
@@ -67,7 +68,11 @@ Exactd4de86c then PASSED actual combined signed recreation/4-object matching
 restore, but its full API suite failed a new packaged fixture under the CI
 single-label host. Reviewed test-only7c92c9a aligns that fixture with the actual
 FQDN and has68 affected passes plus1 focused FQDN pass. Corrected full API/CI
-acceptance remains required; incoming ADR0038/plan are unaccepted local drafts.
+acceptance then PASSED at exactc12d6e1:1266 API/3 explicit native skips/1 retained
+queue Pydantic warning,175 browser,both packaged/security jobs and actual combined
+signed recreation/4-object restore. The bounded staff-file core is accepted.
+Incoming ADR0038/plan is the next separate contract; no incoming implementation
+or final target qualification follows automatically from this acceptance.
 See docs/phase-3i-private-file-packaged-evidence.md for complete failed history,
 warnings and source/evidence limits; no incoming-file completion or final target
 qualification is inferred.

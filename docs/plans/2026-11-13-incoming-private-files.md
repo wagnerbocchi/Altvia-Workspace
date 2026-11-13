@@ -237,7 +237,9 @@ block/count; no direct raw/private-reason lookup or new collection route.
 
 **Files:** Extend apps/web/src/components/mail-cases/detail.tsx,
 apps/web/src/components/tickets/messages.tsx, apps/web/src/components/attachments.tsx,
-apps/web/src/lib/attachments.ts and apps/web/src/lib/mail-cases.ts; use existing
+and apps/web/src/lib/attachments.ts; reuse apps/web/src/lib/mail-cases.ts unchanged
+when its existing full generated CaseDetail/current GET already carries files.
+Use existing
 generated API types, apps/web/tests/mail-cases.spec.ts and
 apps/web/tests/attachments.spec.ts. Extend scripts/browser_incoming_fixture.py,
 scripts/browser_file_fixture.py's existing synthetic scan protocol with an
@@ -250,7 +252,8 @@ Update existing focused packaged-proof/browser-helper tests when their owners
 change; include every added helper in the actual build/proof source-hash map.
 Extend scripts/packaged_file_browser.mjs when the native incoming context consumes
 its real browser owner; keep its bounded diagnostic allowlist and private payload
-discipline, with scripts/packaged_file_browser.test.mjs coverage as affected.
+discipline, extending packaged_file_browser_support.mjs and
+scripts/packaged_file_browser.test.mjs as affected.
 
 **Consumes:** Task3 scoped files blocks/capabilities and existing global byte/retry
 routes. Core actual storage/scanner/browser/MIME/restore owners remain the seam.

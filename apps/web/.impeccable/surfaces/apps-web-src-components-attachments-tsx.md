@@ -64,3 +64,44 @@ and recovery evidence. These ticket captures do not claim separately pictured wo
 comment layouts. Signed production-profile ClamAV UI proof, exact-final hosted gates
 and consolidated target qualification remain separate acceptance work. No raster
 provenance entry is needed for this extension because no raster asset ships.
+
+## Immutable incoming-file consultation (2026-11-13)
+
+IncomingAttachments extends the same file-row vocabulary for original received
+files in case triage and the immutable ticket conversation. It adds no upload,
+include, forward or inline-preview action to incoming files. Existing public
+response, private-note and work-comment picker capabilities above remain separate
+and unchanged. The incumbent neutral Operate world, spacing, responsive action
+stacking, system type and Lucide paperclip remain authoritative; no new system,
+comp, seed, QUALITY BAR card or shipping raster is introduced.
+
+Each visible original file retains its name, byte size and explicit current state.
+Incoming ready copy says verification is complete rather than promising use or
+permanent safety. Current capability alone exposes named download or failed-scan
+retry; consultation-only access can retain download without retry. Completed
+verification with unavailable download has its own explanation. Download performs
+a fresh file read before requesting bytes, uses the current filename, aborts on
+disposal and revokes temporary Blob URLs. Relevant parent read error/refetch and
+the protected retry lock disable stale actions.
+
+Retry retains the original file identity/version/key through uncertainty. Its
+protected POST receipt and a current actor-bound read must confirm the same
+incoming case asset before acknowledgement; refreshing the parent alone does not
+confirm it. Show named original-operation recovery, and deliberate refresh/discard
+for a refused conflict; failed refresh preserves the original attempt. Current
+files remain independent of frozen promotion text/review. Session disposal clears
+private state, while a temporarily hidden block does not manufacture an empty set.
+
+Legacy explains that files were not processed and absence proves nothing about
+original attachments. Unavailable uses fixed administrator-recovery guidance;
+complete empty explicitly states no file received. Hidden/null yields no block or
+inferred count. Invalidated message history stays visible only within current
+authority, with current capabilities deciding file actions.
+
+The incoming-file finish verdict is ship for UI cf74597 and all 52 required
+desktop/mobile light/dark captures across 13 states. This evidence supplements,
+and does not replace or broaden, the earlier picker/copy-fix evidence above.
+It is ordinary extension evidence, not whole-product or final engineering
+qualification. Pre-existing root DESIGN.md-newer-than-sidecar drift remains
+disclosed and unrepaired; this increment establishes no new tokens or defects
+as system rules.

@@ -33,3 +33,37 @@ FINISH Real PostgreSQL/API browser evidence: persisted escaped text, explicit
 keyboard review, independence from notes, scoped read-only states, ordered pages,
 uncertain and acknowledged recovery, axe and desktop/mobile light/dark captures.
 Actual local TLS relay and real worker prove acceptance, rejection and uncertainty without claiming recipient delivery. Finish with a fresh independent review and documentation of incumbent-system consistency. Root owns the visual disposition.
+
+## Received files in the conversation (2026-11-13)
+
+Preserve the immutable incoming sender, received time, subject and literal bounded
+text as one conversation entry. Its original incoming-file region follows that
+text, before the separate response composer. Incoming files remain consultation
+with current permitted download, refresh and protected failed-scan retry; they
+offer no upload, response inclusion, forwarding or inline preview. Existing
+public-response draft/file selection, delivery review and private-note controls
+retain their independent purpose and authority.
+
+Use current conversation file capabilities and fresh file reads before bytes;
+immutable associations and historical verification never certify present download
+authority. Relevant conversation read error/refetch blocks stale file actions;
+read failure hides the stale conversation list. Retry preserves the original file
+version/key through uncertainty until its protected POST receipt and current
+actor-bound read confirm the same incoming case asset. Parent refresh is not an
+acknowledgement. Session disposal removes private state.
+
+Keep the explicit invalidation warning beside preserved history and gate file
+actions by current authority. Distinguish unprocessed legacy files, fixed
+unavailability with administrator recovery and a complete empty set. Hidden/null
+file authority exposes no file block, filename or inferred count. Verification
+complete and download currently unavailable remain separate visible facts.
+
+Reuse the existing neutral Twenty-inspired Operate planes, system typography,
+section rules and wrapping filename/bytes/state rows with named outline actions;
+mobile stacks metadata before actions. No world, tokens, comp, seed, QUALITY BAR
+card or shipping raster is introduced. The independent incoming-file ship verdict
+for UI cf74597 covers all 52 required desktop/mobile light/dark captures across
+13 states, including conversation, error and hidden states. It is bounded
+extension evidence, not a new verdict for every existing delivery/composer path
+or final engineering qualification. Pre-existing root DESIGN.md-newer-than-sidecar
+drift is disclosed without repair or canonization.

@@ -148,7 +148,13 @@ source/spec/quality review found no blockers. Local browser evidence is35 passes
 plus one separately corrected fixture case, not one green36-case run. Native/helper
 and actual PG/S3 checks, build/contracts/security policy passed within recorded
 split scopes. New actual signed incoming/restore and full hosted acceptance remain
-pending. See docs/phase-3j-incoming-files-evidence.md for failures, corrections,
+pending. Exacta91f33d passed1461 API/3 explicit skips/1 warning,185 browser and both
+security gates, but private-file runtime failed in the existing SMTP lost-final-
+reply child before reaching new incoming proof. Reviewed diagnostic-only50539e8
+preserves private channels/nonzero and adds bounded phase/error reporting;151 local
+covering passes/1 unchanged Node-only deselection do not establish a runtime fix.
+Next exact hosted execution and new incoming restore remain required.
+See docs/phase-3j-incoming-files-evidence.md for failures, corrections,
 boundaries and known tooling notices. Final increment review and remaining MVP
 stages follow; no complete-MVP or target qualification is claimed.
 

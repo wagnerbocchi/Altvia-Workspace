@@ -93,11 +93,36 @@ includes case/file identity, extraction header and immutable incoming relationsh
 no parallel restore protocol. New names/bytes/hashes/keys/IMAPS credentials join
 private-canary and actual-role checks. Public proof remains bounded metadata.
 
-Actual new signed combined execution has not yet run on adequately provisioned
-hosted Docker. Expected Podman refusal is not signature acceptance; WSL host
-memory does not prove capacity of the configured2048MiB machine. Exact published
-source needs full API/browser, both container jobs, source/image security and final
-increment review. Relevant workflow checks include web:check/build, Ruff, contract
+Exact a91f33d hosted gates passed1461 API cases/3 explicit native-console skips/
+1 metadata warning,185 browser cases, source security27 LOW/0 blockers/0 secrets
+and image security with seven nonempty hash-verified zero-vulnerability reports.
+The common container runtime passed. The private-file runtime failed before the
+new incoming context, in the existing SMTP lost-final-reply worker child. Its153
+command records contain only one nonzero result, index151; matching accepted/lost
+child commands are149/151. The standalone file infrastructure passed66 commands,
+including its two intentional negative controls. Complete logs/artifacts remain
+preserved; private child channels were intentionally not uploaded, so their hashes
+cannot reveal the original assertion or establish a root cause.
+
+Reviewed diagnostic-only commit50539e8 adds strict bounded scenario/phase/error-kind
+reporting at that existing child/host boundary. It preserves the original exception,
+nonzero exit, private channels and all runtime assertions. Local covering evidence
+is151 passes/1 unchanged Node-only deselection, with separate earlier native proof
+for that test. Failed RED and first broader runs remain retained. Independent review
+approved the diagnostic gap with no new source finding. This instrumentation does
+not repair an identified runtime defect. The next exact hosted execution must pass
+or supply its bounded signal; new incoming signed/recreation/restore acceptance and
+final increment review remain open.
+
+Failed a91f33d archive SHA256:
+9a1792a96db161966abe589ce11e6bdd910d3c9e9cbeea3d06fe12b13ec37269.
+Its219 entries passed CRC;213 API/263 combined/18 infrastructure source inputs match
+the exact Git archive. This failed archive is not accepted evidence of completion.
+
+Expected Podman refusal is not signature acceptance; WSL host memory does not prove
+capacity of the configured2048MiB machine. Exact new source needs full API/browser,
+both container jobs, source/image security and final increment review.
+Relevant workflow checks include web:check/build, Ruff, contract
 generation, node --test scripts/packaged_file_browser.test.mjs and the opted-in
 scripts/container_smoke.py --files. Private evidence retains exact argv/raw hashes.
 

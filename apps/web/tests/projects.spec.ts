@@ -169,7 +169,10 @@ test("@projects lost creation reply reuses original intent through independent r
     const response = page.waitForResponse(result => result.url().includes("/api/v1/users?") && result.ok());
     await managerPages.getByRole("button", { name: "Próximas contas", exact: true }).click();
     const rows = (await (await response).json()).items;
-    await expect(manager.locator(`option[value="${rows[0].id}"]`)).toHaveCount(1);
+    // The directory includes inactive accounts; the picker keeps self plus active others.
+    const selectable = rows.filter((row: { id: string; active: boolean }) => row.active && row.id !== owner.id);
+    await expect.poll(() => manager.locator("option").evaluateAll(options => options.map(option => option.getAttribute("value"))))
+      .toEqual(["", owner.id, ...selectable.map((row: { id: string }) => row.id)]);
   }
   await expect(manager).toHaveValue(delegate.id);
   const intents: { key: string | undefined; body: string | null }[] = [];

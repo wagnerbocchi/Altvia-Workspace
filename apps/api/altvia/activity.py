@@ -71,6 +71,20 @@ TICKET_EVENT_TYPES = {
     "ticket.message_received",
     "ticket.delivery_queued",
 }
+TICKET_WORK_EVENT_TYPES = {"ticket.work_linked", "ticket.work_unlinked"}
+WORK_TICKET_EVENT_TYPES = {"work_item.ticket_linked", "work_item.ticket_unlinked"}
+
+
+class TicketWorkEventPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
+    actor_id: UUID
+    actor_kind: Literal["user"]
+    ticket_id: UUID
+    work_item_id: UUID
+    client_id: UUID
+    queue_id: UUID
+    project_id: UUID
+    relation_type: Literal["related"]
 
 
 class TicketEventPayload(BaseModel):
@@ -354,6 +368,8 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
             | MILESTONE_EVENT_TYPES
             | QUEUE_EVENT_TYPES
             | TICKET_EVENT_TYPES
+            | TICKET_WORK_EVENT_TYPES
+            | WORK_TICKET_EVENT_TYPES
             or event.schema_version != 1
         ):
             event.status, event.last_error_code, event.lease_until = (
@@ -372,8 +388,18 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                 | QueueEventPayload
                 | QueueAccessEventPayload
                 | TicketEventPayload
+                | TicketWorkEventPayload
             )
-            if event.event_type in TICKET_EVENT_TYPES:
+            if event.event_type in TICKET_WORK_EVENT_TYPES | WORK_TICKET_EVENT_TYPES:
+                payload = TicketWorkEventPayload.model_validate(event.payload)
+                own_id = (
+                    payload.ticket_id
+                    if event.event_type in TICKET_WORK_EVENT_TYPES
+                    else payload.work_item_id
+                )
+                if own_id != event.aggregate_id:
+                    raise ValueError("Invalid relationship aggregate")
+            elif event.event_type in TICKET_EVENT_TYPES:
                 payload = TicketEventPayload.model_validate(event.payload)
                 fields = payload.model_fields_set - {
                     "actor_id",
@@ -552,11 +578,11 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
             }
             expected_resource = (
                 "ticket"
-                if event.event_type in TICKET_EVENT_TYPES
+                if event.event_type in TICKET_EVENT_TYPES | TICKET_WORK_EVENT_TYPES
                 else "ticket_queue"
                 if event.event_type in QUEUE_EVENT_TYPES
                 else "work_item"
-                if event.event_type in WORK_EVENT_TYPES
+                if event.event_type in WORK_EVENT_TYPES | WORK_TICKET_EVENT_TYPES
                 else "project"
                 if event.event_type in PROJECT_EVENT_TYPES | MILESTONE_EVENT_TYPES
                 else "operational_area"

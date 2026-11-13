@@ -1033,6 +1033,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tickets/{identifier}/work-item-choices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Choices */
+        get: operations["choices_api_v1_tickets__identifier__work_item_choices_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/{identifier}/work-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Linked Work */
+        get: operations["linked_work_api_v1_tickets__identifier__work_items_get"];
+        put?: never;
+        /** Link */
+        post: operations["link_api_v1_tickets__identifier__work_items_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/{identifier}/work-items/{work_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Unlink */
+        delete: operations["unlink_api_v1_tickets__identifier__work_items__work_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users": {
         parameters: {
             query?: never;
@@ -1235,6 +1287,23 @@ export interface paths {
         };
         /** States */
         get: operations["states_api_v1_work_items__identifier__status_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/work-items/{identifier}/tickets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Linked Tickets */
+        get: operations["linked_tickets_api_v1_work_items__identifier__tickets_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1988,6 +2057,63 @@ export interface components {
              * @enum {string}
              */
             precision: "instant";
+        };
+        /** LinkedTicket */
+        LinkedTicket: {
+            /** Can Unlink */
+            can_unlink: boolean;
+            /** Number */
+            number: string;
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "low" | "medium" | "high" | "critical";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "new" | "open" | "pending_customer" | "pending_third_party" | "resolved" | "closed";
+            /** Subject */
+            subject: string;
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
+            /** Version */
+            version: number;
+        };
+        /** LinkedWork */
+        LinkedWork: {
+            /** Can Unlink */
+            can_unlink: boolean;
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "low" | "medium" | "high" | "critical";
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Project Name */
+            project_name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "todo" | "in_progress" | "blocked" | "done" | "cancelled";
+            /** Title */
+            title: string;
+            /** Version */
+            version: number;
+            /**
+             * Work Item Id
+             * Format: uuid
+             */
+            work_item_id: string;
         };
         /** LoginInput */
         LoginInput: {
@@ -3175,6 +3301,45 @@ export interface components {
              */
             ticket_id: string;
         };
+        /** TicketWorkChoices */
+        TicketWorkChoices: {
+            /** Can Link */
+            can_link: boolean;
+            /** Items */
+            items: components["schemas"]["WorkLinkChoice"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** TicketWorkCreate */
+        TicketWorkCreate: {
+            /**
+             * Work Item Id
+             * Format: uuid
+             */
+            work_item_id: string;
+        };
+        /** TicketWorkPage */
+        TicketWorkPage: {
+            /** Can Link */
+            can_link: boolean;
+            /** Items */
+            items: components["schemas"]["LinkedWork"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** TicketWorkReceipt */
+        TicketWorkReceipt: {
+            /**
+             * Ticket Id
+             * Format: uuid
+             */
+            ticket_id: string;
+            /**
+             * Work Item Id
+             * Format: uuid
+             */
+            work_item_id: string;
+        };
         /** Transition */
         Transition: {
             /**
@@ -3340,6 +3505,35 @@ export interface components {
              */
             work_type: "one_off" | "ongoing";
         };
+        /** WorkLinkChoice */
+        WorkLinkChoice: {
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "low" | "medium" | "high" | "critical";
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Project Name */
+            project_name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "todo" | "in_progress" | "blocked" | "done" | "cancelled";
+            /** Title */
+            title: string;
+            /** Version */
+            version: number;
+            /**
+             * Work Item Id
+             * Format: uuid
+             */
+            work_item_id: string;
+        };
         /** WorkOutput */
         WorkOutput: {
             /** Assignee Ids */
@@ -3462,6 +3656,13 @@ export interface components {
              * Format: uuid
              */
             work_item_id: string;
+        };
+        /** WorkTicketPage */
+        WorkTicketPage: {
+            /** Items */
+            items: components["schemas"]["LinkedTicket"][];
+            /** Next Cursor */
+            next_cursor: string | null;
         };
     };
     responses: never;
@@ -6526,6 +6727,149 @@ export interface operations {
             };
         };
     };
+    choices_api_v1_tickets__identifier__work_item_choices_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+                project_id?: string | null;
+                q?: string | null;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketWorkChoices"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    linked_work_api_v1_tickets__identifier__work_items_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketWorkPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    link_api_v1_tickets__identifier__work_items_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+                "If-Match-Work-Item": string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TicketWorkCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TicketWorkReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unlink_api_v1_tickets__identifier__work_items__work_id__delete: {
+        parameters: {
+            query?: never;
+            header: {
+                "If-Match": string;
+                "If-Match-Work-Item": string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                identifier: string;
+                work_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_users_api_v1_users_get: {
         parameters: {
             query?: {
@@ -7170,6 +7514,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["StatePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    linked_tickets_api_v1_work_items__identifier__tickets_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkTicketPage"];
                 };
             };
             /** @description Validation Error */

@@ -102,15 +102,21 @@ def _etag(response: Response, version: int) -> None:
     response.headers["ETag"] = f'"{version}"'
 
 
-def _expected_version(request: Request) -> int:
-    value = request.headers.get("if-match")
+def _expected_version(
+    request: Request,
+    *,
+    header: str = "if-match",
+    required_code: str = "version_required",
+    invalid_code: str = "invalid_version",
+) -> int:
+    value = request.headers.get(header)
     if value is None:
-        raise identity.IdentityError(428, "version_required")
+        raise identity.IdentityError(428, required_code)
     if not re.fullmatch(r'"[1-9][0-9]{0,9}"', value):
-        raise identity.IdentityError(422, "invalid_version")
+        raise identity.IdentityError(422, invalid_code)
     version = int(value[1:-1])
     if version > 2147483647:
-        raise identity.IdentityError(422, "invalid_version")
+        raise identity.IdentityError(422, invalid_code)
     return version
 
 

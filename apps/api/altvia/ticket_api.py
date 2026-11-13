@@ -74,6 +74,7 @@ from altvia.ticket_schemas import (
     TicketTransition,
     TicketTransitionReceipt,
 )
+from altvia.ticket_work import link_activity_clause
 from altvia.work_schemas import Candidate, CandidatePage
 
 
@@ -692,7 +693,9 @@ def create_ticket_router(engine: Engine, settings: Settings) -> APIRouter:
             _, access = registry.scoped_ticket(db, actor.id, identifier)
             _collection(request)
             query = select(ActivityEvent).where(
-                ActivityEvent.resource_type == "ticket", ActivityEvent.resource_id == identifier
+                ActivityEvent.resource_type == "ticket",
+                ActivityEvent.resource_id == identifier,
+                link_activity_clause(actor.id, "ticket"),
             )
             if not registry.can_read_notes(access):
                 query = query.where(ActivityEvent.event_type != "ticket.note_added")

@@ -35,6 +35,7 @@ from altvia.models import (
     WorkItem,
     WorkStatusHistory,
 )
+from altvia.ticket_work import link_activity_clause
 from altvia.work_schemas import (
     Candidate,
     CandidatePage,
@@ -479,6 +480,7 @@ def create_work_router(engine: Engine, settings: Settings) -> APIRouter:
                 select(ActivityEvent).where(
                     ActivityEvent.resource_type == "work_item",
                     ActivityEvent.resource_id == identifier,
+                    link_activity_clause(actor.id, "work_item"),
                 ),
                 f"work-activity:{identifier}",
                 limit,

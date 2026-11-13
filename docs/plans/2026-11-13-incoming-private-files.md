@@ -240,12 +240,17 @@ apps/web/src/components/tickets/messages.tsx, apps/web/src/components/attachment
 apps/web/src/lib/attachments.ts and apps/web/src/lib/mail-cases.ts; use existing
 generated API types, apps/web/tests/mail-cases.spec.ts and
 apps/web/tests/attachments.spec.ts. Extend scripts/browser_incoming_fixture.py,
-scripts/container_smoke.py and scripts/packaged_file_proof.py's shared snapshot;
+scripts/browser_file_fixture.py's existing synthetic scan protocol with an
+explicit case-parent fixture guard, scripts/container_smoke.py and
+scripts/packaged_file_proof.py's shared snapshot;
 add a focused scripts/packaged_incoming_file_proof.py if needed to extend the
 actual native incoming context without duplicating packaged_smtp_proof.py's
 existing ownership. Use current session/protected-write/query owners. No new world.
 Update existing focused packaged-proof/browser-helper tests when their owners
 change; include every added helper in the actual build/proof source-hash map.
+Extend scripts/packaged_file_browser.mjs when the native incoming context consumes
+its real browser owner; keep its bounded diagnostic allowlist and private payload
+discipline, with scripts/packaged_file_browser.test.mjs coverage as affected.
 
 **Consumes:** Task3 scoped files blocks/capabilities and existing global byte/retry
 routes. Core actual storage/scanner/browser/MIME/restore owners remain the seam.

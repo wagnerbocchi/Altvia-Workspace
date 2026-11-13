@@ -98,10 +98,28 @@ boundaries. Execute incrementally; the contract itself is not implementation.
 Incoming Task1 pure extraction is implemented in561d22c with170 local passes
 (109 new file cases and61 parser2 regressions), clean lint/types and independent
 source/spec/quality approval. All12 existing normalizer AST owners are unchanged.
-Hosted verification is pending. Next is immutable owner publication/real S3/SQL
-guards; HTTP file reads and the interface remain later tasks, not a completed
+All five exacte05ba8a hosted gates passed:1375 API cases/3 explicit native-console
+opt-in skips/1 known concurrent Pydantic metadata warning,175 browser cases,both
+container jobs and both security gates. Actual signed scanner/browser/MIME/privacy/
+recreation/matching restore passed; seven nonempty image inventories have zero
+reported vulnerabilities. The accepted archive SHA256 is
+927e0f5128e4b24356271b64bfbd9658338f3ac37820d4f7155021cf6e519a6b;
+source maps were checked against exacte05ba8a. CPU and encrypted-backup/compatible-
+image rollback remain separate gates. Next is immutable owner publication/real
+S3/SQL guards; HTTP file reads and the interface remain later tasks, not a completed
 incoming-files feature. Its producer stage also adds fail-closed unsupported-parent
 handling before any case assets exist behind the old global reader.
+
+Incoming Task2 owner publication is implemented in92d5f33 with independent source/
+spec/quality approval and550 affected actual PG/S3/API/worker tests passed without
+skips/warnings. Immutable case sets, SQL provenance/count/rollback guards, actual
+narrow worker scan, concurrent publication/collision during storage success/failure,
+private schema2 events and the finite owner Compose profile are covered. Lint,
+format, types, build, Compose and existing security policy passed; benign Git CRLF
+notices and failed early fixture runs remain retained. Fresh PG resolved old local
+fixture drift without weakening guards or deleting volumes. Hosted checks for this
+producer source remain pending. Existing global detail/content/retry hide case-file
+IDs until Task3 adds current scoped reads; no completed incoming UI is claimed.
 
 Task3 closure: all five exact-df3c8bb hosted gates passed,1198 API cases/three
 explicit opt-in native-image skips and154 browser cases. All25 new file-link/MIME

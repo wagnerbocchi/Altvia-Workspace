@@ -27,8 +27,21 @@ ADR0030-0033/0036/0037. Contracts precede code; real-provider policy stays Q03/Q
 
 Task1 pure interpretation is implemented in561d22c and independently source/spec/
 quality approved:170 local passes (109 new,61 existing parser2), Ruff/format/mypy
-pass and old12 normalizer AST owners unchanged. Hosted verification is pending;
-owner publication, HTTP and interface are not implemented by that pure increment.
+pass and old12 normalizer AST owners unchanged. All five exacte05ba8a hosted gates
+passed:1375 API cases/3 explicit native-console opt-in skips/1 known concurrent
+Pydantic metadata warning,175 browser cases,both container jobs and both security
+gates. The actual signed scanner/browser/MIME/privacy/recreation/matching restore
+passed; seven nonempty image inventories reported zero vulnerabilities. CPU and
+encrypted-backup/compatible-image rollback remain unqualified. Owner publication,
+HTTP and interface are not implemented by that pure interpretation increment.
+
+Task2 producer publication is implemented in92d5f33 and independently spec/quality
+approved. Final affected actual PG/S3/API/worker suite:550 passed, no skips/warnings;
+lint/format/mypy/build/Compose/security policy passed. Source/fixture inputs stayed
+frozen. Retained early fixture failures were resolved on fresh migration-backed PG;
+old volumes/evidence remain. Git CRLF normalization notices are nonblocking tooling
+noise, not a claim that every validation channel is pristine. Hosted Task2 gates
+remain pending. Case-file HTTP access deliberately stays404 until Task3.
 
 ## Global constraints
 
@@ -83,19 +96,19 @@ reason:str|None), plus extract_files(raw:bytes)->ExtractedFiles. Reason is exact
 file_structure|file_count|file_size|file_encoding|file_filename|file_type|file_parameter;
 complete has no reason, unavailable has no files. No text/body/provenance output.
 
-- [ ] RED accepted raw multipart text + base64 PDF and RFC2231 UTF8 filename:
+- [x] RED accepted raw multipart text + base64 PDF and RFC2231 UTF8 filename:
   assert status==complete; len(files)==1; exact original decoded bytes/name/type;
   normalize(raw) equals its existing parser2 result before/after extraction.
-- [ ] RED every supported actual core type/encoding and20/21 candidates; empty
+- [x] RED every supported actual core type/encoding and20/21 candidates; empty
   file, raw2097152/2097153 bytes, depth/entity/header bounds, malformed encodings,
   mixed good/bad set, attached containers and unsupported/unsafe names. Assert
   unavailable/files==() and fixed reason; never partial files or altered text.
-- [ ] RED plain/single extended names, allowed charset aliases/language tag,
+- [x] RED plain/single extended names, allowed charset aliases/language tag,
   invalid percent/bytes, conflicting declarations, raw UTF8 header, RFC2047 and
   continuation rejection. Fixtures stay within the unchanged raw bounds.
-- [ ] Implement using existing bounded MIME helpers, stdlib decoding and core
+- [x] Implement using existing bounded MIME helpers, stdlib decoding and core
   filename/media validators. Keep normalize/parser2 behavior/version untouched.
-- [ ] GREEN `uv run pytest -q apps/api/tests/test_mail_file_mime.py apps/api/tests/test_mail_mime.py`;
+- [x] GREEN `uv run pytest -q apps/api/tests/test_mail_file_mime.py apps/api/tests/test_mail_mime.py`;
   lint/format affected source, record exact freeze/results and commit. Task review.
 
 ### Task 2: Immutable case-owned assets and atomic owner publication
@@ -121,42 +134,42 @@ storage_file:Path|None=None. Text-only/unavailable/existing cases need no S3 con
 CLI reuses optional ALTVIA_STORAGE_FILE through owner-specific DatabaseSettings;
 load/validate it only after preflight and only when actual files need storage.
 
-- [ ] RED actual PG checks: exact three-parent/provenance rules, owner-only case
+- [x] RED actual PG checks: exact three-parent/provenance rules, owner-only case
   INSERT, unique ordered positions, deferred count equality/immutability, old
   staff creator requirements and legacy0 defaults; migration preservation/refusal.
-- [ ] RED new case-owned IDs receive the same404 as missing IDs at existing
+- [x] RED new case-owned IDs receive the same404 as missing IDs at existing
   detail/content/retry routes until Task3. Make scoped() explicitly choose ticket
   or work, else404 before purpose validation; no new read grant or422 existence
   distinction. Preserve normal staff behavior and no S3 access for this denial.
-- [ ] RED actual worker credentials still claim/finalize a case asset with no
+- [x] RED actual worker credentials still claim/finalize a case asset with no
   case-table/parent/name grant; creation-only count/provenance checks must never
   run for ordinary scan updates. Do not repair a trigger by broadening grants.
-- [ ] Add case file_extraction_version/file_set_status/file_count/private fixed
+- [x] Add case file_extraction_version/file_set_status/file_count/private fixed
   file_rejection_reason
   and attachment case FK/position, creator-null-only-for-case constraints. Reuse
   existing JSON identity guards. No raw grants or extra incoming-link table.
-- [ ] RED real PG/S3 new complete/unavailable/empty publication, legacy replay,
+- [x] RED real PG/S3 new complete/unavailable/empty publication, legacy replay,
   exact alias, conflicting bytes, concurrent one result/set, contact/version
   change, event/count rollback and private orphans after failed final checks.
-- [ ] Refactor the EXISTING locked attestation protocol into its shared preflight/
+- [x] Refactor the EXISTING locked attestation protocol into its shared preflight/
   final helper. Existing replay/alias/collision finishes before storage. A new
   preparation has no DB effect. Stage objects outside locks; final checks repeat
   current context and commit case/header/assets/origin/version/audit/outbox once.
-- [ ] Construct the immutable file header on the NEW case before its first INSERT/
+- [x] Construct the immutable file header on the NEW case before its first INSERT/
   flush, then persist ordered assets/events. Never update a flushed case to add
   its header or disable an identity/count guard to make publication succeed.
-- [ ] RED block actual S3 PUT and concurrently create contradictory context;
+- [x] RED block actual S3 PUT and concurrently create contradictory context;
   include failing PUT/configuration. Assert invalidation/origin commits even when
   storage fails; still-new storage failure acknowledges no case. No timed guess.
-- [ ] Emit only owner file.uploaded schema2 (null actor/management_command/file ID/
+- [x] Emit only owner file.uploaded schema2 (null actor/management_command/file ID/
   quarantine); retain exact schema1 user/worker events and existing case events.
   Prove strict private consumption/dedup/no activity and unchanged narrow worker
   columns plus table/column/actual-query denials. Reuse actual scan lifecycle.
-- [ ] Add one finite owner-tool Compose profile using existing image, owner DB,
+- [x] Add one finite owner-tool Compose profile using existing image, owner DB,
   restricted API S3 writer/CA and internal networks; ordinary migrate stays without
   those extra credentials. Validate Compose/resources and fixed CLI error/stdin
   discipline; no root S3 credential, new daemon or dependency.
-- [ ] GREEN affected real PG/API/S3/worker and migration/CLI tests plus existing
+- [x] GREEN affected real PG/API/S3/worker and migration/CLI tests plus existing
   mail case/normalizer/scan regressions. Record exact boundaries, commit and task
   source/spec/quality gate before Task3. No manual ready/production claim.
 
@@ -164,7 +177,10 @@ load/validate it only after preflight and only when actual files need storage.
 
 **Files:** Extend apps/api/altvia/attachments.py, attachment_schemas.py,
 attachment_api.py, mail_case_api.py, mail_case_schemas.py and mail_promotion.py in
-that altvia directory; docs/contracts/openapi.json and
+that altvia directory, plus ticket_api.py's direct incoming projection consumers;
+provision.py adds only the immutable case-file header column reads actually used
+by the new projection, preserving private rejection/provenance and worker denials.
+Update docs/contracts/openapi.json and
 apps/web/src/lib/api.generated.ts. Create apps/api/tests/test_mail_case_file_api.py;
 extend apps/api/tests/test_attachment_delivery.py and test_attachment_links.py.
 
@@ -187,6 +203,10 @@ block/count; no direct raw/private-reason lookup or new collection route.
 - [ ] Implement batched projections (bound query growth with multiple cases),
   global detail/content resolution and current invalidation checks before AND
   after object prefetch. Visible invalidated content is409/no bytes; hidden404.
+- [ ] Prove actual API credentials can read only the newly required immutable
+  file header columns after reprovisioning. Full case-table/private reason/raw/
+  provenance and worker case-table/parent/name denials remain unchanged. Keep
+  summary READ_COLUMNS separate so the existing strict list shape stays exact.
 - [ ] RED actual S3 revocation/collision during download, original receipt replay,
   integrity failure and session loss; assert zero private bytes. Keep legacy
   ready-file outage policy and transfer limits; no access-time scan or direct URL.

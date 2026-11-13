@@ -117,9 +117,28 @@ narrow worker scan, concurrent publication/collision during storage success/fail
 private schema2 events and the finite owner Compose profile are covered. Lint,
 format, types, build, Compose and existing security policy passed; benign Git CRLF
 notices and failed early fixture runs remain retained. Fresh PG resolved old local
-fixture drift without weakening guards or deleting volumes. Hosted checks for this
-producer source remain pending. Existing global detail/content/retry hide case-file
-IDs until Task3 adds current scoped reads; no completed incoming UI is claimed.
+fixture drift without weakening guards or deleting volumes. All five exacta55dd14
+hosted gates passed:1418 API cases/3 explicit native-console skips/no warnings,
+175 browser,both container/security jobs and seven nonempty zero-vulnerability
+image inventories. The prior signed core/browser/MIME/privacy/recreation/matching
+restore passed. Archive SHA256:
+33b5eba4decce055d06d90be7bd96e24175a80c7abf55b0641ede191aed12380;
+source maps checked against exacta55dd14. Producer-only global detail/content/retry
+hide case-file IDs until Task3 adds current scoped reads. New incoming UI/native
+proof and final target qualification are not claimed by this producer gate.
+
+Incoming Task3 current scoped file reads/download/retry are implemented ine0fc3e4
+with independent source/spec/quality approval.342 affected actual PG/S3/API/SMTP/
+scan/migration cases passed with no skips/warnings; lint, format, types, frontend
+type check and exact generated-contract compatibility passed. Current customer/
+queue and resulting-ticket scope, manager-only fresh retry, private runtime SQL
+denials, prefetch collision/revocation/session loss and no automatic forwarding
+are covered. The resulting-ticket-only denial branch uses a controlled real SQL
+predicate; today's immutable client/queue grants naturally hide both resources on
+real revocation. No separate production grant is invented. Two nonblocking
+evidence observations remain recorded for final review. Hosted verification is
+pending; Task4 incoming-file interface and signed native/matching restore proof
+are next, under the accepted Twenty-inspired Impeccable world.
 
 Task3 closure: all five exact-df3c8bb hosted gates passed,1198 API cases/three
 explicit opt-in native-image skips and154 browser cases. All25 new file-link/MIME

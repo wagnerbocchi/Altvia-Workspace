@@ -4,7 +4,9 @@
 > at a time with independent task review and one final increment review. The user
 > already authorizes continuous MVP work/direct main publication without PR.
 
-**State:** Ready for authorized incremental execution. ADR0038's fresh builder
+**State:** Tasks1-3 have independent source approval; Task4 interface/native proof
+is next. Tasks1/2 hosted gates passed; Task3 hosted verification remains pending.
+ADR0038's fresh builder
 check found nothing important left; finite MIME parameter choices are pinned.
 Private-file core's exactc12d6e1 corrected full CI passed:1266 API cases/3 explicit
 native console skips,175 browser,both packaged/security jobs and actual signed
@@ -40,8 +42,19 @@ approved. Final affected actual PG/S3/API/worker suite:550 passed, no skips/warn
 lint/format/mypy/build/Compose/security policy passed. Source/fixture inputs stayed
 frozen. Retained early fixture failures were resolved on fresh migration-backed PG;
 old volumes/evidence remain. Git CRLF normalization notices are nonblocking tooling
-noise, not a claim that every validation channel is pristine. Hosted Task2 gates
-remain pending. Case-file HTTP access deliberately stays404 until Task3.
+noise, not a claim that every validation channel is pristine. All five exacta55dd14
+hosted gates passed:1418 API cases/3 explicit native-console skips/no warnings,
+175 browser,both container/security jobs and seven nonempty zero-vulnerability
+image inventories. The prior signed core/browser/MIME/privacy/recreation/matching
+restore also passed. New incoming UI/native proof remains Task4. Producer-only
+case-file HTTP access deliberately stays404 until Task3.
+
+Task3 current read/retry API is implemented ine0fc3e4 with independent spec/quality
+approval,342 affected actual PG/S3/API/SMTP/scan/migration passes and no test
+skips/warnings. Lint/format/types/frontend type check and exact generated-contract
+compatibility passed. Two nonblocking evidence observations are retained in the
+execution ledger for final review. Hosted checks remain pending. Incoming-file
+interface and actual signed incoming-case/restoration proof remain Task4.
 
 ## Global constraints
 
@@ -183,6 +196,8 @@ by the new projection, preserving private rejection/provenance and worker denial
 Update docs/contracts/openapi.json and
 apps/web/src/lib/api.generated.ts. Create apps/api/tests/test_mail_case_file_api.py;
 extend apps/api/tests/test_attachment_delivery.py and test_attachment_links.py.
+Adapt test_mail_case_files.py's producer-only unsupported-parent check to a hidden
+actor when the authorized concrete case branch exists, preserving404/no-S3 proof.
 
 **Consumes:** Actual case-owned assets/header, existing scoped_case/readable_receipt,
 ticket visible/scoped/write authorities and ready-file download/retry owners.
@@ -193,29 +208,29 @@ Optional files block on CaseDetail and IncomingMessageOutput, not CaseSummary.
 Use explicit actor_id in incoming projection helpers. Suppress entire hidden
 block/count; no direct raw/private-reason lookup or new collection route.
 
-- [ ] RED current case queue+client ceiling, platform-admin negatives, promoted
+- [x] RED current case queue+client ceiling, platform-admin negatives, promoted
   ticket scope, private-purpose/cross-ID errors and legacy/unavailable fixed states.
   Assert existing list shape, receipt/fingerprint/event/wire compatibility.
-- [ ] Extend read DTO owner/purpose with mail_case/incoming while keeping upload
+- [x] Extend read DTO owner/purpose with mail_case/incoming while keeping upload
   inputs/filters/receipts staff-only. Refactor internal Parent to authorized
   owner-ID/version/capability values so case reads never hydrate private ORM
   columns. Explicitly handle all three parents, no work-item fallthrough.
-- [ ] Implement batched projections (bound query growth with multiple cases),
+- [x] Implement batched projections (bound query growth with multiple cases),
   global detail/content resolution and current invalidation checks before AND
   after object prefetch. Visible invalidated content is409/no bytes; hidden404.
-- [ ] Prove actual API credentials can read only the newly required immutable
+- [x] Prove actual API credentials can read only the newly required immutable
   file header columns after reprovisioning. Full case-table/private reason/raw/
   provenance and worker case-table/parent/name denials remain unchanged. Keep
   summary READ_COLUMNS separate so the existing strict list shape stays exact.
-- [ ] RED actual S3 revocation/collision during download, original receipt replay,
+- [x] RED actual S3 revocation/collision during download, original receipt replay,
   integrity failure and session loss; assert zero private bytes. Keep legacy
   ready-file outage policy and transfer limits; no access-time scan or direct URL.
-- [ ] RED manager-only current case failed retry and protected FILE protocol,
+- [x] RED manager-only current case failed retry and protected FILE protocol,
   denied agent/viewer/inactive/invalidated/closed/promoted hidden targets, revoke
   on saved replay and unchanged generation/history/fencing. No malware release.
-- [ ] RED visible incoming asset cannot link/send as public/note/work; assert
+- [x] RED visible incoming asset cannot link/send as public/note/work; assert
   refusal before S3 and exact prior frozen wires. No automatic forwarding.
-- [ ] GREEN affected auth/projection/SMTP/scan tests and generated contracts,
+- [x] GREEN affected auth/projection/SMTP/scan tests and generated contracts,
   lint/format/type/migration gates. Commit and independent task review.
 
 ### Task 4: Real triage/conversation UI and consolidated incoming-file proof
@@ -229,6 +244,8 @@ scripts/container_smoke.py and scripts/packaged_file_proof.py's shared snapshot;
 add a focused scripts/packaged_incoming_file_proof.py if needed to extend the
 actual native incoming context without duplicating packaged_smtp_proof.py's
 existing ownership. Use current session/protected-write/query owners. No new world.
+Update existing focused packaged-proof/browser-helper tests when their owners
+change; include every added helper in the actual build/proof source-hash map.
 
 **Consumes:** Task3 scoped files blocks/capabilities and existing global byte/retry
 routes. Core actual storage/scanner/browser/MIME/restore owners remain the seam.
@@ -245,7 +262,10 @@ routes. Core actual storage/scanner/browser/MIME/restore owners remain the seam.
 - [ ] Add a NEW packaged synthetic incoming-file context under --files using
   existing owner tool and actual signed-current scanner. Preserve all old contexts,
   root references, wires, identities, clocks and deliberate session invalidations.
-  Reuse core's known fresh actor-bound proof session rather than stale cookies.
+  Reuse capture_current_file_author/select_current_file_author and the existing
+  fresh actor-bound proof session rather than stale cookies. Snapshot output,
+  objects, routing IDs and receiving context stay in private channels; export
+  only bounded proof metadata/hashes through the existing allowlist.
 - [ ] After actual delivered/processed file events and recreation, check every
   incoming name/bytes/hash/key/credential canary in decoded metadata/diagnostics
   and exact API/worker table AND column/query denials. No raw channels in artifacts.

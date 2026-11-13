@@ -75,3 +75,41 @@ separate incoming-MIME attachments and remaining MVP development remain open.
 Encrypted backup and compatible image rollback belong to integrated hardening.
 Final actual x86-64-v1 qualification follows development. No production rollout,
 real import or Zammad retirement is authorized by this evidence.
+
+## First hosted run and transport correction
+
+At source 56fc6d7, API checks passed 1224 cases with 3 explicit native console skips
+and 3 Pydantic field-metadata warnings in existing threaded queue tests. Browser
+checks passed 175, source/image security passed and the historical packaged job
+passed. The separate actual signed-current scanner infrastructure proof also
+passed. The new combined child failed, so Task5 is NOT positively accepted.
+
+The retained parent traceback identifies the browser child, but its fixed generic
+stderr has no historical phase. Raw locator errors were correctly excluded from
+artifacts; this left a diagnostic gap. Do not assign a retrospective phase that
+was never recorded. Complete logs and digest-verified ZIPs remain preserved in
+`C:/Users/wagne/.codex/state/evidence/private-file-task5-ef6b9f9/ci-56fc6d7-failed.zip`:
+24 entries, 1862635 bytes, CRC passed, SHA256
+`58828a9f1ec37e2258a3f352ef7eca04aa1377d483f1dd5678730f492053203e`.
+
+A focused actual HTTPS differential reproduced a concrete transport defect:
+SPKI-pinned Chromium with the configured hostname mapping succeeds, while the
+separate Node APIRequestContext refuses that endpoint. Correction b6e6095 reuses
+the existing packaged browser-fetch pattern for the two read probes. Assertions
+for actual clean/rejected states, bytes, private linking and public review remain.
+The generic transport probe does not emulate a file or successful scanner.
+
+The fix also adds a bounded failure artifact with fixed phase/state enums and
+numeric counters. The parent rejects unknown fields, invalid types/enums,
+duplicate keys, invalid UTF8 and oversized/recursive JSON. Raw exception text,
+identifiers, URLs, names, note/file contents and credentials are excluded; the
+original nonzero outcome remains. Actual failed-child tests verify this boundary.
+
+Final focused checks passed 18 Python controls, 2 live HTTPS/projection tests and 3
+existing child-output tests. Root verified six final source bindings, unchanged
+before/after maps and all six recorded raw streams. The first differential's
+transcript observation is labeled separately from the later captured raw channels.
+Independent scoped review approved both the diagnostic boundary and transport
+correction, with no new Critical/Important findings. A new combined hosted run
+remains required before claiming actual file restoration success. Earlier failed evidence
+stays failed. No product runtime or target operation was changed.

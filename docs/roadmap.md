@@ -87,6 +87,14 @@ separate engineering contract; no incoming implementation is inferred from core
 acceptance. Exact history, hashes, skips and tooling notices are in
 docs/phase-3i-private-file-packaged-evidence.md. No target operation occurred.
 
+Next accepted engineering contract is ADR0038 and
+docs/plans/2026-11-13-incoming-private-files.md: bounded MIME file interpretation,
+immutable concrete case ownership using existing S3/scanner, current authorized
+triage/conversation projections and actual Impeccable/browser/packaged restore.
+The fresh builder check found no consequential open planning question. Preserve
+legacy parser2/receipts/wires, worker least privilege and provider/retention
+boundaries. Execute incrementally; the contract itself is not implementation.
+
 Task3 closure: all five exact-df3c8bb hosted gates passed,1198 API cases/three
 explicit opt-in native-image skips and154 browser cases. All25 new file-link/MIME
 cases actually executed; separate mandatory signed/current scanner/update/reload

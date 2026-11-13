@@ -12,7 +12,12 @@ from email.header import decode_header
 from email.message import Message
 from email.parser import BytesParser
 from html.parser import HTMLParser
+from io import BytesIO
+from typing import Literal
+from urllib.parse import unquote_to_bytes
 
+from altvia.attachments import media_type, validate_filename
+from altvia.identity import IdentityError
 from altvia.mail_intake import MAX_RAW_BYTES
 
 PARSER_VERSION = 2
@@ -372,3 +377,176 @@ def normalize(raw: bytes) -> NormalizedMail:
         return NormalizedMail("rejected", reason=str(error))
     except (ValueError, LookupError, RecursionError, HeaderParseError):
         return NormalizedMail("rejected", reason="invalid_encoding")
+
+
+@dataclass(frozen=True)
+class ExtractedFile:
+    filename: str
+    media_type: str
+    content: bytes
+
+
+@dataclass(frozen=True)
+class ExtractedFiles:
+    status: Literal["complete", "unavailable"]
+    files: tuple[ExtractedFile, ...] = ()
+    reason: str | None = None
+
+
+class _FileUnavailable(ValueError):
+    pass
+
+
+def _file_parameter(value: str, parameter: str) -> str | None:
+    """Check finite wire forms before stdlib can recover or combine parameters."""
+    value = re.sub(r"\r?\n[ \t]+", " ", value)
+    token = r"[^\x00-\x20\x7f()<>@,;:\\\"/\[\]?=]+"
+    quoted = r'"(?:[^"\\\x00-\x1f\x7f]|\\[\x20-\x7e])*"'
+    main, separator, rest = value.partition(";")
+    if not main.strip():
+        raise _FileUnavailable("file_parameter")
+    found = None
+    while separator:
+        match = re.match(rf"\s*({token})\s*=\s*({quoted}|{token})\s*(;|$)", rest)
+        if match is None:
+            raise _FileUnavailable("file_parameter")
+        name, wire, separator = match.groups()
+        rest = rest[match.end() :]
+        name = name.lower()
+        if name == parameter or name.startswith(parameter + "*"):
+            if found is not None or name not in {parameter, parameter + "*"}:
+                raise _FileUnavailable("file_parameter")
+            # Rename to a plain parameter to let the public stdlib API unquote
+            # without applying RFC2231's broad charset/percent recovery first.
+            field = Message(policy=policy.compat32)
+            field["Content-Disposition"] = "attachment; value=" + wire
+            decoded = field.get_param("value", header="Content-Disposition")
+            if not isinstance(decoded, str) or "=?" in decoded:
+                raise _FileUnavailable("file_parameter")
+            if name.endswith("*"):
+                pieces = decoded.split("'", 2)
+                if len(pieces) != 3:
+                    raise _FileUnavailable("file_parameter")
+                charset, language, encoded = pieces
+                if language and re.fullmatch(r"[A-Za-z0-9-]{1,35}", language) is None:
+                    raise _FileUnavailable("file_parameter")
+                if re.search(r"%(?![0-9A-Fa-f]{2})", encoded):
+                    raise _FileUnavailable("file_parameter")
+                try:
+                    decoded = unquote_to_bytes(encoded).decode(_charset(charset), errors="strict")
+                except (ValueError, LookupError) as error:
+                    raise _FileUnavailable("file_parameter") from error
+            found = decoded
+    return found
+
+
+def _file_headers(raw: bytes) -> tuple[Message, bytes, str | None]:
+    headers, _ = _root_headers(raw)
+    names = []
+    for key, value in headers.raw_items():
+        try:
+            key.encode("ascii", errors="strict")
+            value.encode("ascii", errors="strict")
+        except UnicodeError as error:
+            reason = (
+                "file_parameter"
+                if key.lower() in {"content-type", "content-disposition"}
+                else "file_structure"
+            )
+            raise _FileUnavailable(reason) from error
+        parameter = {"content-type": "name", "content-disposition": "filename"}.get(key.lower())
+        if parameter is not None:
+            name = _file_parameter(value, parameter)
+            if name is not None:
+                names.append(name)
+    if len(set(names)) > 1:
+        raise _FileUnavailable("file_parameter")
+    # Existing bounded/strict structural ownership stays unchanged for parser2.
+    headers, body, _ = _headers(raw)
+    return headers, body, names[0] if names else None
+
+
+def _file_content(body: bytes, encoding: str) -> bytes:
+    if encoding == "base64":
+        try:
+            return base64.b64decode(body.translate(None, b" \t\r\n"), validate=True)
+        except binascii.Error as error:
+            raise _FileUnavailable("file_encoding") from error
+    if encoding == "quoted-printable":
+        if re.search(rb"=(?![0-9A-Fa-f]{2}|\r?\n)", body):
+            raise _FileUnavailable("file_encoding")
+        return quopri.decodestring(body)
+    if encoding not in {"7bit", "8bit", "binary"} or (encoding == "7bit" and not body.isascii()):
+        raise _FileUnavailable("file_encoding")
+    return body
+
+
+class _FileExtractor:
+    def __init__(self) -> None:
+        self.parts = 0
+        self.decoded = 0
+        self.files: list[ExtractedFile] = []
+
+    def entity(self, raw: bytes, ancestors: tuple[str, ...] = ()) -> None:
+        self.parts += 1
+        if self.parts > 64 or len(ancestors) >= 8:
+            raise _FileUnavailable("file_structure")
+        headers, body, filename = _file_headers(raw)
+        content_type = headers.get_content_type()
+        attached = headers.get_content_disposition() not in {None, "inline"} or filename is not None
+        encoding = headers.get("Content-Transfer-Encoding", "7bit").lower().strip()
+        if not attached and headers.get_content_maintype() == "multipart":
+            if content_type not in {
+                "multipart/mixed",
+                "multipart/alternative",
+                "multipart/related",
+            }:
+                raise _FileUnavailable("file_structure")
+            if encoding not in {"7bit", "8bit", "binary"}:
+                raise _FileUnavailable("file_encoding")
+            boundary = headers.get_boundary()
+            if boundary is None:
+                raise _FileUnavailable("file_structure")
+            children = _children(body, boundary, ancestors)
+            if content_type == "multipart/related" and headers.get_param("start") is not None:
+                first, _, _ = _headers(children[0])
+                if headers.get_param("start") != first.get("Content-ID"):
+                    raise _FileUnavailable("file_structure")
+            for child in children:
+                self.entity(child, (*ancestors, boundary))
+            return
+        if not attached and content_type in {"text/plain", "text/html"}:
+            return
+        if len(self.files) >= 20:
+            raise _FileUnavailable("file_count")
+        if headers.get_content_maintype() in {"multipart", "message"}:
+            raise _FileUnavailable("file_type")
+        if filename is None:
+            raise _FileUnavailable("file_filename")
+        try:
+            validate_filename(filename)
+        except IdentityError as error:
+            raise _FileUnavailable("file_filename") from error
+        content = _file_content(body, encoding)
+        self.decoded += len(content)
+        if not 1 <= len(content) <= 10485760 or self.decoded > MAX_RAW_BYTES:
+            raise _FileUnavailable("file_size")
+        try:
+            actual_type = media_type(BytesIO(content), filename)
+        except IdentityError as error:
+            raise _FileUnavailable("file_type") from error
+        self.files.append(ExtractedFile(filename, actual_type, content))
+
+
+def extract_files(raw: bytes) -> ExtractedFiles:
+    """Interpret one bounded ordered original-file set, without publishing it."""
+    try:
+        if not isinstance(raw, bytes) or not 1 <= len(raw) <= MAX_RAW_BYTES:
+            raise _FileUnavailable("file_structure")
+        extractor = _FileExtractor()
+        extractor.entity(raw)
+        return ExtractedFiles("complete", tuple(extractor.files))
+    except _FileUnavailable as error:
+        return ExtractedFiles("unavailable", reason=str(error))
+    except (ValueError, LookupError, RecursionError, HeaderParseError):
+        return ExtractedFiles("unavailable", reason="file_structure")

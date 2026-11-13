@@ -12,6 +12,7 @@ import { createServer as createTlsServer } from "node:tls";
 import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import selfsigned from "selfsigned";
+import { spawnSafeTestChild } from "./test-output.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
 const web = resolve(root, "apps/web");
@@ -19,15 +20,21 @@ const require = createRequire(new URL("../package.json", import.meta.url));
 if (process.env.ALTVIA_ALLOW_TEST_DB !== "1") throw Error("Explicit test DB opt-in required");
 if (process.env.ALTVIA_PUBLIC_ORIGIN !== "https://127.0.0.1:3443") throw Error("Test origin required");
 const children = [];
+const outputs = new Map();
 const run = (command, args, cwd = root) => {
-  const child = spawn(command, args, { cwd, env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1" }, stdio: "inherit" });
+  const { child, output } = spawnSafeTestChild(command, args, { cwd, env: { ...process.env, NEXT_TELEMETRY_DISABLED: "1" } });
   children.push(child);
+  outputs.set(child, output);
   return child;
 };
-const result = child => new Promise((done, reject) => {
-  child.once("error", reject);
-  child.once("exit", code => code === 0 ? done() : reject(Error(`Child exited ${code}`)));
-});
+const result = async child => {
+  const code = await new Promise((done, reject) => {
+    child.once("error", reject);
+    child.once("close", done);
+  });
+  await outputs.get(child);
+  if (code !== 0) throw Error(`Child exited ${code}`);
+};
 const uv = process.platform === "win32" ? "uv.exe" : "uv";
 let gateway;
 let relay;
@@ -138,5 +145,7 @@ try {
       await new Promise(done => child.once("exit", done));
     }
   }
+  const outputResults = await Promise.allSettled(outputs.values());
   if (relayFolder) await rm(relayFolder, { recursive: true, force: true });
+  if (outputResults.some(result => result.status === "rejected")) throw Error("Protected test output could not be forwarded");
 }

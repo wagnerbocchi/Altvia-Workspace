@@ -55,6 +55,7 @@ jobs:
       - run: pnpm --filter @altvia/web generate:api
       - run: git diff --exit-code -- docs/contracts/openapi.json apps/web/src/lib/api.generated.ts
       - run: pnpm web:check
+      - run: node --test apps/web/scripts/test-output.test.mjs
       - run: pnpm web:build
       - run: pnpm audit --audit-level=moderate
       - run: pnpm --filter @altvia/web exec playwright install --with-deps chromium

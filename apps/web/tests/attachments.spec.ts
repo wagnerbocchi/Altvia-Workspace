@@ -244,8 +244,11 @@ test("@files uncertain draft keeps the exact ordered file review through replay 
   });
   await page.getByRole("button", { name: "Salvar rascunho", exact: true }).click(); const verify = page.getByRole("button", { name: "Verificar rascunho", exact: true }); await expect(verify).toBeVisible();
   await expect(page.getByRole("group", { name: "Revisar rascunho de resposta", exact: true })).toContainText(name);
-  await page.route(`**/api/v1/tickets/${id}/messages/*`, route => route.abort("failed")); await verify.click();
+  let receiptReadFailures = 0;
+  await page.route(`**/api/v1/tickets/${id}/messages/*`, async route => { await route.abort("failed"); receiptReadFailures++; }); await verify.click();
+  await expect.poll(() => receiptReadFailures).toBe(1);
   await expect(page.getByRole("button", { name: "Revisar rascunho", exact: true })).toBeDisabled();
+  await expect(page.getByText("Rascunho salvo, nao enviado. Atualize o chamado antes de continuar.", { exact: true })).toBeVisible();
   await page.unroute(`**/api/v1/tickets/${id}/messages/*`); await page.getByRole("button", { name: "Atualizar chamado", exact: true }).click();
   await expect(page.getByRole("button", { name: "Revisar rascunho", exact: true })).toBeEnabled(); expect(attempts).toBe(2);
   const saved = (await (await page.request.get(`/api/v1/tickets/${id}/messages`)).json()).items;
@@ -293,7 +296,10 @@ test("@files viewer can download current public files without upload or note met
   const id = await ticket(page, await login(page)); await page.goto(`/service-desk/tickets/${id}`);
   const name = "browser-file-viewer.txt", identifier = await upload(page, id, name); await ready(page, identifier, name);
   await login(page, "VIEWER"); await page.reload();
-  await expect(publicFiles(page)).toContainText("Acesso de consulta"); await expect(page.getByLabel("Arquivo para resposta publica", { exact: true })).toHaveCount(0); await expect(noteFiles(page)).toHaveCount(0);
+  await expect(publicFiles(page)).toContainText("Acesso de consulta");
+  await expect(publicFiles(page)).toContainText("Consulte o estado dos arquivos e baixe os que estiverem disponiveis para sua conta.");
+  await expect(publicFiles(page)).not.toContainText("Envie, aguarde"); await expect(publicFiles(page)).not.toContainText("marque os arquivos");
+  await expect(page.getByLabel("Arquivo para resposta publica", { exact: true })).toHaveCount(0); await expect(noteFiles(page)).toHaveCount(0);
   await expect(publicFiles(page).getByRole("button", { name: `Baixar ${name}`, exact: true })).toBeEnabled();
   await capture(page, "read-only");
 });

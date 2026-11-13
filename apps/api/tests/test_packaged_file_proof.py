@@ -567,8 +567,34 @@ def test_packaged_timeout_acceleration_error_restores_guard_and_schedule(
     assert guarded.value.orig.sqlstate == "P0001"
 
 
+@pytest.fixture
+def packaged_admin_client(settings, db_engine, seeded_user):
+    from altvia.main import create_app
+    from altvia.management import bootstrap_admin
+    from conftest import TEST_PASSWORD
+    from fastapi.testclient import TestClient
+    from test_team_api import sign_in
+
+    # Match container_smoke's packaged host contract. A single-label API test
+    # origin has a different effective cookie domain in the standard cookie jar.
+    origin = "https://workspace.altvia.test"
+    packaged_settings = settings.model_copy(update={"public_origin": origin})
+    with TestClient(
+        create_app(packaged_settings), base_url=origin, headers={"Origin": origin}
+    ) as client:
+        with Session(db_engine) as db, db.begin():
+            bootstrap_admin(db, "admin@example.test", "Administrator", TEST_PASSWORD)
+        sign_in(client, "admin@example.test")
+        yield client
+
+
+class PrivateFileProof(dict):
+    def __repr__(self):
+        return "<private file proof>"
+
+
 def test_packaged_saved_session_is_revoked_by_later_team_role_change(
-    admin_client,
+    packaged_admin_client,
     db_engine,
     seeded_user,
 ):
@@ -581,6 +607,7 @@ def test_packaged_saved_session_is_revoked_by_later_team_role_change(
     from test_attachments import upload
     from test_team_api import sign_in
 
+    admin_client = packaged_admin_client
     refs = setup(admin_client, db_engine, seeded_user)
     parent = ticket(admin_client, refs)
     uploaded = upload(admin_client, parent)
@@ -588,14 +615,16 @@ def test_packaged_saved_session_is_revoked_by_later_team_role_change(
     identifier = uploaded.json()["attachment_id"]
     route = "/api/v1/attachments/" + identifier
     original_session = admin_client.cookies.get("__Host-altvia_session")
-    file_proof = {
-        "session": original_session,
-        "author_id": str(seeded_user),
-        "context": {"ticket_id": parent.rsplit("/", 1)[1], "markers": [original_session]},
-        "browser": {"ids": [identifier, identifier]},
-        "public_body": "private text\n",
-        "note_body": "unused",
-    }
+    file_proof = PrivateFileProof(
+        {
+            "session": original_session,
+            "author_id": str(seeded_user),
+            "context": {"ticket_id": parent.rsplit("/", 1)[1], "markers": [original_session]},
+            "browser": {"ids": [identifier, identifier]},
+            "public_body": "private text\n",
+            "note_body": "unused",
+        }
+    )
     assert admin_client.get(route).status_code == 200
     # No fake-ready result: the real uploaded object remains quarantined.
     assert admin_client.get(route + "/content").status_code == 409
@@ -619,10 +648,12 @@ def test_packaged_saved_session_is_revoked_by_later_team_role_change(
     assert admin_client.get(route).status_code == 200
     assert admin_client.get(route + "/content").status_code == 409
     with pytest.raises(AssertionError):
-        proof.capture_current_file_author(admin_client, {**file_proof, "author_id": str(uuid4())})
+        proof.capture_current_file_author(
+            admin_client, PrivateFileProof(file_proof, author_id=str(uuid4()))
+        )
     with pytest.raises(AssertionError):
         proof.select_current_file_author(
-            admin_client, {**file_proof, "current_session": original_session}
+            admin_client, PrivateFileProof(file_proof, current_session=original_session)
         )
     proof.select_current_file_author(admin_client, file_proof)
     # Independently prove the actual S3 bytes survived the identity mutation.

@@ -211,6 +211,7 @@ def create_ticket_work_router(engine: Engine, settings: Settings) -> APIRouter:
         "/tickets/{identifier}/work-items",
         status_code=201,
         response_model=TicketWorkReceipt,
+        responses={200: {"model": TicketWorkReceipt}},
         openapi_extra={"parameters": [IF_MATCH, IF_MATCH_WORK_ITEM, IDEMPOTENCY_KEY]},
     )
     def link(

@@ -11811,6 +11811,16 @@
           "required": true
         },
         "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketWorkReceipt"
+                }
+              }
+            },
+            "description": "OK"
+          },
           "201": {
             "content": {
               "application/json": {

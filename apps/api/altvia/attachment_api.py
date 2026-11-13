@@ -447,7 +447,9 @@ def create_attachment_router(engine: Engine, settings: Settings) -> APIRouter:
             with Session(engine) as db, db.begin():
                 lock_identity_writes(db)
                 actor = authenticate_request(db, request, settings)
-                row, _ = attachments.scoped(db, actor.id, identifier)
+                row, scope = attachments.scoped(db, actor.id, identifier)
+                if not scope.valid:
+                    raise identity.IdentityError(409, "attachment_parent_inactive")
                 if row.state != "ready":
                     raise identity.IdentityError(409, "attachment_not_ready")
                 return row.object_key, row.bytes, row.sha256, row.filename

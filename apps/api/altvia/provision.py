@@ -13,6 +13,7 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.exc import SQLAlchemyError
 
 from altvia.attachment_scan import RETRY_UPDATES, SCAN_COLUMNS, SCAN_UPDATES
+from altvia.attachments import CASE_FILE_COLUMNS
 from altvia.config import Settings
 from altvia.database import make_engine
 from altvia.mail_cases import READ_COLUMNS, ROUTING_COLUMNS
@@ -75,7 +76,7 @@ ROLE_PRIVILEGES = {
 
 
 APP_COLUMN_READS = {
-    "mail_triage_cases": READ_COLUMNS | ROUTING_COLUMNS,
+    "mail_triage_cases": READ_COLUMNS | ROUTING_COLUMNS | CASE_FILE_COLUMNS,
     "ticket_participants": {"id", "ticket_id", "contact_id", "email", "active", "version"},
 }
 APP_COLUMN_UPDATES = {

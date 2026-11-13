@@ -8,6 +8,8 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validato
 Purpose = Literal["public", "note", "work"]
 State = Literal["quarantine", "scanning", "ready", "rejected", "failed"]
 OwnerType = Literal["ticket", "work_item"]
+ReadOwnerType = Literal["ticket", "work_item", "mail_case"]
+ReadPurpose = Literal["public", "note", "work", "incoming"]
 
 
 class Strict(BaseModel):
@@ -16,9 +18,9 @@ class Strict(BaseModel):
 
 class AttachmentOutput(Strict):
     id: UUID
-    owner_type: OwnerType
+    owner_type: ReadOwnerType
     owner_id: UUID
-    purpose: Purpose
+    purpose: ReadPurpose
     filename: str
     media_type: str
     bytes: int
@@ -28,6 +30,12 @@ class AttachmentOutput(Strict):
     created_at: AwareDatetime
     can_download: bool
     can_retry_scan: bool
+
+
+class CaseFileSet(Strict):
+    extraction_version: Literal[0, 1]
+    status: Literal["legacy", "complete", "unavailable"]
+    items: list[AttachmentOutput] = Field(max_length=20)
 
 
 class AttachmentPage(Strict):

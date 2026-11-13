@@ -6,6 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, StrictBool
 
+from altvia.attachment_schemas import CaseFileSet
 from altvia.ticket_schemas import Status, StrictModel, Subject, TicketMessageOutput, _text
 from altvia.work_schemas import Priority
 
@@ -38,6 +39,7 @@ class CaseSummary(BaseModel):
 
 
 class CaseDetail(CaseSummary):
+    files: CaseFileSet | None = None
     email_snapshot: str
     body_text: str
     can_create: bool
@@ -81,6 +83,7 @@ class PromotionReceipt(StrictModel):
 
 
 class IncomingMessageOutput(StrictModel):
+    files: CaseFileSet | None = None
     kind: Literal["incoming"] = "incoming"
     id: UUID
     case_id: UUID

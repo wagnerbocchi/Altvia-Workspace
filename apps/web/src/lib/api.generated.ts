@@ -1384,7 +1384,7 @@ export interface components {
              * Owner Type
              * @enum {string}
              */
-            owner_type: "ticket" | "work_item";
+            owner_type: "ticket" | "work_item" | "mail_case";
             /**
              * Policy Version
              * @constant
@@ -1394,7 +1394,7 @@ export interface components {
              * Purpose
              * @enum {string}
              */
-            purpose: "public" | "note" | "work";
+            purpose: "public" | "note" | "work" | "incoming";
             /**
              * State
              * @enum {string}
@@ -1482,6 +1482,7 @@ export interface components {
             created_at: string;
             /** Email Snapshot */
             email_snapshot: string;
+            files?: components["schemas"]["CaseFileSet"] | null;
             /**
              * Id
              * Format: uuid
@@ -1509,6 +1510,21 @@ export interface components {
             subject: string;
             /** Version */
             version: number;
+        };
+        /** CaseFileSet */
+        CaseFileSet: {
+            /**
+             * Extraction Version
+             * @enum {integer}
+             */
+            extraction_version: 0 | 1;
+            /** Items */
+            items: components["schemas"]["AttachmentOutput"][];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "legacy" | "complete" | "unavailable";
         };
         /** CasePage */
         CasePage: {
@@ -1927,6 +1943,7 @@ export interface components {
             contact_name: string;
             /** Email Snapshot */
             email_snapshot: string;
+            files?: components["schemas"]["CaseFileSet"] | null;
             /**
              * Id
              * Format: uuid

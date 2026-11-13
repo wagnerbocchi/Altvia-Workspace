@@ -43,6 +43,42 @@ def send(client, path, message, account, participant, ids, *, key=None, version=
     )
 
 
+def test_visible_incoming_file_never_forwards_or_changes_frozen_wire(
+    admin_client, db_engine, context, tmp_path, monkeypatch
+):
+    from altvia.mail_participants import attest_requester
+    from sqlalchemy.orm import Session
+    from test_attachments import controlled_ready
+    from test_mail_case_file_api import published
+    from test_mail_promotion import promote, sender
+
+    case, asset = published(db_engine, context)
+    controlled_ready(admin_client, db_engine, asset.id, tmp_path)
+    assert admin_client.get(f"/api/v1/attachments/{asset.id}").json()["can_download"]
+    receipt = promote(admin_client, case.case_id).json()
+    path = "/api/v1/tickets/" + receipt["ticket_id"]
+    with Session(db_engine) as db, db.begin():
+        participant = attest_requester(db, UUID(receipt["ticket_id"]), 2, "synthetic:proof").id
+    account = sender(db_engine, context)
+    message_id = post(admin_client, path, [], version=2).json()["message_id"]
+    monkeypatch.setattr(
+        S3Store, "verified_spool", lambda *a, **k: pytest.fail("incoming forwarded")
+    )
+    refused = send(admin_client, path, message_id, account, participant, [str(asset.id)])
+    assert refused.status_code == 409, refused.text
+    key = uuid4().hex
+    sent = send(admin_client, path, message_id, account, participant, [], key=key, omitted=True)
+    assert sent.status_code == 201, sent.text
+    with db_engine.connect() as db:
+        frozen = db.execute(text("SELECT wire,wire_format FROM outbound_messages")).one()
+    assert frozen.wire_format == 1 and b"private file" not in frozen.wire
+    assert asset.filename.encode() not in frozen.wire
+    replay = send(admin_client, path, message_id, account, participant, [], key=key, omitted=True)
+    assert replay.status_code == 200 and replay.json() == sent.json()
+    with db_engine.connect() as db:
+        assert db.execute(text("SELECT wire,wire_format FROM outbound_messages")).one() == frozen
+
+
 def test_review_freezes_exact_ordered_mime_and_replay_never_refetches(
     admin_client, db_engine, seeded_user, tmp_path, monkeypatch
 ):

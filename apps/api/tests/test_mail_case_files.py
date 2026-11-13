@@ -112,16 +112,18 @@ def test_real_files_immutable_set_replay_alias_collision(db_engine, context):
 
 
 @pytest.mark.usefixtures("file_services")
-def test_unsupported_global_reader_indistinguishable_404_before_storage(
+def test_hidden_case_global_reader_indistinguishable_404_before_storage(
     db_engine, context, admin_client, monkeypatch
 ):
     from altvia.file_storage import S3Store
+    from test_team_api import sign_in
 
     attest(db_engine, context, variant(db_engine), file_path("api"))
     identifier = assets(db_engine)[0].id
+    sign_in(admin_client, "admin@example.test")
 
     def forbidden(*args, **kwargs):
-        pytest.fail("Unsupported parent reached S3")
+        pytest.fail("Hidden parent reached S3")
 
     monkeypatch.setattr(S3Store, "verified_spool", forbidden)
     for suffix in ("", "/content", "/scan-retries"):

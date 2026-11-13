@@ -7,11 +7,44 @@ from file_core_support import file_services
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 from test_attachments import controlled_ready, upload
+from test_mail_cases import context
 from test_team_api import admin_client, preconditions
 from test_tickets import setup, ticket
 
-__all__ = ["admin_client", "file_services"]
+__all__ = ["admin_client", "file_services", "context"]
 pytestmark = pytest.mark.usefixtures("file_services")
+
+
+def test_visible_incoming_asset_cannot_link_to_staff_content(
+    admin_client, db_engine, seeded_user, context, tmp_path, monkeypatch
+):
+    from altvia.file_storage import S3Store
+    from test_mail_case_file_api import published
+    from test_team_api import sign_in
+    from test_ticket_notes import configure
+    from test_work_items import create_work, setup_project
+
+    _, asset = published(db_engine, context)
+    controlled_ready(admin_client, db_engine, asset.id, tmp_path)
+    assert admin_client.get(f"/api/v1/attachments/{asset.id}").json()["can_download"]
+    path = ticket(admin_client, context)
+    configure(admin_client, context, seeded_user, "write")
+    monkeypatch.setattr(S3Store, "verified_spool", lambda *a, **k: pytest.fail("link reached S3"))
+    for kind in ("messages", "notes"):
+        response = post(admin_client, path, [str(asset.id)], kind=kind)
+        assert response.status_code == 404, response.text
+        assert asset.filename not in response.text
+    assert admin_client.get(path).json()["version"] == 1
+    sign_in(admin_client, "admin@example.test")
+    project = setup_project(admin_client, seeded_user)
+    work = "/api/v1/work-items/" + create_work(admin_client, project).json()["work_item_id"]
+    result = admin_client.post(
+        work + "/comments",
+        json={"body": "Work", "attachment_ids": [str(asset.id)]},
+        headers=preconditions(),
+    )
+    assert result.status_code == 404, result.text
+    assert admin_client.get(work).json()["version"] == 1
 
 
 def ready(

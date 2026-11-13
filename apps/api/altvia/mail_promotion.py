@@ -364,8 +364,11 @@ def promote(
 
 
 def incoming_outputs(
-    db: Session, rows: list[TicketIncomingMessage]
+    db: Session, actor_id: UUID, rows: list[TicketIncomingMessage]
 ) -> dict[UUID, IncomingMessageOutput]:
+    from altvia.attachments import case_file_sets
+
+    files = case_file_sets(db, actor_id, [row.case_id for row in rows])
     cases = {
         case.id: case
         for case in db.execute(
@@ -387,6 +390,7 @@ def incoming_outputs(
         if (case.client_id, case.queue_id) != (row.client_id, row.queue_id):
             raise identity.IdentityError(404, "not_found")
         result[row.id] = IncomingMessageOutput(
+            files=files.get(row.case_id),
             id=row.id,
             case_id=row.case_id,
             ticket_id=row.ticket_id,
@@ -405,5 +409,7 @@ def incoming_outputs(
     return result
 
 
-def incoming_output(db: Session, row: TicketIncomingMessage) -> IncomingMessageOutput:
-    return incoming_outputs(db, [row])[row.id]
+def incoming_output(
+    db: Session, actor_id: UUID, row: TicketIncomingMessage
+) -> IncomingMessageOutput:
+    return incoming_outputs(db, actor_id, [row])[row.id]

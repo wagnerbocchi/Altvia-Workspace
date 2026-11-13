@@ -9,7 +9,7 @@ from fastapi import APIRouter, Query, Request, Response
 from sqlalchemy import Engine, tuple_
 from sqlalchemy.orm import Session
 
-from altvia import identity, mail_cases, mail_promotion
+from altvia import attachments, identity, mail_cases, mail_promotion
 from altvia.admin_http import (
     IDEMPOTENCY_KEY,
     IF_MATCH,
@@ -78,6 +78,7 @@ def create_mail_case_router(engine: Engine, settings: Settings) -> APIRouter:
                     **{key: value for key, value in row.items() if key in fields},
                     **mail_promotion.capabilities(db, actor.id, row),
                     "promotion_receipt": mail_promotion.readable_receipt(db, actor.id, row),
+                    "files": attachments.case_file_sets(db, actor.id, [case_id]).get(case_id),
                 }
             )
 

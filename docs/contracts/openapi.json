@@ -266,7 +266,8 @@
           "owner_type": {
             "enum": [
               "ticket",
-              "work_item"
+              "work_item",
+              "mail_case"
             ],
             "title": "Owner Type",
             "type": "string"
@@ -280,7 +281,8 @@
             "enum": [
               "public",
               "note",
-              "work"
+              "work",
+              "incoming"
             ],
             "title": "Purpose",
             "type": "string"
@@ -531,6 +533,16 @@
             "title": "Email Snapshot",
             "type": "string"
           },
+          "files": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaseFileSet"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -603,6 +615,43 @@
           "candidate_can_reopen"
         ],
         "title": "CaseDetail",
+        "type": "object"
+      },
+      "CaseFileSet": {
+        "additionalProperties": false,
+        "properties": {
+          "extraction_version": {
+            "enum": [
+              0,
+              1
+            ],
+            "title": "Extraction Version",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AttachmentOutput"
+            },
+            "maxItems": 20,
+            "title": "Items",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "legacy",
+              "complete",
+              "unavailable"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "extraction_version",
+          "status",
+          "items"
+        ],
+        "title": "CaseFileSet",
         "type": "object"
       },
       "CasePage": {
@@ -1528,6 +1577,16 @@
           "email_snapshot": {
             "title": "Email Snapshot",
             "type": "string"
+          },
+          "files": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CaseFileSet"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "id": {
             "format": "uuid",

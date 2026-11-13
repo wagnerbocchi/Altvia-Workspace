@@ -469,7 +469,7 @@ def create_ticket_router(engine: Engine, settings: Settings) -> APIRouter:
                     )
                 )
             }
-            incoming_values = incoming_outputs(db, list(incoming.values()))
+            incoming_values = incoming_outputs(db, actor.id, list(incoming.values()))
             return ConversationPage(
                 items=[
                     incoming_values[row.id]
@@ -503,7 +503,7 @@ def create_ticket_router(engine: Engine, settings: Settings) -> APIRouter:
             )
             if row is None:
                 raise identity.IdentityError(404, "not_found")
-            return incoming_output(db, row)
+            return incoming_output(db, actor.id, row)
 
     @router.get("/tickets/{identifier}/messages/{message_id}", response_model=TicketMessageOutput)
     def message(identifier: UUID, message_id: UUID, request: Request) -> TicketMessageOutput:

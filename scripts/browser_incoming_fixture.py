@@ -3,6 +3,9 @@
 import json
 import os
 import sys
+from email.message import EmailMessage
+from email.policy import SMTP
+from pathlib import Path
 from uuid import UUID, uuid4
 
 from altvia.config import Settings
@@ -12,6 +15,7 @@ from altvia.mail_intake import capture_message, register_source
 from altvia.mail_normalize import normalize_variant
 from altvia.mail_participants import attest_requester
 from altvia.models import ClientContact, MailTriageCase, Ticket, TicketQueue
+from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
@@ -68,12 +72,47 @@ else:
         + f"Subject: {subject}\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n"
         + body
     ).encode()
+    if "files" in options:
+        message = EmailMessage(policy=SMTP)
+        message["From"] = email
+        message["Message-ID"] = identifier
+        message["Subject"] = subject
+        if references:
+            message["References"] = references
+        message.set_content(body)
+        for file in options["files"]:
+            message.add_attachment(
+                file["body"].encode(),
+                maintype="text",
+                subtype="plain",
+                filename=file["filename"],
+            )
+        raw = message.as_bytes()
     with Session(engine) as db, db.begin():
         receipt = capture_message(db, key, 1, 1, raw)
     normalize_variant(engine, receipt.variant_id)
     published = attest_case(
-        engine, receipt.variant_id, contact_id, version, "browser-synthetic-variant-only"
+        engine,
+        receipt.variant_id,
+        contact_id,
+        version,
+        "browser-synthetic-variant-only",
+        storage_file=Path(os.environ["ALTVIA_STORAGE_FILE"]),
     )
+    if options.get("legacy"):
+        # Historical migration fixture only: zero-file case, no assets discarded.
+        with engine.begin() as db:
+            db.execute(text("LOCK TABLE mail_triage_cases IN ACCESS EXCLUSIVE MODE"))
+            db.execute(text("ALTER TABLE mail_triage_cases DISABLE TRIGGER mail_case_guard"))
+            db.execute(
+                text(
+                    "UPDATE mail_triage_cases SET file_extraction_version=0, "
+                    "file_set_status='legacy' WHERE id=:id AND file_count=0 "
+                    "AND file_set_status='complete'"
+                ),
+                {"id": published.case_id},
+            )
+            db.execute(text("ALTER TABLE mail_triage_cases ENABLE TRIGGER mail_case_guard"))
     with Session(engine) as db:
         case = db.get(MailTriageCase, published.case_id)
         assert case is not None

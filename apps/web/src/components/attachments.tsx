@@ -6,7 +6,7 @@ import { Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoadingRows, Paging, ReadError, usePaging, useTeamWrite, writeError } from "@/components/team-admin/common";
 import { useWorkspaceSession } from "@/components/workspace-session";
-import { createAttachmentApi, type Attachment, type AttachmentSummary, type FileScope, type RetryIntent, type UploadIntent } from "@/lib/attachments";
+import { createAttachmentApi, type Attachment, type AttachmentSummary, type FileScope, type IncomingFileSet, type RetryIntent, type UploadIntent } from "@/lib/attachments";
 import { ApiError, isResourceForbidden } from "@/lib/http";
 
 const stateLabels: Record<Attachment["state"], string> = { quarantine: "Em quarentena - aguardando verificacao", scanning: "Verificando seguranca", ready: "Pronto para uso", rejected: "Rejeitado - uso bloqueado", failed: "Verificacao falhou" };
@@ -15,7 +15,7 @@ export function AttachmentReview({ files = [] }: { files: readonly AttachmentSum
   return <div className="attachment-review"><strong>Anexos ({files.length})</strong>{files.length ? <ul className="attachment-names">{files.map(file => <li key={file.id}>{file.filename} <span className="record-meta">({file.bytes.toLocaleString("pt-BR")} bytes)</span></li>)}</ul> : <p className="field-help">Nenhum arquivo incluido.</p>}</div>;
 }
 
-function FileDownload({ file }: { file: AttachmentSummary }) {
+function FileDownload({ file, disabled = false }: { file: AttachmentSummary; disabled?: boolean }) {
   const session = useWorkspaceSession();
   const api = createAttachmentApi(session.user.csrf_token, session.onAuthError);
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
@@ -23,7 +23,7 @@ function FileDownload({ file }: { file: AttachmentSummary }) {
   const urls = useRef(new Set<string>());
   useEffect(() => () => { controller.current?.abort(); for (const url of urls.current) URL.revokeObjectURL(url); urls.current.clear(); }, []);
   const download = async () => {
-    if (busy || !session.isCurrent()) return;
+    if (disabled || busy || !session.isCurrent()) return;
     setBusy(true); setError("");
     const abort = new AbortController(); controller.current = abort;
     try {
@@ -40,11 +40,51 @@ function FileDownload({ file }: { file: AttachmentSummary }) {
     } catch { if (session.isCurrent() && !abort.signal.aborted) setError("Nao foi possivel baixar. Verifique seu acesso e tente novamente."); }
     finally { if (session.isCurrent() && !abort.signal.aborted) setBusy(false); }
   };
-  return <><Button type="button" variant="outline" disabled={busy} onClick={() => void download()}>{busy ? "Baixando arquivo..." : `Baixar ${file.filename}`}</Button>{error && <p role="alert" className="field-error">{error}</p>}</>;
+  return <><Button type="button" variant="outline" disabled={disabled || busy} onClick={() => void download()}>{busy ? "Baixando arquivo..." : `Baixar ${file.filename}`}</Button>{error && <p role="alert" className="field-error">{error}</p>}</>;
 }
 
 export function LinkedAttachments({ files }: { files: readonly AttachmentSummary[] | undefined }) {
   return files?.length ? <ul className="attachment-links" aria-label="Arquivos registrados">{files.map(file => <li key={file.id}><span>{file.filename} <span className="record-meta">({file.bytes.toLocaleString("pt-BR")} bytes)</span></span><FileDownload file={file} /></li>)}</ul> : null;
+}
+
+export function IncomingAttachments({ files, caseId, blocked, refresh }: {
+  files: IncomingFileSet | null | undefined; caseId: string; blocked: boolean; refresh: () => Promise<unknown>;
+}) {
+  const session = useWorkspaceSession();
+  const api = createAttachmentApi(session.user.csrf_token, session.onAuthError);
+  const request = useRef<AbortController | null>(null);
+  useEffect(() => () => request.current?.abort(), []);
+  const write = useTeamWrite(session, async (intent: RetryIntent) => {
+    const abort = new AbortController(); request.current = abort;
+    // Retain the original FILE version/key until its POST receipt AND a current
+    // read confirm the same immutable case asset. A parent refresh is no ACK.
+    const receipt = await api.retry(intent, abort.signal);
+    try {
+      const current = await api.get(receipt.attachment_id, abort.signal);
+      if (current.id !== intent.id || current.owner_type !== "mail_case" || current.owner_id !== caseId || current.purpose !== "incoming" || current.version < receipt.version) throw Error("Incoming file identity not confirmed");
+      return current;
+    } catch (error) {
+      if (error instanceof ApiError && [401, 403].includes(error.status)) throw error;
+      throw Error("Current incoming file read not confirmed");
+    }
+  }, () => { void refresh().catch(() => {}); });
+  // Hidden authority is not an empty set. Keep a pending intent private while
+  // the mounted parent revalidates access; session disposal unmounts this owner.
+  if (!files) return null;
+  return <div className="attachment-picker" role="group" aria-label="Arquivos recebidos">
+    <h3 className="work-subheading">Arquivos recebidos</h3>
+    {files.status === "legacy" ? <p className="field-help">Os arquivos desta mensagem antiga nao foram processados. A ausencia de arquivos nesta tela nao confirma que a mensagem chegou sem anexos.</p> : files.status === "unavailable" ? <p className="read-notice">Nao foi possivel disponibilizar os arquivos desta mensagem. O texto recebido permanece disponivel; consulte o administrador.</p> : <>
+      <p className="field-help">Arquivos originais da mensagem. O download depende da verificacao de seguranca e do seu acesso atual. Eles nao sao incluidos em respostas.</p>
+      {files.items.length ? <ul className="attachment-list" aria-label="Arquivos originais recebidos">{files.items.map(file => <li className="attachment-row" key={file.id}>
+        <div className="record-text"><span className="attachment-filename"><Paperclip size={16} aria-hidden="true" />{file.filename}</span><span className="record-meta">{file.bytes.toLocaleString("pt-BR")} bytes</span><span role="status" className="record-meta">{file.state === "ready" ? "Verificacao concluida" : stateLabels[file.state]}</span>{file.state === "ready" && !file.can_download && <p className="field-help">Download indisponivel nas condicoes atuais desta mensagem.</p>}</div>
+        <div className="attachment-actions">{file.can_download && <FileDownload file={file} disabled={blocked || write.locked} />}{file.can_retry_scan && <Button type="button" variant="outline" disabled={blocked || write.locked} onClick={() => write.submit({ kind: "retry", id: file.id, version: file.version, key: crypto.randomUUID() })}>Verificar novamente {file.filename}</Button>}</div>
+      </li>)}</ul> : <p>Nenhum arquivo recebido nesta mensagem.</p>}
+    </>}
+    {write.locked && <p role="status">{write.pending ? "Confirmando nova verificacao..." : "Verificacao sem resultado confirmado. A solicitacao original foi preservada."}</p>}
+    {write.error && <div className="read-error"><p role="alert">{write.uncertain ? "Ainda nao foi possivel confirmar o resultado. Recupere a solicitacao original antes de tentar novamente." : writeError(write.error)}</p><div className="action-row">{(write.uncertain || isResourceForbidden(write.error)) && <Button type="button" variant="outline" disabled={write.pending} onClick={write.verify}>Recuperar verificacao original</Button>}{write.locked && !write.uncertain && write.error instanceof ApiError && write.error.status === 409 && <Button type="button" variant="outline" disabled={write.pending || write.reloading} onClick={() => void write.reconcile(async () => { await refresh(); })}>Atualizar e descartar tentativa recusada</Button>}</div></div>}
+    {write.reloadFailed && <p role="alert" className="field-error">Nao foi possivel atualizar. A solicitacao original continua preservada.</p>}
+    <Button type="button" variant="outline" disabled={blocked || write.pending} onClick={() => void refresh().catch(() => {} )}>Atualizar arquivos recebidos</Button>
+  </div>;
 }
 
 export function AttachmentPicker({ scope, version, selected, change, disabled, busyChanged }: {

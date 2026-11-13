@@ -3,6 +3,7 @@ import { createAdminTransport, pageQuery, versionHeader } from "./admin-http";
 
 export type Attachment = components["schemas"]["AttachmentOutput"];
 export type AttachmentSummary = components["schemas"]["AttachmentSummary"];
+export type IncomingFileSet = components["schemas"]["CaseFileSet"];
 export type FileScope = { owner: "ticket"; id: string; purpose: "public" | "note" } | { owner: "work_item"; id: string; purpose: "work" };
 export type UploadIntent = { kind: "upload"; file: File; digest: string; version: number; key: string };
 export type RetryIntent = { kind: "retry"; id: string; version: number; key: string };

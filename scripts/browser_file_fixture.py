@@ -19,7 +19,7 @@ from altvia.file_scan_transport import ClamClient
 from altvia.file_settings import ScannerSettings
 from altvia.file_storage import S3Store
 from altvia.file_storage_owner import load_storage
-from altvia.models import Attachment, AttachmentScanAttempt, Ticket, WorkItem
+from altvia.models import Attachment, AttachmentScanAttempt, MailTriageCase, Ticket, WorkItem
 from sqlalchemy import func, select, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
@@ -65,6 +65,8 @@ def main():
                 f"{private}:/run/secrets:ro",
                 "--env-file",
                 str(env_file),
+                "-e",
+                "ALTVIA_E2E_NOTE_QUEUE_ID",
                 "-w",
                 "/workspace",
                 "--entrypoint",
@@ -92,6 +94,16 @@ def main():
             parent = db.get(WorkItem, row.work_item_id)
             if not parent or not parent.title.startswith("Browser file work "):
                 raise SystemExit("Named synthetic work required")
+        elif row.mail_case_id:
+            parent = db.get(MailTriageCase, row.mail_case_id)
+            if (
+                not parent
+                or not parent.subject.startswith("Browser incoming files ")
+                or parent.queue_id != UUID(os.environ["ALTVIA_E2E_NOTE_QUEUE_ID"])
+                or row.purpose != "incoming"
+                or row.creator_id is not None
+            ):
+                raise SystemExit("Named synthetic incoming case required")
         else:
             raise SystemExit("Concrete synthetic parent required")
         # With scanner storage removed only from the browser worker environment,

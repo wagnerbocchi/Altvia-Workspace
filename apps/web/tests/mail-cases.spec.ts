@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -16,6 +16,14 @@ async function login(page: Page, kind = "AUTHOR") {
 }
 const headers = (csrf: string, version: number) => ({ Origin: origin, "X-CSRF-Token": csrf, "If-Match": `"${version}"`, "Idempotency-Key": crypto.randomUUID() });
 const conversation = (page: Page) => page.getByRole("list", { name: "Conversa do chamado", exact: true });
+const incomingFiles = (page: Page) => page.getByRole("group", { name: "Arquivos recebidos", exact: true });
+const filePython = resolve(root, process.platform === "win32" ? ".venv/Scripts/python.exe" : ".venv/bin/python");
+function scanIncoming(id: string, state = "clean") {
+  execFileSync(filePython, ["scripts/browser_file_fixture.py", id, state], { cwd: root, env: process.env, stdio: "pipe" });
+}
+function fileFixture(files = [{ filename: "browser-file-recebido.txt", body: "Original incoming file bytes\n" }]) {
+  return fixture({ subject: `Browser incoming files ${crypto.randomUUID()}`, files });
+}
 async function reviewCreate(page: Page, caseId: string) {
   await page.goto(`/service-desk/mail-cases/${caseId}`);
   await page.getByLabel("Assunto do novo chamado", { exact: true }).fill("Inbound synthetic reviewed request");
@@ -233,4 +241,152 @@ test("@incoming ticket-wide refresh observes external incoming and attestation i
   fixture({ action: "revoke", case: item.case_id });
   await page.getByRole("button", { name: "Atualizar chamado", exact: true }).click();
   await expect(conversation(page)).toContainText("registro historico foi preservado");
+});
+
+test("@incoming-files actual multipart quarantine becomes current through frozen promotion review and exact incoming download", async ({ page }) => {
+  test.setTimeout(150_000);
+  const filename = "browser-file-relatorio-caf\u00e9.txt", body = "Original incoming file bytes\n";
+  const item = fileFixture([{ filename, body }]); await login(page);
+  const before = (await (await page.request.get(`/api/v1/mail-cases/${item.case_id}`)).json());
+  expect(before.files.items).toHaveLength(1); const id = before.files.items[0].id;
+  await reviewCreate(page, item.case_id);
+  await expect(incomingFiles(page)).toContainText("Em quarentena - aguardando verificacao");
+  await expect(incomingFiles(page).locator('input[type="file"],input[type="checkbox"]')).toHaveCount(0);
+  expect((await page.request.get(`/api/v1/attachments/${id}/content`)).status()).toBe(409);
+  await capture(page, "incoming-files-quarantine");
+  scanIncoming(id);
+  await incomingFiles(page).getByRole("button", { name: "Atualizar arquivos recebidos", exact: true }).click();
+  await expect(incomingFiles(page)).toContainText("Verificacao concluida");
+  await expect(page.getByRole("heading", { name: "Revisar inclusao da mensagem", exact: true })).toBeVisible();
+  expect((await (await page.request.get(`/api/v1/mail-cases/${item.case_id}`)).json()).version).toBe(before.version);
+  const downloadEvent = page.waitForEvent("download");
+  await incomingFiles(page).getByRole("button", { name: `Baixar ${filename}`, exact: true }).focus();
+  await page.keyboard.press("Enter");
+  const downloaded = await downloadEvent; expect(downloaded.suggestedFilename()).toBe(filename);
+  expect(await readFile((await downloaded.path())!)).toEqual(Buffer.from(body));
+  await capture(page, "incoming-files-ready-review");
+  await page.getByRole("button", { name: "Confirmar criacao", exact: true }).click();
+  await page.getByRole("link", { name: "Abrir chamado confirmado", exact: true }).click();
+  await page.waitForURL("**/service-desk/tickets/*");
+  await expect(incomingFiles(page)).toContainText(filename);
+  const path = new URL(page.url()).pathname;
+  const incoming = (await (await page.request.get(`/api/v1/tickets/${path.split('/').at(-1)}/conversation`)).json()).items.find((row: { kind: string }) => row.kind === "incoming");
+  expect(incoming.files.items.map((file: { id: string }) => file.id)).toEqual([id]);
+  const secondDownload = page.waitForEvent("download");
+  await incomingFiles(page).getByRole("button", { name: `Baixar ${filename}`, exact: true }).click();
+  expect(await readFile((await (await secondDownload).path())!)).toEqual(Buffer.from(body));
+  await capture(page, "incoming-files-conversation");
+});
+
+test("@incoming-files hidden current scope returns no file block and no count", async ({ page }) => {
+  test.setTimeout(90000); const item = fileFixture();
+  await page.context().addCookies([{ name: "__Host-altvia_session", value: process.env.ALTVIA_E2E_ADMIN_SESSION!, url: origin, secure: true, httpOnly: true, sameSite: "Lax" }]);
+  expect((await page.request.get(`/api/v1/mail-cases/${item.case_id}`)).status()).toBe(404);
+  await page.goto(`/service-desk/mail-cases/${item.case_id}`);
+  await expect(page.getByText("Esta mensagem nao esta disponivel", { exact: false })).toBeVisible();
+  await expect(incomingFiles(page)).toHaveCount(0);
+  await expect(page.getByText("Nenhum arquivo recebido", { exact: false })).toHaveCount(0);
+  await capture(page, "incoming-files-hidden");
+});
+
+test("@incoming-files real scanning rejected failed and revoked states retain honest current actions", async ({ page, browser }) => {
+  test.setTimeout(180_000);
+  const files = ["browser-file-verificando.txt", "browser-file-rejeitado.txt", "browser-file-falhou.txt"].map(filename => ({ filename, body: "Bounded incoming bytes\n" }));
+  const item = fileFixture(files); await login(page);
+  const rows = (await (await page.request.get(`/api/v1/mail-cases/${item.case_id}`)).json()).files.items;
+  const child = spawn(filePython, ["scripts/browser_file_fixture.py", rows[0].id, "clean", "--hold", "20"], { cwd: root, env: process.env, stdio: "pipe" });
+  const completed = new Promise<number | null>((done, reject) => { child.once("error", reject); child.once("close", done); });
+  try {
+    await expect.poll(async () => (await (await page.request.get(`/api/v1/attachments/${rows[0].id}`)).json()).state, { timeout: 30000 }).toBe("scanning");
+    await page.goto(`/service-desk/mail-cases/${item.case_id}`);
+    await expect(incomingFiles(page)).toContainText("Verificando seguranca");
+    await capture(page, "incoming-files-scanning");
+  } finally { expect(await completed).toBe(0); }
+  scanIncoming(rows[1].id, "infected"); scanIncoming(rows[2].id, "failed");
+  await incomingFiles(page).getByRole("button", { name: "Atualizar arquivos recebidos", exact: true }).click();
+  await expect(incomingFiles(page)).toContainText("Rejeitado - uso bloqueado");
+  await expect(incomingFiles(page)).toContainText("Verificacao falhou");
+  await expect(incomingFiles(page).getByRole("button", { name: `Verificar novamente ${files[2].filename}`, exact: true })).toBeVisible();
+  await expect(incomingFiles(page).getByRole("button", { name: `Baixar ${files[1].filename}`, exact: true })).toHaveCount(0);
+  await capture(page, "incoming-files-blocked");
+  for (const role of ["VIEWER", "READER"]) {
+    const context = await browser.newContext({ baseURL: origin, ignoreHTTPSErrors: true });
+    try {
+      const viewer = await context.newPage(); const csrf = await login(viewer, role);
+      await viewer.goto(`/service-desk/mail-cases/${item.case_id}`);
+      await expect(incomingFiles(viewer)).toContainText("Verificacao falhou");
+      await expect(incomingFiles(viewer).getByRole("button", { name: /^Verificar novamente/ })).toHaveCount(0);
+      const current = (await (await viewer.request.get(`/api/v1/attachments/${rows[2].id}`)).json());
+      expect((await viewer.request.post(`/api/v1/attachments/${rows[2].id}/scan-retries`, { headers: headers(csrf, current.version), data: {} })).status()).toBe(403);
+      if (role === "VIEWER") await capture(viewer, "incoming-files-readonly");
+    } finally { await context.close(); }
+  }
+  fixture({ action: "revoke", case: item.case_id });
+  await page.getByRole("button", { name: "Atualizar mensagem", exact: true }).click();
+  await expect(incomingFiles(page)).toContainText("Verificacao concluida");
+  await expect(incomingFiles(page)).toContainText("Download indisponivel nas condicoes atuais");
+  await expect(incomingFiles(page).getByRole("button", { name: /^Baixar |^Verificar novamente/ })).toHaveCount(0);
+  expect((await page.request.get(`/api/v1/attachments/${rows[0].id}/content`)).status()).toBe(409);
+  await capture(page, "incoming-files-revoked");
+});
+
+for (const outcome of ["uncommitted", "committed", "read-failed"]) test(`@incoming-files uncertain retry ${outcome} retains FILE intent until receipt plus current read`, async ({ page }) => {
+  test.setTimeout(120_000);
+  const item = fileFixture(); await login(page);
+  const file = (await (await page.request.get(`/api/v1/mail-cases/${item.case_id}`)).json()).files.items[0];
+  scanIncoming(file.id, "failed");
+  await page.goto(`/service-desk/mail-cases/${item.case_id}`);
+  let attempts = 0, failRead = false; let original: unknown;
+  await page.route(`**/api/v1/attachments/${file.id}`, route => failRead ? (failRead = false, route.abort("failed")) : route.continue());
+  await page.route(`**/api/v1/attachments/${file.id}/scan-retries`, async route => {
+    const req = route.request(); const intent = { key: req.headers()["idempotency-key"], version: req.headers()["if-match"], body: req.postData() };
+    if (++attempts === 1) {
+      original = intent;
+      if (outcome === "read-failed") { failRead = true; return route.continue(); }
+      if (outcome === "committed") await route.fetch();
+      return route.abort("failed");
+    }
+    expect(intent).toEqual(original); return route.continue();
+  });
+  await incomingFiles(page).getByRole("button", { name: `Verificar novamente ${file.filename}`, exact: true }).click();
+  const recover = incomingFiles(page).getByRole("button", { name: "Recuperar verificacao original", exact: true });
+  await expect(recover).toBeVisible();
+  await incomingFiles(page).getByRole("button", { name: "Atualizar arquivos recebidos", exact: true }).click();
+  await expect(recover).toBeVisible(); expect(attempts).toBe(1);
+  if (outcome === "uncommitted") await expect(incomingFiles(page).getByRole("button", { name: /^Verificar novamente/ })).toBeDisabled();
+  if (outcome === "committed") await capture(page, "incoming-files-uncertain");
+  await recover.click(); await expect(recover).toHaveCount(0); expect(attempts).toBe(2);
+  await expect(incomingFiles(page)).toContainText("Em quarentena - aguardando verificacao");
+  scanIncoming(file.id);
+  await incomingFiles(page).getByRole("button", { name: "Atualizar arquivos recebidos", exact: true }).click();
+  await expect(incomingFiles(page).getByRole("button", { name: `Baixar ${file.filename}`, exact: true })).toBeVisible();
+});
+
+for (const status of ["legacy", "unavailable", "empty"]) test(`@incoming-files ${status} is fixed honest text without inferred names or counts`, async ({ page }) => {
+  test.setTimeout(90000); await login(page);
+  const item = status === "legacy" ? fixture({ legacy: true }) : status === "unavailable" ? fileFixture([{ filename: "browser-file-private-unsupported.zip", body: "Unsupported bytes" }]) : fileFixture([]);
+  await page.goto(`/service-desk/mail-cases/${item.case_id}`);
+  await expect(incomingFiles(page)).toContainText(status === "legacy" ? "mensagem antiga nao foram processados" : status === "unavailable" ? "Nao foi possivel disponibilizar" : "Nenhum arquivo recebido");
+  await expect(incomingFiles(page).getByRole("list")).toHaveCount(0);
+  await expect(page.getByText("browser-file-private-unsupported.zip", { exact: true })).toHaveCount(0);
+  await capture(page, `incoming-files-${status}`);
+});
+
+test("@incoming-files current parent errors disable actions and real session loss disposes private file state", async ({ page }) => {
+  test.setTimeout(90000); const item = fileFixture(); await login(page);
+  const file = (await (await page.request.get(`/api/v1/mail-cases/${item.case_id}`)).json()).files.items[0];
+  scanIncoming(file.id); await page.goto(`/service-desk/mail-cases/${item.case_id}`);
+  const download = incomingFiles(page).getByRole("button", { name: `Baixar ${file.filename}`, exact: true });
+  await expect(download).toBeEnabled();
+  let refuse = true;
+  await page.route(`**/api/v1/mail-cases/${item.case_id}`, route => refuse ? route.abort("failed") : route.continue());
+  await page.getByRole("button", { name: "Atualizar mensagem", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Tentar carregar novamente", exact: true })).toBeVisible();
+  await expect(download).toBeDisabled(); await capture(page, "incoming-files-read-error");
+  refuse = false; await page.getByRole("button", { name: "Tentar carregar novamente", exact: true }).click();
+  await expect(download).toBeEnabled();
+  await page.context().clearCookies(); await download.click();
+  await expect(page.getByRole("heading", { name: "Acesse seu workspace", exact: true })).toBeVisible();
+  await expect(incomingFiles(page)).toHaveCount(0);
+  await expect(page.getByText(file.filename, { exact: true })).toHaveCount(0);
 });

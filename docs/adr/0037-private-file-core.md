@@ -6,8 +6,8 @@ security requirements and existing domain authorization/replay contracts apply.
 This is a development contract. Tasks1-3 backend infrastructure, private assets,
 scanning, immutable content links and reviewed outbound MIME files are implemented
 and development/CI accepted throughdf3c8bb. Task4 browser workflows are implemented
-in c5c668c/039a631, locally verified and independently reviewed; exact-final hosted
-gates remain pending. Incoming-MIME file ownership remains pending. The latest user continuation resumes Task4 after
+in c5c668c/039a631, locally verified and independently reviewed; all five hosted
+gates passed at2da7788. Incoming-MIME file ownership remains pending. The latest user continuation resumes Task4 after
 the accepted whole-system redesign, superseding the earlier stop-before-design.
 This is not production/CPU acceptance. No target connection, production deployment, real data import or
 retention/deletion policy is authorized here.

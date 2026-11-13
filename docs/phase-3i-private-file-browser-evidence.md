@@ -1,8 +1,8 @@
 # Phase 3I private-file browser evidence
 
-Updated 2026-11-12. Task 4 under ADR-0037 extends the accepted Twenty-inspired
+Updated 2026-11-13. Task 4 under ADR-0037 extends the accepted Twenty-inspired
 Operate interface. Implementation c5c668c and reviewed corrections 039a631 are
-locally verified. Exact-final hosted gates are pending. This is not final MVP,
+locally verified. All five hosted gates passed at exact source 2da7788. This is not final MVP,
 production, signed-scanner end-to-end or target-CPU acceptance.
 
 ## Behavior and ownership
@@ -100,8 +100,39 @@ found zero matches in indexed text artifacts; this is not universal secret proof
 Mutable log aliases and restricted/private originals are excluded. Original and
 sanitized stream hashes remain distinct.
 
-Remaining: exact-final hosted CI/security/image gates; Task 5 actual packaged files
+Remaining: Task 5 actual packaged files
 with signed/current ClamAV, recreation/privacy and matching DB/object restore;
 separate incoming-MIME attachment ownership; remaining MVP stages; consolidated
 actual x86-64-v1 qualification. No production rollout, real import, retention
 deletion or Zammad retirement is implied.
+
+## Exact-source hosted acceptance
+
+All five required workflows passed at
+`2da77881ac87419685ef3a39be1deac0c5c63218`:
+
+| Gate | Run | Executed result |
+| --- | --- | --- |
+| API checks | [43355647453](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43355647453) | 1198 passed, 3 explicit opt-in native console logger skips; 37 mandatory actual-S3 attachment cases passed |
+| Browser checks | [43355647373](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43355647373) | 175 passed, no skips; 3 child-output protection cases passed |
+| Container checks | [43355647312](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43355647312) | Packaged regressions and separate actual signed-current scanner infrastructure passed |
+| Source security | [43355647375](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43355647375) | 22 LOW, zero blocking findings and zero secret findings |
+| Service image security | [43355647432](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43355647432) | Seven nonempty inventories, zero reported vulnerabilities |
+
+The three API skips require `ALTVIA_FILE_LOGGER_IMAGE` and concern freshclam,
+freshclam-daemon and clamd console checks. They are not counted as executed.
+The mandatory separate scanner proof used `actual-signed-complete-current`,
+ClamAV 1.4.6 and database 28181 dated 2026-11-12T06:27:14Z, including actual
+update/reload, clean/EICAR/encrypted/expanded-limit and stale/oversize refusals.
+This infrastructure evidence does not replace Task 5's combined packaged file,
+privacy, recreation and matching restore acceptance.
+
+Root verified 202 API source hashes plus 32 recorded command streams, and 18
+scanner-infrastructure source hashes plus 132 streams against Git and archived
+bytes. All five artifact ZIPs match GitHub's digest. Complete job logs, artifact
+ZIPs, run/job metadata, independent verification and the file manifest are in
+`C:/Users/wagne/.codex/state/evidence/private-file-task4-039a631/ci-2da7788.zip`:
+24 entries, 1795369 bytes, CRC passed, SHA256
+`f57c7b8a4463b6beea063ef9274efebf7fb4398f9f472c6e7cebe7643d737591`.
+The earlier local archive retains its historical hosted-pending status; this
+supplement records the later observed acceptance without rewriting that history.

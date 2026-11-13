@@ -30,6 +30,113 @@ def digest(value):
     return hashlib.sha256(value).hexdigest()
 
 
+def validate_browser_diagnostic(data):
+    """Strict public allowlist; even a compromised child cannot export context."""
+    fields = {
+        "schema",
+        "phase",
+        "file_slot",
+        "http_status",
+        "scan_state",
+        "page_errors",
+        "error_kind",
+    }
+    phases = {
+        "unknown",
+        "launch",
+        "context",
+        "cookie",
+        "navigate",
+        "select_file",
+        "upload",
+        "scan_metadata",
+        "refresh_files",
+        "rejected_block",
+        "download",
+        "select_note",
+        "note_fill",
+        "note_save",
+        "note_reload",
+        "select_public",
+        "draft_fill",
+        "draft_review",
+        "draft_save",
+        "send_review",
+        "send_confirm",
+        "complete",
+        "close",
+    }
+    states = {"unknown", "invalid", "quarantine", "scanning", "ready", "rejected", "failed"}
+    if (
+        type(data) is not dict
+        or set(data) != fields
+        or type(data["schema"]) is not int
+        or data["schema"] != 1
+        or type(data["phase"]) is not str
+        or data["phase"] not in phases
+        or type(data["scan_state"]) is not str
+        or data["scan_state"] not in states
+        or type(data["error_kind"]) is not str
+        or data["error_kind"] not in {"assertion", "timeout", "browser"}
+    ):
+        raise ValueError("Invalid bounded browser diagnostic")
+    for field, maximum in (("file_slot", 3), ("http_status", 599), ("page_errors", 1000)):
+        if type(data[field]) is not int or not 0 <= data[field] <= maximum:
+            raise ValueError("Invalid bounded browser diagnostic")
+    if 0 < data["http_status"] < 100:
+        raise ValueError("Invalid bounded browser diagnostic")
+    return dict(data)
+
+
+def export_browser_failure(work):
+    """Private child input becomes an explicit validated failure-only artifact."""
+
+    def unique_object(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("Duplicate diagnostic field")
+            result[key] = value
+        return result
+
+    result = {"schema": 1, "diagnostic_status": "unavailable"}
+    try:
+        with (work / "file-browser-diagnostic.private.json").open("rb") as source:
+            raw = source.read(2049)
+        if len(raw) > 2048:
+            raise ValueError("Oversized diagnostic")
+        data = json.loads(raw, object_pairs_hook=unique_object)
+        result = {
+            "schema": 1,
+            "diagnostic_status": "valid",
+            "diagnostic": validate_browser_diagnostic(data),
+        }
+    except OSError:
+        pass
+    except (ValueError, TypeError, UnicodeError, RecursionError):
+        result["diagnostic_status"] = "invalid"
+    (work / "file-browser-failure.json").write_text(
+        json.dumps(result, indent=2) + "\n", encoding="utf-8"
+    )
+
+
+def run_file_browser(run, work, payload):
+    try:
+        return json.loads(
+            run(
+                ["node", "scripts/packaged_file_browser.mjs", str(work)],
+                data=json.dumps(payload),
+                timeout=360,
+            )
+        )
+    except Exception:
+        try:
+            export_browser_failure(work)
+        except OSError:
+            pass  # Failure to persist diagnostics cannot replace the child error.
+        raise  # Retain the original child failure, never normalize it to success.
+
+
 def source_hashes(root):
     paths = {
         *root.glob("apps/api/altvia/*.py"),
@@ -417,13 +524,7 @@ def prepare_packaged_files(
         "source_id": setup["source_id"],
         "participant_id": setup["participant_id"],
     }
-    browser = json.loads(
-        run(
-            ["node", "scripts/packaged_file_browser.mjs", str(work)],
-            data=json.dumps(browser_input),
-            timeout=360,
-        )
-    )
+    browser = run_file_browser(run, work, browser_input)
     ids = browser["ids"]
     # A paused REAL daemon accepts no response; the actual transport times out.
     # Only this new synthetic file's due timestamp is accelerated between attempts.

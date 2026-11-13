@@ -68,6 +68,7 @@ jobs:
       - run: uv run pytest -q apps/api/tests/test_file_storage.py apps/api/tests/test_file_scan_transport.py apps/api/tests/test_private_file_infra_proof.py
       - run: uv run python scripts/private_file_infra_proof.py
       - run: pnpm --filter @altvia/web exec playwright install --with-deps chromium
+      - run: node --test scripts/packaged_file_browser.test.mjs
       - run: uv run python scripts/container_smoke.py --files
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
@@ -79,6 +80,7 @@ jobs:
             .superpowers/file-infra/*/[0-9]*.stdout
             .superpowers/file-infra/*/[0-9]*.stderr
             .superpowers/container-tests/*/packaged-file-proof.json
+            .superpowers/container-tests/*/file-browser-failure.json
             .superpowers/container-tests/*/file-command-proof.json
             .superpowers/container-tests/*/file-source-proof.json
             .superpowers/container-tests/*/file-inventory-*.txt

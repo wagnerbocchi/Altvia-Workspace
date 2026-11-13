@@ -5,6 +5,7 @@ import base64
 import importlib.util
 import io
 import json
+import subprocess
 import sys
 from email.message import EmailMessage
 from pathlib import Path
@@ -292,3 +293,117 @@ def test_new_file_ticket_reuses_current_sender_without_mutating_old_wire(
             sender.from_email,
             sender.namespace_hash,
         ) == sender_identity
+
+
+def browser_diagnostic():
+    return {
+        "schema": 1,
+        "phase": "scan_metadata",
+        "file_slot": 1,
+        "http_status": 201,
+        "scan_state": "unknown",
+        "page_errors": 0,
+        "error_kind": "browser",
+    }
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("phase", "private-filename.txt"),
+        ("scan_state", "private-note-bytes"),
+        ("error_kind", "https://private/?credential=secret"),
+        ("extra", "objects/private-key"),
+        ("file_slot", True),
+        ("file_slot", 4),
+        ("http_status", 600),
+        ("http_status", 99),
+        ("page_errors", -1),
+        ("schema", True),
+        ("phase", ["private-data"]),
+    ],
+)
+def test_browser_diagnostic_strict_parent_rejects_disclosure_and_malformed_values(
+    tmp_path, field, value
+):
+    data = browser_diagnostic()
+    data[field] = value
+    with pytest.raises(ValueError, match="Invalid bounded"):
+        proof.validate_browser_diagnostic(data)
+    (tmp_path / "file-browser-diagnostic.private.json").write_text(
+        json.dumps(data), encoding="utf-8"
+    )
+    proof.export_browser_failure(tmp_path)
+    assert json.loads((tmp_path / "file-browser-failure.json").read_text()) == {
+        "schema": 1,
+        "diagnostic_status": "invalid",
+    }
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [b"{", b"[]", b"\xff", b" " * 2049, b'{"phase":"private-secret","phase":"scan_metadata"}'],
+)
+def test_browser_diagnostic_invalid_encoding_size_and_duplicate_fields_are_not_exported(
+    tmp_path, raw
+):
+    (tmp_path / "file-browser-diagnostic.private.json").write_bytes(raw)
+    proof.export_browser_failure(tmp_path)
+    assert json.loads((tmp_path / "file-browser-failure.json").read_text()) == {
+        "schema": 1,
+        "diagnostic_status": "invalid",
+    }
+
+
+def test_browser_failure_actual_child_preserves_nonzero_and_exports_only_validated_state(tmp_path):
+    support = (SCRIPTS / "packaged_file_browser_support.mjs").as_uri()
+    child = (
+        "import {emitBrowserFailure,initialDiagnostic} from " + json.dumps(support) + ";"
+        "const d=initialDiagnostic();d.phase='scan_metadata';d.file_slot=1;d.http_status=201;"
+        "d.extra='private-note-filename-bytes-hash-key-credential';"
+        "await emitBrowserFailure(process.argv[1],d,new Error(d.extra));"
+    )
+    original = None
+
+    def run(command, **kwargs):
+        nonlocal original
+        assert command[0] == "node" and kwargs["timeout"] == 360
+        result = subprocess.run(
+            ["node", "--input-type=module", "-e", child, str(tmp_path)],
+            capture_output=True,
+            timeout=10,
+        )
+        assert result.returncode == 1
+        assert result.stdout == b"" and result.stderr == b"Packaged file browser proof failed.\n"
+        original = subprocess.CalledProcessError(
+            result.returncode, ["node"], result.stdout, result.stderr
+        )
+        raise original
+
+    with pytest.raises(subprocess.CalledProcessError) as caught:
+        proof.run_file_browser(run, tmp_path, {"session": "private-session-canary"})
+    assert caught.value is original and caught.value.returncode == 1
+    exported = json.loads((tmp_path / "file-browser-failure.json").read_text())
+    assert exported == {
+        "schema": 1,
+        "diagnostic_status": "valid",
+        "diagnostic": browser_diagnostic(),
+    }
+    assert "private-" not in json.dumps(exported)
+
+
+def test_browser_failure_missing_diagnostic_remains_failure_with_explicit_unavailable_artifact(
+    tmp_path,
+):
+    original = RuntimeError("fixed child failure")
+
+    def run(*args, **kwargs):
+        raise original
+
+    with pytest.raises(RuntimeError) as caught:
+        proof.run_file_browser(run, tmp_path, {})
+    assert caught.value is original
+    assert json.loads((tmp_path / "file-browser-failure.json").read_text()) == {
+        "schema": 1,
+        "diagnostic_status": "unavailable",
+    }

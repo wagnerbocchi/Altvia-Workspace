@@ -66,7 +66,7 @@ mail case/conversation readers consume their authorized file projections.
 Models/provision/migrations enforce concrete ownership/count/immutability/grants.
 Existing frontend case/conversation/download owners present the new actual data.
 
-### Task1: Bounded version1 file interpretation, unchanged parser2 text
+### Task 1: Bounded version1 file interpretation, unchanged parser2 text
 
 **Files:** Modify apps/api/altvia/mail_mime.py. Create
 apps/api/tests/test_mail_file_mime.py; reuse test_mail_mime.message/multipart.
@@ -93,7 +93,7 @@ complete has no reason, unavailable has no files. No text/body/provenance output
 - [ ] GREEN `uv run pytest -q apps/api/tests/test_mail_file_mime.py apps/api/tests/test_mail_mime.py`;
   lint/format affected source, record exact freeze/results and commit. Task review.
 
-### Task2: Immutable case-owned assets and atomic owner publication
+### Task 2: Immutable case-owned assets and atomic owner publication
 
 **Files:** Create apps/api/migrations/versions/b46087000027_incoming_private_files.py,
 apps/api/altvia/mail_case_files.py and apps/api/tests/test_mail_case_files.py.
@@ -149,7 +149,7 @@ load/validate it only after preflight and only when actual files need storage.
   mail case/normalizer/scan regressions. Record exact boundaries, commit and task
   source/spec/quality gate before Task3. No manual ready/production claim.
 
-### Task3: Current case/ticket authority and additive file projections
+### Task 3: Current case/ticket authority and additive file projections
 
 **Files:** Extend apps/api/altvia/attachments.py, attachment_schemas.py,
 attachment_api.py, mail_case_api.py, mail_case_schemas.py and mail_promotion.py in
@@ -187,7 +187,7 @@ block/count; no direct raw/private-reason lookup or new collection route.
 - [ ] GREEN affected auth/projection/SMTP/scan tests and generated contracts,
   lint/format/type/migration gates. Commit and independent task review.
 
-### Task4: Real triage/conversation UI and consolidated incoming-file proof
+### Task 4: Real triage/conversation UI and consolidated incoming-file proof
 
 **Files:** Extend apps/web/src/components/mail-cases/detail.tsx,
 apps/web/src/components/tickets/messages.tsx, apps/web/src/components/attachments.tsx,

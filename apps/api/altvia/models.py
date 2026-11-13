@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import Literal
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
@@ -737,6 +738,45 @@ class Ticket(Base):
     assignee: Mapped[User | None] = relationship(
         foreign_keys=[assignee_id], lazy="joined", viewonly=True
     )
+
+
+class TicketWorkItem(Base):
+    __tablename__ = "ticket_work_items"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["ticket_id", "client_id", "queue_id"],
+            ["tickets.id", "tickets.client_id", "tickets.queue_id"],
+            name="fk_ticket_work_ticket_context",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["work_item_id", "project_id"],
+            ["work_items.id", "work_items.project_id"],
+            name="fk_ticket_work_work_project",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "client_id"],
+            ["projects.id", "projects.client_id"],
+            name="fk_ticket_work_project_client",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        CheckConstraint("relation_type='related'", name="ck_ticket_work_relation"),
+        Index("ix_ticket_work_reverse", "work_item_id", "ticket_id"),
+    )
+    ticket_id: Mapped[UUID] = mapped_column(primary_key=True)
+    work_item_id: Mapped[UUID] = mapped_column(primary_key=True)
+    client_id: Mapped[UUID]
+    queue_id: Mapped[UUID]
+    project_id: Mapped[UUID]
+    relation_type: Mapped[Literal["related"]] = mapped_column(String(7), default="related")
+    created_by: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT", onupdate="RESTRICT")
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class TicketStatusHistory(Base):

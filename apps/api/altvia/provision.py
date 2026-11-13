@@ -45,6 +45,7 @@ ROLE_PRIVILEGES = {
         "ticket_queues": {"SELECT", "INSERT", "UPDATE"},
         "ticket_categories": {"SELECT", "INSERT", "UPDATE"},
         "tickets": {"SELECT", "INSERT", "UPDATE"},
+        "ticket_work_items": {"SELECT", "INSERT", "DELETE"},
         "ticket_status_history": {"SELECT", "INSERT"},
         "attachments": {"SELECT", "INSERT"},
         "ticket_notes": {"SELECT", "INSERT"},

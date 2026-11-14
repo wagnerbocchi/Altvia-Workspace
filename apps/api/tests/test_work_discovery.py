@@ -4,7 +4,7 @@ from datetime import datetime
 from uuid import UUID, uuid4
 
 import pytest
-from sqlalchemy import event, text
+from sqlalchemy import Engine, event, text
 from sqlalchemy.orm import Session
 from test_team_api import admin_client, preconditions, sign_in
 from test_work_items import create_work, setup_project
@@ -189,21 +189,22 @@ def test_personal_query_is_bounded_not_per_result(admin_client, seeded_user, db_
     def count(*args):
         counts.append(1)
 
-    event.listen(db_engine, "before_cursor_execute", count)
+    event.listen(Engine, "before_cursor_execute", count)
     try:
         assert len(ids(admin_client.get("/api/v1/my-work"))) == 1
         initial = len(counts)
+        assert initial > 0
     finally:
-        event.remove(db_engine, "before_cursor_execute", count)
+        event.remove(Engine, "before_cursor_execute", count)
     for _ in range(4):
         task(admin_client, p, owner_id=str(seeded_user))
     counts.clear()
-    event.listen(db_engine, "before_cursor_execute", count)
+    event.listen(Engine, "before_cursor_execute", count)
     try:
         assert len(ids(admin_client.get("/api/v1/my-work"))) == 5
         assert len(counts) == initial
     finally:
-        event.remove(db_engine, "before_cursor_execute", count)
+        event.remove(Engine, "before_cursor_execute", count)
 
 
 def test_personal_queue_never_inherits_platform_admin(admin_client, seeded_user):

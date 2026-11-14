@@ -77,7 +77,11 @@ No total, inferred effort, notification, automation state or write capability is
 returned. A page is bounded even when a task has many links. Badge enrichment
 must reuse both current parent visibility predicates, with a bounded window over
 only the returned work IDs. Use a fixed query count, never one ORM lookup per
-result. Preserve the native authenticated session lock/last_seen update; do not
+result. Selection, full-set suppression and badge enrichment use one PostgreSQL
+statement snapshot. A concurrent link/unlink must not produce a response that
+suppresses a ticket under one link state and loses its badge under another.
+This is response coherence, not a snapshot retained across page requests.
+Preserve the native authenticated session lock/last_seen update; do not
 introduce a read-only transaction incompatible with authentication.
 
 ## Ordering, cursor and current authority

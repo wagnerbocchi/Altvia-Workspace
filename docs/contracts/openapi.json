@@ -1734,6 +1734,58 @@
         "title": "LinkedTicket",
         "type": "object"
       },
+      "LinkedTicketBadge": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "number": {
+            "minimum": 1.0,
+            "title": "Number",
+            "type": "integer"
+          },
+          "priority": {
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
+            "title": "Priority",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "new",
+              "open",
+              "pending_customer",
+              "pending_third_party",
+              "resolved",
+              "closed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subject": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Subject",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "subject",
+          "status",
+          "priority"
+        ],
+        "title": "LinkedTicketBadge",
+        "type": "object"
+      },
       "LinkedWork": {
         "additionalProperties": false,
         "properties": {
@@ -4905,6 +4957,264 @@
         "title": "Transition",
         "type": "object"
       },
+      "UnifiedTicket": {
+        "additionalProperties": false,
+        "properties": {
+          "client_id": {
+            "format": "uuid",
+            "title": "Client Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "ticket",
+            "title": "Kind",
+            "type": "string"
+          },
+          "number": {
+            "minimum": 1.0,
+            "title": "Number",
+            "type": "integer"
+          },
+          "priority": {
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
+            "title": "Priority",
+            "type": "string"
+          },
+          "queue_id": {
+            "format": "uuid",
+            "title": "Queue Id",
+            "type": "string"
+          },
+          "queue_name": {
+            "title": "Queue Name",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "new",
+              "open",
+              "pending_customer",
+              "pending_third_party",
+              "resolved",
+              "closed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subject": {
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Subject",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "subject",
+          "status",
+          "priority",
+          "kind",
+          "client_id",
+          "queue_id",
+          "queue_name",
+          "created_at"
+        ],
+        "title": "UnifiedTicket",
+        "type": "object"
+      },
+      "UnifiedWorkItem": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "due": {
+            "anyOf": [
+              {
+                "discriminator": {
+                  "mapping": {
+                    "date": "#/components/schemas/DateDue",
+                    "instant": "#/components/schemas/InstantDue"
+                  },
+                  "propertyName": "precision"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/DateDue"
+                  },
+                  {
+                    "$ref": "#/components/schemas/InstantDue"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due"
+          },
+          "due_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due At"
+          },
+          "has_more_linked_tickets": {
+            "title": "Has More Linked Tickets",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "work_item",
+            "title": "Kind",
+            "type": "string"
+          },
+          "linked_tickets": {
+            "items": {
+              "$ref": "#/components/schemas/LinkedTicketBadge"
+            },
+            "maxItems": 3,
+            "title": "Linked Tickets",
+            "type": "array"
+          },
+          "priority": {
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
+            "title": "Priority",
+            "type": "string"
+          },
+          "project_id": {
+            "format": "uuid",
+            "title": "Project Id",
+            "type": "string"
+          },
+          "project_name": {
+            "title": "Project Name",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "todo",
+              "in_progress",
+              "blocked",
+              "done",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "work_type": {
+            "enum": [
+              "one_off",
+              "ongoing"
+            ],
+            "title": "Work Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "project_id",
+          "project_name",
+          "title",
+          "status",
+          "priority",
+          "work_type",
+          "due",
+          "due_at",
+          "created_at",
+          "linked_tickets",
+          "has_more_linked_tickets"
+        ],
+        "title": "UnifiedWorkItem",
+        "type": "object"
+      },
+      "UnifiedWorkPage": {
+        "additionalProperties": false,
+        "properties": {
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "ticket": "#/components/schemas/UnifiedTicket",
+                  "work_item": "#/components/schemas/UnifiedWorkItem"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/UnifiedWorkItem"
+                },
+                {
+                  "$ref": "#/components/schemas/UnifiedTicket"
+                }
+              ]
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor",
+          "as_of"
+        ],
+        "title": "UnifiedWorkPage",
+        "type": "object"
+      },
       "UploadReceipt": {
         "additionalProperties": false,
         "properties": {
@@ -7296,6 +7606,203 @@
         "summary": "My Work",
         "tags": [
           "Work items"
+        ]
+      }
+    },
+    "/api/v1/my-work/unified": {
+      "get": {
+        "operationId": "listing_api_v1_my_work_unified_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "work_item",
+                "ticket"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "priority",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high",
+                    "critical"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Priority"
+            }
+          },
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Client Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "team_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Team Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "work_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "todo",
+                    "in_progress",
+                    "blocked",
+                    "done",
+                    "cancelled"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Work Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ticket_status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "new",
+                    "open",
+                    "pending_customer",
+                    "pending_third_party",
+                    "resolved",
+                    "closed"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Ticket Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnifiedWorkPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listing",
+        "tags": [
+          "Personal work"
         ]
       }
     },

@@ -460,19 +460,43 @@ No state/assignment/deadline/SLA synchronization or task creation occurs here.
 Counterpart titles/IDs and reciprocal history require BOTH current scopes before
 pagination; unlink history does not depend on a surviving live relationship.
 Full fields, authority, locking, replay and compatibility are pinned in ADR0039
-and its implementation plan. Automation/unified My Work remains a later contract.
+and its implementation plan. ADR0040 separately contracts the read-only personal
+projection below. Structured automation still requires its writer contract.
 
 ## My Work and analytics
 
-Response items: `{kind: work_item|ticket, id, title, status, priority, due,
-origin, linked_tickets: [{id,number,status}], version}`. Restrict related fields
-to the caller's ACL. Tasks qualify through owner or explicit assignee membership;
-tickets through assignee. ADR-0007 defines N:N suppression. Deduplication takes
-place before cursor pagination across the full filtered authorized set.
-Response also names `as_of`, timezone and applied filters. `unified_count`,
-`ticket_count`, `work_item_count`, `active_no_due_date_count` and
-`all_missing_deadline_count` have distinct meanings. Counts are optional on
-paginated reads; when provided they use the same predicates/projection.
+ADR0040 is selected and in development; acceptance is tracked separately. Keep
+GET /my-work's task-only schema, filters and cursor unchanged. Add read-only
+GET /my-work/unified with {items,next_cursor,as_of}. Strict query fields:
+limit1..100/default50, cursor<=512, kind all|work_item|ticket/defaultall, optional
+priority/client_id/team_id/work_status/ticket_status and trimmed q<=200. Reject
+unknown, repeated or invalid input422; q containing NUL is invalid. Empty q is
+absent. Domain status filters are independent. Existing project/type/deadline
+filters remain on the task-only endpoint; they are unsupported on unified reads.
+
+Compute full scoped eligible W (owner or participant) and T (current assignee).
+Return each W once and each T only when no eligible W links it. Both visibility
+policies precede full-set deduplication, priority/creation/UUID/domain ordering and
+keyset pagination. Hidden or nonqualifying work never suppresses a ticket. The
+cursor is actor/filter-bound, includes the domain tie-breaker, and is not an
+authorization grant or cross-request snapshot. Refresh restarts pagination.
+
+Items discriminate on kind. A work_item retains the task-only summary fields and
+adds created_at, linked_tickets(max3) and has_more_linked_tickets(boolean). Only
+current visible ticket origins contribute to badges/more; badges sort by ticket
+UUID independently of personal ticket assignment/status filters. A ticket row has
+id/number/subject/status/priority/client_id/queue_id/queue_name/created_at, without
+task deadline, private text/count, requester or mutation capability. A badge has
+id/number/subject/status/priority. Use the existing paged link panel for full
+origin discovery. No result total, effort or SLA value is fabricated.
+Candidate selection, full-set suppression and bounded badge enrichment share
+one PostgreSQL statement snapshot. Concurrent native link changes cannot mix
+suppression from one state with badges from another in the same response.
+
+Analytics remains a separate contract. Future unified_count/ticket_count/
+work_item_count/active_no_due_date_count/all_missing_deadline_count must have
+distinct documented predicates and reconcile to authorized persisted data.
+No analytics endpoint or count is implemented by ADR0040's paginated read.
 
 ## Durable event contract
 

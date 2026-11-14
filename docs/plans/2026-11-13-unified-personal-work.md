@@ -39,6 +39,9 @@ unified_work_api.py; create apps/api/tests/test_unified_work.py; register the
 router in apps/api/altvia/main.py. Modify existing predicate owners only if a
 small extraction is needed to reuse exactly their behavior. Leave /my-work,
 MyWorkPage, its native ordering/cursor and worker grants unchanged.
+The scalar SQL projection reuses deadlines.due_value(precision, instant,
+local_date, timezone); deadlines.due_output keeps its existing ORM signature and
+delegates to that same pure value formatter. No deadline policy is duplicated.
 
 Interfaces: UnifiedWorkFilters, LinkedTicketBadge, UnifiedWorkItem, UnifiedTicket,
 UnifiedWorkPage from ADR0040; create_unified_work_router(engine: Engine,
@@ -48,34 +51,37 @@ UnifiedCursor is an immutable tuple/dataclass with priority_rank, created_at,
 identifier and kind. Keep cursor encode/decode private to this feature, using
 ADR0040's exact grammar and native IdentityError422 invalid_cursor behavior.
 
-- [ ] Write real PostgreSQL/API tests before production code. Arrange synthetic
+- [x] Write real PostgreSQL/API tests before production code. Arrange synthetic
   grants through existing native owners; fixture truncation requires a dedicated
   database named altvia_test and ALTVIA_ALLOW_TEST_DB=1. Never share it with another
   running suite, print credentials or use production.
-- [ ] Prove standalone/owner+participant/different-assignee/shared-task and N:N
+- [x] Prove standalone/owner+participant/different-assignee/shared-task and N:N
   behavior. Assert the union of all returned page keys has exactly expected
   (kind,id) keys and no repeated work. Limit1 must not cause a represented ticket
   to reappear on later pages. A nonqualifying linked task must leave its ticket.
-- [ ] Prove same UUID/instant/domain tie, exact priority/creation/key order,
+- [x] Prove same UUID/instant/domain tie, exact priority/creation/key order,
   status/kind/q/client/team filtering and cursor actor/filter/grammar rejection.
   Assert both current unauthorized and nonexistent scopes return empty metadata.
-- [ ] Prove badge3/more using4 visible links, then hide the fourth and assert
+- [x] Prove badge3/more using4 visible links, then hide the fourth and assert
   false/no hidden ID. Revoke queue/client/project scope between pages, require
   old-session401 where the native writer invalidates it, then authenticate the
   same actor and check current independent eligibility. Include platform/team
   non-grants and unassigned/history-only participation non-eligibility.
-- [ ] Implement one responsible query owner. Reuse complete eligible W in the
+- [x] Implement one responsible query owner. Reuse complete eligible W in the
   NOT EXISTS anti-join; no result-page Python deduplication. Use bounded windowed
   enrichment over returned work IDs with both current visibility predicates.
   Fetch at mostlimit+1 rows and at most4 visible badge candidates per returned
   work. Do not cause ORM N+1. Reuse existing task due formatting semantics.
-- [ ] Run uv run pytest apps/api/tests/test_unified_work.py and nearest affected
+  Select candidates and bounded badges in one PostgreSQL statement snapshot;
+  prove a concurrent native unlink cannot lose the represented ticket. Keep
+  the incumbent authentication transaction isolation and session lock protocol.
+- [x] Run uv run pytest apps/api/tests/test_unified_work.py and nearest affected
   discovery/ticket-work modules against the dedicated actual database. Run
   uv run ruff check apps/api, uv run ruff format --check apps/api, uv run mypy,
   and existing migration-head/contract gates. Expected: all pass, explicit skip
   limits retained. Inspect query counts/plans on representative synthetic data;
   introduce no index until its measured need and reversible contract are recorded.
-- [ ] Export OpenAPI and generated types using uv run python scripts/export_openapi.py
+- [x] Export OpenAPI and generated types using uv run python scripts/export_openapi.py
   and pnpm --filter @altvia/web generate:api. Assert all legacy /my-work examples,
   response schema and unfiltered/filtered cursor behavior remain valid. Commit
   intended API/tests/generated contracts as feat: unify authorized personal work.

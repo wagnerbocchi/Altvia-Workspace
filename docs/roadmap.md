@@ -74,7 +74,10 @@ review returned SPEC PASS/QUALITY APPROVED,0 actionable findings; manual links
 are accepted. See
 docs/ticket-work-link-evidence.md for original failures/source hashes/limits.
 Next ADR0040/planning commitf5c45f6 preserves legacy tasks while defining the
-authorized unified queue. Native backend TDD is in progress, not accepted UI or
+authorized unified queue. Native backend passed34 new and114 affected API cases,
+Ruff/mypy and stable generated contracts. Concurrent unlink regression now uses
+one statement snapshot for suppression/badges. Browser implementation and its
+consolidated acceptance remain in progress, not accepted UI or
 automation. Final integrated qualification remains deferred until development.
 
 Private-files Task4 is implemented in c5c668c with reviewed corrections 039a631.

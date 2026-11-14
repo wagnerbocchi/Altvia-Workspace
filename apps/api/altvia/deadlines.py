@@ -69,9 +69,16 @@ def set_due(db: Session, item: WorkItem | ProjectMilestone, due: Due | None) -> 
 
 
 def due_output(item: WorkItem | ProjectMilestone) -> Due | None:
+    return due_value(item.due_precision, item.due_at, item.due_date_local, item.due_timezone)
+
+
+def due_value(
+    precision: str | None, instant: datetime | None, local_date: date | None, timezone: str | None
+) -> Due | None:
+    """Format the same deadline from ORM owners or a bounded SQL projection."""
     due: Due | None = None
-    if item.due_precision == "date" and item.due_date_local and item.due_timezone:
-        due = DateDue(precision="date", date=item.due_date_local, timezone=item.due_timezone)
-    elif item.due_at:
-        due = InstantDue(precision="instant", instant=item.due_at)
+    if precision == "date" and local_date and timezone:
+        due = DateDue(precision="date", date=local_date, timezone=timezone)
+    elif instant:
+        due = InstantDue(precision="instant", instant=instant)
     return due

@@ -314,6 +314,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/my-work/unified": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listing */
+        get: operations["listing_api_v1_my_work_unified_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/operational-areas": {
         parameters: {
             query?: never;
@@ -2084,6 +2101,28 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** LinkedTicketBadge */
+        LinkedTicketBadge: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: number;
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "low" | "medium" | "high" | "critical";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "new" | "open" | "pending_customer" | "pending_third_party" | "resolved" | "closed";
+            /** Subject */
+            subject: string;
+        };
         /** LinkedWork */
         LinkedWork: {
             /** Can Unlink */
@@ -3355,6 +3394,112 @@ export interface components {
              */
             target_status: "todo" | "in_progress" | "blocked" | "done" | "cancelled";
         };
+        /** UnifiedTicket */
+        UnifiedTicket: {
+            /**
+             * Client Id
+             * Format: uuid
+             */
+            client_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "ticket";
+            /** Number */
+            number: number;
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "low" | "medium" | "high" | "critical";
+            /**
+             * Queue Id
+             * Format: uuid
+             */
+            queue_id: string;
+            /** Queue Name */
+            queue_name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "new" | "open" | "pending_customer" | "pending_third_party" | "resolved" | "closed";
+            /** Subject */
+            subject: string;
+        };
+        /** UnifiedWorkItem */
+        UnifiedWorkItem: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Due */
+            due: (components["schemas"]["DateDue"] | components["schemas"]["InstantDue"]) | null;
+            /** Due At */
+            due_at: string | null;
+            /** Has More Linked Tickets */
+            has_more_linked_tickets: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "work_item";
+            /** Linked Tickets */
+            linked_tickets: components["schemas"]["LinkedTicketBadge"][];
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "low" | "medium" | "high" | "critical";
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /** Project Name */
+            project_name: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "todo" | "in_progress" | "blocked" | "done" | "cancelled";
+            /** Title */
+            title: string;
+            /**
+             * Work Type
+             * @enum {string}
+             */
+            work_type: "one_off" | "ongoing";
+        };
+        /** UnifiedWorkPage */
+        UnifiedWorkPage: {
+            /**
+             * As Of
+             * Format: date-time
+             */
+            as_of: string;
+            /** Items */
+            items: (components["schemas"]["UnifiedWorkItem"] | components["schemas"]["UnifiedTicket"])[];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
         /** UploadReceipt */
         UploadReceipt: {
             /**
@@ -4402,6 +4547,45 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MyWorkPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listing_api_v1_my_work_unified_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+                kind?: "all" | "work_item" | "ticket";
+                priority?: ("low" | "medium" | "high" | "critical") | null;
+                client_id?: string | null;
+                team_id?: string | null;
+                work_status?: ("todo" | "in_progress" | "blocked" | "done" | "cancelled") | null;
+                ticket_status?: ("new" | "open" | "pending_customer" | "pending_third_party" | "resolved" | "closed") | null;
+                q?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnifiedWorkPage"];
                 };
             };
             /** @description Validation Error */

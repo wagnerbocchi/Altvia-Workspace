@@ -36,6 +36,9 @@ export function Paging({ paging, next, label, disabled = false }: {
     atividades: ["Atividades anteriores", "Próximas atividades"],
     automacoes: ["Automacoes anteriores", "Proximas automacoes"],
     registros: ["Registros anteriores", "Proximos registros"],
+    "ciclos de SLA": ["Ciclos mais recentes", "Ciclos mais antigos"],
+    "calendarios de SLA": ["Calendarios anteriores", "Proximos calendarios"],
+    "politicas de SLA": ["Politicas anteriores", "Proximas politicas"],
     contatos: ["Contatos anteriores", "Próximos contatos"],
     marcos: ["Marcos anteriores", "Proximos marcos"],
     filas: ["Filas anteriores", "Proximas filas"],
@@ -67,6 +70,9 @@ export function isUncertain(error: unknown) {
 export function writeError(error: unknown) {
   if (isUncertain(error)) return "Não foi possível confirmar a gravação. Confira o resultado antes de enviar outra solicitação.";
   if (error instanceof ApiError) {
+    if (error.code === "invalid_timezone") return "O fuso informado nao esta disponivel. Confira o nome IANA e corrija o campo do calendario.";
+    if (error.code === "sla_policy_exists") return "Ja existe uma politica para essa combinacao de cliente, categoria e prioridade. Edite a politica existente ou escolha outros seletores.";
+    if (error.code === "sla_configuration_unavailable") return "O calendario ou a categoria selecionada nao esta disponivel para novos ciclos. Atualize e revise as referencias da politica.";
     if (error.code === "name_exists") return "Ja existe um cadastro com esse nome nesta equipe ou fila. Escolha outro nome ou restaure o cadastro existente.";
     if (error.code === "inactive_parent") return "A equipe ou fila foi arquivada. Recarregue os dados antes de continuar.";
     if (error.code === "contact_email_exists") return "Este e-mail ja pertence a um contato deste cliente. Recarregue para revisar o cadastro existente.";

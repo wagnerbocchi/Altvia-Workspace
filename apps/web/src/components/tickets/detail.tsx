@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { TicketWorkLinks } from "@/components/ticket-work/links";
 import { AssignmentRuns } from "@/components/automation/runs";
+import { TicketSla } from "@/components/sla/cycles";
 import { AttachmentPicker } from "@/components/attachments";
 import { sameAttachments, type AttachmentSummary } from "@/lib/attachments";
 import { useCallback, useRef, useState } from "react";
@@ -78,7 +79,7 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
     acknowledgedMessage.current = null;
     setAwaiting(false);
     if (awaiting) setNotice("Alteracao confirmada.");
-    await Promise.all(["tickets", "ticket-states", "ticket-activity"].map(key => cache.invalidateQueries({ queryKey: key === "tickets" ? [key] : [key, id] })));
+    await Promise.all(["tickets", "ticket-states", "ticket-activity", "ticket-sla"].map(key => cache.invalidateQueries({ queryKey: key === "tickets" ? [key] : [key, id] })));
   };
   const write = useTeamWrite(session, async (intent: Intent) => {
     if (intent.kind === "delivery") return { kind: "delivery" as const, receipt: await api.send(id, intent.review.message.id, { participant_id: intent.review.choices.participant!.participant_id, source_id: intent.review.choices.sender!.source_id, ...(intent.review.message.attachments?.length ? { attachment_ids: intent.review.message.attachments.map(file => file.id) } : {}) }, intent.version, intent.key) };
@@ -153,6 +154,7 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
         </section>
       </div>
     </>}
+    {row && <div className="admin-plane"><TicketSla ticketId={id} session={session} available={!query.isError} /></div>}
     {query.data && <TicketWorkLinks ticket={query.data} session={session}
       parentAvailable={!!row && !query.isError}
       parentLocked={parentLocked || editor !== null || transitionReview !== null || messageReview !== null || deliveryReview !== null}

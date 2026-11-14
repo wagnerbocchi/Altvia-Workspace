@@ -38,6 +38,9 @@ export function createQueueApi(csrf: string, onAuthError: (error: unknown) => vo
     async categories(id: string, cursor: string | null, signal?: AbortSignal): Promise<components["schemas"]["CategoryPage"]> {
       return (await request(`${path(id)}/categories${pageQuery(cursor)}`, { signal })).json();
     },
+    async category(id: string, category: string, signal?: AbortSignal) {
+      return record<CategoryRecord>(await request(`${path(id)}/categories/${encodeURIComponent(category)}`, { signal }));
+    },
     async createCategory(id: string, name: string, key: string): Promise<components["schemas"]["CategoryReceipt"]> {
       return (await request(`${path(id)}/categories`, write("POST", { name }, undefined, key))).json();
     },

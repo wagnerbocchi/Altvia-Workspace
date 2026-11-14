@@ -27,7 +27,7 @@ export function TicketHistory({ id, api }: { id: string; api: TicketApi }) {
 export function TicketActivity({ id, api }: { id: string; api: TicketApi }) {
   const paging = usePaging();
   const query = useQuery({ queryKey: ["ticket-activity", id, paging.cursor], queryFn: ({ signal }) => api.activity(id, paging.cursor, signal) });
-  const labels: Record<string, string> = { "ticket.created": "Chamado criado", "ticket.updated": "Chamado editado", "ticket.assigned": "Responsavel atribuido", "ticket.status_changed": "Estado alterado", "ticket.note_added": "Nota interna registrada", "ticket.message_drafted": "Rascunho de resposta salvo" };
+  const labels: Record<string, string> = { "ticket.created": "Chamado criado", "ticket.updated": "Chamado editado", "ticket.assigned": "Responsavel atribuido", "ticket.status_changed": "Estado alterado", "ticket.note_added": "Nota interna registrada", "ticket.message_drafted": "Rascunho de resposta salvo", "ticket.sla_breached": "Violacao de SLA registrada", "ticket.sla_corrected": "Resultado de SLA corrigido" };
   return <section className="admin-section" aria-labelledby="ticket-activity-heading">
     <h2 id="ticket-activity-heading">Atividade do chamado</h2>
     <p className="field-help">Novas atividades podem levar instantes para aparecer.</p>
@@ -35,7 +35,8 @@ export function TicketActivity({ id, api }: { id: string; api: TicketApi }) {
     {query.isPending ? <LoadingRows label="Carregando atividade..." /> : query.isError ? <ReadError retry={() => void query.refetch()} /> : query.data.items.length ?
       <ul className="record-list" aria-label="Atividade do chamado">{query.data.items.map(row => <li className="team-row" key={row.event_id}>
         <div className="record-text"><strong>{row.actor_kind === "automation" ? "Tarefa vinculada por automacao" : labels[row.event_type] ?? "Alteracao registrada"}</strong>
-          <span className="record-meta">{row.actor_kind === "automation" ? `Automacao autorizada por: ${row.details.authorizer_id}` : `Autor ${row.actor_id}`} - versao {row.aggregate_version}</span>
+          <span className="record-meta">{row.actor_kind === "sla_worker" ? "Processamento automatico de SLA" : row.actor_kind === "automation" ? `Automacao autorizada por: ${row.details.authorizer_id}` : `Autor ${row.actor_id}`} - versao {row.aggregate_version}</span>
+          {row.actor_kind === "sla_worker" && <span className="record-meta">Ciclo {row.details.cycle_number} - {row.details.goal === "first_response" ? "Primeira resposta" : "Resolucao"}</span>}
           <time className="record-meta" dateTime={row.occurred_at}>{new Date(row.occurred_at).toLocaleString("pt-BR")}</time>
         </div>
       </li>)}</ul> : <p>Nenhuma atividade disponivel nesta pagina.</p>}

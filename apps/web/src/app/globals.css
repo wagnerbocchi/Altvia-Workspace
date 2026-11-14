@@ -137,6 +137,12 @@ dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 .record-status[data-state="active"], .record-status[data-state="done"], .record-status[data-state="resolved"] { color: var(--success); background: var(--success-ground); }
 .record-status[data-state="in_progress"], .record-status[data-state="open"], .record-status[data-state="new"] { color: var(--primary); background: var(--notice-ground); }
 .record-status[data-state="blocked"], .record-status[data-state="pending_customer"], .record-status[data-state="pending_third_party"] { color: var(--warning); background: var(--warning-ground); }
+.record-status[data-state="breached"] { color: var(--error); background: var(--error-ground); }
+.sla-window, .sla-policy-row, .sla-goal { padding: 20px 0; }
+.sla-calendar-row { flex-wrap: wrap; }
+.sla-calendar-row > .record-text { flex: 1 1 240px; }
+.sla-cycle + .sla-cycle, .sla-goal + .sla-goal, .sla-policy-row + .sla-policy-row { border-top: 1px solid var(--line); }
+.sla-cycle + .sla-cycle { margin-top: 24px; padding-top: 24px; }
 .paging { font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
 .paging > span { color: var(--muted); font-size: 14px; }
 .roster-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
@@ -323,3 +329,5 @@ footer { display: flex; justify-content: space-between; gap: 16px; padding: 20px
   .attachment-actions label { overflow-wrap: anywhere; min-width: 0; }
   .attachment-actions input { flex-shrink: 0; }
 }
+.sla-subheading { margin: 28px 0 12px; font-size: 16px; line-height: 1.5; font-weight: 650; }
+.sla-policy-row .sla-subheading, .sla-goal .sla-subheading { margin-top: 0; }

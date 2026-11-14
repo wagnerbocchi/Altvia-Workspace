@@ -129,8 +129,14 @@ migration fixtures are corrected without weakening guards, source timestamps or
 receipt fingerprints. Actual private TLS S3/native revalidation passed8 with no
 skips, plus static gates. Final subsequent-source hosted acceptance remains pending;
 see docs/ticket-sla-evidence.md for exact runs and setup failures. Task4 SLA UI
-is in progress, with real browser SMTP, revision and recovery evidence; it is not
-yet accepted or published.
+development is complete:9 real browser cases passed, with frozen revision review,
+TLS SMTP, native cycles, recovery, session/privacy/conflict/focus and archived
+deactivation. Native web check/build/Sharp guard passed. The fresh Impeccable
+review found two actual visual/state issues, both reproduced RED and resolved
+in one batch; the final9-case GREEN and24 theme/viewport recaptures passed. Its
+verdict scored both fixes resolved, ship at that scope. Shipped documentation
+preserved the incumbent design files. Task5 packaged/whole-increment acceptance
+and final hosted gates remain pending; no whole-SLA or target completion claim.
 
 ADR0042 Task3 backend development is complete locally/natively: atomic creation/
 reopen cycles, bounded two-goal evaluator, strict independent accepted-response
@@ -142,8 +148,9 @@ repeated generated contracts(85 old paths/168 schemas unchanged), offline packag
 build and source SAST0 blocking passed. Legacy migration fixtures now explicitly
 model pre-SLA tickets, preserving all old guard/parent/ACL assertions and refusing
 to remove configured obligations. See docs/ticket-sla-evidence.md for full failed
-runs, corrective proof and limits. UI/packaged whole-feature/hosted acceptance
-remain pending; Q07 production hours/targets and final qualification stay open.
+runs, corrective proof and limits. Task4 UI progress is recorded above. Packaged
+whole-feature/hosted acceptance remains pending; Q07 production hours/targets and
+final qualification stay open.
 
 ADR0042 now selects the separate versioned SLA contract after independent builder
 check. Its bounded frozen-calendar arithmetic passed46 actual native cases,
@@ -151,8 +158,9 @@ Ruff/format/mypy76 and cold/warm/memory bounds. Task2 persisted configuration no
 passed125 final native cases/static,90 earlier storage/incumbent cases,161 affected
 configuration/storage/automation/queue/client cases and55 current integrity/
 execution cases (overlapping counts). Repeated contracts preserve81 paths and155
-components, web check and source SAST0blocking passed. Native cycles/evaluator/UI
-and whole-SLA acceptance remain pending. See docs/ticket-sla-evidence.md. Q07 real hours/holidays/targets stay
+components, web check and source SAST0blocking passed. Subsequent native cycle/
+evaluator/interface evidence is recorded above; whole-SLA acceptance remains
+pending. See docs/ticket-sla-evidence.md. Q07 real hours/holidays/targets stay
 unconfigured. The selected authoritative clock is existing durable accepted_at,
 not an inferred wire-observation timestamp. Archived selected configuration fails
 explicitly rather than silently selecting another policy.

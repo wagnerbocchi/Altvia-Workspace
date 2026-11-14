@@ -4,8 +4,62 @@ ADR0042 and docs/plans/2026-11-14-ticket-sla.md define the selected contract.
 SLA capability is not complete. Task1 calendar arithmetic and Task2's persisted
 configuration APIs have development evidence below. Task3 native cycles, evaluator,
 accepted-response capture and outcome API are implemented with native development
-evidence below. UI and whole-capability acceptance remain pending. No hours, holidays or targets are
+evidence below. Task4's real browser interface and two review corrections have
+passing evidence below; packaged and whole-capability acceptance remain pending.
+No hours, holidays or targets are
 configured for Altvia.
+
+## Configuration and outcome interface
+
+Queue managers can select an explicitly authorized client, configure calendar
+windows/holidays and immutable revisions, create disabled policies and review
+activation or deactivation. Forms do not prefill company hours, timezone, targets
+or pause policy. Selector identity stays immutable. Activation review fetches the
+policy-selected historical calendar through the new fully scoped snapshot read,
+even after its current calendar name or revision changes. Archived parents still
+allow deliberate policy deactivation under the existing backend contract.
+
+Ticket readers see server-owned current/history response and resolution outcomes,
+preserved policy/calendar labels, pauses, stale/evaluating/unavailable states and
+observation times. No browser clock invents elapsed time or deadlines. Ordinary
+acceptance is explicitly described as durable finalization, including its delay
+limits. New accepted-response observations refresh that ticket's conversation
+and delivery reads, within the current session, so the visible source receipt
+does not remain queued beside a fulfilled response goal.
+
+Protected uncertain writes preserve the original body, key and reviewed versions;
+acknowledged writes recover reads only. Parent failures own parent recovery, and
+session disposal fences private callbacks. Focus enters forms/reviews, returns
+to the enabled opener after cancellation/reload and reaches confirmed scope facts
+after success. All additions retain the accepted Twenty-inspired Operate world,
+light/dark tokens and existing native controls; no raster or dependency was added.
+
+The final review-green01 command ran the entire tests/sla.spec.ts module:9 passed
+in1.8m (launcher151.071s), with real HTTPS/API/PostgreSQL/Redis/worker and verified
+TLS SMTP acceptance. It covers real calendar/policy creation and frozen revision
+activation, native ticket transitions/reopen, uncertain/acknowledged recovery,
+identity replacement, parent failure, invalid timezone, duplicate selector,
+concurrent queue conflict/focus and archived-parent deactivation. Native web
+check/build and the no-Sharp guard passed. All39720 frozen inputs stayed unchanged;
+33 transferred evidence files were SHA256-verified, including24 full-page captures
+of six states at1440/390 in both themes with axe and document overflow checks.
+
+Passing automation did not hide the actual visual review findings. The fresh
+Impeccable reviewer found a long calendar name collapsed beside its actions and
+a stale queued response beside fulfilled SLA. Separate real browser RED runs
+reproduced both: layout-red01 measured59.76 label lines against a maximum4;
+coherence-red01 failed visible accepted-delivery confirmation. One correction
+batch added scoped wrapping and session-fenced source-read invalidation. The
+complete nine-case GREEN above and24 inspected recaptures prove the result. The
+same reviewer's verdict pass scored both findings resolved, disposition ship at
+the two-fix scope. This is development interface evidence, not whole-SLA or final
+target qualification. Prior failed/invalid capture runs remain private evidence.
+
+The shipped Impeccable documenter verified all33 collected hashes, compared the
+finished extension with incumbent source and documented it in the SLA surface
+brief. DESIGN.md and its sidecar hashes remain unchanged. Older PRODUCT.md and
+sidecar coverage drift was reported without unrelated repairs. Documentation
+sampling does not broaden the review verdict or qualify target images.
 
 ## Native cycle, accepted-response and outcome progress
 

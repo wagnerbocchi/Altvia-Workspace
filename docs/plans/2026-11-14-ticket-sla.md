@@ -229,18 +229,18 @@ Files: lib/sla.ts, components/sla/{calendars,policies,cycles}.tsx; queue detail
 and ticket detail integrations; tests/sla.spec.ts and guarded browser fixture.
 Consume generated DTOs and existing authenticated transport/write recovery.
 
-- [ ] Impeccable context/local-extension workflow; actual missing-control RED.
+- [x] Impeccable context/local-extension workflow; actual missing-control RED.
   Reuse existing system. Explicit client selection supplies no backend grant.
-- [ ] Build real timezone/week windows/holiday revision forms and disabled policy
+- [x] Build real timezone/week windows/holiday revision forms and disabled policy
   create/review/enable/edit/disable. Show reviewed selector order, both versions,
   future-cycle boundary and frozen calendar. Never prefill company policy.
-- [ ] Build real current/history goal outcomes, paused/approaching/breached/
+- [x] Build real current/history goal outcomes, paused/approaching/breached/
   fulfilled/unfulfilled/corrected/unconfigured/legacy/stale/unavailable states.
   Explain durable acceptance timing; no browser clock invents a deadline.
-- [ ] Retain original protected intent through uncertain writes; acknowledged
+- [x] Retain original protected intent through uncertain writes; acknowledged
   writes retry reads only. Parent failure owns parent recovery; unavailable child
   panels must not duplicate parent alerts or offer ineffective private retries.
-- [ ] Prove real API/PG/worker behavior, identity replacement, error/conflict/
+- [x] Prove real API/PG/worker behavior, identity replacement, error/conflict/
   keyboard/focus, both themes and390/1440 axe/overflow/captures. Inspect actual
   renders, apply only real fixes, run affected browser/check/build/native guard.
   Complete Impeccable review/documentation and commit scoped UI/proof.

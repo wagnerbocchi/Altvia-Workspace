@@ -5,8 +5,13 @@ implemented and independently reviewed atb4c31e5,9a45874/657167d and2413417.
 All five exactbb45df9 API-source hosted gates passed, including1566 API cases
 with3 explicit skips/1 retained warning and185 browser cases. Current panel
 source has native focused/contextual proof and independent visual disposition
-ship; its exact hosted gates, packaged relationship proof, whole-feature/MVP
-acceptance and final target qualification remain pending.
+ship. Task4 packaged source b3495fc now passed the complete native command;
+contact/navigation corrections97b4c50 and next-contract documentationf5c45f6 are
+included. Exactb349 ALL FIVE hosted gates passed:1566 API/3 explicit skips,
+209 browser, both Container jobs and both security gates; seven nonempty image
+inventories report0 vulnerabilities. Final independent whole-increment review
+returned SPEC PASS/QUALITY APPROVED with0 actionable findings. Manual-link
+development is accepted; no whole-MVP or final target qualification is claimed.
 
 ## Native schema slice
 
@@ -264,13 +269,132 @@ Next standalone-launcher, isolated PG local-trust and Redis host-overcommit
 notices remain disclosed for concrete packaged/runtime disposition; no host or
 security policy changed to silence them.
 
-## Remaining gates
+## Packaged continuation at b3495fc
 
-Observe panel-source exact hosted workflows and implement packaged relationship
-recreation/current-ACL proof. Obtain independent task and whole-increment reviews.
-Link lifecycle remains independent; task creation/automation/unified My Work
-require the next contract. Passing native backend checks alone does not close
-manual-link feature acceptance.
+Task4 adds scripts/packaged_ticket_work_proof.py and additive orchestration in
+container_smoke.py. A dedicated synthetic actor/customer/project/queue/requester
+keeps every incumbent singleton/version/activity assertion unchanged. Actual
+HTTP writes create both resources and their relationship; the existing native
+API/PostgreSQL recreation is followed by ordinary fresh actor/admin login.
+
+The complete native `uv run python scripts/container_smoke.py` passed exit0 in
+570.740 seconds on selected altvia-vm. Both Ruff script checks passed; all37,607
+mapped source/dependency/runner inputs were unchanged. Root independently matched
+all541 archived source files to Git blobs at exact
+b3495fc123a7163167b49365895f7c7f220ed522. The separately added ADR0040 documents
+do not change consumed image sources. Exact native five-image identities and
+source/command/proof hashes are retained with the private evidence.
+
+Actual proof: pair unchanged after recreation; original link/unlink receipts
+remain receipts through unlink/relink; absent DELETE is a no-op; both endpoint
+versions move independently to5/5 with ticket open and work in_progress. Both
+history feeds retain readable unlink history. Six reciprocal link events each
+have exactly one owner-queried ActivityEvent. Removing the actor's dedicated queue
+binding requires old-session401 and SAME-ACTOR fresh login; work remains200,
+ticket404, the retained pair persists, all three hidden work-side link-history
+events disappear, and the two ordinary work events remain with bounded cursors.
+This is one-direction packaged revocation; Task2 supplies both SQL directions.
+
+All incumbent native API/persistence/search/MyWork/SMTP/IMAPS/MIME/note/browser/
+resource assertions completed. Worker blackhole proof exited0 in6.632 seconds
+and recovered27 events. No timeout, retry, resource cap, original assertion or
+runtime permission was weakened. The signed scanner/file profile is a separate
+hosted Container gate and is not inferred from this non-file local command.
+
+Two browser blockers were resolved at their responsible owners. Delayed home RSC
+showed a back-link click returning while still on /admin/users: the old menu could
+open before route remount closed it. The old standalone navigation failed30s;
+waiting for the actual focused Minha conta heading before opening passed. Only
+the packaged test synchronization changed. Separately, exact60b Browser checks
+run43533721937 failed1/207passes before a contact POST: email text entered the name
+field. Pinned RHF7.91's setFocus schedules native focus with setTimeout, even from
+useLayoutEffect. Native ref.focus during layout removes that deferred focus.
+A paused-browser-clock keyboard test fails on the old image and passes with the
+correction; the complete contact module passed9 cases (33.9s), web check/build
+passed, and all37,615 mapped inputs stayed unchanged. Its contact source retained
+CRLF; canonical Git/native packaged source is LF-only with identical normalized
+content. Do not represent that earlier snapshot as byte-identical to Git.
+
+Failures remain recorded. Native Task4 run02 used an incorrect transient two-row
+ticket activity prefix; owner SQL proved assigned+created+linked, so only the new
+helper's counts changed to3/2,4/3,6/5 with explicit families. Run03 passed the new
+proof then failed the incumbent menu. Root continuation04 failed migrations:
+private tar preparation under umask077/data-filter extraction copied a nested
+migration directory as700. Retained-volume migration still failed; same-image
+native probing reproduced PermissionError on migrations/versions. Original
+container traceback was removed by incumbent cleanup and remains unavailable.
+The tentative PG-readiness hypothesis was falsified; no healthcheck changed.
+Continuation05 caught the same directory-mode preflight before running checks.
+Continuation06 normalizes only fresh public source directories to755 before
+freeze, preserving private parents/config/evidence and all source content hashes.
+This is an artifact-preparation correction, not a product migration change.
+
+Fresh independent source review found0 Critical/Important/Minor in the five
+affected source/proof files. Root inspected representative current mobile-dark
+and desktop-light contact captures; the visual world remains unchanged. Native
+Next standalone-launcher notice is retained; no launcher or host/security policy
+was changed to hide output. Final whole-increment review followed all exact
+gates and independently inspected native/FK/replay/history/browser boundaries
+and native/hosted evidence: SPEC PASS, QUALITY APPROVED,0 actionable findings.
+
+Safe evidence archives, verified against every exported file/native record:
+
+- Root diagnostics38files: SHA256
+  0bd4ad5e7657d6153e65ffb29bf6eb4643c083372066d23dc10bde98780eb406.
+- Native contact47files: SHA256
+  ab8f0c7981b1c8ff307cb19237909b5844944995b422426e6042e331fcd437a8;
+  later audit found0 matches against74 retained fixture/session secret canaries.
+- Passing packaged48files: SHA256
+  57d230aa1005c3d43f1063a0b50b8ef1817500759c7180b59b8fdaab470c9740.
+
+The packaged allowlist contains strict IDs/booleans/counts, top native streams,
+source/check hashes and post-login/empty-login captures. Synthetic login password
+and dynamic cookie/CSRF values were not separately retained/canaried there;
+no full Docker inspect, secret config, database dump or raw content was exported.
+Full failed attempts and startup observer streams remain private. All task
+containers stopped, volumes/config/evidence retained. The persistent native SSH
+shell is reused for ongoing independent development, not a production rollout.
+
+## Exact-source hosted acceptance
+
+All complete logs, job statuses and available artifacts are retained and checked
+against exactb3495fc123a7163167b49365895f7c7f220ed522. No hosted error marker or
+failed required step remains. The three native-console opt-ins are explicit
+skips, not executions; actual signed file runtime is separately proved below.
+The earlier concurrent Pydantic metadata warning was not observed in this API
+run, which does not establish its cause or silently close its historical branch.
+
+| Required workflow | Exact run | Observed result |
+| --- | --- | --- |
+| API checks | [43540621130](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43540621130) |1566 passed/3 explicit native-console skips, no warnings |
+| Browser checks | [43540620917](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43540620917) |209 passed, including contact focus and actual relationship panels |
+| Container checks | [43540620837](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43540620837) |api-runtime AND private-file-runtime passed |
+| Source security | [43540620864](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43540620864) |Passed |
+| Service image security | [43540620960](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43540620960) |7 nonempty inventories,0 reported vulnerabilities |
+
+Root matched every report SHA256 and Metadata.ImageID with the scanner manifest.
+API/postgres/ingress/web/redis/storage/clamav inventories contain72/49/70/43/16/
+107/38 packages respectively. These exact scanned image IDs are retained in
+the manifest; they are not relabeled the separate native build IDs. Scanner DB
+UpdatedAt2026-11-13T19:05:12Z and digest
+cf51a5a8c8421b80becfd304d0beac86f6e7e97412f6500512781e55aa3def3c
+bound the observed zero-finding result, not a timeless security guarantee.
+
+Both Container jobs completed the actual new relationship recreation/privacy
+proof. The private profile additionally exercised signed current ClamAV scanning,
+MIME/incoming privacy/recreation and matching6-object restore. The complete
+signed-current proof is retained in its artifact; no skip is used as a scanner
+or restore pass. Actual compatible-image rollback and encrypted backup remain
+separate from this logical matching restore.
+
+The final reviewer independently checked the pinned source and full feature
+invariants, all exact gate statuses, seven inventories, paired current-ACL JSON
+and signed6-object restore evidence. No Critical/Important/Minor source finding
+remains. Manual ticket/work-link development is accepted atb3495fc. ADR0040/its
+plan select the next read-only unified personal queue; that feature and structured
+automation are not accepted by this manual-link gate.
+
+## Remaining integrated gates
 
 Minimum compatible API/worker readers, guarded contraction and retained-history
 privacy remain required. Actual encrypted backup/compatible-image rollback and

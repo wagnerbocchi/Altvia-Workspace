@@ -61,6 +61,22 @@ above. No production rollout or general SSH/security configuration is implied.
 
 ## Delivery status
 
+Manual ticket/work Task4 source b3495fc passed the complete native packaged
+command (570.740s), original receipts/unlink/relink, independent state, once-only
+projection and current retained-history privacy after recreation/revocation.
+Contact focus/navigation correction97b4c50 passed the9-case contact module and
+web check/build; actual native menu RED/GREEN proof retained. Root's private
+snapshot directory-mode failure was diagnosed and corrected without changing
+migrations or healthchecks. Exactb349 Browser/source/image-security gates passed;
+all7 nonempty image inventories report0 vulnerabilities. API1566/3 explicit native
+skips,209 browser and both Container jobs passed. Final independent whole-increment
+review returned SPEC PASS/QUALITY APPROVED,0 actionable findings; manual links
+are accepted. See
+docs/ticket-work-link-evidence.md for original failures/source hashes/limits.
+Next ADR0040/planning commitf5c45f6 preserves legacy tasks while defining the
+authorized unified queue. Native backend TDD is in progress, not accepted UI or
+automation. Final integrated qualification remains deferred until development.
+
 Private-files Task4 is implemented in c5c668c with reviewed corrections 039a631.
 Local full175 at c5 and final scoped9 browser/3 child-output tests passed; final
 lint/types/build and contracts passed. Independent source review approved fixes;

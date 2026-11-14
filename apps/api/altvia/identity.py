@@ -9,7 +9,7 @@ from uuid import UUID
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError
-from sqlalchemy import delete, select
+from sqlalchemy import and_, delete, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -209,6 +209,29 @@ def authenticate(db: Session, token: str | None) -> tuple[User, SessionRecord]:
     return user, session
 
 
+def analytics_available(db: Session, user_id: UUID) -> bool:
+    # Operation availability is not customer/project/queue row authority.
+    return bool(
+        db.scalar(
+            select(RoleBinding.id)
+            .where(
+                RoleBinding.user_id == user_id,
+                or_(
+                    and_(
+                        RoleBinding.role_name == "operations_manager",
+                        RoleBinding.scope_kind.in_(("client", "queue")),
+                    ),
+                    and_(
+                        RoleBinding.role_name == "project_manager",
+                        RoleBinding.scope_kind == "project",
+                    ),
+                ),
+            )
+            .limit(1)
+        )
+    )
+
+
 def capabilities(db: Session, user: User) -> list[str]:
     admin = db.scalar(
         select(RoleBinding).where(
@@ -218,4 +241,7 @@ def capabilities(db: Session, user: User) -> list[str]:
         )
     )
     # A platform role never confers customer-content permissions.
-    return ["identity.manage"] if admin else []
+    result = ["identity.manage"] if admin else []
+    if analytics_available(db, user.id):
+        result.append("analytics.read")
+    return result

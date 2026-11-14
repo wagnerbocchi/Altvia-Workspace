@@ -65,33 +65,33 @@ scopes(db,actor_id,filters,cursor) -> AnalyticsScopePage. No ORM row-per-record 
 Current session auth remains a normal transaction; never enable a read-only DB
 transaction incompatible with last_seen updates. JSON output is bounded and typed.
 
-- [ ] RED a real native overview with managed/hidden rows before route/source.
+- [x] RED a real native overview with managed/hidden rows before route/source.
   Expected: missing GET404 or missing query effect, not a fixture failure.
-- [ ] Prove global admin/team metadata/agent/viewer non-grants, current ceiling/
+- [x] Prove global admin/team metadata/agent/viewer non-grants, current ceiling/
   membership/queue manager conjunction, partial scope, archived reads and revoked
   session/cursor. Coarse capability alone must return no unauthorized data/labels.
-- [ ] Prove zero/one/many N:N links, cross-owner responsibilities, hidden or
+- [x] Prove zero/one/many N:N links, cross-owner responsibilities, hidden or
   filtered work, same UUID across domains, completed work versus active ticket,
   independent priority/project/creation filters and before-page suppression.
-- [ ] Prove ordinary/ongoing/terminal/blocked/null responsibility; all scalar
+- [x] Prove ordinary/ongoing/terminal/blocked/null responsibility; all scalar
   identities and fixed-key distributions. Never add personal row counts together
   as global effort or infer work participants as principal owners.
-- [ ] Prove typed deadline equality, UTC offsets, DST DateDue boundaries,
+- [x] Prove typed deadline equality, UTC offsets, DST DateDue boundaries,
   microseconds, explicit window endpoints, paired creation period and strict
   malformed/repeated/unknown query/cursor/timezone input.
-- [ ] Prove configured/unconfigured/legacy latest cycles, retained breach and
+- [x] Prove configured/unconfigured/legacy latest cycles, retained breach and
   correction counts, hidden SLA records and current-history labels independent
   from reference_at. Do not execute or duplicate the SLA timing engine.
-- [ ] Implement one-statement overview/workload snapshots, no N+1 enrichment,
+- [x] Implement one-statement overview/workload snapshots, no N+1 enrichment,
   current actor-bound page cursors and visible context-only scope choices.
   Prove null bucket versus a real zero UUID, off-page eligible suppression and
   concurrent link/role changes without mixed snapshot output or stale grants.
-- [ ] Native benchmark: bulk synthetic 6000 eligible and6000 hidden work rows,
+- [x] Native benchmark: bulk synthetic 6000 eligible and6000 hidden work rows,
   linked tickets and multiple principals, rolled back afterward. Retain EXPLAIN
   ANALYZE/BUFFERS, fixed query count and cold/warm times. Acceptance budget2s per
   representative statement on the isolated development host; this is not a
   production capacity promise. Inspect plans before adding any index/migration.
-- [ ] Run affected reports/native identity/unified/ticket-work/SLA read regressions,
+- [x] Run affected reports/native identity/unified/ticket-work/SLA read regressions,
   Ruff/check/format/mypy and package build. Generate API/types twice, compare every
   old path/component exactly and run web check. Expected: real tests pass, stable
   new artifacts, every prior operation/schema unchanged. Commit persisted-data

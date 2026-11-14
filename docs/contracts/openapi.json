@@ -122,6 +122,488 @@
         "title": "ActivityPage",
         "type": "object"
       },
+      "AnalyticsFilters": {
+        "additionalProperties": false,
+        "properties": {
+          "client_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
+          "created_before": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created Before"
+          },
+          "created_from": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created From"
+          },
+          "due_through": {
+            "format": "date-time",
+            "title": "Due Through",
+            "type": "string"
+          },
+          "priority": {
+            "anyOf": [
+              {
+                "enum": [
+                  "low",
+                  "medium",
+                  "high",
+                  "critical"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Priority"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
+          "reference_at": {
+            "format": "date-time",
+            "title": "Reference At",
+            "type": "string"
+          },
+          "responsible_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responsible Id"
+          },
+          "team_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Team Id"
+          },
+          "timezone": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Timezone",
+            "type": "string"
+          },
+          "unassigned": {
+            "default": false,
+            "title": "Unassigned",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "reference_at",
+          "due_through",
+          "timezone"
+        ],
+        "title": "AnalyticsFilters",
+        "type": "object"
+      },
+      "AnalyticsOverview": {
+        "additionalProperties": false,
+        "properties": {
+          "active_no_due_date_count": {
+            "minimum": 0.0,
+            "title": "Active No Due Date Count",
+            "type": "integer"
+          },
+          "active_ticket_count": {
+            "minimum": 0.0,
+            "title": "Active Ticket Count",
+            "type": "integer"
+          },
+          "active_unified_count": {
+            "minimum": 0.0,
+            "title": "Active Unified Count",
+            "type": "integer"
+          },
+          "active_work_item_count": {
+            "minimum": 0.0,
+            "title": "Active Work Item Count",
+            "type": "integer"
+          },
+          "all_missing_deadline_count": {
+            "minimum": 0.0,
+            "title": "All Missing Deadline Count",
+            "type": "integer"
+          },
+          "blocked_work_item_count": {
+            "minimum": 0.0,
+            "title": "Blocked Work Item Count",
+            "type": "integer"
+          },
+          "due_soon_work_item_count": {
+            "minimum": 0.0,
+            "title": "Due Soon Work Item Count",
+            "type": "integer"
+          },
+          "filters": {
+            "$ref": "#/components/schemas/AnalyticsFilters"
+          },
+          "later_due_work_item_count": {
+            "minimum": 0.0,
+            "title": "Later Due Work Item Count",
+            "type": "integer"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "ongoing_work_item_count": {
+            "minimum": 0.0,
+            "title": "Ongoing Work Item Count",
+            "type": "integer"
+          },
+          "overdue_work_item_count": {
+            "minimum": 0.0,
+            "title": "Overdue Work Item Count",
+            "type": "integer"
+          },
+          "pending_customer_ticket_count": {
+            "minimum": 0.0,
+            "title": "Pending Customer Ticket Count",
+            "type": "integer"
+          },
+          "pending_third_party_ticket_count": {
+            "minimum": 0.0,
+            "title": "Pending Third Party Ticket Count",
+            "type": "integer"
+          },
+          "represented_ticket_count": {
+            "minimum": 0.0,
+            "title": "Represented Ticket Count",
+            "type": "integer"
+          },
+          "sla_configured_ticket_count": {
+            "minimum": 0.0,
+            "title": "Sla Configured Ticket Count",
+            "type": "integer"
+          },
+          "sla_corrected_ticket_count": {
+            "minimum": 0.0,
+            "title": "Sla Corrected Ticket Count",
+            "type": "integer"
+          },
+          "sla_last_observation_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sla Last Observation At"
+          },
+          "sla_legacy_ticket_count": {
+            "minimum": 0.0,
+            "title": "Sla Legacy Ticket Count",
+            "type": "integer"
+          },
+          "sla_recorded_breach_ticket_count": {
+            "minimum": 0.0,
+            "title": "Sla Recorded Breach Ticket Count",
+            "type": "integer"
+          },
+          "sla_unconfigured_ticket_count": {
+            "minimum": 0.0,
+            "title": "Sla Unconfigured Ticket Count",
+            "type": "integer"
+          },
+          "standalone_ticket_count": {
+            "minimum": 0.0,
+            "title": "Standalone Ticket Count",
+            "type": "integer"
+          },
+          "ticket_count": {
+            "minimum": 0.0,
+            "title": "Ticket Count",
+            "type": "integer"
+          },
+          "ticket_priority_counts": {
+            "$ref": "#/components/schemas/PriorityCounts"
+          },
+          "ticket_status_counts": {
+            "$ref": "#/components/schemas/TicketStatusCounts"
+          },
+          "unassigned_ticket_count": {
+            "minimum": 0.0,
+            "title": "Unassigned Ticket Count",
+            "type": "integer"
+          },
+          "unassigned_work_item_count": {
+            "minimum": 0.0,
+            "title": "Unassigned Work Item Count",
+            "type": "integer"
+          },
+          "unified_count": {
+            "minimum": 0.0,
+            "title": "Unified Count",
+            "type": "integer"
+          },
+          "work_item_count": {
+            "minimum": 0.0,
+            "title": "Work Item Count",
+            "type": "integer"
+          },
+          "work_priority_counts": {
+            "$ref": "#/components/schemas/PriorityCounts"
+          },
+          "work_status_counts": {
+            "$ref": "#/components/schemas/WorkStatusCounts"
+          }
+        },
+        "required": [
+          "active_work_item_count",
+          "active_ticket_count",
+          "blocked_work_item_count",
+          "ongoing_work_item_count",
+          "active_no_due_date_count",
+          "overdue_work_item_count",
+          "due_soon_work_item_count",
+          "later_due_work_item_count",
+          "observed_at",
+          "filters",
+          "work_item_count",
+          "ticket_count",
+          "represented_ticket_count",
+          "standalone_ticket_count",
+          "unified_count",
+          "active_unified_count",
+          "all_missing_deadline_count",
+          "unassigned_work_item_count",
+          "unassigned_ticket_count",
+          "pending_customer_ticket_count",
+          "pending_third_party_ticket_count",
+          "sla_legacy_ticket_count",
+          "sla_unconfigured_ticket_count",
+          "sla_configured_ticket_count",
+          "sla_recorded_breach_ticket_count",
+          "sla_corrected_ticket_count",
+          "sla_last_observation_at",
+          "work_status_counts",
+          "ticket_status_counts",
+          "work_priority_counts",
+          "ticket_priority_counts"
+        ],
+        "title": "AnalyticsOverview",
+        "type": "object"
+      },
+      "AnalyticsScope": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 150,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "AnalyticsScope",
+        "type": "object"
+      },
+      "AnalyticsScopePage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsScope"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "AnalyticsScopePage",
+        "type": "object"
+      },
+      "AnalyticsWorkloadPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsWorkloadRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "overview": {
+            "$ref": "#/components/schemas/AnalyticsOverview"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor",
+          "overview"
+        ],
+        "title": "AnalyticsWorkloadPage",
+        "type": "object"
+      },
+      "AnalyticsWorkloadRow": {
+        "additionalProperties": false,
+        "properties": {
+          "active_no_due_date_count": {
+            "minimum": 0.0,
+            "title": "Active No Due Date Count",
+            "type": "integer"
+          },
+          "active_ticket_count": {
+            "minimum": 0.0,
+            "title": "Active Ticket Count",
+            "type": "integer"
+          },
+          "active_work_item_count": {
+            "minimum": 0.0,
+            "title": "Active Work Item Count",
+            "type": "integer"
+          },
+          "blocked_work_item_count": {
+            "minimum": 0.0,
+            "title": "Blocked Work Item Count",
+            "type": "integer"
+          },
+          "due_soon_work_item_count": {
+            "minimum": 0.0,
+            "title": "Due Soon Work Item Count",
+            "type": "integer"
+          },
+          "later_due_work_item_count": {
+            "minimum": 0.0,
+            "title": "Later Due Work Item Count",
+            "type": "integer"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 150,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "ongoing_work_item_count": {
+            "minimum": 0.0,
+            "title": "Ongoing Work Item Count",
+            "type": "integer"
+          },
+          "overdue_work_item_count": {
+            "minimum": 0.0,
+            "title": "Overdue Work Item Count",
+            "type": "integer"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          }
+        },
+        "required": [
+          "active_work_item_count",
+          "active_ticket_count",
+          "blocked_work_item_count",
+          "ongoing_work_item_count",
+          "active_no_due_date_count",
+          "overdue_work_item_count",
+          "due_soon_work_item_count",
+          "later_due_work_item_count",
+          "user_id",
+          "name"
+        ],
+        "title": "AnalyticsWorkloadRow",
+        "type": "object"
+      },
       "AreaCreate": {
         "additionalProperties": false,
         "properties": {
@@ -3489,6 +3971,39 @@
         "title": "PolicyReceipt",
         "type": "object"
       },
+      "PriorityCounts": {
+        "additionalProperties": false,
+        "properties": {
+          "critical": {
+            "minimum": 0.0,
+            "title": "Critical",
+            "type": "integer"
+          },
+          "high": {
+            "minimum": 0.0,
+            "title": "High",
+            "type": "integer"
+          },
+          "low": {
+            "minimum": 0.0,
+            "title": "Low",
+            "type": "integer"
+          },
+          "medium": {
+            "minimum": 0.0,
+            "title": "Medium",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "low",
+          "medium",
+          "high",
+          "critical"
+        ],
+        "title": "PriorityCounts",
+        "type": "object"
+      },
       "ProjectCreate": {
         "additionalProperties": false,
         "properties": {
@@ -6377,6 +6892,51 @@
         "title": "TicketStates",
         "type": "object"
       },
+      "TicketStatusCounts": {
+        "additionalProperties": false,
+        "properties": {
+          "closed": {
+            "minimum": 0.0,
+            "title": "Closed",
+            "type": "integer"
+          },
+          "new": {
+            "minimum": 0.0,
+            "title": "New",
+            "type": "integer"
+          },
+          "open": {
+            "minimum": 0.0,
+            "title": "Open",
+            "type": "integer"
+          },
+          "pending_customer": {
+            "minimum": 0.0,
+            "title": "Pending Customer",
+            "type": "integer"
+          },
+          "pending_third_party": {
+            "minimum": 0.0,
+            "title": "Pending Third Party",
+            "type": "integer"
+          },
+          "resolved": {
+            "minimum": 0.0,
+            "title": "Resolved",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "new",
+          "open",
+          "pending_customer",
+          "pending_third_party",
+          "resolved",
+          "closed"
+        ],
+        "title": "TicketStatusCounts",
+        "type": "object"
+      },
       "TicketTransition": {
         "additionalProperties": false,
         "properties": {
@@ -7773,6 +8333,45 @@
         "title": "WorkReceipt",
         "type": "object"
       },
+      "WorkStatusCounts": {
+        "additionalProperties": false,
+        "properties": {
+          "blocked": {
+            "minimum": 0.0,
+            "title": "Blocked",
+            "type": "integer"
+          },
+          "cancelled": {
+            "minimum": 0.0,
+            "title": "Cancelled",
+            "type": "integer"
+          },
+          "done": {
+            "minimum": 0.0,
+            "title": "Done",
+            "type": "integer"
+          },
+          "in_progress": {
+            "minimum": 0.0,
+            "title": "In Progress",
+            "type": "integer"
+          },
+          "todo": {
+            "minimum": 0.0,
+            "title": "Todo",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "todo",
+          "in_progress",
+          "blocked",
+          "done",
+          "cancelled"
+        ],
+        "title": "WorkStatusCounts",
+        "type": "object"
+      },
       "WorkTicketPage": {
         "additionalProperties": false,
         "properties": {
@@ -7810,6 +8409,510 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/analytics/overview": {
+      "get": {
+        "operationId": "overview_api_v1_analytics_overview_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "reference_at",
+            "required": true,
+            "schema": {
+              "format": "date-time",
+              "title": "Reference At",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "due_through",
+            "required": true,
+            "schema": {
+              "format": "date-time",
+              "title": "Due Through",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timezone",
+            "required": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 1,
+              "title": "Timezone",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "priority",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high",
+                    "critical"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Priority"
+            }
+          },
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Client Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "team_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Team Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "responsible_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Responsible Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "unassigned",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Unassigned",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "created_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Created From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "created_before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Created Before"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Overview",
+        "tags": [
+          "Management analytics"
+        ]
+      }
+    },
+    "/api/v1/analytics/scopes": {
+      "get": {
+        "operationId": "scopes_api_v1_analytics_scopes_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "client",
+                "project",
+                "team",
+                "responsible"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 320,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsScopePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Scopes",
+        "tags": [
+          "Management analytics"
+        ]
+      }
+    },
+    "/api/v1/analytics/team-workload": {
+      "get": {
+        "operationId": "workload_api_v1_analytics_team_workload_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "reference_at",
+            "required": true,
+            "schema": {
+              "format": "date-time",
+              "title": "Reference At",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "due_through",
+            "required": true,
+            "schema": {
+              "format": "date-time",
+              "title": "Due Through",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timezone",
+            "required": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 1,
+              "title": "Timezone",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "priority",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high",
+                    "critical"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Priority"
+            }
+          },
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Client Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "team_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Team Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "responsible_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Responsible Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "unassigned",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Unassigned",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "created_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Created From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "created_before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Created Before"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 320,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsWorkloadPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Workload",
+        "tags": [
+          "Management analytics"
+        ]
+      }
+    },
     "/api/v1/attachments/{identifier}": {
       "get": {
         "operationId": "detail_api_v1_attachments__identifier__get",

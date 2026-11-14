@@ -13,6 +13,12 @@ gates,1900 API/3 explicit skips,234 browser,both Container jobs and seven nonemp
 zero-vulnerability image inventories. Next are analytics under ADR0043, the
 guarded importer and integrated hardening in
 docs/plans/2026-11-11-mvp-completion.md.
+Analytics read endpoints now have49 passing native cases, bounded full-set SQL
+reconciliation, real restricted-role reads and a12000-work/2400-ticket fixture
+below the selected2s development query budget. Generated prior contracts remain
+unchanged. An additional nonzero-state case and156 overlapping affected native
+regressions also passed. The real interface and integrated acceptance remain
+open; see docs/operational-analytics-evidence.md.
 Use the established Twenty-inspired Operate interface. The earlier stop-before-
 design boundary is superseded. Keep local/CI validation per slice and final
 consolidated target qualification after development; no production rollout or

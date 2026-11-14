@@ -14,6 +14,7 @@ from starlette.responses import JSONResponse
 
 from altvia import identity
 from altvia.activity_api import create_activity_router
+from altvia.analytics_api import create_analytics_router
 from altvia.attachment_api import create_attachment_router
 from altvia.automation_api import create_automation_router
 from altvia.automation_execution_api import create_execution_router
@@ -216,4 +217,5 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(create_milestone_router(engine, config))
     app.include_router(create_work_router(engine, config))
     app.include_router(create_unified_work_router(engine, config))
+    app.include_router(create_analytics_router(engine, config))
     return app

@@ -4,6 +4,57 @@
  */
 
 export interface paths {
+    "/api/v1/analytics/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Overview */
+        get: operations["overview_api_v1_analytics_overview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/scopes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Scopes */
+        get: operations["scopes_api_v1_analytics_scopes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/analytics/team-workload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Workload */
+        get: operations["workload_api_v1_analytics_team_workload_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/attachments/{identifier}": {
         parameters: {
             query?: never;
@@ -1572,6 +1623,151 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** AnalyticsFilters */
+        AnalyticsFilters: {
+            /** Client Id */
+            client_id?: string | null;
+            /** Created Before */
+            created_before?: string | null;
+            /** Created From */
+            created_from?: string | null;
+            /**
+             * Due Through
+             * Format: date-time
+             */
+            due_through: string;
+            /** Priority */
+            priority?: ("low" | "medium" | "high" | "critical") | null;
+            /** Project Id */
+            project_id?: string | null;
+            /**
+             * Reference At
+             * Format: date-time
+             */
+            reference_at: string;
+            /** Responsible Id */
+            responsible_id?: string | null;
+            /** Team Id */
+            team_id?: string | null;
+            /** Timezone */
+            timezone: string;
+            /**
+             * Unassigned
+             * @default false
+             */
+            unassigned: boolean;
+        };
+        /** AnalyticsOverview */
+        AnalyticsOverview: {
+            /** Active No Due Date Count */
+            active_no_due_date_count: number;
+            /** Active Ticket Count */
+            active_ticket_count: number;
+            /** Active Unified Count */
+            active_unified_count: number;
+            /** Active Work Item Count */
+            active_work_item_count: number;
+            /** All Missing Deadline Count */
+            all_missing_deadline_count: number;
+            /** Blocked Work Item Count */
+            blocked_work_item_count: number;
+            /** Due Soon Work Item Count */
+            due_soon_work_item_count: number;
+            filters: components["schemas"]["AnalyticsFilters"];
+            /** Later Due Work Item Count */
+            later_due_work_item_count: number;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+            /** Ongoing Work Item Count */
+            ongoing_work_item_count: number;
+            /** Overdue Work Item Count */
+            overdue_work_item_count: number;
+            /** Pending Customer Ticket Count */
+            pending_customer_ticket_count: number;
+            /** Pending Third Party Ticket Count */
+            pending_third_party_ticket_count: number;
+            /** Represented Ticket Count */
+            represented_ticket_count: number;
+            /** Sla Configured Ticket Count */
+            sla_configured_ticket_count: number;
+            /** Sla Corrected Ticket Count */
+            sla_corrected_ticket_count: number;
+            /** Sla Last Observation At */
+            sla_last_observation_at: string | null;
+            /** Sla Legacy Ticket Count */
+            sla_legacy_ticket_count: number;
+            /** Sla Recorded Breach Ticket Count */
+            sla_recorded_breach_ticket_count: number;
+            /** Sla Unconfigured Ticket Count */
+            sla_unconfigured_ticket_count: number;
+            /** Standalone Ticket Count */
+            standalone_ticket_count: number;
+            /** Ticket Count */
+            ticket_count: number;
+            ticket_priority_counts: components["schemas"]["PriorityCounts"];
+            ticket_status_counts: components["schemas"]["TicketStatusCounts"];
+            /** Unassigned Ticket Count */
+            unassigned_ticket_count: number;
+            /** Unassigned Work Item Count */
+            unassigned_work_item_count: number;
+            /** Unified Count */
+            unified_count: number;
+            /** Work Item Count */
+            work_item_count: number;
+            work_priority_counts: components["schemas"]["PriorityCounts"];
+            work_status_counts: components["schemas"]["WorkStatusCounts"];
+        };
+        /** AnalyticsScope */
+        AnalyticsScope: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
+        /** AnalyticsScopePage */
+        AnalyticsScopePage: {
+            /** Items */
+            items: components["schemas"]["AnalyticsScope"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** AnalyticsWorkloadPage */
+        AnalyticsWorkloadPage: {
+            /** Items */
+            items: components["schemas"]["AnalyticsWorkloadRow"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            overview: components["schemas"]["AnalyticsOverview"];
+        };
+        /** AnalyticsWorkloadRow */
+        AnalyticsWorkloadRow: {
+            /** Active No Due Date Count */
+            active_no_due_date_count: number;
+            /** Active Ticket Count */
+            active_ticket_count: number;
+            /** Active Work Item Count */
+            active_work_item_count: number;
+            /** Blocked Work Item Count */
+            blocked_work_item_count: number;
+            /** Due Soon Work Item Count */
+            due_soon_work_item_count: number;
+            /** Later Due Work Item Count */
+            later_due_work_item_count: number;
+            /** Name */
+            name: string | null;
+            /** Ongoing Work Item Count */
+            ongoing_work_item_count: number;
+            /** Overdue Work Item Count */
+            overdue_work_item_count: number;
+            /** User Id */
+            user_id: string | null;
+        };
         /** AreaCreate */
         AreaCreate: {
             /** Name */
@@ -2946,6 +3142,17 @@ export interface components {
              */
             queue_id: string;
         };
+        /** PriorityCounts */
+        PriorityCounts: {
+            /** Critical */
+            critical: number;
+            /** High */
+            high: number;
+            /** Low */
+            low: number;
+            /** Medium */
+            medium: number;
+        };
         /** ProjectCreate */
         ProjectCreate: {
             /** Client Id */
@@ -4069,6 +4276,21 @@ export interface components {
             /** Next Cursor */
             next_cursor: string | null;
         };
+        /** TicketStatusCounts */
+        TicketStatusCounts: {
+            /** Closed */
+            closed: number;
+            /** New */
+            new: number;
+            /** Open */
+            open: number;
+            /** Pending Customer */
+            pending_customer: number;
+            /** Pending Third Party */
+            pending_third_party: number;
+            /** Resolved */
+            resolved: number;
+        };
         /** TicketTransition */
         TicketTransition: {
             /** Reason */
@@ -4560,6 +4782,19 @@ export interface components {
              */
             work_item_id: string;
         };
+        /** WorkStatusCounts */
+        WorkStatusCounts: {
+            /** Blocked */
+            blocked: number;
+            /** Cancelled */
+            cancelled: number;
+            /** Done */
+            done: number;
+            /** In Progress */
+            in_progress: number;
+            /** Todo */
+            todo: number;
+        };
         /** WorkTicketPage */
         WorkTicketPage: {
             /** Items */
@@ -4576,6 +4811,123 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    overview_api_v1_analytics_overview_get: {
+        parameters: {
+            query: {
+                reference_at: string;
+                due_through: string;
+                timezone: string;
+                priority?: ("low" | "medium" | "high" | "critical") | null;
+                client_id?: string | null;
+                team_id?: string | null;
+                project_id?: string | null;
+                responsible_id?: string | null;
+                unassigned?: boolean;
+                created_from?: string | null;
+                created_before?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyticsOverview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scopes_api_v1_analytics_scopes_get: {
+        parameters: {
+            query: {
+                kind: "client" | "project" | "team" | "responsible";
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyticsScopePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    workload_api_v1_analytics_team_workload_get: {
+        parameters: {
+            query: {
+                reference_at: string;
+                due_through: string;
+                timezone: string;
+                priority?: ("low" | "medium" | "high" | "critical") | null;
+                client_id?: string | null;
+                team_id?: string | null;
+                project_id?: string | null;
+                responsible_id?: string | null;
+                unassigned?: boolean;
+                created_from?: string | null;
+                created_before?: string | null;
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyticsWorkloadPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     detail_api_v1_attachments__identifier__get: {
         parameters: {
             query?: never;

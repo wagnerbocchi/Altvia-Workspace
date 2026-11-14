@@ -9,6 +9,24 @@ from pydantic import Field, StrictBool, field_validator, model_validator
 from altvia.work_schemas import Priority, StrictModel, Title
 
 AssignmentStatus = Literal["new", "open", "pending_customer", "pending_third_party", "resolved"]
+ExecutionState = Literal[
+    "pending", "processing", "succeeded", "triage", "superseded", "cancelled", "dead"
+]
+ExecutionError = Literal[
+    "authorization_lost",
+    "project_unavailable",
+    "assignee_unavailable",
+    "ticket_state_changed",
+    "existing_work_needs_review",
+    "invalid_event",
+    "unsupported_event",
+    "broker_unavailable",
+    "processing_failed",
+    "attempts_exhausted",
+    "rule_disabled",
+    "source_superseded",
+    "lease_expired",
+]
 
 
 class RuleCreate(StrictModel):
@@ -83,3 +101,34 @@ class RuleOutput(StrictModel):
 class RulePage(StrictModel):
     items: list[RuleOutput]
     next_cursor: str | None
+
+
+class ExecutionEffect(StrictModel):
+    work_item_id: UUID
+    project_id: UUID
+    mode: Literal["created", "adopted"]
+
+
+class ExecutionOutput(StrictModel):
+    id: UUID
+    rule_id: UUID
+    action_id: UUID
+    rule_version: int
+    source_event_id: UUID
+    state: ExecutionState
+    attempts: int
+    error_code: ExecutionError | None
+    created_at: datetime
+    updated_at: datetime
+    version: int
+    can_retry: bool
+    effect: ExecutionEffect | None
+
+
+class ExecutionPage(StrictModel):
+    items: list[ExecutionOutput]
+    next_cursor: str | None
+
+
+class ExecutionReceipt(StrictModel):
+    execution_id: UUID

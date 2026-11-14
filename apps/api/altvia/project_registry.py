@@ -5,7 +5,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import Select, and_, or_, select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, noload
 from sqlalchemy.sql.selectable import Exists
 
 from altvia import client_registry, identity
@@ -76,9 +76,16 @@ def visible_projects(user_id: UUID) -> Select[tuple[Project, bool]]:
 
 
 def scoped_project(
-    db: Session, user_id: UUID, project_id: UUID, *, write: bool = False
+    db: Session,
+    user_id: UUID,
+    project_id: UUID,
+    *,
+    write: bool = False,
+    metadata_only: bool = False,
 ) -> tuple[Project, bool]:
     query = visible_projects(user_id).where(Project.id == project_id)
+    if metadata_only:
+        query = query.options(noload(Project.operational_area))
     if write:
         query = query.with_for_update(of=Project)
     row = db.execute(query).one_or_none()

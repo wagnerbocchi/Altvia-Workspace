@@ -3,13 +3,13 @@
 import re
 from datetime import UTC, datetime
 from typing import Annotated
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from fastapi import APIRouter, Query, Request, Response
 from sqlalchemy import Engine, select, tuple_
 from sqlalchemy.orm import Session, noload
 
-from altvia import attachment_links, identity, project_registry, work_queries
+from altvia import attachment_links, identity, project_registry, work_creation, work_queries
 from altvia import work_items as work
 from altvia.activity_api import ActivityPage, activity_page
 from altvia.admin_http import (
@@ -181,13 +181,7 @@ def create_work_router(engine: Engine, settings: Settings) -> APIRouter:
         with Session(engine) as db, db.begin():
             actor = authenticate_request(db, request, settings, write=True)
             permission = work.access(db, actor.id, body.project_id, write=True)
-            if not permission.manage and (
-                body.owner_id != actor.id
-                or body.assignee_ids
-                or body.parent_id
-                or body.external_participants
-            ):
-                raise identity.IdentityError(403, "forbidden")
+            work_creation.require_create(actor.id, permission, body)
             route = "work-create:" + str(body.project_id)
             canonical = body.model_dump(mode="json")
             if not body.external_participants:
@@ -197,48 +191,14 @@ def create_work_router(engine: Engine, settings: Settings) -> APIRouter:
             if saved:
                 response.status_code = 200
                 return WorkReceipt.model_validate(saved.result)
-            work.require_active(db, permission)
-            contributors = work.validate_assignments(
-                db, permission, body.owner_id, body.assignee_ids
+            item = work_creation.create_record(
+                db,
+                actor.id,
+                permission,
+                body,
+                now=datetime.now(UTC),
+                correlation_id=request.state.correlation_id,
             )
-            now = datetime.now(UTC)
-            item = WorkItem(
-                id=uuid4(),
-                project_id=body.project_id,
-                title=body.title,
-                description=body.description,
-                priority=body.priority,
-                work_type=body.work_type,
-                status="in_progress" if body.work_type == "ongoing" else "todo",
-                parent_id=body.parent_id,
-                owner_id=body.owner_id,
-                estimated_minutes=body.estimated_minutes,
-                version=1,
-                started_at=now if body.work_type == "ongoing" else None,
-                created_at=now,
-                updated_at=now,
-            )
-            work.validate_parent(db, item)
-            work.set_due(db, item, body.due)
-            item.assignees = [
-                WorkAssignee(user_id=user, user=contributors[user]) for user in body.assignee_ids
-            ]
-            item.external_participants = [
-                WorkExternalParticipant(unresolved_label=label)
-                for label in body.external_participants
-            ]
-            db.add(item)
-            db.flush()
-            db.add(
-                WorkStatusHistory(
-                    work_item_id=item.id,
-                    actor_id=actor.id,
-                    to_status=item.status,
-                    version=1,
-                    occurred_at=now,
-                )
-            )
-            _event(db, actor, item, request, "created")
             receipt = WorkReceipt(work_item_id=item.id, project_id=item.project_id)
             _remember(db, actor, route, key, fingerprint, receipt, 201)
             return receipt

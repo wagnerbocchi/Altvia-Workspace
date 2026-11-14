@@ -554,6 +554,8 @@ effect means no changed owner/state/due/link, including after manual unlink.
 
 GET /tickets/{ticket_id}/automation-executions pages actual scoped outcomes;
 current target scope is required before including mapped rows or cursor metadata.
+Protected recovery reads its original source through migration30's restricted
+assignment-only view; it grants no API access to unrelated outbox payloads.
 Protected POST on /{execution_id}/retry uses execution If-Match, current stronger
 configuration/content authority and the original immutable source/revision.
 No lease token, raw payload or generic private execution ID enters activity DTOs.

@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -228,40 +227,3 @@ def stage_assignment(db: Session, event: OutboxEvent, ticket: Ticket) -> None:
             source_event_id=event.event_id,
         )
     )
-
-
-class _RuleMetadata(BaseModel):
-    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
-    actor_id: UUID
-    actor_kind: str
-    rule_id: UUID
-    queue_id: UUID
-    client_id: UUID
-    changed_fields: str | None = Field(default=None, max_length=100)
-
-
-def validate_private_event(event: OutboxEvent) -> None:
-    """Acknowledge strict metadata only; this confers no shared-feed audience."""
-    payload = _RuleMetadata.model_validate(event.payload)
-    if (
-        event.schema_version != 1
-        or event.aggregate_type != "automation_rule"
-        or event.aggregate_id != payload.rule_id
-        or event.aggregate_version < 1
-        or payload.actor_kind != "user"
-    ):
-        raise ValueError("Invalid automation metadata")
-    fields = event.payload.keys()
-    if event.event_type == "automation.rule_created":
-        if "changed_fields" in fields:
-            raise ValueError("Unexpected creation fields")
-    elif event.event_type == "automation.rule_updated":
-        names = payload.changed_fields.split(",") if payload.changed_fields else []
-        if (
-            not names
-            or len(set(names)) != len(names)
-            or not set(names) <= {"enabled", "title", "priority", "ticket_statuses"}
-        ):
-            raise ValueError("Invalid updated fields")
-    else:
-        raise ValueError("Unsupported automation metadata")

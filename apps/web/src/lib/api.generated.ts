@@ -1138,6 +1138,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tickets/{ticket_id}/automation-executions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listing */
+        get: operations["listing_api_v1_tickets__ticket_id__automation_executions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tickets/{ticket_id}/automation-executions/{execution_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retry */
+        post: operations["retry_api_v1_tickets__ticket_id__automation_executions__execution_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/users": {
         parameters: {
             query?: never;
@@ -2041,6 +2075,88 @@ export interface components {
              * Format: uuid
              */
             ticket_id: string;
+        };
+        /** ExecutionEffect */
+        ExecutionEffect: {
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "created" | "adopted";
+            /**
+             * Project Id
+             * Format: uuid
+             */
+            project_id: string;
+            /**
+             * Work Item Id
+             * Format: uuid
+             */
+            work_item_id: string;
+        };
+        /** ExecutionOutput */
+        ExecutionOutput: {
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /** Attempts */
+            attempts: number;
+            /** Can Retry */
+            can_retry: boolean;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            effect: components["schemas"]["ExecutionEffect"] | null;
+            /** Error Code */
+            error_code: ("authorization_lost" | "project_unavailable" | "assignee_unavailable" | "ticket_state_changed" | "existing_work_needs_review" | "invalid_event" | "unsupported_event" | "broker_unavailable" | "processing_failed" | "attempts_exhausted" | "rule_disabled" | "source_superseded" | "lease_expired") | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Rule Id
+             * Format: uuid
+             */
+            rule_id: string;
+            /** Rule Version */
+            rule_version: number;
+            /**
+             * Source Event Id
+             * Format: uuid
+             */
+            source_event_id: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "pending" | "processing" | "succeeded" | "triage" | "superseded" | "cancelled" | "dead";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+        };
+        /** ExecutionPage */
+        ExecutionPage: {
+            /** Items */
+            items: components["schemas"]["ExecutionOutput"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** ExecutionReceipt */
+        ExecutionReceipt: {
+            /**
+             * Execution Id
+             * Format: uuid
+             */
+            execution_id: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -7350,6 +7466,84 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listing_api_v1_tickets__ticket_id__automation_executions_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                ticket_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExecutionPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_api_v1_tickets__ticket_id__automation_executions__execution_id__retry_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "If-Match": string;
+            };
+            path: {
+                ticket_id: string;
+                execution_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExecutionReceipt"];
+                };
+            };
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExecutionReceipt"];
+                };
             };
             /** @description Validation Error */
             422: {

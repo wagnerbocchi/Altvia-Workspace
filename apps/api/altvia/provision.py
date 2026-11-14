@@ -50,6 +50,7 @@ ROLE_PRIVILEGES = {
         "automation_rule_revisions": {"SELECT", "INSERT"},
         "automation_executions": {"SELECT", "INSERT"},
         "automation_effects": {"SELECT"},
+        "automation_assignment_sources": {"SELECT"},
         "ticket_status_history": {"SELECT", "INSERT"},
         "attachments": {"SELECT", "INSERT"},
         "ticket_notes": {"SELECT", "INSERT"},
@@ -69,6 +70,14 @@ ROLE_PRIVILEGES = {
         "work_item_status_history": {"SELECT", "INSERT"},
     },
     "altvia_worker": {
+        "automation_rules": {"SELECT"},
+        "automation_rule_revisions": {"SELECT"},
+        "automation_executions": {"SELECT"},
+        "automation_effects": {"SELECT", "INSERT"},
+        "automation_assignment_sources": {"SELECT"},
+        "work_items": {"INSERT"},
+        "work_item_status_history": {"INSERT"},
+        "ticket_work_items": {"SELECT", "INSERT"},
         "outbox_events": {"SELECT", "INSERT"},
         "outbound_messages": {"SELECT"},
         "attachment_scan_attempts": {"SELECT", "INSERT"},
@@ -86,6 +95,16 @@ APP_COLUMN_READS = {
 }
 APP_COLUMN_UPDATES = {
     "automation_rules": {"version", "updated_at", "cancelled_through_version"},
+    "automation_executions": {
+        "state",
+        "attempts",
+        "version",
+        "error_code",
+        "lease_token",
+        "lease_until",
+        "next_attempt_at",
+        "updated_at",
+    },
     "mail_triage_cases": {"state", "version", "ticket_id", "incoming_message_id"},
     "attachments": RETRY_UPDATES,
 }
@@ -93,13 +112,64 @@ WORKER_COLUMN_READS = {
     # Incoming file publication adds no worker parent/name/case privileges.
     # Creation-only case-set triggers must not run on these scan updates.
     "attachments": SCAN_COLUMNS,
-    "users": {"id", "active"},
-    "tickets": {"id", "client_id", "queue_id", "requester_id", "assignee_id", "status"},
-    "role_bindings": {"user_id", "scope_kind", "queue_id", "role_name"},
+    "users": {"id", "active", "display_name"},
+    "tickets": {
+        "id",
+        "client_id",
+        "queue_id",
+        "requester_id",
+        "assignee_id",
+        "status",
+        "version",
+        "updated_at",
+    },
+    "role_bindings": {
+        "id",
+        "user_id",
+        "scope_kind",
+        "queue_id",
+        "role_name",
+        "team_id",
+        "client_id",
+        "project_id",
+        "note_access",
+    },
     "client_access_grants": {"user_id", "client_id"},
-    "clients": {"id", "active"},
-    "teams": {"id", "active"},
-    "ticket_queues": {"id", "team_id", "active"},
+    "clients": {
+        "id",
+        "name",
+        "active",
+        "default_project_id",
+        "version",
+        "created_at",
+        "updated_at",
+    },
+    "teams": {"id", "name", "active", "version", "created_at", "updated_at"},
+    "ticket_queues": {
+        "id",
+        "team_id",
+        "name",
+        "active",
+        "version",
+        "created_at",
+        "updated_at",
+        "allow_manual_close",
+        "allow_reopen",
+    },
+    "projects": {
+        "id",
+        "name",
+        "active",
+        "version",
+        "scope_kind",
+        "client_id",
+        "team_id",
+        "operational_area_id",
+        "created_at",
+        "updated_at",
+    },
+    "project_members": {"project_id", "user_id", "created_at"},
+    "work_items": {"id", "project_id", "parent_id", "owner_id", "status", "version", "updated_at"},
     "client_contacts": {"id", "client_id", "active", "email_normalized"},
     "ticket_participants": {"id", "ticket_id", "contact_id", "email", "active"},
 }
@@ -114,6 +184,29 @@ DELIVERY_STATUS_COLUMNS = {
     "accepted_at",
 }
 WORKER_STATUS_COLUMNS = {"status", "attempts", "next_attempt_at", "lease_until", "last_error_code"}
+WORKER_COLUMN_UPDATES = {
+    "outbox_events": WORKER_STATUS_COLUMNS,
+    "outbound_messages": DELIVERY_STATUS_COLUMNS,
+    "attachments": SCAN_UPDATES,
+    "automation_executions": {
+        "state",
+        "attempts",
+        "version",
+        "lease_token",
+        "lease_until",
+        "next_attempt_at",
+        "error_code",
+        "updated_at",
+    },
+    # PostgreSQL row-lock SELECT requires UPDATE on at least one column. These
+    # metadata-only grants never permit changing configuration, scope or grants.
+    "automation_rules": {"updated_at"},
+    "clients": {"updated_at"},
+    "teams": {"updated_at"},
+    "ticket_queues": {"updated_at"},
+    "tickets": {"version", "updated_at"},
+    "work_items": {"version", "updated_at"},
+}
 
 
 def provision_runtime(engine: Engine, runtime_url: str, worker_url: str | None = None) -> None:
@@ -218,14 +311,7 @@ def _provision_role(connection: Connection, engine: Engine, login_url: str, name
                     )
                     or (
                         g.privilege_type == "UPDATE"
-                        and g.column_name
-                        in (
-                            {
-                                "outbox_events": WORKER_STATUS_COLUMNS,
-                                "outbound_messages": DELIVERY_STATUS_COLUMNS,
-                                "attachments": SCAN_UPDATES,
-                            }.get(g.relname, set())
-                        )
+                        and g.column_name in WORKER_COLUMN_UPDATES.get(g.relname, set())
                     )
                 )
             )
@@ -280,11 +366,6 @@ def _provision_role(connection: Connection, engine: Engine, login_url: str, name
                 )
             )
     if name == "altvia_worker":
-        raw.execute(
-            sql.SQL("GRANT UPDATE ({}) ON public.attachments TO altvia_worker").format(
-                sql.SQL(",").join(sql.Identifier(c) for c in sorted(SCAN_UPDATES))
-            )
-        )
         for table, columns in WORKER_COLUMN_READS.items():
             raw.execute(
                 sql.SQL("GRANT SELECT ({}) ON {} TO altvia_worker").format(
@@ -292,18 +373,13 @@ def _provision_role(connection: Connection, engine: Engine, login_url: str, name
                     sql.Identifier("public", table),
                 )
             )
-        raw.execute(
-            sql.SQL("GRANT UPDATE ({}) ON public.outbound_messages TO altvia_worker").format(
-                sql.SQL(",").join(sql.Identifier(c) for c in sorted(DELIVERY_STATUS_COLUMNS))
-            )
-        )
-        raw.execute(
-            sql.SQL("GRANT UPDATE ({}) ON public.outbox_events TO altvia_worker").format(
-                sql.SQL(",").join(
-                    sql.Identifier(column) for column in sorted(WORKER_STATUS_COLUMNS)
+        for table, columns in WORKER_COLUMN_UPDATES.items():
+            raw.execute(
+                sql.SQL("GRANT UPDATE ({}) ON {} TO altvia_worker").format(
+                    sql.SQL(",").join(sql.Identifier(c) for c in sorted(columns)),
+                    sql.Identifier("public", table),
                 )
             )
-        )
 
 
 def main() -> int:

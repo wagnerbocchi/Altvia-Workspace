@@ -6,7 +6,7 @@ from typing import Any
 from uuid import UUID
 
 from sqlalchemy import Select, and_, func, literal_column, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, load_only, noload
 
 from altvia import identity
 from altvia.attachment_links import summaries
@@ -170,11 +170,32 @@ def visible(user_id: UUID) -> Select[tuple[Ticket, str, bool, str]]:
 
 
 def scoped_ticket(
-    db: Session, actor_id: UUID, identifier: UUID, *, write: bool = False
+    db: Session,
+    actor_id: UUID,
+    identifier: UUID,
+    *,
+    write: bool = False,
+    metadata_only: bool = False,
 ) -> tuple[Ticket, Access]:
     query = (
         visible(actor_id).where(Ticket.id == identifier).execution_options(populate_existing=True)
     )
+    if metadata_only:
+        query = query.options(
+            load_only(
+                Ticket.id,
+                Ticket.client_id,
+                Ticket.queue_id,
+                Ticket.assignee_id,
+                Ticket.status,
+                Ticket.version,
+                Ticket.updated_at,
+                raiseload=True,
+            ),
+            noload(Ticket.requester),
+            noload(Ticket.category),
+            noload(Ticket.assignee),
+        )
     row = db.execute(query).one_or_none()
     if row is None:
         raise identity.IdentityError(404, "not_found")
@@ -261,7 +282,11 @@ def candidates(queue_id: UUID, client_id: UUID) -> Select[tuple[User]]:
         .correlate(User)
         .exists()
     )
-    return select(User).where(User.active, bound, ceiling)
+    return (
+        select(User)
+        .options(load_only(User.id, User.display_name, User.active, raiseload=True))
+        .where(User.active, bound, ceiling)
+    )
 
 
 def validate_assignee(db: Session, access: Access, identifier: UUID | None) -> None:

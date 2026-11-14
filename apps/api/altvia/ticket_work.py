@@ -70,6 +70,7 @@ def change_link(
     linked: bool,
     now: datetime,
     correlation_id: str,
+    origin: identity.AutomationOrigin | None = None,
 ) -> bool:
     ticket, work = pair.ticket, pair.work_item
     existing = db.get(TicketWorkItem, (ticket.id, work.id))
@@ -113,6 +114,7 @@ def change_link(
         ticket.version,
         aggregate_type="ticket",
         details=details,
+        origin=origin,
     )
     identity.record_event(
         db,
@@ -124,6 +126,7 @@ def change_link(
         work.version,
         aggregate_type="work_item",
         details=details,
+        origin=origin,
     )
     return True
 

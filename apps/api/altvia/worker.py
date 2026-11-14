@@ -22,7 +22,7 @@ from sqlalchemy import Engine, func, or_, select, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from altvia import attachment_scan, mail_delivery
+from altvia import attachment_scan, automation_execution, mail_delivery
 from altvia.activity import CONSUMER, claim_events, consume_event, publication_failed, replay_event
 from altvia.config import WorkerSettings
 from altvia.database import make_engine
@@ -93,7 +93,23 @@ def build_worker(
     registered = actor(broker=broker, actor_name=CONSUMER, queue_name="identity", max_retries=0)(
         project_identity
     )
-    queues = {"identity"}
+
+    def assign_work(execution_id: str, lease_token: str) -> None:
+        try:
+            identifier, token = UUID(execution_id), UUID(lease_token)
+        except (TypeError, ValueError, AttributeError):
+            LOGGER.warning("", extra={"event_code": "invalid_message"})
+            return
+        try:
+            automation_execution.consume(engine, identifier, token, datetime.now(UTC))
+        except SQLAlchemyError:
+            # Only the persisted lease can authorize a later attempt.
+            LOGGER.error("", extra={"event_code": "assignment_database_unavailable"})
+
+    actor(broker=broker, actor_name="assignment_work", queue_name="automation", max_retries=0)(
+        assign_work
+    )
+    queues = {"identity", "automation"}
     if accounts:
 
         def send_mail(delivery_id: str) -> None:
@@ -235,6 +251,25 @@ def dispatch_once(
     return sent
 
 
+def dispatch_assignment_once(
+    engine: Engine, broker: RedisBroker, now: datetime, stop: Event | None = None
+) -> int:
+    if stop is not None and stop.is_set():
+        return 0
+    registered = broker.get_actor("assignment_work")
+    sent = 0
+    for identifier, token in automation_execution.claim_due(engine, now):
+        if stop is not None and stop.is_set():
+            break
+        try:
+            registered.send(str(identifier), str(token))
+            sent += 1
+        except RedisError:
+            automation_execution.publication_failed(engine, identifier, token, now)
+            LOGGER.warning("", extra={"event_code": "assignment_broker_unavailable"})
+    return sent
+
+
 def healthy(engine: Engine, broker: RedisBroker, heartbeat: Path) -> bool:
     if not heartbeat.is_file() or not 0 <= time.time() - heartbeat.stat().st_mtime < 30:
         return False
@@ -305,6 +340,7 @@ def main() -> int:
         while not stop.is_set():
             try:
                 count = dispatch_once(engine, registered, datetime.now(UTC), stop)
+                count += dispatch_assignment_once(engine, broker, datetime.now(UTC), stop)
                 count += dispatch_mail_once(engine, broker, accounts, stop)
                 count += dispatch_file_once(engine, broker, stop)
                 if stop.is_set():

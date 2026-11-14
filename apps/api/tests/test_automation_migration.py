@@ -98,6 +98,31 @@ def test_assignment_ledger_schema_exists(db_engine):
     assert TABLES <= set(inspect(db_engine).get_table_names())
 
 
+def test_assignment_source_view_roundtrip_preserves_populated_ledger(db_engine, ledger):
+    with db_engine.connect() as connection:
+        assert (
+            connection.scalar(
+                text(
+                    "SELECT 'security_barrier=true'=ANY(reloptions) FROM pg_class "
+                    "WHERE oid='public.automation_assignment_sources'::regclass"
+                )
+            )
+            is True
+        )
+        before = {
+            table: connection.scalar(text(f"SELECT count(*) FROM {table}")) for table in TABLES
+        }
+    config = Config("apps/api/alembic.ini")
+    command.downgrade(config, "b46087000029")
+    assert "automation_assignment_sources" not in inspect(db_engine).get_view_names()
+    with db_engine.connect() as connection:
+        assert {
+            table: connection.scalar(text(f"SELECT count(*) FROM {table}")) for table in TABLES
+        } == before
+    command.upgrade(config, "head")
+    assert "automation_assignment_sources" in inspect(db_engine).get_view_names()
+
+
 def test_rule_revision_scope_and_native_value_constraints(db_engine, ledger):
     rule, revision, _, _ = ledger
     rejected(db_engine, "automation_rules", {**rule, "id": uuid4()}, "23505")
@@ -247,7 +272,7 @@ def test_effect_native_context_receipt_survives_unlink(db_engine, ledger, seeded
         assert caught.value.orig.sqlstate == "23503"
 
 
-def test_ledger_api_columns_and_no_premature_worker_writer(db_engine, ledger):
+def test_ledger_api_and_worker_cannot_rewrite_immutable_context(db_engine, ledger):
     from altvia.provision import provision_runtime
 
     api = runtime_url(db_engine)
@@ -269,7 +294,18 @@ def test_ledger_api_columns_and_no_premature_worker_writer(db_engine, ledger):
                 "DELETE FROM automation_effects",
             ],
         ),
-        (worker, [f"SELECT * FROM {table}" for table in sorted(TABLES)]),
+        (
+            worker,
+            [
+                "UPDATE automation_rules SET action_id=action_id",
+                "UPDATE automation_rule_revisions SET title=title",
+                "UPDATE automation_executions SET ticket_id=ticket_id",
+                "UPDATE automation_effects SET mode=mode",
+                "DELETE FROM automation_rules",
+                "DELETE FROM automation_effects",
+                "INSERT INTO automation_executions SELECT * FROM automation_executions",
+            ],
+        ),
     ):
         engine = create_engine(url, hide_parameters=True)
         try:

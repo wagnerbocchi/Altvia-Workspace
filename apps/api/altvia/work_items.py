@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy import Select, and_, false, or_, select, text, true
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, load_only, noload
 
 from altvia import identity, project_registry
 from altvia.deadlines import due_output as due_output
@@ -80,11 +80,24 @@ def candidates(project: Project) -> Select[tuple[User]]:
         if project.client_id
         else true()
     )
-    return select(User).where(User.active.is_(True), or_(direct, inherited), ceiling)
+    return (
+        select(User)
+        .options(load_only(User.id, User.display_name, User.active, raiseload=True))
+        .where(User.active.is_(True), or_(direct, inherited), ceiling)
+    )
 
 
-def access(db: Session, user_id: UUID, project_id: UUID, *, write: bool = False) -> Access:
-    project, manage = project_registry.scoped_project(db, user_id, project_id)
+def access(
+    db: Session,
+    user_id: UUID,
+    project_id: UUID,
+    *,
+    write: bool = False,
+    metadata_only: bool = False,
+) -> Access:
+    project, manage = project_registry.scoped_project(
+        db, user_id, project_id, metadata_only=metadata_only
+    )
     contribute = manage or db.scalar(candidates(project).where(User.id == user_id)) is not None
     if write:
         if not contribute:
@@ -111,13 +124,33 @@ def require_active(db: Session, permission: Access) -> None:
 
 
 def scoped_work(
-    db: Session, user_id: UUID, identifier: UUID, *, write: bool = False
+    db: Session,
+    user_id: UUID,
+    identifier: UUID,
+    *,
+    write: bool = False,
+    metadata_only: bool = False,
 ) -> tuple[WorkItem, Access]:
     project_id = db.scalar(select(WorkItem.project_id).where(WorkItem.id == identifier))
     if project_id is None:
         raise identity.IdentityError(404, "not_found")
-    permission = access(db, user_id, project_id, write=write)
+    permission = access(db, user_id, project_id, write=write, metadata_only=metadata_only)
     query = select(WorkItem).where(WorkItem.id == identifier)
+    if metadata_only:
+        query = query.options(
+            load_only(
+                WorkItem.id,
+                WorkItem.project_id,
+                WorkItem.owner_id,
+                WorkItem.status,
+                WorkItem.version,
+                WorkItem.updated_at,
+                raiseload=True,
+            ),
+            noload(WorkItem.owner),
+            noload(WorkItem.assignees),
+            noload(WorkItem.external_participants),
+        )
     if write:
         query = query.with_for_update(of=WorkItem)
     item = db.scalars(query).one()

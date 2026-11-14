@@ -16,6 +16,7 @@ from altvia import identity
 from altvia.activity_api import create_activity_router
 from altvia.attachment_api import create_attachment_router
 from altvia.automation_api import create_automation_router
+from altvia.automation_execution_api import create_execution_router
 from altvia.client_api import create_client_router
 from altvia.config import Settings
 from altvia.contact_api import create_contact_router
@@ -203,6 +204,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(create_project_router(engine, config))
     app.include_router(create_queue_router(engine, config))
     app.include_router(create_automation_router(engine, config))
+    app.include_router(create_execution_router(engine, config))
     app.include_router(create_ticket_router(engine, config))
     app.include_router(create_ticket_work_router(engine, config))
     app.include_router(create_mail_delivery_router(engine, config))

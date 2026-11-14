@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_valida
 from sqlalchemy import Engine, and_, or_, select
 from sqlalchemy.orm import Session
 
+from altvia import automation_events
 from altvia.mail_cases import CASE_EVENTS, validate_case_event
 from altvia.mail_intake import INTAKE_EVENTS, validate_intake_event
 from altvia.models import ActivityEvent, AuditLog, OutboxEvent, ProcessedEvent
@@ -338,7 +339,7 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
             # strictly redacted metadata; raw tables remain inaccessible here.
             try:
                 if event.event_type.startswith("automation."):
-                    from altvia.automation_rules import validate_private_event
+                    from altvia.automation_events import validate_private_event
 
                     validate_private_event(event)
                 elif event.event_type.startswith("file."):
@@ -363,6 +364,29 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
             db.add(ProcessedEvent(consumer=CONSUMER, event_id=event_id, processed_at=now))
             event.status, event.lease_until, event.last_error_code = "delivered", None, None
             return True
+        if event.schema_version == 2 and event.event_type in automation_events.DOMAIN_EVENTS:
+            try:
+                automated = automation_events.validate_domain_event(db, event)
+            except (ValueError, ValidationError):
+                event.status, event.last_error_code, event.lease_until = (
+                    "dead",
+                    "invalid_event",
+                    None,
+                )
+                return False
+            automated_details: dict[str, str | None] = {
+                key: str(value)
+                for key, value in automated.model_dump(exclude_none=True).items()
+                if key not in {"actor_id", "actor_kind"}
+            }
+            return _project_activity(
+                db,
+                event,
+                now,
+                automated.actor_id,
+                automated.actor_kind,
+                automated_details,
+            )
         if (
             event.event_type
             not in EVENT_TYPES
@@ -612,23 +636,34 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
             details["old_assignee_id"] = (
                 str(payload.old_assignee_id) if payload.old_assignee_id is not None else None
             )
-        db.add(ProcessedEvent(consumer=CONSUMER, event_id=event_id, processed_at=now))
-        db.add(
-            ActivityEvent(
-                event_id=event_id,
-                resource_type=event.aggregate_type,
-                resource_id=event.aggregate_id,
-                event_type=event.event_type,
-                occurred_at=event.occurred_at,
-                actor_id=payload.actor_id,
-                actor_kind=payload.actor_kind,
-                aggregate_version=event.aggregate_version,
-                correlation_id=event.correlation_id,
-                details=details,
-            )
+        return _project_activity(db, event, now, payload.actor_id, payload.actor_kind, details)
+
+
+def _project_activity(
+    db: Session,
+    event: OutboxEvent,
+    now: datetime,
+    actor_id: UUID | None,
+    actor_kind: str,
+    details: dict[str, str | None],
+) -> bool:
+    db.add(ProcessedEvent(consumer=CONSUMER, event_id=event.event_id, processed_at=now))
+    db.add(
+        ActivityEvent(
+            event_id=event.event_id,
+            resource_type=event.aggregate_type,
+            resource_id=event.aggregate_id,
+            event_type=event.event_type,
+            occurred_at=event.occurred_at,
+            actor_id=actor_id,
+            actor_kind=actor_kind,
+            aggregate_version=event.aggregate_version,
+            correlation_id=event.correlation_id,
+            details=details,
         )
-        event.status, event.lease_until, event.last_error_code = "delivered", None, None
-        return True
+    )
+    event.status, event.lease_until, event.last_error_code = "delivered", None, None
+    return True
 
 
 def replay_event(engine: Engine, event_id: UUID, now: datetime) -> bool:

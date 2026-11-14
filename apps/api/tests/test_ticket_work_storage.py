@@ -42,7 +42,8 @@ PARENT_GRANTS = text(
     "SELECT grantee,table_name,privilege_type FROM information_schema.table_privileges "
     # These descendants are recreated above28, not incumbent parent tables.
     "WHERE table_schema='public' AND table_name NOT IN ('ticket_work_items',"
-    "'automation_rules','automation_rule_revisions','automation_executions','automation_effects') "
+    "'automation_rules','automation_rule_revisions','automation_executions','automation_effects',"
+    "'automation_assignment_sources') "
     "ORDER BY grantee,table_name,privilege_type"
 )
 
@@ -184,7 +185,9 @@ def test_ticket_work_runtime_privileges(admin_client, db_engine, seeded_user):
                     )
                 )
                 if url == worker_url:
-                    assert not connection.scalar(
+                    # Assignment execution is now a real native second writer;
+                    # grant reads/inserts, never arbitrary mutation or removal.
+                    assert connection.scalar(
                         text(
                             "SELECT has_any_column_privilege("
                             "current_user,'ticket_work_items','SELECT')"
@@ -199,15 +202,14 @@ def test_ticket_work_runtime_privileges(admin_client, db_engine, seeded_user):
                     "TRUNCATE ticket_work_items",
                 ]
             else:
+                with engine.begin() as connection:
+                    connection.execute(INSERT, values(context, seeded_user))
+                    assert connection.scalar(text("SELECT count(*) FROM ticket_work_items")) == 1
                 denied = [
-                    "SELECT * FROM ticket_work_items",
                     "UPDATE ticket_work_items SET relation_type='related'",
                     "DELETE FROM ticket_work_items",
                     "TRUNCATE ticket_work_items",
                 ]
-                with pytest.raises(DBAPIError) as caught, engine.begin() as connection:
-                    connection.execute(INSERT, values(context, seeded_user))
-                assert caught.value.orig.sqlstate == "42501"
             for statement in denied:
                 with pytest.raises(DBAPIError) as caught, engine.begin() as connection:
                     connection.execute(text(statement))

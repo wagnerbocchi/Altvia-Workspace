@@ -109,7 +109,9 @@ query fields only. Name/ID alone supplies no grant. No DELETE endpoint.
 
 ## Task 2: Native atomic effect, lease recovery and truthful activity
 
-Files: add apps/api/altvia/automation_execution.py and work_creation.py; extend
+Files: add apps/api/altvia/automation_execution.py, automation_events.py,
+automation_execution_api.py and work_creation.py; migration30 adds the restricted
+source view needed by actual API recovery without base-outbox reads; extend
 work_api.py, work_items.py, tickets.py, ticket_work.py, identity.py, activity.py,
 activity_api.py, provision.py, worker.py and automation_schemas.py/automation_api.py;
 add tests/test_automation_execution.py and test_automation_activity.py.
@@ -143,31 +145,31 @@ committed replay. New intent only triage/dead, full current config conjunction,
 active/current-source eligibility, disabled/fenced/superseded refusal409. No
 revision/source/effect replacement; replay cannot revive a later cancelled run.
 
-- [ ] First prove actual RED for pending job having no task effect. Exercise
+- [x] First prove actual RED for pending job having no task effect. Exercise
   exactly-one creation/adoption, independent lifecycle/priority/due, no private
   ticket text copied and no implicit project/account/grant.
-- [ ] Extract the real manual work creation/history/event owner and reuse it;
+- [x] Extract the real manual work creation/history/event owner and reuse it;
   run existing manual creation/fingerprint/event/agent restrictions unchanged.
   Extend reciprocal event owner with typed origin, strict schema2 projection,
   ActivityEvent actor CHECK, source/effect validation and DTO provenance redaction.
-- [ ] Prove full stable-key matrix across new event IDs/revisions/reassign/reopen,
+- [x] Prove full stable-key matrix across new event IDs/revisions/reassign/reopen,
   two workers, crash before/after commit, after publish before ack, Redis outage,
   expired/mismatched tokens, manual unlink/relink, changed default and version
   overflow. Off/on with a delayed unexpired token must cancel old work; new
   post-enable assignment may use the later revision. No forced new-work path.
-- [ ] Implement current-authorizer/domain/active/assignee resolution under native
+- [x] Implement current-authorizer/domain/active/assignee resolution under native
   ticket-before-graph locks, immutable effect receipt and atomic new work/link.
   Existing usable link adopts without a version change; ambiguous/hidden target,
   missing/inactive default or denied authorizer goes to bounded private triage.
-- [ ] Prove current source/project/queue/ceiling/authorizer/assignee revocation,
+- [x] Prove current source/project/queue/ceiling/authorizer/assignee revocation,
   platform/team non-grants, unsupported/corrupt event/schema, actual worker-role
   denied password/hash/note/message/raw/owner/role writes. Add only exact metadata
   reads/row-lock/version columns and INSERT grants needed by executed native calls.
-- [ ] Implement dispatch/claim/fence/backoff/DLQ and scoped protected retry. Prove
+- [x] Implement dispatch/claim/fence/backoff/DLQ and scoped protected retry. Prove
   disabled/revision-floor authority precedes effects, and hidden rows contribute
   no data/count/cursor. Prove work-only creation is truthful without execution/
   source IDs; reciprocal history after unlink still requires both scopes.
-- [ ] Run all new/affected API/worker/activity/privacy/migration tests and static
+- [x] Run all new/affected API/worker/activity/privacy/migration tests and static
   gates. Expected: pass with unchanged frozen source. Export contracts/types and
   verify manual schema1/legacy operations. Commit coherent worker/privacy batches.
 

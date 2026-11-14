@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import secrets
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from threading import BoundedSemaphore
 from uuid import UUID
@@ -43,6 +44,11 @@ def csrf_token(token: str) -> str:
     return hmac.new(token.encode(), b"altvia-csrf-v1", hashlib.sha256).hexdigest()
 
 
+@dataclass(frozen=True)
+class AutomationOrigin:
+    execution_id: UUID
+
+
 def record_event(
     db: Session,
     actor_id: UUID | None,
@@ -54,8 +60,21 @@ def record_event(
     *,
     aggregate_type: str = "identity",
     details: Mapping[str, str | None] | None = None,
+    origin: AutomationOrigin | None = None,
 ) -> OutboxEvent:
     metadata = dict(details or {})
+    actor_kind = "user" if actor_id else "management_command"
+    schema_version = 1
+    if origin is not None:
+        expected = {
+            "work_item.created": "work_item",
+            "work_item.ticket_linked": "work_item",
+            "ticket.work_linked": "ticket",
+        }
+        if actor_id is None or expected.get(event) != aggregate_type:
+            raise ValueError("Invalid automated event provenance")
+        metadata.update(authorizer_id=str(actor_id), execution_id=str(origin.execution_id))
+        actor_id, actor_kind, schema_version = None, "automation", 2
     db.add(
         AuditLog(
             actor_id=actor_id,
@@ -63,7 +82,7 @@ def record_event(
             resource_id=resource_id,
             occurred_at=now,
             correlation_id=correlation_id,
-            details={**metadata, "actor_kind": "user" if actor_id else "management_command"},
+            details={**metadata, "actor_kind": actor_kind},
         )
     )
     event_record = OutboxEvent(
@@ -71,11 +90,11 @@ def record_event(
         aggregate_id=resource_id,
         aggregate_version=version,
         event_type=event,
-        schema_version=1,
+        schema_version=schema_version,
         payload={
             **metadata,
             "actor_id": str(actor_id) if actor_id else None,
-            "actor_kind": "user" if actor_id else "management_command",
+            "actor_kind": actor_kind,
         },
         occurred_at=now,
         correlation_id=correlation_id,

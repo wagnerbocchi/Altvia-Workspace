@@ -193,6 +193,20 @@ Prove actual runtime roles with real PostgreSQL negative privilege tests.
 
 ## Truthful events and read privacy
 
+Task2 runtime-role tracing identified a read boundary: protected recovery must
+validate its original assignment, while altvia_app deliberately cannot read the
+general outbox. Migration30 adds a security-barrier owner view,
+automation_assignment_sources, joined to each execution's immutable source UUID
+and limited to schema1 ticket.assigned/ticket envelopes. It exposes only execution
+ID, envelope scope/version and the assignment ID metadata, never other event types,
+transport state or unrelated JSON fields. An unexpected payload-field flag permits
+the same strict Python source validator to fail closed without exposing those
+fields. Both runtime roles receive SELECT on this view; no API base-outbox SELECT
+is added. This avoids duplicated event snapshots or granting unrelated payloads.
+The view stores no new data; migration30 contraction drops only the derived view.
+Retain schema30 when rolling binaries back; drain/disable as specified below before
+contraction, because an active recovery caller requires the view.
+
 Keep every manual schema1 envelope byte-shape compatible. For automated native
 work_item.created, ticket.work_linked and work_item.ticket_linked, emit schema2
 with actor_id null, actor_kind automation, authorizer_id and execution_id, plus

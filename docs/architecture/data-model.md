@@ -335,6 +335,12 @@ grant is added. Downgrade refuses state or durable private checkpoint history.
 
 ## ADR0041 assignment automation model
 
+Migration30 adds the derived security-barrier automation_assignment_sources view
+for strict current-source recovery. It selects only execution-bound schema1 native
+assignments and whitelisted ID metadata, with an unexpected-field indicator.
+Neither unrelated outbox payload nor delivery state is exposed to the API role.
+No stored snapshot, new logical identity or mutable source is introduced.
+
 Migration b46087000029 follows manual links28 and is implemented with native
 constraints/privilege/contraction proof. Task1 configuration and source staging
 are natively complete; worker effects, browser and whole-feature acceptance remain

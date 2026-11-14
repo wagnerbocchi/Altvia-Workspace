@@ -97,6 +97,15 @@ and packaged/whole-feature acceptance remain open. See
 docs/assignment-automation-evidence.md. Production title/status/scope is Q-23; leave
 real rules unconfigured while implementing controlled synthetic fixtures.
 
+ADR0041 Task2 backend development passed222 affected native checks, plus focused
+2 version/floor and13 current-authority cases (overlapping counts), static gates
+and generated-contract/web checks. Actual restricted API/worker roles and real
+Redis recovery passed; independent backend review found no Critical/Important
+issue. Migration30 exposes only derived assignment-source metadata, keeping API
+base-outbox reads denied. Task3 interface work has begun under Impeccable after
+an actual missing-control browser RED. Browser/visual/packaged/hosted whole-feature
+acceptance and final target qualification remain open; see the evidence report.
+
 Private-files Task4 is implemented in c5c668c with reviewed corrections 039a631.
 Local full175 at c5 and final scoped9 browser/3 child-output tests passed; final
 lint/types/build and contracts passed. Independent source review approved fixes;

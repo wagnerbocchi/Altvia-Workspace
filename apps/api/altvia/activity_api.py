@@ -52,7 +52,19 @@ def activity_page(
         last = rows[limit - 1]
         next_cursor = _next_time_cursor(scope, last.occurred_at, last.event_id)
     return ActivityPage(
-        items=[ActivityOutput.model_validate(row) for row in rows[:limit]], next_cursor=next_cursor
+        items=[
+            ActivityOutput.model_validate(row).model_copy(
+                update={
+                    "details": {
+                        key: value for key, value in row.details.items() if key != "execution_id"
+                    }
+                }
+            )
+            if row.actor_kind == "automation"
+            else ActivityOutput.model_validate(row)
+            for row in rows[:limit]
+        ],
+        next_cursor=next_cursor,
     )
 
 

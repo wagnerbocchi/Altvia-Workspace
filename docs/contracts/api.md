@@ -395,7 +395,7 @@ filters; unsupported/repeated/invalid parameters return422. See ADR for boundari
 | GET `/attachments/{id}/content` | target read + note.read if applicable | 200 private stream, safe Content-Disposition; 404 denied |
 | GET `/analytics/overview`, `/analytics/team-workload` | analytics.read | Date range/timezone required for period metrics; authorized aggregates only |
 | GET/POST `/automation-rules` | automation.manage | Versioned structured schema; rejects expressions/arbitrary actions |
-| GET/POST `/ticket-queues/{queue_id}/sla-policies`, `/ticket-queues/{queue_id}/business-calendars` | ADR0042 full customer/queue configuration conjunction | Selected contract; implementation pending |
+| GET/POST `/ticket-queues/{queue_id}/sla-policies`, `/ticket-queues/{queue_id}/business-calendars` | ADR0042 full customer/queue configuration conjunction | Implemented configuration; cycles/evaluator remain separate |
 | POST `/imports/dry-runs` | import.manage | Hash + local upload + reference_date/timezone + mapping_version, 202 |
 | POST `/imports/{id}/commit` | import.manage | 202 approved batch, reject unresolved mappings/stale dry-run |
 | GET `/imports/{id}` | import.manage | 200 dispositions/counts without unrestricted raw payload |
@@ -405,7 +405,7 @@ P1 APIs `/notifications`, `/time-entries` and `/exports` require a subsequent
 contract revision before implementation. No external caller-accessible IMAP
 ingestion endpoint; mailbox adapters run as restricted worker jobs.
 
-### Selected SLA configuration contract (ADR0042; not implemented yet)
+### SLA configuration contract (ADR0042; implemented configuration only)
 
 No global SLA collection or implicit platform/customer grant is introduced.
 Each calendar/policy belongs to immutable client_id and queue_id. All collection,
@@ -466,6 +466,9 @@ Parents must be active for new creation/action edits/activation. Authorized read
 disable-only changes, coherent no-op and already committed receipt replay survive
 archive. Policy activation checks the selected same-scope calendar revision,
 calendar current active state and any category's current same-queue eligibility.
+An explicitly reviewed historical calendar revision remains selectable after the
+calendar is reactivated; its historical active flag does not override current
+eligibility. Missing current configuration revisions fail503, never silent fallback.
 Hidden404, readable forbidden403, missing precondition428, invalid422 and stale409
 follow existing HTTP owners. Duplicate selector409 sla_policy_exists discloses no
 other scope. No DELETE, implicit delegation, cycle reset or production activation.

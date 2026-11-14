@@ -230,8 +230,8 @@ that those tables, endpoints or capabilities already exist.
 
 ## SLA, durable processing and provenance
 
-ADR0042 Task2 configuration storage is selected before migration31 source, not
-implemented by the pure-calendar foundation. Four native tables own it:
+ADR0042 Task2 configuration storage and scoped APIs are implemented through
+migration31; cycles/evaluator remain separate. Four native tables own it:
 
 | Table | Exact configuration invariants |
 | --- | --- |

@@ -108,7 +108,7 @@ class Window:
             raise ValueError("Invalid weekly window")
 
 
-def _windows(values: Sequence[Window]) -> tuple[Window, ...]:
+def canonical_windows(values: Sequence[Window]) -> tuple[Window, ...]:
     if not 1 <= len(values) <= 28 or any(not isinstance(value, Window) for value in values):
         raise ValueError("Select between one and 28 weekly windows")
     merged: list[Window] = []
@@ -144,7 +144,7 @@ class CalendarSnapshot:
             not isinstance(self.zone, FrozenZone)
             or type(self.windows) is not tuple
             or type(self.holidays) is not frozenset
-            or _windows(self.windows) != self.windows
+            or canonical_windows(self.windows) != self.windows
         ):
             raise ValueError("Immutable canonical calendar required")
         _holidays(tuple(self.holidays))
@@ -153,7 +153,7 @@ class CalendarSnapshot:
 def build_calendar(
     zone: FrozenZone, windows: Sequence[Window], holidays: Sequence[date]
 ) -> CalendarSnapshot:
-    return CalendarSnapshot(zone, _windows(windows), _holidays(holidays))
+    return CalendarSnapshot(zone, canonical_windows(windows), _holidays(holidays))
 
 
 def _append(rows: list[Interval], start: datetime, end: datetime) -> None:

@@ -53,6 +53,35 @@ IDEMPOTENCY_KEY = {
     "required": True,
     "schema": {"type": "string", "pattern": "^[A-Za-z0-9._:-]{1,128}$"},
 }
+IF_MATCH_QUEUE = {**IF_MATCH, "name": "If-Match-Queue", "description": "Reviewed queue version"}
+
+
+def configuration_query(request: Request, *, listing: bool = False) -> None:
+    allowed = {"client_id", "limit", "cursor"} if listing else set()
+    if not set(request.query_params) <= allowed:
+        raise identity.IdentityError(422, "unsupported_query")
+    if any(len(request.query_params.getlist(name)) != 1 for name in request.query_params):
+        raise identity.IdentityError(422, "repeated_query")
+
+
+def queue_configuration_versions(
+    request: Request, *, patch: bool = False
+) -> tuple[int, int | None]:
+    for header in ("if-match", "if-match-queue", "idempotency-key"):
+        if len(request.headers.getlist(header)) > 1:
+            raise identity.IdentityError(422, "invalid_precondition")
+    reviewed = _expected_version(request)
+    queue = (
+        _expected_version(
+            request,
+            header="if-match-queue",
+            required_code="queue_version_required",
+            invalid_code="invalid_queue_version",
+        )
+        if patch
+        else None
+    )
+    return reviewed, queue
 
 
 def _cursor(value: str | None, scope: str) -> UUID | None:

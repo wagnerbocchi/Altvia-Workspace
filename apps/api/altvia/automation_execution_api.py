@@ -19,7 +19,7 @@ from altvia.admin_http import (
     _remember,
     authenticate_request,
 )
-from altvia.automation_api import _versions
+from altvia.admin_http import queue_configuration_versions as _versions
 from altvia.automation_schemas import (
     ExecutionEffect,
     ExecutionOutput,

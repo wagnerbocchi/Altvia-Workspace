@@ -1,9 +1,57 @@
 # Ticket SLA development evidence
 
 ADR0042 and docs/plans/2026-11-14-ticket-sla.md define the selected contract.
-SLA capability is not complete. Task1 calendar arithmetic and Task2's storage
-foundation have evidence below. Configuration APIs, native cycles/evaluator, UI
-and acceptance remain pending. No hours, holidays or targets are configured for Altvia.
+SLA capability is not complete. Task1 calendar arithmetic and Task2's persisted
+configuration APIs have development evidence below. Native cycles/evaluator, UI
+and capability acceptance remain pending. No hours, holidays or targets are
+configured for Altvia.
+
+## Scoped configuration APIs
+
+Eight actual nested calendar/policy list/detail/create/PATCH operations now use
+the existing identity-before-authentication and client/team/queue/own lock order.
+The shared current authority owner was extracted from the actual automation
+caller, preserving its aliases and behavior. Shared strict HTTP query/version
+validation lives in admin_http. No alternate permission model is introduced.
+
+Calendars capture trusted installed timezone bytes only after protected replay;
+omitted timezone preserves them and explicit same-name selection can refresh
+them. Policies start disabled, retain immutable null-aware selectors and explicitly
+review an immutable calendar revision. Selection ranks exact/category/priority/
+default before current reference eligibility. Historical authorizer departure
+does not disable business policy. No-op/archived disable/committed replay retain
+later state; foreign scope, stale versions, overflow and uncertain repeated intent
+have real native checks. Private configuration events are strictly validated and
+acknowledged without a shared activity projection, even with the worker credential.
+
+config-red01 failed actual POST404 versus201 before the HTTP source. Native
+config-green01 passed61 cases in57.83s (15 configuration,46 calendar), with
+Ruff/check/format and mypy80. Local53 schema cases plus46 calendar cases passed99
+in0.29s. Native selector-red01 failed the missing selection owner before source.
+config-green02 ran no tests because the selected legacy filename was wrong;
+the corrected collection was checked before running config-green03. That native
+batch passed161 cases in325.23s, including configuration/storage, automation,
+queue access and client registry. One incumbent Pydantic identifier alias warning
+in the concurrent queue-access case is retained. Native static gates passed.
+
+boundaries01 passed three cases and failed one synthetic fixture at the wrong
+module for set_client_access; the fixture now calls its real client_registry
+owner. integrity-red01 reproduced two product errors before correction: checking
+a historical active flag instead of current calendar eligibility, and silently
+falling back when a selected current policy revision is missing. The latter now
+fails503; no broader policy is substituted. Current calendar eligibility gates an
+explicit historical math revision after reactivation. Native
+config-integrity-green01 passed all55 cases in227.02s: current configuration,
+cursor/concurrency/artifact/privacy/integrity boundaries and the full automation
+execution suite. Current API product hashes match that passing frozen snapshot.
+Its subsequent Ruff check failed one formatting-only long test line; local
+formatting/static checks pass after correction, with a final native batch pending.
+
+OpenAPI/TypeScript generation ran twice with identical bytes. All81 prior paths
+and155 prior components remain exactly unchanged. Local web typegen/ESLint/types
+passed. Local source SAST retains35 low findings,0 blocking, without an ignore.
+No UI, timer, native cycle, worker evaluator, production policy or final target
+qualification is implied by this configuration increment.
 
 ## Configuration storage foundation
 

@@ -59,7 +59,11 @@ eligibility. An archived category or currently inactive calendar on that selecte
 policy fails creation/reopening with409 sla_configuration_unavailable. Do not
 silently fall back to a broader selector or treat it as unconfigured. A manager
 must explicitly disable/revise that policy. Policy/calendar labels and
-selector priority are visible during review.
+selector priority are visible during review. Current calendar active state gates
+new references; an explicitly selected historical math revision remains usable
+after that calendar is reactivated. Its former active flag is historical metadata,
+not the current eligibility decision. A missing current revision fails503 rather
+than disappearing from selection and silently choosing a broader policy.
 
 Policy revisions contain name1..160, enabled(default false on create), exact
 calendar identity/revision, first_response_minutes and resolution_minutes each

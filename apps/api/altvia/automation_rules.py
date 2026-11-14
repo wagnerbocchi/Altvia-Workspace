@@ -1,55 +1,23 @@
 """Native assignment configuration and transactional source staging ownership."""
 
-from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from altvia import client_registry, identity, queue_registry, tickets
+from altvia import identity, queue_registry
 from altvia.automation_schemas import RuleCreate, RuleOutput, RulePatch
 from altvia.models import (
     AutomationExecution,
     AutomationRule,
     AutomationRuleRevision,
-    Client,
     OutboxEvent,
     Ticket,
-    TicketQueue,
 )
-
-
-@dataclass(frozen=True)
-class RuleAccess:
-    client: Client
-    queue: TicketQueue
-    team_active: bool
-
-
-def access(
-    db: Session, actor_id: UUID, client_id: UUID, queue_id: UUID, *, write: bool = False
-) -> RuleAccess:
-    client, client_role = client_registry.scoped_client(db, actor_id, client_id)
-    queue, _, active, configuration_manager = queue_registry.scoped_queue(db, actor_id, queue_id)
-    _, queue_role, _ = tickets.scoped_queue(db, actor_id, queue_id)
-    if (
-        client_role != "operations_manager"
-        or queue_role != "operations_manager"
-        or not configuration_manager
-    ):
-        raise identity.IdentityError(403, "forbidden")
-    if write:
-        # Same parent order as native ticket writes; never queue before client.
-        client, _ = client_registry.scoped_client(db, actor_id, client_id, write=True)
-        queue, _, active, _ = queue_registry.scoped_queue(db, actor_id, queue_id, write=True)
-    return RuleAccess(client, queue, active)
-
-
-def require_active(permission: RuleAccess) -> None:
-    if not permission.client.active:
-        raise identity.IdentityError(409, "client_inactive")
-    queue_registry.require_active(permission.team_active, permission.queue.active)
+from altvia.queue_client_configuration import ConfigurationAccess as RuleAccess
+from altvia.queue_client_configuration import access as access
+from altvia.queue_client_configuration import require_active as require_active
 
 
 def current_revision(db: Session, rule: AutomationRule) -> AutomationRuleRevision:

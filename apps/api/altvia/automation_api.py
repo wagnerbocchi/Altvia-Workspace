@@ -13,14 +13,16 @@ from altvia import identity
 from altvia.admin_http import (
     IDEMPOTENCY_KEY,
     IF_MATCH,
+    IF_MATCH_QUEUE,
     _cursor,
     _etag,
-    _expected_version,
     _next_cursor,
     _operation,
     _remember,
     authenticate_request,
 )
+from altvia.admin_http import configuration_query as _query
+from altvia.admin_http import queue_configuration_versions as _versions
 from altvia.automation_schemas import (
     RuleCreate,
     RuleListQuery,
@@ -31,34 +33,6 @@ from altvia.automation_schemas import (
 )
 from altvia.config import Settings
 from altvia.models import AutomationRule
-
-IF_MATCH_QUEUE = {**IF_MATCH, "name": "If-Match-Queue", "description": "Reviewed queue version"}
-
-
-def _query(request: Request, *, listing: bool = False) -> None:
-    allowed = {"client_id", "limit", "cursor"} if listing else set()
-    if not set(request.query_params) <= allowed:
-        raise identity.IdentityError(422, "unsupported_query")
-    if any(len(request.query_params.getlist(name)) != 1 for name in request.query_params):
-        raise identity.IdentityError(422, "repeated_query")
-
-
-def _versions(request: Request, *, patch: bool = False) -> tuple[int, int | None]:
-    for header in ("if-match", "if-match-queue", "idempotency-key"):
-        if len(request.headers.getlist(header)) > 1:
-            raise identity.IdentityError(422, "invalid_precondition")
-    reviewed = _expected_version(request)
-    queue = (
-        _expected_version(
-            request,
-            header="if-match-queue",
-            required_code="queue_version_required",
-            invalid_code="invalid_queue_version",
-        )
-        if patch
-        else None
-    )
-    return reviewed, queue
 
 
 def _rule(db: Session, queue_id: UUID, rule_id: UUID, *, write: bool = False) -> AutomationRule:

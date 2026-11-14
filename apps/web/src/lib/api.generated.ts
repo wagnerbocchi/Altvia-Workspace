@@ -753,6 +753,42 @@ export interface paths {
         patch: operations["patch_api_v1_ticket_queues__queue_id__automation_rules__rule_id__patch"];
         trace?: never;
     };
+    "/api/v1/ticket-queues/{queue_id}/business-calendars": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Calendars */
+        get: operations["calendars_api_v1_ticket_queues__queue_id__business_calendars_get"];
+        put?: never;
+        /** Calendar Create */
+        post: operations["calendar_create_api_v1_ticket_queues__queue_id__business_calendars_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ticket-queues/{queue_id}/business-calendars/{calendar_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Calendar Detail */
+        get: operations["calendar_detail_api_v1_ticket_queues__queue_id__business_calendars__calendar_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Calendar Patch */
+        patch: operations["calendar_patch_api_v1_ticket_queues__queue_id__business_calendars__calendar_id__patch"];
+        trace?: never;
+    };
     "/api/v1/ticket-queues/{queue_id}/categories": {
         parameters: {
             query?: never;
@@ -823,6 +859,42 @@ export interface paths {
         head?: never;
         /** Change Member */
         patch: operations["change_member_api_v1_ticket_queues__queue_id__members__user_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/ticket-queues/{queue_id}/sla-policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Policies */
+        get: operations["policies_api_v1_ticket_queues__queue_id__sla_policies_get"];
+        put?: never;
+        /** Policy Create */
+        post: operations["policy_create_api_v1_ticket_queues__queue_id__sla_policies_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ticket-queues/{queue_id}/sla-policies/{policy_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Policy Detail */
+        get: operations["policy_detail_api_v1_ticket_queues__queue_id__sla_policies__policy_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Policy Patch */
+        patch: operations["policy_patch_api_v1_ticket_queues__queue_id__sla_policies__policy_id__patch"];
         trace?: never;
     };
     "/api/v1/tickets": {
@@ -1582,6 +1654,148 @@ export interface components {
             /** Media Type */
             media_type: string;
         };
+        /** CalendarCreate */
+        CalendarCreate: {
+            /** Active */
+            active: boolean;
+            /**
+             * Client Id
+             * Format: uuid
+             */
+            client_id: string;
+            /** Holidays */
+            holidays: components["schemas"]["Holiday"][];
+            /** Name */
+            name: string;
+            /** Timezone */
+            timezone: string;
+            /** Windows */
+            windows: components["schemas"]["WeeklyWindow"][];
+        };
+        /** CalendarOutput */
+        CalendarOutput: {
+            /** Active */
+            active: boolean;
+            /** Can Edit */
+            can_edit: boolean;
+            /**
+             * Client Id
+             * Format: uuid
+             */
+            client_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Holidays */
+            holidays: components["schemas"]["Holiday"][];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Queue Id
+             * Format: uuid
+             */
+            queue_id: string;
+            /** Queue Version */
+            queue_version: number;
+            /** Timezone */
+            timezone: string;
+            /** Tzif Sha256 */
+            tzif_sha256: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+            /** Windows */
+            windows: components["schemas"]["WeeklyWindow"][];
+        };
+        /** CalendarPage */
+        CalendarPage: {
+            /** Items */
+            items: components["schemas"]["CalendarSummary"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** CalendarPatch */
+        CalendarPatch: {
+            /** Active */
+            active?: boolean | null;
+            /** Holidays */
+            holidays?: components["schemas"]["Holiday"][] | null;
+            /** Name */
+            name?: string | null;
+            /** Timezone */
+            timezone?: string | null;
+            /** Windows */
+            windows?: components["schemas"]["WeeklyWindow"][] | null;
+        };
+        /** CalendarReceipt */
+        CalendarReceipt: {
+            /**
+             * Calendar Id
+             * Format: uuid
+             */
+            calendar_id: string;
+            /**
+             * Client Id
+             * Format: uuid
+             */
+            client_id: string;
+            /**
+             * Queue Id
+             * Format: uuid
+             */
+            queue_id: string;
+        };
+        /** CalendarSummary */
+        CalendarSummary: {
+            /** Active */
+            active: boolean;
+            /** Can Edit */
+            can_edit: boolean;
+            /**
+             * Client Id
+             * Format: uuid
+             */
+            client_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Queue Id
+             * Format: uuid
+             */
+            queue_id: string;
+            /** Queue Version */
+            queue_version: number;
+            /** Timezone */
+            timezone: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+        };
         /** Candidate */
         Candidate: {
             /** Display Name */
@@ -2163,6 +2377,13 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** Holiday */
+        Holiday: {
+            /** Date */
+            date: string;
+            /** Label */
+            label?: string | null;
+        };
         /** IncomingMessageOutput */
         IncomingMessageOutput: {
             /**
@@ -2533,6 +2754,141 @@ export interface components {
         PlatformAdminInput: {
             /** Enabled */
             enabled: boolean;
+        };
+        /** PolicyCreate */
+        PolicyCreate: {
+            /** Approach Minutes */
+            approach_minutes: number;
+            /**
+             * Calendar Id
+             * Format: uuid
+             */
+            calendar_id: string;
+            /** Calendar Version */
+            calendar_version: number;
+            /** Category Id */
+            category_id?: string | null;
+            /**
+             * Client Id
+             * Format: uuid
+             */
+            client_id: string;
+            /** First Response Minutes */
+            first_response_minutes: number;
+            /** Name */
+            name: string;
+            /** Pause States */
+            pause_states: ("pending_customer" | "pending_third_party")[];
+            /** Priority */
+            priority?: ("low" | "medium" | "high" | "critical") | null;
+            /** Resolution Minutes */
+            resolution_minutes: number;
+        };
+        /** PolicyOutput */
+        PolicyOutput: {
+            /** Approach Minutes */
+            approach_minutes: number;
+            /**
+             * Authorizer Id
+             * Format: uuid
+             */
+            authorizer_id: string;
+            /**
+             * Calendar Id
+             * Format: uuid
+             */
+            calendar_id: string;
+            /** Calendar Version */
+            calendar_version: number;
+            /** Can Edit */
+            can_edit: boolean;
+            /** Category Id */
+            category_id: string | null;
+            /**
+             * Client Id
+             * Format: uuid
+             */
+            client_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Enabled */
+            enabled: boolean;
+            /** First Response Minutes */
+            first_response_minutes: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Pause States */
+            pause_states: ("pending_customer" | "pending_third_party")[];
+            /** Priority */
+            priority: ("low" | "medium" | "high" | "critical") | null;
+            /**
+             * Queue Id
+             * Format: uuid
+             */
+            queue_id: string;
+            /** Queue Version */
+            queue_version: number;
+            /** Resolution Minutes */
+            resolution_minutes: number;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+        };
+        /** PolicyPage */
+        PolicyPage: {
+            /** Items */
+            items: components["schemas"]["PolicyOutput"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** PolicyPatch */
+        PolicyPatch: {
+            /** Approach Minutes */
+            approach_minutes?: number | null;
+            /** Calendar Id */
+            calendar_id?: string | null;
+            /** Calendar Version */
+            calendar_version?: number | null;
+            /** Enabled */
+            enabled?: boolean | null;
+            /** First Response Minutes */
+            first_response_minutes?: number | null;
+            /** Name */
+            name?: string | null;
+            /** Pause States */
+            pause_states?: ("pending_customer" | "pending_third_party")[] | null;
+            /** Resolution Minutes */
+            resolution_minutes?: number | null;
+        };
+        /** PolicyReceipt */
+        PolicyReceipt: {
+            /**
+             * Client Id
+             * Format: uuid
+             */
+            client_id: string;
+            /**
+             * Policy Id
+             * Format: uuid
+             */
+            policy_id: string;
+            /**
+             * Queue Id
+             * Format: uuid
+             */
+            queue_id: string;
         };
         /** ProjectCreate */
         ProjectCreate: {
@@ -3872,6 +4228,15 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** WeeklyWindow */
+        WeeklyWindow: {
+            /** End Minute */
+            end_minute: number;
+            /** Start Minute */
+            start_minute: number;
+            /** Weekday */
+            weekday: number;
         };
         /** WorkCreate */
         WorkCreate: {
@@ -6242,6 +6607,161 @@ export interface operations {
             };
         };
     };
+    calendars_api_v1_ticket_queues__queue_id__business_calendars_get: {
+        parameters: {
+            query: {
+                client_id: string;
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                queue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    calendar_create_api_v1_ticket_queues__queue_id__business_calendars_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "If-Match": string;
+            };
+            path: {
+                queue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarCreate"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarReceipt"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    calendar_detail_api_v1_ticket_queues__queue_id__business_calendars__calendar_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                queue_id: string;
+                calendar_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarOutput"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    calendar_patch_api_v1_ticket_queues__queue_id__business_calendars__calendar_id__patch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "If-Match": string;
+                /** @description Reviewed queue version */
+                "If-Match-Queue": string;
+            };
+            path: {
+                queue_id: string;
+                calendar_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     categories_api_v1_ticket_queues__queue_id__categories_get: {
         parameters: {
             query?: {
@@ -6529,6 +7049,161 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    policies_api_v1_ticket_queues__queue_id__sla_policies_get: {
+        parameters: {
+            query: {
+                client_id: string;
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                queue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    policy_create_api_v1_ticket_queues__queue_id__sla_policies_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "If-Match": string;
+            };
+            path: {
+                queue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyCreate"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyReceipt"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    policy_detail_api_v1_ticket_queues__queue_id__sla_policies__policy_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                queue_id: string;
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyOutput"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    policy_patch_api_v1_ticket_queues__queue_id__sla_policies__policy_id__patch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "If-Match": string;
+                /** @description Reviewed queue version */
+                "If-Match-Queue": string;
+            };
+            path: {
+                queue_id: string;
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyReceipt"];
+                };
             };
             /** @description Validation Error */
             422: {

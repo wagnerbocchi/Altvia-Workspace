@@ -29,6 +29,7 @@ from altvia.models import User
 from altvia.observability import configure_logging
 from altvia.project_api import create_project_router
 from altvia.queue_api import create_queue_router
+from altvia.sla_api import create_sla_router
 from altvia.team_api import create_team_router
 from altvia.ticket_api import create_ticket_router
 from altvia.ticket_work_api import create_ticket_work_router
@@ -204,6 +205,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(create_project_router(engine, config))
     app.include_router(create_queue_router(engine, config))
     app.include_router(create_automation_router(engine, config))
+    app.include_router(create_sla_router(engine, config))
     app.include_router(create_execution_router(engine, config))
     app.include_router(create_ticket_router(engine, config))
     app.include_router(create_ticket_work_router(engine, config))

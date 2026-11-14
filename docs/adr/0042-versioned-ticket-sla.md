@@ -68,14 +68,17 @@ pending_third_party pause states. No customer hours or pause default is inferred
 Approach is a display state within the remaining business-time budget, not a new
 notification service. Targets are independent; neither is forced to exceed the
 other. A captured revision remains authoritative after later edits/disable.
+Existing cycles continue after reference archival or authorizer deactivation;
+evaluation fulfills a recorded obligation and grants no content access. Current
+ticket authorization still governs every read. Archival is not an implicit pause.
 Priority/category changes during a cycle do not silently replace its target.
 
 Calendar revisions contain explicit active boolean, name1..160, IANA timezone,
-1..28 ordered nonoverlapping
-weekly windows, each weekday0..6 and start_minute0..1439/end_minute1..1440 with
+1..28 ordered nonoverlapping weekly windows, each weekday0..6 and
+start_minute0..1439/end_minute1..1440 with
 start<end, plus at most1000 unique holiday dates with optional plain label1..160.
-Cross-midnight availability is expressed as two windows. No overlapping/touching
-duplicate range or duplicate holiday is accepted. A holiday removes all windows
+Cross-midnight availability is expressed as two windows. Reject overlaps and
+duplicates; canonical validation coalesces touching windows. A holiday removes all windows
 on that local civil date. The UI supplies explicit timezone/window/holiday inputs,
 never a preselected claim about Altvia's hours.
 
@@ -153,7 +156,9 @@ a separate explicit transport-evidence contract and new-cycle policy revision.
 
 ## Persistence, transactions and worker
 
-Reserve migration31 after b46087000030. Tables:
+Reserve migration31 after b46087000030 for the five configuration tables. Add
+cycle/event storage in32 with its actual evaluator, rather than empty scaffolding.
+Tables:
 
 - business_calendars: UUID, immutable customer/queue, positive version and UTC
   created/updated, composite unique(id,client_id,queue_id).

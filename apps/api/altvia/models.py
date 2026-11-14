@@ -19,7 +19,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from altvia.database import Base
@@ -903,7 +903,12 @@ class ActivityEvent(Base):
             "','work_item','ticket_queue','ticket')",
             name="ck_activity_resource",
         ),
-        CheckConstraint("actor_kind IN ('user','management_command')", name="ck_activity_actor"),
+        CheckConstraint(
+            "actor_kind IN ('user','management_command') OR "
+            "(actor_kind='automation' AND actor_id IS NULL AND event_type IN "
+            "('work_item.created','ticket.work_linked','work_item.ticket_linked'))",
+            name="ck_activity_actor",
+        ),
         Index("ix_activity_order", "occurred_at", "event_id"),
     )
     event_id: Mapped[UUID] = mapped_column(ForeignKey("outbox_events.event_id"), primary_key=True)
@@ -1353,3 +1358,215 @@ class WorkCommentAttachment(Base):
     work_item_id: Mapped[UUID]
     purpose: Mapped[str] = mapped_column(String(10))
     position: Mapped[int]
+
+
+class AutomationRule(Base):
+    __tablename__ = "automation_rules"
+    __table_args__ = (
+        UniqueConstraint("queue_id", "client_id", name="uq_automation_rule_scope"),
+        UniqueConstraint("action_id", name="uq_automation_action"),
+        UniqueConstraint(
+            "id", "action_id", "client_id", "queue_id", name="uq_automation_rule_context"
+        ),
+        CheckConstraint(
+            "version > 0 AND cancelled_through_version BETWEEN 0 AND version",
+            name="ck_automation_rule_version",
+        ),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    client_id: Mapped[UUID] = mapped_column(
+        ForeignKey("clients.id", ondelete="RESTRICT", onupdate="RESTRICT")
+    )
+    queue_id: Mapped[UUID] = mapped_column(
+        ForeignKey("ticket_queues.id", ondelete="RESTRICT", onupdate="RESTRICT")
+    )
+    action_id: Mapped[UUID] = mapped_column(default=uuid4)
+    version: Mapped[int] = mapped_column(default=1, server_default="1")
+    cancelled_through_version: Mapped[int] = mapped_column(default=0, server_default="0")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class AutomationRuleRevision(Base):
+    __tablename__ = "automation_rule_revisions"
+    __table_args__ = (
+        CheckConstraint("version > 0", name="ck_automation_revision_version"),
+        CheckConstraint("char_length(btrim(title)) BETWEEN 1 AND 300", name="ck_automation_title"),
+        CheckConstraint(
+            "priority IN ('low','medium','high','critical')", name="ck_automation_priority"
+        ),
+        CheckConstraint(
+            "array_ndims(ticket_statuses)=1 AND cardinality(ticket_statuses) BETWEEN 1 AND 5 "
+            "AND ticket_statuses <@ ARRAY['new','open','pending_customer',"
+            "'pending_third_party','resolved']::varchar[] "
+            "AND cardinality(ticket_statuses)=(('new'=ANY(ticket_statuses))::int "
+            "+('open'=ANY(ticket_statuses))::int+('pending_customer'=ANY(ticket_statuses))::int "
+            "+('pending_third_party'=ANY(ticket_statuses))::int+('resolved'=ANY(ticket_statuses))::int)",
+            name="ck_automation_ticket_statuses",
+        ),
+    )
+    rule_id: Mapped[UUID] = mapped_column(
+        ForeignKey("automation_rules.id", ondelete="RESTRICT", onupdate="RESTRICT"),
+        primary_key=True,
+    )
+    version: Mapped[int] = mapped_column(primary_key=True)
+    enabled: Mapped[bool] = mapped_column(default=False, server_default="false")
+    title: Mapped[str] = mapped_column(String(300))
+    priority: Mapped[str] = mapped_column(String(20))
+    ticket_statuses: Mapped[list[str]] = mapped_column(ARRAY(String(30)))
+    authorizer_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT", onupdate="RESTRICT")
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class AutomationExecution(Base):
+    __tablename__ = "automation_executions"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["rule_id", "action_id", "client_id", "queue_id"],
+            [
+                "automation_rules.id",
+                "automation_rules.action_id",
+                "automation_rules.client_id",
+                "automation_rules.queue_id",
+            ],
+            name="fk_automation_execution_rule",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["rule_id", "rule_version"],
+            ["automation_rule_revisions.rule_id", "automation_rule_revisions.version"],
+            name="fk_automation_execution_revision",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["ticket_id", "client_id", "queue_id"],
+            ["tickets.id", "tickets.client_id", "tickets.queue_id"],
+            name="fk_automation_execution_ticket",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        UniqueConstraint(
+            "rule_id", "action_id", "source_event_id", name="uq_automation_execution_source"
+        ),
+        UniqueConstraint(
+            "id",
+            "rule_id",
+            "action_id",
+            "ticket_id",
+            "client_id",
+            "queue_id",
+            name="uq_automation_execution_context",
+        ),
+        CheckConstraint(
+            "state IN ('pending','processing','succeeded','triage',"
+            "'superseded','cancelled','dead')",
+            name="ck_automation_execution_state",
+        ),
+        CheckConstraint(
+            "attempts BETWEEN 0 AND 8 AND version > 0", name="ck_automation_execution_version"
+        ),
+        CheckConstraint(
+            "(state='processing' AND lease_token IS NOT NULL AND lease_until IS NOT NULL) OR "
+            "(state<>'processing' AND lease_token IS NULL AND lease_until IS NULL)",
+            name="ck_automation_execution_lease",
+        ),
+        CheckConstraint(
+            "error_code IS NULL OR error_code IN ('authorization_lost','project_unavailable',"
+            "'assignee_unavailable','ticket_state_changed','existing_work_needs_review',"
+            "'invalid_event','unsupported_event','broker_unavailable','processing_failed',"
+            "'attempts_exhausted','rule_disabled','source_superseded','lease_expired')",
+            name="ck_automation_execution_error",
+        ),
+        Index("ix_automation_due", "state", "next_attempt_at", "id"),
+        Index("ix_automation_ticket_page", "ticket_id", "created_at", "id"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    rule_id: Mapped[UUID]
+    action_id: Mapped[UUID]
+    rule_version: Mapped[int]
+    client_id: Mapped[UUID]
+    queue_id: Mapped[UUID]
+    ticket_id: Mapped[UUID]
+    source_event_id: Mapped[UUID] = mapped_column(
+        ForeignKey("outbox_events.event_id", ondelete="RESTRICT", onupdate="RESTRICT")
+    )
+    state: Mapped[str] = mapped_column(String(20), default="pending", server_default="pending")
+    attempts: Mapped[int] = mapped_column(default=0, server_default="0")
+    version: Mapped[int] = mapped_column(default=1, server_default="1")
+    lease_token: Mapped[UUID | None]
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    next_attempt_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    error_code: Mapped[str | None] = mapped_column(String(40))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class AutomationEffect(Base):
+    __tablename__ = "automation_effects"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["rule_id", "action_id", "client_id", "queue_id"],
+            [
+                "automation_rules.id",
+                "automation_rules.action_id",
+                "automation_rules.client_id",
+                "automation_rules.queue_id",
+            ],
+            name="fk_automation_effect_rule",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["ticket_id", "client_id", "queue_id"],
+            ["tickets.id", "tickets.client_id", "tickets.queue_id"],
+            name="fk_automation_effect_ticket",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["work_item_id", "project_id"],
+            ["work_items.id", "work_items.project_id"],
+            name="fk_automation_effect_work",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["project_id", "client_id"],
+            ["projects.id", "projects.client_id"],
+            name="fk_automation_effect_project",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["origin_execution_id", "rule_id", "action_id", "ticket_id", "client_id", "queue_id"],
+            [
+                "automation_executions.id",
+                "automation_executions.rule_id",
+                "automation_executions.action_id",
+                "automation_executions.ticket_id",
+                "automation_executions.client_id",
+                "automation_executions.queue_id",
+            ],
+            name="fk_automation_effect_execution",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        UniqueConstraint("origin_execution_id", name="uq_automation_effect_origin"),
+        CheckConstraint("mode IN ('created','adopted')", name="ck_automation_effect_mode"),
+    )
+    rule_id: Mapped[UUID] = mapped_column(primary_key=True)
+    action_id: Mapped[UUID] = mapped_column(primary_key=True)
+    ticket_id: Mapped[UUID] = mapped_column(primary_key=True)
+    client_id: Mapped[UUID]
+    queue_id: Mapped[UUID]
+    project_id: Mapped[UUID]
+    work_item_id: Mapped[UUID]
+    origin_execution_id: Mapped[UUID]
+    mode: Mapped[str] = mapped_column(String(10))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

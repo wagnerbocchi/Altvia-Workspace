@@ -7,6 +7,7 @@ from uuid import uuid4
 import pytest
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from altvia.models import (
     ActivityEvent,
     AuditLog,
@@ -39,7 +40,9 @@ EVENTS = (
 )
 PARENT_GRANTS = text(
     "SELECT grantee,table_name,privilege_type FROM information_schema.table_privileges "
-    "WHERE table_schema='public' AND table_name<>'ticket_work_items' "
+    # These descendants are recreated above28, not incumbent parent tables.
+    "WHERE table_schema='public' AND table_name NOT IN ('ticket_work_items',"
+    "'automation_rules','automation_rule_revisions','automation_executions','automation_effects') "
     "ORDER BY grantee,table_name,privilege_type"
 )
 
@@ -297,7 +300,9 @@ def test_downgrade_refuses_unlinked_history_or_receipt(
     with pytest.raises(DBAPIError, match="Cannot contract ticket/work links/history"):
         command.downgrade(config, "b46087000027")
     with db_engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "b46087000028"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == (
+            ScriptDirectory.from_config(config).get_current_head()
+        )
 
 
 def test_empty_roundtrip_preserves_existing_parent_keys(admin_client, db_engine, seeded_user):

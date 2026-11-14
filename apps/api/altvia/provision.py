@@ -46,6 +46,10 @@ ROLE_PRIVILEGES = {
         "ticket_categories": {"SELECT", "INSERT", "UPDATE"},
         "tickets": {"SELECT", "INSERT", "UPDATE"},
         "ticket_work_items": {"SELECT", "INSERT", "DELETE"},
+        "automation_rules": {"SELECT", "INSERT"},
+        "automation_rule_revisions": {"SELECT", "INSERT"},
+        "automation_executions": {"SELECT", "INSERT"},
+        "automation_effects": {"SELECT"},
         "ticket_status_history": {"SELECT", "INSERT"},
         "attachments": {"SELECT", "INSERT"},
         "ticket_notes": {"SELECT", "INSERT"},
@@ -81,6 +85,7 @@ APP_COLUMN_READS = {
     "ticket_participants": {"id", "ticket_id", "contact_id", "email", "active", "version"},
 }
 APP_COLUMN_UPDATES = {
+    "automation_rules": {"version", "updated_at", "cancelled_through_version"},
     "mail_triage_cases": {"state", "version", "ticket_id", "incoming_message_id"},
     "attachments": RETRY_UPDATES,
 }

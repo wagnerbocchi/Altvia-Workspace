@@ -7,6 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { LoadingRows, Paging, ReadError, usePaging } from "@/components/team-admin/common";
 import { type WorkApi, type WorkFilters, type WorkRecord, dueLabel, workPriorities, workStatuses } from "@/lib/work-items";
+import type { UnifiedWorkApi } from "@/lib/unified-work";
+import { UnifiedPersonalWork } from "./unified";
 
 type Values = {
   q: string; status: NonNullable<WorkFilters["status"]> | "";
@@ -82,10 +84,15 @@ function PersonalResults({ api, filters }: { api: WorkApi; filters: WorkFilters 
     {!query.isError && <Paging paging={paging} next={query.data?.next_cursor} label="tarefas" disabled={query.isFetching} />}
   </section>;
 }
-export function PersonalWork({ api, actor }: { api: WorkApi; actor: string }) {
+function PersonalTasks({ api, actor }: { api: WorkApi; actor: string }) {
   const [filters, setFilters] = useState<WorkFilters>({});
+  return <section className="admin-section"><TaskFilters actor={actor} onApply={setFilters} personal /><PersonalResults key={JSON.stringify(filters)} api={api} filters={filters} /></section>;
+}
+export function PersonalWork({ api, unifiedApi, actor }: { api: WorkApi; unifiedApi: UnifiedWorkApi; actor: string }) {
+  const [view, setView] = useState<"unified" | "tasks">("unified");
   return <div className="admin-workspace task-discovery-workspace"><div className="action-row"><Link className="text-link" href="/">Minha conta</Link><Link className="text-link" href="/projects">Projetos</Link></div>
-    <h1 id="my-work-heading" tabIndex={-1}>Meu trabalho</h1><p className="admin-intro">Tarefas em que você é responsável ou envolvido, sem duplicação. Inclui todos os estados até você aplicar um filtro. Tickets serão incluídos em uma próxima entrega.</p>
-    <div className="admin-plane"><section className="admin-section"><TaskFilters actor={actor} onApply={setFilters} personal /><PersonalResults key={JSON.stringify(filters)} api={api} filters={filters} /></section></div>
+    <h1 id="my-work-heading" tabIndex={-1}>Meu trabalho</h1><p className="admin-intro">Acompanhe suas tarefas e chamados. Use Somente tarefas para os filtros avançados de tipo e prazo.</p>
+    <div className="action-row task-views" role="group" aria-label="Visualização do meu trabalho"><Button variant="outline" aria-pressed={view === "unified"} onClick={() => setView("unified")}>Fila unificada</Button><Button variant="outline" aria-pressed={view === "tasks"} onClick={() => setView("tasks")}>Somente tarefas</Button></div>
+    <div className="admin-plane">{view === "unified" ? <UnifiedPersonalWork api={unifiedApi} /> : <PersonalTasks api={api} actor={actor} />}</div>
   </div>;
 }

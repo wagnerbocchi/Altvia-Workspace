@@ -34,6 +34,7 @@ export function Paging({ paging, next, label, disabled = false }: {
     clientes: ["Clientes anteriores", "Próximos clientes"], equipes: ["Equipes anteriores", "Próximas equipes"],
     contas: ["Contas anteriores", "Próximas contas"], acessos: ["Acessos anteriores", "Próximos acessos"],
     atividades: ["Atividades anteriores", "Próximas atividades"],
+    registros: ["Registros anteriores", "Proximos registros"],
     contatos: ["Contatos anteriores", "Próximos contatos"],
     marcos: ["Marcos anteriores", "Proximos marcos"],
     filas: ["Filas anteriores", "Proximas filas"],

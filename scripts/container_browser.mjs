@@ -321,6 +321,7 @@ try {
   assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze()).violations, []);
   await page.getByRole("link", { name: "Meu trabalho", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Meu trabalho", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Somente tarefas", exact: true }).click();
   await page.getByLabel("Buscar tarefas", { exact: true }).fill(`"${taskName}"`);
   await page.getByRole("button", { name: "Aplicar filtros", exact: true }).click();
   await expect(page.getByLabel("Buscar tarefas", { exact: true })).toHaveValue(`"${taskName}"`);

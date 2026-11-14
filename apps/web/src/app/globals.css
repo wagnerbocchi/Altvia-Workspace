@@ -285,6 +285,9 @@ footer { display: flex; justify-content: space-between; gap: 16px; padding: 20px
 .client-filter.button { display: flex; justify-content: start; text-align: left; color: var(--muted); padding: 4px 0; font-weight: 400; min-height: 32px; font-size: 13px; }
 .mobile-label { display: none; }
 .work-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); }
+.unified-origins { margin-top: 12px; }
+.unified-origins > .record-meta + .record-meta { margin-top: 12px; }
+.unified-filters .task-filter-details:not([open]) { align-self: end; }
 .task-column .work-row { display: flex; flex-direction: column; gap: 8px; }
 .task-column .record-cell { font-size: 13px; }
 .task-column .record-cell .record-status { font-size: 12px; }

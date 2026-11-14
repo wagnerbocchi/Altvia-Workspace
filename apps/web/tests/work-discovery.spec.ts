@@ -95,6 +95,7 @@ test("@discovery personal queue deduplicates ownership and participation", async
   await page.goto(`/projects/${project}/work`);
   await page.getByRole("navigation", { name: "Navegacao principal", exact: true }).getByRole("link", { name: "Meu trabalho", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Meu trabalho", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Somente tarefas", exact: true }).click();
   await filter(page, title);
   await expect(page.getByLabel("Buscar tarefas", { exact: true })).toHaveValue(title);
   await expect(page.getByRole("link", { name: title, exact: true })).toHaveCount(1);
@@ -105,6 +106,7 @@ test("@discovery personal queue deduplicates ownership and participation", async
   await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
   await loginWork(page, "READER");
   await page.goto("/my-work");
+  await page.getByRole("button", { name: "Somente tarefas", exact: true }).click();
   await filter(page, title);
   await expect(page.getByRole("link", { name: title, exact: true })).toHaveCount(0);
 });

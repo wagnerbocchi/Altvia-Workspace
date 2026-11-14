@@ -218,6 +218,13 @@ At or below (540px), and for coarse pointers, buttons and native fields gain (44
 
 Kanban is a named, focusable bounded horizontal scroll region, not stacked columns: columns are (240px), with a (16px) gap and maximum region height of (560px). At (1500px) and above, columns use `minmax(220px, 1fr)`. Each column keeps independent paging. Prose has its own measure regardless of the surrounding working track.
 
+My Work keeps the same aligned rows and adds a labeled unified/task-only view
+group. Unified task rows place at most three authorized ticket origins beneath
+the task title; a real task-detail link owns further discovery. Ticket numbers
+remain exact decimal strings. Independent state labels and task-only deadlines
+prevent linked origins from appearing as a second personal work row. Native
+filters, explicit submission, paging and read recovery inherit the shared system.
+
 **The Shared Track Rule.** Operational headings, facts, forms and section rules fill the shared content track; bound prose independently.
 
 ## Elevation & Depth

@@ -97,7 +97,10 @@ PhotoCraft was unavailable; the images were inspected directly. Rendered review
 found the closed filter disclosure vertically above its neighboring select; a
 local alignment rule and numeric render assertion corrected it. browser-green03
 passed all five cases in17.0s, including that geometry check. These runs precede
-the final browser decimal assertion; browser-green04 remains pending.
+the final browser decimal assertion. browser-green04 passed all five final cases
+in16.2s with exact native decimal comparison, geometry, keyboard, four native
+theme/width captures, axe, overflow and frozen input maps. All four fresh renders
+were inspected directly. Independent whole-increment review remains required.
 
 packaged01 and number-red02 stopped before exercising their product checks:
 Docker reported all predefined address pools fully subnetted. All14 retired

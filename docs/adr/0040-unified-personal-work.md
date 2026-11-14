@@ -1,8 +1,10 @@
 # ADR-0040: Authorized unified personal work
 
-Date2026-11-13. Engineering contract for the next read-only increment, not a
-runtime completion claim. Execute after current manual-link source is validated;
-record final hosted acceptance separately. The master specification was read
+Date2026-11-13. Read-only increment development accepted2026-11-14 at1f7d5ab,
+after native/browser/packaged proof, independent whole review, its one corrected
+P2 and all five final hosted gates. See docs/unified-work-evidence.md for exact
+results, skips, warning and limits. Automation and integrated qualification remain
+separate. The master specification was read
 completely. ADR0007 supplies the projection invariant; ADR0021 task discovery
 and ADR0039 manual-link authority/compatibility remain unchanged. The user's
 continuous-development/direct-main authorization covers implementation after

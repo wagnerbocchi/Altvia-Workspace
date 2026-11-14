@@ -1,7 +1,8 @@
 # Unified personal work evidence
 
-ADR0040 read projection is in development. This document records backend proof;
-it does not accept the browser increment, whole MVP or target qualification.
+ADR0040 read projection and browser increment are development accepted at
+1f7d5ab after the final cursor correction and all five exact-source hosted gates.
+This does not accept structured automation, the whole MVP or target qualification.
 Accepted manual links remain separately documented in ticket-work-link-evidence.md.
 
 ## Backend behavior and compatibility
@@ -212,3 +213,53 @@ browser behavior changed. No further reviewer is requested under the one-pass
 execution workflow; the supplied condition for accepting the P2 is satisfied by
 this regression proof. Final hosted gates for the corrected application source
 remain pending;85dd260's successful gates are historical, not its replacement.
+
+## Final corrected-source acceptance
+
+All five workflows passed for1f7d5ab6ccf859853626871944d0ee68bc3cd2c7:
+
+| Gate | Actual result | Run |
+| --- | --- | --- |
+| API | 1602 passed,3 explicit skips,1 warning;1205.68s;zero failures/errors | [43552817582](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43552817582) |
+| Browser | 214 passed in7.6m | [43552817481](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43552817481) |
+| Containers | api-runtime and private-file-runtime both passed | [43552817465](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43552817465) |
+| Source security | Passed | [43552817512](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43552817512) |
+| Image security | Seven nonempty inventories;0 vulnerabilities | [43552817473](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43552817473) |
+
+Complete run logs, job metadata, API JUnit and image reports are retained under
+ci-1f7d5ab. JUnit has1605 cases,0 failures/errors and3 skips. These remain the
+freshclam/freshclam-daemon/clamd foreground checks requiring a supplied pinned
+image; the separate private-file runtime job passed its actual native checks.
+Image inventories contain72/38/70/49/16/107/43 packages for API/ClamAV/ingress/
+PostgreSQL/Redis/storage/web respectively, all with zero vulnerabilities. No
+ignore, new dependency or ISA requirement was introduced.
+
+The final private collect03-proof.tar.gz includes cursor-red01/green07 and the
+manual capture follow-up. Transfer and all659 manifest hashes were verified;
+598 credential canaries matched no collected file. Archive SHA256 is
+d13239a4c893cdda7394175506432eebe0e6b49df358a3d6123d09373c183c93.
+Audit/manifest metadata add two archive entries. Raw evidence stays private.
+
+The one warning is Pydantic UnsupportedFieldAttributeWarning for the limit alias
+while test_queue_atomic_failure_overflow_and_competing_versions constructs apps
+concurrently. The complete warning block was inspected. Existing queue parameters
+use native Annotated[int, Query(ge=1, le=100)] and no explicit alias. This warning
+also predates this increment in accepted staff-file/incoming-file evidence; it
+was absent at85dd260 and recurred here. Its root cause is not established by the
+warning attribution. Classify it as an existing intermittent schema-generation
+observation, not a new failed assertion or a proven product defect. Retain the
+test/schema-owner investigation in integrated hardening. It was not suppressed,
+and this run is not called warning-free.
+
+The original independent review remains SPEC MISS/CHANGES REQUESTED for one P2.
+Executor resolution:1f7d5ab fixes precisely its UTC-overflow boundary, with actual
+authenticated RED/GREEN, both422 invalid_cursor cases, all36 unified tests and
+the fresh complete hosted gates above. No other finding or minor was left open.
+Under the one-pass execution workflow this satisfies the review's stated
+acceptance condition; no second reviewer approval is claimed.
+
+The read-only increment is accepted. Structured durable automation is the next
+separate contract. SLA, analytics, import, compatible-image rollback, encrypted
+restore and final integrated x86-64-v1 qualification remain open. Synthetic timing
+does not establish a production SLO. Docs-only closure reuses these exact runtime
+results; it does not claim new full runs on the documentation commit.

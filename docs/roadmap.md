@@ -1,6 +1,6 @@
 # Development roadmap and decision register
 
-Updated 2026-11-13. User authorized incremental development after contracts,
+Updated 2026-11-14. User authorized incremental development after contracts,
 direct pushes to main and no PR. Continue safe independent work while questions
 await answers. This does not authorize production deployment or real data import.
 
@@ -73,15 +73,17 @@ skips,209 browser and both Container jobs passed. Final independent whole-increm
 review returned SPEC PASS/QUALITY APPROVED,0 actionable findings; manual links
 are accepted. See
 docs/ticket-work-link-evidence.md for original failures/source hashes/limits.
-Next ADR0040/planning commitf5c45f6 preserves legacy tasks while defining the
-authorized unified queue. Native backend passed36 final new cases plus the legacy
-BIGINT/migration case, with114 earlier affected cases, Ruff/mypy and stable
-generated contracts. Concurrent unlink uses one statement snapshot; decimal ticket
-numbers preserve native precision. Actual browser modules passed26 cases and5
-final cases, and the full packaged command passed591.728s with37,617 frozen inputs.
-Final exact-source hosted/security gates and independent review remain pending,
-not accepted UI or
-automation. Final integrated qualification remains deferred until development.
+ADR0040 unified queue is development accepted at1f7d5ab. The legacy task surface
+is preserved. Native36 final cases,1 legacy precision/migration case,114 earlier
+affected cases,26 affected browser cases and5 final browser cases passed. The
+full packaged command passed591.728s, including recreation/current-scope proof.
+Independent source/visual review found one P2 cursor overflow; actual RED/GREEN
+and the narrow fix satisfied its one-pass acceptance condition. All five final
+exact-source hosted gates passed:1602 API/3 explicit skips/1 retained existing
+Pydantic warning,214 browser,both Container jobs and seven zero-vulnerability
+image inventories. See docs/unified-work-evidence.md for hashes, failures and
+limits. Structured durable automation is the next separate contract; SLA,
+analytics/import and integrated hardening/qualification remain open.
 
 Private-files Task4 is implemented in c5c668c with reviewed corrections 039a631.
 Local full175 at c5 and final scoped9 browser/3 child-output tests passed; final

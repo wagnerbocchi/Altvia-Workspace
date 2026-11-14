@@ -465,7 +465,8 @@ projection below. Structured automation still requires its writer contract.
 
 ## My Work and analytics
 
-ADR0040 is selected and in development; acceptance is tracked separately. Keep
+ADR0040 read/browser development is accepted at1f7d5ab; exact gates and limits are
+in docs/unified-work-evidence.md. Structured automation remains separate. Keep
 GET /my-work's task-only schema, filters and cursor unchanged. Add read-only
 GET /my-work/unified with {items,next_cursor,as_of}. Strict query fields:
 limit1..100/default50, cursor<=512, kind all|work_item|ticket/defaultall, optional

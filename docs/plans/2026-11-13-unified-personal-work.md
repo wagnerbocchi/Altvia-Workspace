@@ -2,7 +2,9 @@
 
 Goal: implement ADR0040 and ADR0007's real personal queue while preserving the
 existing task-only HTTP contract and advanced task view. This is a plan, not
-implementation or a passing gate. Current manual-link Task4 validation remains
+implementation or a passing gate. Closure2026-11-14: all tasks below completed;
+development accepted at1f7d5ab with exact evidence in docs/unified-work-evidence.md.
+Current manual-link Task4 validation remains
 separately tracked in docs/ticket-work-link-evidence.md.
 
 Architecture: reuse native PostgreSQL visibility/FTS predicates and N:N links in
@@ -111,7 +113,7 @@ transport and owns its filter/paging state inside the current private session.
   bounded visible origins and explicit domain/deadline labels. Keep existing
   TaskFilters/results in their separate keyed subtree. No client-side join,
   synthetic counts, privileged directory lookup or stale cached rows after denial.
-- [ ] Run the new and affected discovery/browser modules through the repository's
+- [x] Run the new and affected discovery/browser modules through the repository's
   real HTTPS/API/PG launcher. Check keyboard,390/1440 both themes, overflow and
   axe in a shared render batch; inspect actual captures. Run pnpm web:check,
   pnpm web:build and installed native-dependency guards. Independent source/visual
@@ -129,15 +131,15 @@ docs/unified-work-evidence.md; update ADR status, roadmap and continuous ledger.
   require readable work and no hidden ticket origin/standalone row. Preserve the
   native pair/history receipts and existing exact singleton canaries. Make no new
   writes solely to fit a result count.
-- [ ] Run relevant packaged proof/static gates. Preserve exact source, commands,
+- [x] Run relevant packaged proof/static gates. Preserve exact source, commands,
   outcomes, failures, raw hashes and narrow evidence limits. Source review before
   publication, then observe all five exact-source hosted/security workflows,
   including both Container jobs. Reuse unchanged valid evidence appropriately;
   no unexecuted gate is labeled passed.
-- [ ] Obtain one final independent whole-increment review after exact gates.
+- [x] Obtain one final independent whole-increment review after exact gates.
   Record all findings and corrected proofs. Commit source and evidence in small
   batches, direct push main under existing user authorization; no PR.
-- [ ] Mark this read-only development increment accepted only after its required
+- [x] Mark this read-only development increment accepted only after its required
   evidence. Keep actual compatible-image rollback/encrypted restore and final
   integrated x86-64-v1 qualification pending. The next separate contract is
   structured durable automation; SLA, analytics, import and integrated hardening

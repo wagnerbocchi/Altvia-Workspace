@@ -268,9 +268,80 @@ any row, configuration event or protected receipt before dropping derived schema
 Preexisting native state/grants/history are preserved. Empty roundtrip and actual
 least-privilege/atomic rollback proof are required before accepting this schema.
 
-Cycle/evaluator storage in migration32 is a later owner, with its detailed
-counter/progress/event contract in docs/plans/2026-11-14-ticket-sla.md. The generic
-future-domain table below remains a planning overview, not implementation proof.
+### Selected migration32 cycle/evaluator contract (not implemented yet)
+
+The bounded sla_clock owner supplies immutable scalar continuation; no cycle is
+persisted by that arithmetic alone. Migration32 belongs to the actual native
+freeze/evaluator/acceptance owners and introduces four private tables:
+
+- ticket_sla_states: PK(ticket_id,cycle_number1..2147483647), immutable client_id,
+  queue_id, start_version/start_at/start_status and initial category/priority.
+  Same-client/queue ticket FK; start_version references the existing unique
+  native(ticket_id,version) history key. Optional policy_id/policy_version is a
+  complete pair with the existing same-context immutable policy revision FK.
+  Unconfigured is explicit, with no goal rows, targets or timer. Derived end_version/
+  end_at is an optional pair referencing native same-ticket history, with version
+  greater than start and nondecreasing time. Worker-owned first_response_delivery_id/
+  first_response_at is a complete validated acceptance pair; no actor is granted
+  authority by these facts. Worker-owned positive BIGINT evaluator version,
+  evaluated_at, computed_through_at, next_check_at and fixed safe_error retain
+  progress/failure. State is unconfigured|evaluating|ready|unavailable; stale is
+  computed read-only from observation age, never written by an HTTP clock.
+- ticket_sla_goals: PK(ticket_id,cycle_number,goal) with restrictive cycle FK;
+  goal is exactly first_response|resolution. Scalar evaluated_through_at,
+  last_history_version (existing same-ticket history FK), current_status,
+  elapsed_us0..3155760000000000, due_at, search_through_at and
+  search_remaining_us0..31536000000000 serialize ClockProgress. Fixed outcome is
+  evaluating|running|paused|approaching|fulfilled|unfulfilled|breached. Target is
+  derived from the captured policy, not independently editable or duplicated.
+  due_at implies zero search remainder; absent due_at retains a positive remainder.
+  Paused incomplete search has null search_through_at. A reached deadline remains
+  recorded after pause; a breach takes display precedence over that pause.
+  Fulfillment derives from the cycle's validated acceptance/end fact; observed
+  breach/correction derives from immutable events, avoiding duplicate truth columns.
+- ticket_sla_acceptances: immutable PK(delivery_id), unique source_event_id,
+  same-cycle FK, native same-ticket delivery FK, message ticket_version,
+  accepted_at, delivery_version and observed_at. The metadata-only source view
+  exposes delivery/message IDs, native message version, accepted time and delivery
+  version, never message/wire/recipient bodies. Capture strictly validates the
+  existing schema1 envelope against that native source and cycle membership before
+  insertion. A processed receipt alone is never evidence: invalid/ineligible
+  events are acknowledged without inserting a fact. This prevents malformed
+  acknowledged events from later satisfying a clock through a permissive join.
+- ticket_sla_events: immutable UUID id, same-cycle/goal FK, fixed breached|corrected
+  kind, occurred_at and observed_at. A partial unique(ticket,cycle,goal) permits
+  one breach; separate unique correction delivery evidence preserves later
+  outcomes without deleting it. Corrections are first_response only and reference
+  a same-cycle validated acceptance, with fixed fulfilled|breached outcome.
+  No note/body/email/raw exception is stored. Native delivery metadata gains only
+  the restrictive composite uniqueness needed by these same-ticket FKs.
+
+New actual tickets atomically insert one cycle and, only if configured, the two
+initial goals after native creation history flush. A real reopen does likewise;
+replay/no-op never does. Injected goal/config failures roll back the entire native
+ticket/history/audit/outbox/receipt. No legacy ticket is backfilled. Resolution is
+derived from immutable native history; the API receives no derived-clock UPDATE.
+
+The worker uses identity/client/team/queue/ticket/cycle ordering, separate bounded
+acceptance receipts and entirely DB-local arithmetic. Each actual goal receives
+at most16 UTC dates for elapsed plus future search and499 history rows; start/end
+facts keep the total within32 dates/1000 history rows. Separate future progress
+survives ordinary observations; a new relevant pause/resume resets its anchor.
+An earlier first-response candidate resets only that goal's derived progress.
+Cycle progress, unique event, audit/outbox and receipt commit atomically; failure
+retains prior committed progress. Invalid/poison rows move their next check safely
+and cannot monopolize a bounded due batch.
+
+API gets SELECT/INSERT on states/goals, scoped state/event SELECT and no evaluator
+UPDATE or acceptance writer. Worker gets exact configuration, metadata history,
+source-view and state/goal/fact/event privileges required by the real owners;
+it gains no ticket status, message/note body, identity or grant writer. Native
+status vocabulary is a dependency-free shared owner, reexported by the old DTO
+module. Contraction locks these tables and refuses rows, history, source receipts
+or new event envelopes before DDL. Retain expanded schema and version-aware
+reader/worker on binary rollback. This section selects no pass or production hours.
+
+The generic future-domain table below remains a planning overview, not proof.
 
 | Tables | Contract |
 | --- | --- |

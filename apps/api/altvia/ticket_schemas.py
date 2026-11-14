@@ -7,17 +7,9 @@ from uuid import UUID
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
 from altvia.attachment_schemas import AttachmentSelection, AttachmentSummary
+from altvia.ticket_state import TICKET_TRANSITIONS as TICKET_TRANSITIONS
+from altvia.ticket_state import Status as Status
 from altvia.work_schemas import Candidate, Priority
-
-Status = Literal["new", "open", "pending_customer", "pending_third_party", "resolved", "closed"]
-TICKET_TRANSITIONS = {
-    "new": {"open"},
-    "open": {"pending_customer", "pending_third_party", "resolved"},
-    "pending_customer": {"open", "resolved"},
-    "pending_third_party": {"open", "resolved"},
-    "resolved": {"closed", "open"},
-    "closed": {"open"},
-}
 
 
 def _text(value: object) -> object:

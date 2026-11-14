@@ -154,6 +154,27 @@ sla_acceptance_v1, independently of activity status; no delivery-time watermark.
 capture_acceptances(engine,limit=20) -> int; evaluate_due(engine,limit=20) -> int.
 Both are bounded DB-only operations called in the existing main worker loop.
 
+The internal sla_clock owner supplies immutable HistoryPoint/ClockProgress and
+bounded step results for the two actual response/resolution goals. It consumes
+integer microseconds and native ordered history; it has no account, transport or
+HTTP authority. Each goal gets at most16 UTC dates (actual plus future search)
+and499 history rows per step. Two goals plus the start/resolution source facts
+therefore remain within32 dates/1000 ordered history rows. Future search retains
+its own anchor, through instant and remaining budget; a new actual observation
+does not restart a long search. A relevant pause/resume invalidates only a future
+projection, retaining an actual deadline already reached. Equality is on time;
+only business elapsed greater than the target breaches. An early terminal goal
+needs no invented future deadline. Unknown, reversed or discontinuous native
+history fails timing_inconsistent. No-op same-instant progress still advances
+native history version. Partial history never grants a projection past unseen rows.
+
+Persist the two actual goal progress records in a constrained ticket_sla_goals
+child keyed by(ticket_id,cycle_number,goal), rather than duplicate response_*/
+resolution_* columns or opaque mutable JSON in ticket_sla_states. Goal is the
+fixed first_response|resolution set, not an extensible workflow vocabulary. This
+adds one private relational table with no new user resource, seed or endpoint.
+Define its exact columns/ACL/atomic counters in the data model before migration32.
+
 Use the cycle/event tables in ADR0042. Persist fixed response/resolution progress
 fields separately: evaluated_through_at,last_history_version,current_status,
 elapsed_us,deadline search through/remaining,fulfilled_at and outcome. A real

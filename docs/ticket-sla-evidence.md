@@ -6,6 +6,48 @@ configuration APIs have development evidence below. Native cycles/evaluator, UI
 and capability acceptance remain pending. No hours, holidays or targets are
 configured for Altvia.
 
+## Bounded response/resolution clock foundation
+
+Task3 now has an internal immutable clock step owner, with integer microseconds,
+native status continuity and separate actual/future progress. Each goal is bounded
+to16 UTC dates and499 history rows. Long future searches retain their anchor
+across observations; relevant pause/resume clears a future projection, while an
+already reached deadline and breach remain. Exact equality is on time; a terminal
+response with no acceptance remains unfulfilled. Source timing discontinuity and
+unrepresentable deadlines fail explicitly. No DB cycle/evaluator/API/UI exists
+from this pure arithmetic sub-batch.
+
+clock-red01 failed18 actual owner assertions before source. Initial18 cases then
+passed. The later pause-after-breach test reproduced a misleading paused outcome;
+the fix gives breach precedence while retaining the actual pending source state.
+Local126 arithmetic/calendar/schema cases passed afterward.
+
+Native clock-native01 passed tests/static but its private benchmark ended in a
+paused state while expecting an incomplete future search. The benchmark fixture
+was corrected to499 real transitions ending open; no product change was made.
+clock-native02 passed tests/static and timing bounds, but pure-engine RSS127260KiB
+exceeded the preselected96MiB limit. Tracing showed that importing ticket_schemas
+loaded work DTOs/deadlines and then identity/models/SQLAlchemy/Pydantic. A separate
+clean-process import test genuinely failed before the correction. The unchanged
+Status/TICKET_TRANSITIONS definitions now have a standard-library-only
+ticket_state owner, explicitly reexported by the old DTO module. No rule changed.
+The entire generated OpenAPI remains byte-identical after this extraction.
+
+Final clock-native03 passed127 cases in3.13s, native Ruff/check/format and strict
+mypy82. Pure benchmark: two goals/32 dates/998 history rows0.288997s;
+32 distinct clocks0.529305s; peak engine RSS26048KiB. Both predefined2s batch
+limits and96MiB memory limit passed. Native execution has no network, nonroot
+UID10001, read-only root/source, no capabilities, no-new-privileges,1 CPU/512MiB.
+These are arithmetic measurements, not whole-worker load or final qualification.
+Native clock-ticket-regression01 separately passed62 real ticket/manual-mail
+promotion cases in217.55s plus all static gates. Current API source/tests match
+both frozen snapshots;111 final configuration/clock evidence files were transferred
+and hash-verified, alongside the279 earlier retained configuration files.
+
+The exact four-table cycle/goal/validated-acceptance/event contract is now recorded
+before migration32 source. Task3 persistence, native hooks, delivery evidence,
+worker scheduling/activity and ticket read outcomes remain pending.
+
 ## Scoped configuration APIs
 
 Eight actual nested calendar/policy list/detail/create/PATCH operations now use

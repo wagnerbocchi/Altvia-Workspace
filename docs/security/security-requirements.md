@@ -64,7 +64,8 @@ and client operations_manager, explicit queue operations_manager and native queu
 configuration management. Neither platform administration alone, team metadata,
 project membership nor assignment grants access. Scope lists/details/choices and
 protected receipt disclosure identically. There is no general global SLA read.
-Actual migration/API proof remains pending; pure calendar tests establish no grant.
+Actual configuration migration/API proof is retained in docs/ticket-sla-evidence.md.
+Pure calendar/clock tests establish no additional cycle or worker grant.
 
 Identity serialization precedes authentication for writes, then native client/
 team/queue and calendar/policy locks. Current scope and valid headers precede

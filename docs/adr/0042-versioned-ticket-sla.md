@@ -183,6 +183,15 @@ Tables:
 - ticket_sla_events: immutable cycle/goal/type/source identity and exact occurrence/
   observation metadata. Unique logical breach(ticket,cycle,goal); separate unique
   correction evidence key. No body, email address, raw exception or account hash.
+- ticket_sla_goals: exactly the configured cycle's two fixed response/resolution
+  progress records, restrictive cycle FK and unique(ticket,cycle,goal). Native
+  scalar columns own elapsed/history/actual and future-deadline continuation,
+  avoiding duplicated prefixed columns or mutable opaque JSON. This is private
+  evaluator state, not a new configurable goal type or user-facing resource.
+- ticket_sla_acceptances: immutable validated same-cycle public acceptance facts,
+  bound to the native delivery and source event. Acknowledging an invalid event
+  never inserts a fact. This keeps validation separate from a processed receipt
+  and avoids reinterpreting malformed acknowledged metadata as proof later.
 
 Storage ruling before migration source: own holidays inside the immutable
 calendar revision, like weekly windows. A separate insert-only holiday child

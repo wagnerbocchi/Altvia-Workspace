@@ -717,6 +717,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/ticket-queues/{queue_id}/automation-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Listing */
+        get: operations["listing_api_v1_ticket_queues__queue_id__automation_rules_get"];
+        put?: never;
+        /** Create */
+        post: operations["create_api_v1_ticket_queues__queue_id__automation_rules_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ticket-queues/{queue_id}/automation-rules/{rule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Detail */
+        get: operations["detail_api_v1_ticket_queues__queue_id__automation_rules__rule_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch */
+        patch: operations["patch_api_v1_ticket_queues__queue_id__automation_rules__rule_id__patch"];
+        trace?: never;
+    };
     "/api/v1/ticket-queues/{queue_id}/categories": {
         parameters: {
             query?: never;
@@ -2792,6 +2828,114 @@ export interface components {
         };
         /** RetryScan */
         RetryScan: Record<string, never>;
+        /** RuleCreate */
+        RuleCreate: {
+            /**
+             * Client Id
+             * Format: uuid
+             */
+            client_id: string;
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "low" | "medium" | "high" | "critical";
+            /** Ticket Statuses */
+            ticket_statuses: ("new" | "open" | "pending_customer" | "pending_third_party" | "resolved")[];
+            /** Title */
+            title: string;
+        };
+        /** RuleOutput */
+        RuleOutput: {
+            /**
+             * Action Id
+             * Format: uuid
+             */
+            action_id: string;
+            /**
+             * Authorizer Id
+             * Format: uuid
+             */
+            authorizer_id: string;
+            /** Cancelled Through Version */
+            cancelled_through_version: number;
+            /**
+             * Client Id
+             * Format: uuid
+             */
+            client_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Enabled */
+            enabled: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "low" | "medium" | "high" | "critical";
+            /**
+             * Queue Id
+             * Format: uuid
+             */
+            queue_id: string;
+            /** Queue Version */
+            queue_version: number;
+            /** Ticket Statuses */
+            ticket_statuses: ("new" | "open" | "pending_customer" | "pending_third_party" | "resolved")[];
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+        };
+        /** RulePage */
+        RulePage: {
+            /** Items */
+            items: components["schemas"]["RuleOutput"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+        };
+        /** RulePatch */
+        RulePatch: {
+            /** Enabled */
+            enabled?: boolean | null;
+            /** Priority */
+            priority?: ("low" | "medium" | "high" | "critical") | null;
+            /** Ticket Statuses */
+            ticket_statuses?: ("new" | "open" | "pending_customer" | "pending_third_party" | "resolved")[] | null;
+            /** Title */
+            title?: string | null;
+        };
+        /** RuleReceipt */
+        RuleReceipt: {
+            /**
+             * Client Id
+             * Format: uuid
+             */
+            client_id: string;
+            /**
+             * Queue Id
+             * Format: uuid
+             */
+            queue_id: string;
+            /**
+             * Rule Id
+             * Format: uuid
+             */
+            rule_id: string;
+        };
         /** SenderChoice */
         SenderChoice: {
             /** From Email */
@@ -5814,6 +5958,161 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ActivityPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listing_api_v1_ticket_queues__queue_id__automation_rules_get: {
+        parameters: {
+            query: {
+                client_id: string;
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                queue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RulePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_api_v1_ticket_queues__queue_id__automation_rules_post: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "If-Match": string;
+            };
+            path: {
+                queue_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleCreate"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleReceipt"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detail_api_v1_ticket_queues__queue_id__automation_rules__rule_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                queue_id: string;
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleOutput"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_api_v1_ticket_queues__queue_id__automation_rules__rule_id__patch: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": string;
+                "If-Match": string;
+                /** @description Reviewed queue version */
+                "If-Match-Queue": string;
+            };
+            path: {
+                queue_id: string;
+                rule_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RulePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleReceipt"];
                 };
             };
             /** @description Validation Error */

@@ -90,8 +90,11 @@ finite durable assignment writer. Independent builder check found two important
 contract boundaries, resolved before source: a monotone disable-revision floor
 fences old executions after off/on; target-only automated creation retains truthful
 history without private execution/source IDs. The next migration is reserved29.
-Configuration, atomic staging, worker/effect, real UI and packaged acceptance are
-not yet implemented or accepted. Production title/status/scope is Q-23; leave
+Schema/configuration/atomic staging Task1 is natively complete:58 schema/incumbent
+checks,108 affected API checks and3 final authority/private-metadata cases passed,
+plus static and stable repeated generation with web check. Worker/effect, real UI
+and packaged/whole-feature acceptance remain open. See
+docs/assignment-automation-evidence.md. Production title/status/scope is Q-23; leave
 real rules unconfigured while implementing controlled synthetic fixtures.
 
 Private-files Task4 is implemented in c5c668c with reviewed corrections 039a631.

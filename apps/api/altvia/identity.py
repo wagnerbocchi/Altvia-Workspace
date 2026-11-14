@@ -54,7 +54,7 @@ def record_event(
     *,
     aggregate_type: str = "identity",
     details: Mapping[str, str | None] | None = None,
-) -> None:
+) -> OutboxEvent:
     metadata = dict(details or {})
     db.add(
         AuditLog(
@@ -66,25 +66,25 @@ def record_event(
             details={**metadata, "actor_kind": "user" if actor_id else "management_command"},
         )
     )
-    db.add(
-        OutboxEvent(
-            aggregate_type=aggregate_type,
-            aggregate_id=resource_id,
-            aggregate_version=version,
-            event_type=event,
-            schema_version=1,
-            payload={
-                **metadata,
-                "actor_id": str(actor_id) if actor_id else None,
-                "actor_kind": "user" if actor_id else "management_command",
-            },
-            occurred_at=now,
-            correlation_id=correlation_id,
-            status="pending",
-            attempts=0,
-            next_attempt_at=now,
-        )
+    event_record = OutboxEvent(
+        aggregate_type=aggregate_type,
+        aggregate_id=resource_id,
+        aggregate_version=version,
+        event_type=event,
+        schema_version=1,
+        payload={
+            **metadata,
+            "actor_id": str(actor_id) if actor_id else None,
+            "actor_kind": "user" if actor_id else "management_command",
+        },
+        occurred_at=now,
+        correlation_id=correlation_id,
+        status="pending",
+        attempts=0,
+        next_attempt_at=now,
     )
+    db.add(event_record)
+    return event_record
 
 
 def charge_login_attempt(db: Session, email: str, source: str, now: datetime) -> None:

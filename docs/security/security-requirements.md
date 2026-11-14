@@ -230,7 +230,12 @@ contraction with links, history or receipts; no purge is authorized. Actual imag
 pair rollback rehearsal remains a consolidated integrated-hardening gate.
 
 
-## ADR0041 structured automation boundary (selected, not yet implemented)
+## ADR0041 structured automation boundary
+
+Task1 configuration/source staging is implemented and natively validated. The
+worker effects, metadata-only writer grants, schema2 projection/privacy/interface
+and whole-feature acceptance below remain Task2/Task3/Task4 contracts. See
+docs/assignment-automation-evidence.md; no production activation is implied.
 
 Configuration requires active queue configuration manager AND explicit queue
 operations_manager AND client operations_manager with ceiling. No platform/team/

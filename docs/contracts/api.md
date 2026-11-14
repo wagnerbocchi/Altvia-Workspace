@@ -525,11 +525,14 @@ from position. Existing execution history retains the original rule revision.
 Transport is at least once. Exactly-once claims refer only to protected business
 effects, not Redis or SMTP delivery.
 
-### Selected assignment automation contract (not yet implemented)
+### Assignment automation configuration and staging
 
 ADR0041 and docs/plans/2026-11-14-assignment-automation.md select one finite,
 disabled-by-default ticket.assigned/create_or_link action per queue/client.
 Rule/action IDs survive edits/disable; no delete/replacement/new-work endpoint.
+Rule configuration/staging are implemented in ADR0041 Task1 and generated in
+OpenAPI; native proof is in docs/assignment-automation-evidence.md. Worker effects,
+execution/retry routes and the browser interface below remain Task2/Task3 contracts.
 Rule revisions are immutable and executions capture the enabled revision in the
 actual assignment transaction. A separate durable execution/effect receipt owns
 the worker's business action; existing activity delivery is not that receipt.
@@ -560,8 +563,9 @@ automation/authorizer labels; reciprocal source history retains both scopes.
 The three automated native creation/link events use strict schema2 provenance;
 all manual schema1 envelopes remain unchanged. Activation requires a drained,
 compatible producer/worker/history-reader set. Pre-feature binaries are not
-compatible rollback images. Current documentation is a contract, not executed
-automation proof; real policy/title/scope stays unconfigured under Q-23.
+compatible rollback images. Configuration/staging evidence does not establish
+automatic work creation or whole-feature acceptance; real policy/title/scope
+stays unconfigured under Q-23.
 
 ## Phase 3A queue configuration under ADR-0026
 

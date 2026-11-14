@@ -333,9 +333,12 @@ Raw capture/cursor/source-version/audit/outbox commit together. No runtime table
 grant is added. Downgrade refuses state or durable private checkpoint history.
 
 
-## Selected ADR0041 assignment automation model (planned)
+## ADR0041 assignment automation model
 
-Migration b46087000029 is reserved after manual links28; no execution is claimed.
+Migration b46087000029 follows manual links28 and is implemented with native
+constraints/privilege/contraction proof. Task1 configuration and source staging
+are natively complete; worker effects, browser and whole-feature acceptance remain
+open. Exact results and limits are in docs/assignment-automation-evidence.md.
 automation_rules owns immutable queue/client/action identity, unique scope, positive
 version and monotone cancelled_through_version0..version. Immutable numbered
 automation_rule_revisions stores bounded title/native priority/status set, enabled

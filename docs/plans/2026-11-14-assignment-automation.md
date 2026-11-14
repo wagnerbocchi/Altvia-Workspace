@@ -79,29 +79,29 @@ require active parents; disable and committed replay survive archive.
 All lists limit1..100/default50, actor/parent/client-bound cursor, unique known
 query fields only. Name/ID alone supplies no grant. No DELETE endpoint.
 
-- [ ] Write real native tests first for missing tables/routes; prove actual RED.
+- [x] Write real native tests first for missing tables/routes; prove actual RED.
   Include rule scope/action uniqueness, revision snapshot/invalid enums/array
   duplicates, composite effect/source FK mismatches, paired lease/state/attempt
   checks, SQL runtime immutable-column denial and empty/populated downgrade guards.
   Preserve schema1 rows and older migration behavior. No test database shared.
-- [ ] Implement migration/model/explicit grants with no enabled records. Include
+- [x] Implement migration/model/explicit grants with no enabled records. Include
   ActivityEvent actor CHECK expansion, constrained to the three schema2 types;
   all old actor shapes preserved. API receives only intended rule/revision/job
   writes; no worker domain writer grant until Task2's actual caller is implemented.
-- [ ] Add API tests for every conjunct/non-grant, scoped list and hidden parent,
+- [x] Add API tests for every conjunct/non-grant, scoped list and hidden parent,
   strict bodies/query/header grammar, archived disable/no-op, parent/child versions,
   protected uncertain POST/PATCH and rollback of queue/revision/audit/receipt.
-- [ ] Implement native configuration owner and private metadata event validation.
+- [x] Implement native configuration owner and private metadata event validation.
   Global identity lock precedes auth; native client then team/queue then rule.
   Every real disable advances monotone cancelled_through_version to new revision;
   reenable preserves it. Ordinary edit retains earlier staged snapshots.
-- [ ] Prove enabled assignment stages exactly one job/source/revision atomically
+- [x] Prove enabled assignment stages exactly one job/source/revision atomically
   through create/patch/claim/native-mail create; disabled/no rule stages none.
   Force enqueue/audit failure and assert ticket/version/history/event rollback.
   Protected replay emits no second job. Old manual event JSON remains exact.
-- [ ] Implement stage_assignment at the actual _assigned owner, controlled flush
+- [x] Implement stage_assignment at the actual _assigned owner, controlled flush
   for the real event UUID and strict schema/context validation, never a time scan.
-- [ ] Run native new modules plus queue/ticket/mail/link nearest regressions;
+- [x] Run native new modules plus queue/ticket/mail/link nearest regressions;
   uv run ruff check apps/api; uv run ruff format --check apps/api; uv run mypy;
   migration head/metadata gates. Expected: real pass, explicit limits retained.
   Export OpenAPI/types with installed commands and web check; preserve legacy

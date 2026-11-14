@@ -11,7 +11,7 @@ from fastapi import APIRouter, Query, Request, Response
 from sqlalchemy import Engine, literal, select, tuple_, union_all
 from sqlalchemy.orm import Session
 
-from altvia import attachment_links, identity
+from altvia import attachment_links, automation_rules, identity
 from altvia import tickets as registry
 from altvia.activity_api import ActivityPage, activity_page
 from altvia.admin_http import (
@@ -39,6 +39,7 @@ from altvia.models import (
     ActivityEvent,
     Client,
     ClientContact,
+    OutboxEvent,
     Ticket,
     TicketIncomingMessage,
     TicketMessage,
@@ -124,8 +125,8 @@ def _event(
     *,
     now: datetime | None = None,
     **details: str | None,
-) -> None:
-    identity.record_event(
+) -> OutboxEvent:
+    return identity.record_event(
         db,
         actor.id,
         item.id,
@@ -153,7 +154,7 @@ def _assigned(
     *,
     now: datetime | None = None,
 ) -> None:
-    _event(
+    event = _event(
         db,
         actor,
         item,
@@ -164,6 +165,8 @@ def _assigned(
         new_assignee_id=str(item.assignee_id),
         changed_fields=",".join(fields),
     )
+    db.flush()
+    automation_rules.stage_assignment(db, event, item)
 
 
 def create_record(

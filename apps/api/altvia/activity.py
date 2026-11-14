@@ -330,13 +330,18 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
             return False
         if (
             event.event_type in INTAKE_EVENTS | CASE_EVENTS
+            or event.event_type.startswith("automation.")
             or event.event_type == "mail.delivery_changed"
             or event.event_type in {"file.uploaded", "file.scan_changed", "file.scan_retried"}
         ):
             # Unclassified mail has no shared-feed audience. Acknowledge only its
             # strictly redacted metadata; raw tables remain inaccessible here.
             try:
-                if event.event_type.startswith("file."):
+                if event.event_type.startswith("automation."):
+                    from altvia.automation_rules import validate_private_event
+
+                    validate_private_event(event)
+                elif event.event_type.startswith("file."):
                     from altvia.attachment_scan import validate_event
 
                     validate_event(event)

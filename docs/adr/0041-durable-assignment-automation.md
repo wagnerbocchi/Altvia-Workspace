@@ -1,8 +1,11 @@
 # ADR-0041: Durable structured assignment automation
 
 Date2026-11-14. Selected engineering contract after independent builder check;
-both important contract questions are resolved below. No automation implementation or passing gate is
-claimed. Master specification4.2/8.1, ADR0004/0017/0020/0022/0028/0039/0040 and
+both important contract questions are resolved below. Task1 schema/configuration/
+atomic staging is implemented and natively validated; the worker effect, UI and
+whole-feature acceptance remain open. See docs/assignment-automation-evidence.md
+for exact outcomes and limits. Master specification4.2/8.1,
+ADR0004/0017/0020/0022/0028/0039/0040 and
 the current API/security contracts were traced before this decision. The user
 delegated implementation choices and continuous development; production rules,
 real import, retention deletion and production deployment remain unauthorized.

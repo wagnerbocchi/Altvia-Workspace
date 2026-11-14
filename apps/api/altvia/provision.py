@@ -51,6 +51,10 @@ ROLE_PRIVILEGES = {
         "automation_executions": {"SELECT", "INSERT"},
         "automation_effects": {"SELECT"},
         "automation_assignment_sources": {"SELECT"},
+        "business_calendars": {"SELECT", "INSERT"},
+        "business_calendar_revisions": {"SELECT", "INSERT"},
+        "sla_policies": {"SELECT", "INSERT"},
+        "sla_policy_revisions": {"SELECT", "INSERT"},
         "ticket_status_history": {"SELECT", "INSERT"},
         "attachments": {"SELECT", "INSERT"},
         "ticket_notes": {"SELECT", "INSERT"},
@@ -94,6 +98,8 @@ APP_COLUMN_READS = {
     "ticket_participants": {"id", "ticket_id", "contact_id", "email", "active", "version"},
 }
 APP_COLUMN_UPDATES = {
+    "business_calendars": {"version", "updated_at"},
+    "sla_policies": {"version", "updated_at"},
     "automation_rules": {"version", "updated_at", "cancelled_through_version"},
     "automation_executions": {
         "state",
@@ -349,6 +355,18 @@ def _provision_role(connection: Connection, engine: Engine, login_url: str, name
                 sql.Identifier(name),
             )
         )
+    for function in ("valid_business_calendar_windows", "valid_business_calendar_holidays"):
+        raw.execute(
+            sql.SQL("REVOKE ALL ON FUNCTION {}(jsonb) FROM {}").format(
+                sql.Identifier("public", function), sql.Identifier(name)
+            )
+        )
+        if name == "altvia_app":
+            raw.execute(
+                sql.SQL("GRANT EXECUTE ON FUNCTION {}(jsonb) TO altvia_app").format(
+                    sql.Identifier("public", function)
+                )
+            )
     if name == "altvia_app":
         for table, columns in APP_COLUMN_READS.items():
             raw.execute(

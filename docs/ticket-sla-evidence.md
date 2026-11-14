@@ -1,9 +1,37 @@
 # Ticket SLA development evidence
 
 ADR0042 and docs/plans/2026-11-14-ticket-sla.md define the selected contract.
-SLA capability is not complete. Task1 implements only exact bounded calendar
-arithmetic; persisted configuration, native cycles/evaluator, UI and acceptance
-remain pending. No hours, holidays or targets are configured for Altvia.
+SLA capability is not complete. Task1 calendar arithmetic and Task2's storage
+foundation have evidence below. Configuration APIs, native cycles/evaluator, UI
+and acceptance remain pending. No hours, holidays or targets are configured for Altvia.
+
+## Configuration storage foundation
+
+Migration31 adds only four live configuration tables: immutable-scope calendar
+and policy identities plus append-only complete revisions. Canonical bounded
+window/holiday JSONB is checked by invoker-only immutable SQL validators with
+fixed pg_catalog search path. Composite foreign keys preserve same-customer/
+queue/calendar/category scope; NULLS NOT DISTINCT enforces selector uniqueness
+including disabled defaults. TZif size/magic/digest and finite targets/explicit
+pause choices are checked natively. No policy or cycle is seeded.
+
+The API role has SELECT/INSERT and only identity version/timestamp UPDATE; it
+cannot mutate snapshots, scope or delete history. The worker receives no SLA
+table or validator EXECUTE grant in this foundation. Actual runtime-role inserts,
+denied writes/reads/helper calls, malformed nested data, null pause elements,
+empty holidays/pauses, independent maximum targets and all four history/receipt
+contraction guards are exercised. An empty roundtrip preserves real legacy
+identity/event rows and passes Alembic metadata comparison.
+
+schema-red01 failed the actual four-table existence assertion before source.
+schema-green01 stopped at a synthetic fixture's missing required legacy Client
+timestamps; those fixture values were supplied without relaxing product schema.
+schema-green02 passed35 storage cases. Final schema-nearest01 passed90 cases in
+187.45s:39 storage plus incumbent automation migration, runtime provisioning and
+queue regressions. Ruff/check/format and strict mypy passed against the frozen
+native source. PostgreSQL stopped, volumes retained, and only the verified empty
+task-owned internal network was removed. This is isolated development evidence,
+not API/cycle capability or final target qualification.
 
 ## Frozen business-calendar foundation
 

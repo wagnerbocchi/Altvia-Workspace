@@ -1570,3 +1570,189 @@ class AutomationEffect(Base):
     origin_execution_id: Mapped[UUID]
     mode: Mapped[str] = mapped_column(String(10))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class BusinessCalendar(Base):
+    __tablename__ = "business_calendars"
+    __table_args__ = (
+        UniqueConstraint("id", "client_id", "queue_id", name="uq_business_calendar_context"),
+        CheckConstraint("version BETWEEN 1 AND 2147483647", name="ck_business_calendar_version"),
+        Index("ix_business_calendar_scope", "queue_id", "client_id", "id"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    client_id: Mapped[UUID] = mapped_column(
+        ForeignKey("clients.id", ondelete="RESTRICT", onupdate="RESTRICT")
+    )
+    queue_id: Mapped[UUID] = mapped_column(
+        ForeignKey("ticket_queues.id", ondelete="RESTRICT", onupdate="RESTRICT")
+    )
+    version: Mapped[int] = mapped_column(default=1, server_default="1")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class BusinessCalendarRevision(Base):
+    __tablename__ = "business_calendar_revisions"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["calendar_id", "client_id", "queue_id"],
+            [
+                "business_calendars.id",
+                "business_calendars.client_id",
+                "business_calendars.queue_id",
+            ],
+            name="fk_business_calendar_revision_context",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        UniqueConstraint(
+            "calendar_id",
+            "version",
+            "client_id",
+            "queue_id",
+            name="uq_business_calendar_revision_context",
+        ),
+        CheckConstraint("version BETWEEN 1 AND 2147483647", name="ck_calendar_revision_version"),
+        CheckConstraint(
+            "name ~ '[^[:space:]]' AND char_length(name) BETWEEN 1 AND 160 "
+            "AND position(chr(10) in name)=0 AND position(chr(13) in name)=0",
+            name="ck_calendar_revision_name",
+        ),
+        CheckConstraint(
+            "timezone ~ '^[A-Za-z0-9_+/-]{1,100}$' AND timezone !~ '(^/|//|/$)'",
+            name="ck_calendar_revision_timezone",
+        ),
+        CheckConstraint(
+            "public.valid_business_calendar_windows(windows)", name="ck_calendar_revision_windows"
+        ),
+        CheckConstraint(
+            "public.valid_business_calendar_holidays(holidays)",
+            name="ck_calendar_revision_holidays",
+        ),
+        CheckConstraint(
+            "octet_length(tzif) BETWEEN 44 AND 262144 "
+            "AND substring(tzif from 1 for 4)=decode('545a6966','hex') "
+            "AND tzif_sha256 ~ '^[0-9a-f]{64}$' "
+            "AND tzif_sha256=encode(sha256(tzif),'hex')",
+            name="ck_calendar_revision_artifact",
+        ),
+    )
+    calendar_id: Mapped[UUID] = mapped_column(primary_key=True)
+    version: Mapped[int] = mapped_column(primary_key=True)
+    client_id: Mapped[UUID]
+    queue_id: Mapped[UUID]
+    active: Mapped[bool]
+    name: Mapped[str] = mapped_column(String(160))
+    timezone: Mapped[str] = mapped_column(String(100))
+    windows: Mapped[list[dict[str, object]]] = mapped_column(JSONB)
+    holidays: Mapped[list[dict[str, object]]] = mapped_column(JSONB)
+    tzif: Mapped[bytes] = mapped_column(LargeBinary)
+    tzif_sha256: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class SlaPolicy(Base):
+    __tablename__ = "sla_policies"
+    __table_args__ = (
+        UniqueConstraint("id", "client_id", "queue_id", name="uq_sla_policy_context"),
+        UniqueConstraint(
+            "queue_id",
+            "client_id",
+            "category_id",
+            "priority",
+            name="uq_sla_policy_selector",
+            postgresql_nulls_not_distinct=True,
+        ),
+        ForeignKeyConstraint(
+            ["category_id", "queue_id"],
+            ["ticket_categories.id", "ticket_categories.queue_id"],
+            name="fk_sla_policy_category",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        CheckConstraint("version BETWEEN 1 AND 2147483647", name="ck_sla_policy_version"),
+        CheckConstraint(
+            "priority IS NULL OR priority IN ('low','medium','high','critical')",
+            name="ck_sla_policy_priority",
+        ),
+        Index("ix_sla_policy_scope", "queue_id", "client_id", "id"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    client_id: Mapped[UUID] = mapped_column(
+        ForeignKey("clients.id", ondelete="RESTRICT", onupdate="RESTRICT")
+    )
+    queue_id: Mapped[UUID] = mapped_column(
+        ForeignKey("ticket_queues.id", ondelete="RESTRICT", onupdate="RESTRICT")
+    )
+    category_id: Mapped[UUID | None]
+    priority: Mapped[str | None] = mapped_column(String(20))
+    version: Mapped[int] = mapped_column(default=1, server_default="1")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class SlaPolicyRevision(Base):
+    __tablename__ = "sla_policy_revisions"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["policy_id", "client_id", "queue_id"],
+            ["sla_policies.id", "sla_policies.client_id", "sla_policies.queue_id"],
+            name="fk_sla_policy_revision_context",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        UniqueConstraint(
+            "policy_id", "version", "client_id", "queue_id", name="uq_sla_policy_revision_context"
+        ),
+        ForeignKeyConstraint(
+            ["calendar_id", "calendar_version", "client_id", "queue_id"],
+            [
+                "business_calendar_revisions.calendar_id",
+                "business_calendar_revisions.version",
+                "business_calendar_revisions.client_id",
+                "business_calendar_revisions.queue_id",
+            ],
+            name="fk_sla_policy_calendar",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        CheckConstraint(
+            "version BETWEEN 1 AND 2147483647 AND calendar_version BETWEEN 1 AND 2147483647",
+            name="ck_sla_policy_revision_version",
+        ),
+        CheckConstraint(
+            "name ~ '[^[:space:]]' AND char_length(name) BETWEEN 1 AND 160 "
+            "AND position(chr(10) in name)=0 AND position(chr(13) in name)=0",
+            name="ck_sla_policy_revision_name",
+        ),
+        CheckConstraint(
+            "first_response_minutes BETWEEN 1 AND 525600 "
+            "AND resolution_minutes BETWEEN 1 AND 525600 "
+            "AND approach_minutes BETWEEN 0 AND 525600",
+            name="ck_sla_policy_targets",
+        ),
+        CheckConstraint(
+            "coalesce(array_ndims(pause_states),1)=1 "
+            "AND coalesce(array_lower(pause_states,1),1)=1 "
+            "AND cardinality(pause_states) BETWEEN 0 AND 2 "
+            "AND pause_states <@ ARRAY['pending_customer','pending_third_party']::varchar[] "
+            "AND (cardinality(pause_states)<2 OR pause_states[1]<>pause_states[2])",
+            name="ck_sla_policy_pause_states",
+        ),
+    )
+    policy_id: Mapped[UUID] = mapped_column(primary_key=True)
+    version: Mapped[int] = mapped_column(primary_key=True)
+    client_id: Mapped[UUID]
+    queue_id: Mapped[UUID]
+    enabled: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    name: Mapped[str] = mapped_column(String(160))
+    calendar_id: Mapped[UUID]
+    calendar_version: Mapped[int]
+    first_response_minutes: Mapped[int]
+    resolution_minutes: Mapped[int]
+    approach_minutes: Mapped[int]
+    pause_states: Mapped[list[str]] = mapped_column(ARRAY(String(20)))
+    authorizer_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT", onupdate="RESTRICT")
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

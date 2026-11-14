@@ -109,3 +109,20 @@ zero endpoints. Only those networks were removed; containers, volumes and logs
 were preserved. No host/Docker/SSH security configuration changed. The exact
 cleanup record is network-cleanup01.json. Fresh packaged02 uses the corrected
 decimal source and remains pending. No failed run is counted as acceptance.
+
+## Contact regression fixture correction
+
+The full hosted Browser run43547104201 at91ffdbf passed208 cases and failed only
+the pre-existing contact focus regression: clock.pauseAt(now) became a past
+instant after clock.install advanced virtual time. Complete run logs are retained
+under ci-91ffdbf. This is a test setup failure, not a new contact product fix.
+
+The test now pauses one minute ahead before opening the form; its30s test timeout
+keeps that boundary in the future. The form's delayed autofocus remains held.
+Native contact-clock-green01 passed all9 contact cases in36.1s, static/build and
+unchanged frozen maps. Controlled contact-clock-red01 restored only the pre97b
+focus owner in its private snapshot: the same corrected test failed on the
+inactive name input, with8 other cases passing. That negative control proves the
+fixture correction retains the actual keyboard/focus regression check. Canonical
+contact production source was never reverted or changed. Final hosted gates on
+the completed increment remain pending.

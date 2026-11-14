@@ -116,7 +116,9 @@ test("@contacts opening contact fields focuses immediately without a pending tim
   await trigger.focus();
   const now = new Date();
   await page.clock.install({ time: now });
-  await page.clock.pauseAt(now);
+  // Installation already advances virtual time. Pause in the future before
+  // opening the form so its autofocus timer remains held under test.
+  await page.clock.pauseAt(new Date(now.getTime() + 60_000));
   await page.keyboard.press("Enter");
   const name = page.getByLabel("Nome do contato", { exact: true });
   const email = page.getByLabel("E-mail do contato", { exact: true });

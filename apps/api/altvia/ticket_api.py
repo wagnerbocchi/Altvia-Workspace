@@ -195,17 +195,20 @@ def create_record(
     )
     db.add(item)
     db.flush()
-    db.add(
-        TicketStatusHistory(
-            ticket_id=item.id,
-            actor_id=actor.id,
-            from_status=None,
-            to_status="new",
-            reason=None,
-            version=1,
-            occurred_at=now,
-        )
+    history = TicketStatusHistory(
+        ticket_id=item.id,
+        actor_id=actor.id,
+        from_status=None,
+        to_status="new",
+        reason=None,
+        version=1,
+        occurred_at=now,
     )
+    db.add(history)
+    db.flush()
+    from altvia.sla_cycles import freeze_cycle
+
+    freeze_cycle(db, item, history)
     _event(db, actor, item, request, "created", now=now if source == "email" else None)
     if item.assignee_id is not None:
         _assigned(

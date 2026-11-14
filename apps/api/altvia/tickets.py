@@ -443,6 +443,10 @@ def transition(
     )
     db.add(history)
     db.flush()
+    if old in {"resolved", "closed"} and item.status == "open":
+        from altvia.sla_cycles import freeze_cycle
+
+        freeze_cycle(db, item, history)
     return history
 
 

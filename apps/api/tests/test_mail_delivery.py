@@ -20,6 +20,7 @@ from altvia.mail_intake import register_source
 from altvia.mail_participants import attest_requester, register_sender, revoke_requester
 from altvia.mail_settings import SMTPAccount, load_accounts
 from altvia.models import OutboundMessage, OutboxEvent
+from sla_migration_support import pre_sla_ticket
 from sqlalchemy import create_engine, select, text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
@@ -515,7 +516,8 @@ def test_migration_refuses_durable_mail_history(admin_client, db_engine, seeded_
     from alembic import command
     from alembic.config import Config
 
-    prepared(admin_client, db_engine, seeded_user)
+    _, path, _, _, _ = prepared(admin_client, db_engine, seeded_user)
+    pre_sla_ticket(db_engine, path)
     with pytest.raises(DBAPIError, match="Cannot contract durable"):
         command.downgrade(Config("apps/api/alembic.ini"), "b46087000021")
 
@@ -641,6 +643,7 @@ def test_empty_mail_migration_roundtrip_keeps_prior_public_drafts(
     refs = setup(admin_client, db_engine, seeded_user)
     path = ticket(admin_client, refs)
     message = append(admin_client, path).json()["message_id"]
+    pre_sla_ticket(db_engine, path)
     config = Config("apps/api/alembic.ini")
     command.downgrade(config, "b46087000021")
     command.upgrade(config, "head")

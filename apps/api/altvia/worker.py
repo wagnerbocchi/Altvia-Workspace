@@ -22,7 +22,7 @@ from sqlalchemy import Engine, func, or_, select, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from altvia import attachment_scan, automation_execution, mail_delivery
+from altvia import attachment_scan, automation_execution, mail_delivery, sla_execution
 from altvia.activity import CONSUMER, claim_events, consume_event, publication_failed, replay_event
 from altvia.config import WorkerSettings
 from altvia.database import make_engine
@@ -270,6 +270,15 @@ def dispatch_assignment_once(
     return sent
 
 
+def dispatch_sla_once(engine: Engine, stop: Event | None = None) -> int:
+    if stop is not None and stop.is_set():
+        return 0
+    count = sla_execution.capture_acceptances(engine, stop=stop)
+    if stop is None or not stop.is_set():
+        count += sla_execution.evaluate_due(engine, stop=stop)
+    return count
+
+
 def healthy(engine: Engine, broker: RedisBroker, heartbeat: Path) -> bool:
     if not heartbeat.is_file() or not 0 <= time.time() - heartbeat.stat().st_mtime < 30:
         return False
@@ -339,7 +348,10 @@ def main() -> int:
         LOGGER.info("", extra={"event_code": "worker_started"})
         while not stop.is_set():
             try:
-                count = dispatch_once(engine, registered, datetime.now(UTC), stop)
+                # SLA authority is DB-local and keeps progressing during broker
+                # loss. No network call is made under its native write locks.
+                count = dispatch_sla_once(engine, stop)
+                count += dispatch_once(engine, registered, datetime.now(UTC), stop)
                 count += dispatch_assignment_once(engine, broker, datetime.now(UTC), stop)
                 count += dispatch_mail_once(engine, broker, accounts, stop)
                 count += dispatch_file_once(engine, broker, stop)

@@ -234,3 +234,56 @@ class CalendarPage(StrictModel):
 class PolicyPage(StrictModel):
     items: list[PolicyOutput]
     next_cursor: str | None
+
+
+GoalStatus = Literal[
+    "evaluating", "running", "paused", "approaching", "fulfilled", "unfulfilled", "breached"
+]
+CycleState = Literal["unconfigured", "evaluating", "ready", "stale", "unavailable"]
+
+
+class SlaGoalOutput(StrictModel):
+    status: GoalStatus
+    target_minutes: int
+    elapsed_business_seconds: int
+    remaining_business_seconds: int
+    due_at: datetime | None
+    fulfilled_at: datetime | None
+    breached_at: datetime | None
+    corrected: bool
+
+
+class SlaCycleOutput(StrictModel):
+    number: int
+    start_at: datetime
+    end_at: datetime | None
+    initial_category_id: UUID | None
+    initial_priority: Priority
+    policy_name: str | None
+    policy_version: int | None
+    calendar_name: str | None
+    calendar_version: int | None
+    timezone: str | None
+    state: CycleState
+    computed_through_at: datetime | None
+    evaluated_at: datetime | None
+    safe_error: (
+        Literal[
+            "timing_inconsistent", "calculation_unavailable", "source_invalid", "processing_failed"
+        ]
+        | None
+    )
+    first_response: SlaGoalOutput | None
+    resolution: SlaGoalOutput | None
+
+
+class SlaCyclePage(StrictModel):
+    current: SlaCycleOutput | None
+    history: list[SlaCycleOutput]
+    next_cursor: str | None
+    observed_at: datetime
+
+
+class SlaCycleQuery(StrictModel):
+    limit: int = Field(default=50, ge=1, le=100)
+    cursor: str | None = Field(default=None, max_length=300)

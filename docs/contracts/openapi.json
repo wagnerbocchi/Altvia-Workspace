@@ -4697,6 +4697,329 @@
         "title": "SenderChoice",
         "type": "object"
       },
+      "SlaCycleOutput": {
+        "additionalProperties": false,
+        "properties": {
+          "calendar_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calendar Name"
+          },
+          "calendar_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calendar Version"
+          },
+          "computed_through_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Computed Through At"
+          },
+          "end_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End At"
+          },
+          "evaluated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evaluated At"
+          },
+          "first_response": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SlaGoalOutput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "initial_category_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Initial Category Id"
+          },
+          "initial_priority": {
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
+            "title": "Initial Priority",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "integer"
+          },
+          "policy_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Name"
+          },
+          "policy_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Version"
+          },
+          "resolution": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SlaGoalOutput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "safe_error": {
+            "anyOf": [
+              {
+                "enum": [
+                  "timing_inconsistent",
+                  "calculation_unavailable",
+                  "source_invalid",
+                  "processing_failed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Safe Error"
+          },
+          "start_at": {
+            "format": "date-time",
+            "title": "Start At",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "unconfigured",
+              "evaluating",
+              "ready",
+              "stale",
+              "unavailable"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          }
+        },
+        "required": [
+          "number",
+          "start_at",
+          "end_at",
+          "initial_category_id",
+          "initial_priority",
+          "policy_name",
+          "policy_version",
+          "calendar_name",
+          "calendar_version",
+          "timezone",
+          "state",
+          "computed_through_at",
+          "evaluated_at",
+          "safe_error",
+          "first_response",
+          "resolution"
+        ],
+        "title": "SlaCycleOutput",
+        "type": "object"
+      },
+      "SlaCyclePage": {
+        "additionalProperties": false,
+        "properties": {
+          "current": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SlaCycleOutput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/SlaCycleOutput"
+            },
+            "title": "History",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "current",
+          "history",
+          "next_cursor",
+          "observed_at"
+        ],
+        "title": "SlaCyclePage",
+        "type": "object"
+      },
+      "SlaGoalOutput": {
+        "additionalProperties": false,
+        "properties": {
+          "breached_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Breached At"
+          },
+          "corrected": {
+            "title": "Corrected",
+            "type": "boolean"
+          },
+          "due_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due At"
+          },
+          "elapsed_business_seconds": {
+            "title": "Elapsed Business Seconds",
+            "type": "integer"
+          },
+          "fulfilled_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fulfilled At"
+          },
+          "remaining_business_seconds": {
+            "title": "Remaining Business Seconds",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "evaluating",
+              "running",
+              "paused",
+              "approaching",
+              "fulfilled",
+              "unfulfilled",
+              "breached"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "target_minutes": {
+            "title": "Target Minutes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "status",
+          "target_minutes",
+          "elapsed_business_seconds",
+          "remaining_business_seconds",
+          "due_at",
+          "fulfilled_at",
+          "breached_at",
+          "corrected"
+        ],
+        "title": "SlaGoalOutput",
+        "type": "object"
+      },
       "StateOutput": {
         "additionalProperties": false,
         "properties": {
@@ -14127,6 +14450,78 @@
         "summary": "Note",
         "tags": [
           "Tickets"
+        ]
+      }
+    },
+    "/api/v1/tickets/{identifier}/sla": {
+      "get": {
+        "operationId": "outcomes_api_v1_tickets__identifier__sla_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identifier",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 300,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlaCyclePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Outcomes",
+        "tags": [
+          "Ticket SLA outcomes"
         ]
       }
     },

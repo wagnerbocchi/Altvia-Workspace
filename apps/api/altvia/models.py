@@ -153,6 +153,14 @@ class OutboxEvent(Base):
         CheckConstraint(
             "status IN ('pending','processing','delivered','dead')", name="ck_outbox_status"
         ),
+        Index(
+            "ix_sla_acceptance_sources",
+            "occurred_at",
+            "event_id",
+            postgresql_where=text(
+                "event_type='mail.delivery_changed' AND payload->>'state'='accepted'"
+            ),
+        ),
     )
     event_id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     aggregate_type: Mapped[str] = mapped_column(String(50))
@@ -906,7 +914,9 @@ class ActivityEvent(Base):
         CheckConstraint(
             "actor_kind IN ('user','management_command') OR "
             "(actor_kind='automation' AND actor_id IS NULL AND event_type IN "
-            "('work_item.created','ticket.work_linked','work_item.ticket_linked'))",
+            "('work_item.created','ticket.work_linked','work_item.ticket_linked')) OR "
+            "(actor_kind='sla_worker' AND actor_id IS NULL AND resource_type='ticket' "
+            "AND event_type IN ('ticket.sla_breached','ticket.sla_corrected'))",
             name="ck_activity_actor",
         ),
         Index("ix_activity_order", "occurred_at", "event_id"),
@@ -968,6 +978,7 @@ class TicketMailThread(Base):
 class OutboundMessage(Base):
     __tablename__ = "outbound_messages"
     __table_args__ = (
+        UniqueConstraint("id", "ticket_id", name="uq_delivery_ticket_context"),
         ForeignKeyConstraint(
             ["message_id", "ticket_id"], ["ticket_messages.id", "ticket_messages.ticket_id"]
         ),
@@ -1756,3 +1767,312 @@ class SlaPolicyRevision(Base):
         ForeignKey("users.id", ondelete="RESTRICT", onupdate="RESTRICT")
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class TicketSlaState(Base):
+    __tablename__ = "ticket_sla_states"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["ticket_id", "client_id", "queue_id"],
+            ["tickets.id", "tickets.client_id", "tickets.queue_id"],
+            name="fk_sla_cycle_ticket",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["ticket_id", "start_version"],
+            ["ticket_status_history.ticket_id", "ticket_status_history.version"],
+            name="fk_sla_cycle_start",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["ticket_id", "end_version"],
+            ["ticket_status_history.ticket_id", "ticket_status_history.version"],
+            name="fk_sla_cycle_end",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["policy_id", "policy_version", "client_id", "queue_id"],
+            [
+                "sla_policy_revisions.policy_id",
+                "sla_policy_revisions.version",
+                "sla_policy_revisions.client_id",
+                "sla_policy_revisions.queue_id",
+            ],
+            name="fk_sla_cycle_policy",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["initial_category_id", "queue_id"],
+            ["ticket_categories.id", "ticket_categories.queue_id"],
+            name="fk_sla_cycle_category",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["first_response_delivery_id", "ticket_id", "cycle_number"],
+            [
+                "ticket_sla_acceptances.delivery_id",
+                "ticket_sla_acceptances.ticket_id",
+                "ticket_sla_acceptances.cycle_number",
+            ],
+            name="fk_sla_cycle_response",
+            use_alter=True,
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        UniqueConstraint("ticket_id", "start_version", name="uq_sla_cycle_start"),
+        CheckConstraint(
+            "cycle_number BETWEEN 1 AND 2147483647 AND start_version BETWEEN 1 AND 2147483647 "
+            "AND version>0",
+            name="ck_sla_cycle_version",
+        ),
+        CheckConstraint(
+            "start_status IN ('new','open') AND initial_priority IN "
+            "('low','medium','high','critical')",
+            name="ck_sla_cycle_selector",
+        ),
+        CheckConstraint(
+            "start_at >= TIMESTAMPTZ '2000-01-01 00:00:00+00' "
+            "AND start_at < TIMESTAMPTZ '2100-01-01 00:00:00+00'",
+            name="ck_sla_cycle_start_time",
+        ),
+        CheckConstraint(
+            "(policy_id IS NULL AND policy_version IS NULL AND state='unconfigured' "
+            "AND next_check_at IS NULL AND first_response_delivery_id IS NULL) OR "
+            "(policy_id IS NOT NULL AND policy_version IS NOT NULL "
+            "AND policy_version BETWEEN 1 AND 2147483647 "
+            "AND state IN ('evaluating','ready','unavailable'))",
+            name="ck_sla_cycle_snapshot",
+        ),
+        CheckConstraint(
+            "(end_version IS NULL)=(end_at IS NULL) AND "
+            "(end_version IS NULL OR (end_version>start_version AND end_at>=start_at))",
+            name="ck_sla_cycle_end",
+        ),
+        CheckConstraint(
+            "(first_response_delivery_id IS NULL)=(first_response_at IS NULL) AND "
+            "(first_response_at IS NULL OR (first_response_at>=start_at AND "
+            "(end_at IS NULL OR first_response_at<=end_at)))",
+            name="ck_sla_cycle_response",
+        ),
+        CheckConstraint(
+            "(state='unavailable')=(safe_error IS NOT NULL) AND "
+            "(safe_error IS NULL OR safe_error IN "
+            "('timing_inconsistent','calculation_unavailable',"
+            "'source_invalid','processing_failed')) "
+            "AND (state NOT IN ('ready','unavailable') OR evaluated_at IS NOT NULL) AND "
+            "(computed_through_at IS NULL OR computed_through_at>=start_at)",
+            name="ck_sla_cycle_evaluation",
+        ),
+        Index(
+            "ix_sla_cycle_due",
+            "next_check_at",
+            "ticket_id",
+            "cycle_number",
+            postgresql_where=text("next_check_at IS NOT NULL"),
+        ),
+    )
+    ticket_id: Mapped[UUID] = mapped_column(primary_key=True)
+    cycle_number: Mapped[int] = mapped_column(primary_key=True)
+    client_id: Mapped[UUID]
+    queue_id: Mapped[UUID]
+    start_version: Mapped[int]
+    start_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    start_status: Mapped[str] = mapped_column(String(20))
+    initial_category_id: Mapped[UUID | None]
+    initial_priority: Mapped[str] = mapped_column(String(20))
+    policy_id: Mapped[UUID | None]
+    policy_version: Mapped[int | None]
+    state: Mapped[str] = mapped_column(String(20))
+    next_check_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    version: Mapped[int] = mapped_column(BigInteger, server_default="1")
+    end_version: Mapped[int | None] = mapped_column(server_default=text("NULL"))
+    end_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=text("NULL")
+    )
+    first_response_delivery_id: Mapped[UUID | None] = mapped_column(server_default=text("NULL"))
+    first_response_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=text("NULL")
+    )
+    evaluated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=text("NULL")
+    )
+    computed_through_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=text("NULL")
+    )
+    safe_error: Mapped[str | None] = mapped_column(String(40), server_default=text("NULL"))
+
+
+class TicketSlaGoal(Base):
+    __tablename__ = "ticket_sla_goals"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["ticket_id", "cycle_number"],
+            ["ticket_sla_states.ticket_id", "ticket_sla_states.cycle_number"],
+            name="fk_sla_goal_cycle",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["ticket_id", "last_history_version"],
+            ["ticket_status_history.ticket_id", "ticket_status_history.version"],
+            name="fk_sla_goal_history",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        CheckConstraint("goal IN ('first_response','resolution')", name="ck_sla_goal_kind"),
+        CheckConstraint(
+            "last_history_version BETWEEN 1 AND 2147483647 AND current_status IN "
+            "('new','open','pending_customer','pending_third_party','resolved','closed') "
+            "AND elapsed_us BETWEEN 0 AND 3155760000000000 "
+            "AND search_remaining_us BETWEEN 0 AND 31536000000000",
+            name="ck_sla_goal_progress",
+        ),
+        CheckConstraint(
+            "evaluated_through_at>=TIMESTAMPTZ '2000-01-01 00:00:00+00' AND "
+            "evaluated_through_at<=TIMESTAMPTZ '2100-01-01 00:00:00+00' "
+            "AND (due_at IS NULL OR due_at BETWEEN TIMESTAMPTZ '2000-01-01 00:00:00+00' "
+            "AND TIMESTAMPTZ '2100-01-01 00:00:00+00') "
+            "AND (search_through_at IS NULL OR search_through_at BETWEEN "
+            "TIMESTAMPTZ '2000-01-01 00:00:00+00' AND TIMESTAMPTZ '2100-01-01 00:00:00+00') "
+            "AND ((due_at IS NOT NULL AND search_remaining_us=0) OR "
+            "(due_at IS NULL AND search_remaining_us>0))",
+            name="ck_sla_goal_deadline",
+        ),
+        CheckConstraint(
+            "outcome IN ('evaluating','running','paused','approaching',"
+            "'fulfilled','unfulfilled','breached')",
+            name="ck_sla_goal_outcome",
+        ),
+    )
+    ticket_id: Mapped[UUID] = mapped_column(primary_key=True)
+    cycle_number: Mapped[int] = mapped_column(primary_key=True)
+    goal: Mapped[str] = mapped_column(String(20), primary_key=True)
+    evaluated_through_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    last_history_version: Mapped[int]
+    current_status: Mapped[str] = mapped_column(String(20))
+    search_remaining_us: Mapped[int] = mapped_column(BigInteger)
+    search_through_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=text("NULL")
+    )
+    elapsed_us: Mapped[int] = mapped_column(BigInteger, server_default="0")
+    due_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), server_default=text("NULL")
+    )
+    outcome: Mapped[str] = mapped_column(String(20), server_default="evaluating")
+
+
+class TicketSlaAcceptance(Base):
+    __tablename__ = "ticket_sla_acceptances"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["ticket_id", "cycle_number"],
+            ["ticket_sla_states.ticket_id", "ticket_sla_states.cycle_number"],
+            name="fk_sla_acceptance_cycle",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["delivery_id", "ticket_id"],
+            ["outbound_messages.id", "outbound_messages.ticket_id"],
+            name="fk_sla_acceptance_delivery",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["ticket_id", "message_version"],
+            ["ticket_messages.ticket_id", "ticket_messages.ticket_version"],
+            name="fk_sla_acceptance_message",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        UniqueConstraint(
+            "delivery_id", "ticket_id", "cycle_number", name="uq_sla_acceptance_cycle"
+        ),
+        UniqueConstraint("source_event_id", name="uq_sla_acceptance_event"),
+        CheckConstraint(
+            "delivery_version BETWEEN 1 AND 2147483647 AND accepted_at<=observed_at",
+            name="ck_sla_acceptance_evidence",
+        ),
+        Index("ix_sla_acceptance_first", "ticket_id", "cycle_number", "accepted_at", "delivery_id"),
+    )
+    delivery_id: Mapped[UUID] = mapped_column(primary_key=True)
+    ticket_id: Mapped[UUID]
+    cycle_number: Mapped[int]
+    source_event_id: Mapped[UUID] = mapped_column(
+        ForeignKey("outbox_events.event_id", ondelete="RESTRICT")
+    )
+    message_version: Mapped[int]
+    accepted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    delivery_version: Mapped[int]
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class TicketSlaEvent(Base):
+    __tablename__ = "ticket_sla_events"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["ticket_id", "cycle_number", "goal"],
+            [
+                "ticket_sla_goals.ticket_id",
+                "ticket_sla_goals.cycle_number",
+                "ticket_sla_goals.goal",
+            ],
+            name="fk_sla_event_goal",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["source_delivery_id", "ticket_id", "cycle_number"],
+            [
+                "ticket_sla_acceptances.delivery_id",
+                "ticket_sla_acceptances.ticket_id",
+                "ticket_sla_acceptances.cycle_number",
+            ],
+            name="fk_sla_event_acceptance",
+            ondelete="RESTRICT",
+            onupdate="RESTRICT",
+        ),
+        CheckConstraint(
+            "(kind='breached' AND source_delivery_id IS NULL AND outcome='breached') OR "
+            "(kind='corrected' AND goal='first_response' AND source_delivery_id IS NOT NULL "
+            "AND outcome IN ('fulfilled','breached'))",
+            name="ck_sla_event_kind",
+        ),
+        CheckConstraint(
+            "observed_ticket_version BETWEEN 1 AND 2147483647 AND occurred_at<=observed_at",
+            name="ck_sla_event_observation",
+        ),
+        Index(
+            "uq_sla_breach",
+            "ticket_id",
+            "cycle_number",
+            "goal",
+            unique=True,
+            postgresql_where=text("kind='breached'"),
+        ),
+        Index(
+            "uq_sla_correction",
+            "ticket_id",
+            "cycle_number",
+            "source_delivery_id",
+            unique=True,
+            postgresql_where=text("kind='corrected'"),
+        ),
+    )
+    event_id: Mapped[UUID] = mapped_column(
+        ForeignKey("outbox_events.event_id", ondelete="RESTRICT"), primary_key=True
+    )
+    ticket_id: Mapped[UUID]
+    cycle_number: Mapped[int]
+    goal: Mapped[str] = mapped_column(String(20))
+    kind: Mapped[str] = mapped_column(String(20))
+    outcome: Mapped[str] = mapped_column(String(20))
+    source_delivery_id: Mapped[UUID | None]
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    observed_ticket_version: Mapped[int]

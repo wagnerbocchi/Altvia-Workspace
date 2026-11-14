@@ -392,6 +392,24 @@ def consume_event(engine: Engine, event_id: UUID, now: datetime) -> bool:
                 automated.actor_kind,
                 automated_details,
             )
+        if event.event_type in {"ticket.sla_breached", "ticket.sla_corrected"}:
+            from altvia.sla_events import validate_domain_event as validate_sla_observation
+
+            try:
+                observation = validate_sla_observation(db, event)
+            except (ValueError, ValidationError):
+                event.status, event.last_error_code, event.lease_until = (
+                    "dead",
+                    "invalid_event",
+                    None,
+                )
+                return False
+            observation_details: dict[str, str | None] = {
+                key: str(value)
+                for key, value in observation.model_dump().items()
+                if key not in {"actor_id", "actor_kind"}
+            }
+            return _project_activity(db, event, now, None, "sla_worker", observation_details)
         if (
             event.event_type
             not in EVENT_TYPES

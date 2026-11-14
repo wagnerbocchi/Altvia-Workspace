@@ -268,10 +268,10 @@ any row, configuration event or protected receipt before dropping derived schema
 Preexisting native state/grants/history are preserved. Empty roundtrip and actual
 least-privilege/atomic rollback proof are required before accepting this schema.
 
-### Selected migration32 cycle/evaluator contract (not implemented yet)
+### Migration32 cycle/evaluator contract
 
 The bounded sla_clock owner supplies immutable scalar continuation; no cycle is
-persisted by that arithmetic alone. Migration32 belongs to the actual native
+persisted by that arithmetic alone. Migration32 implements the actual native
 freeze/evaluator/acceptance owners and introduces four private tables:
 
 - ticket_sla_states: PK(ticket_id,cycle_number1..2147483647), immutable client_id,
@@ -308,13 +308,17 @@ freeze/evaluator/acceptance owners and introduces four private tables:
   insertion. A processed receipt alone is never evidence: invalid/ineligible
   events are acknowledged without inserting a fact. This prevents malformed
   acknowledged events from later satisfying a clock through a permissive join.
-- ticket_sla_events: immutable UUID id, same-cycle/goal FK, fixed breached|corrected
+- ticket_sla_events: immutable event_id PK/FK to its native outbox row,
+  same-cycle/goal FK, fixed breached|corrected
   kind, occurred_at and observed_at. A partial unique(ticket,cycle,goal) permits
   one breach; separate unique correction delivery evidence preserves later
   outcomes without deleting it. Corrections are first_response only and reference
   a same-cycle validated acceptance, with fixed fulfilled|breached outcome.
   No note/body/email/raw exception is stored. Native delivery metadata gains only
   the restrictive composite uniqueness needed by these same-ticket FKs.
+  observed_ticket_version records the actual native version at observation; SLA
+  events use it without incrementing ticket state. Correction occurrence is its
+  observation time; the immutable acceptance retains the earlier evidence time.
 
 New actual tickets atomically insert one cycle and, only if configured, the two
 initial goals after native creation history flush. A real reopen does likewise;
@@ -324,16 +328,19 @@ derived from immutable native history; the API receives no derived-clock UPDATE.
 
 The worker uses identity/client/team/queue/ticket/cycle ordering, separate bounded
 acceptance receipts and entirely DB-local arithmetic. Each actual goal receives
-at most16 UTC dates for elapsed plus future search and499 history rows; start/end
-facts keep the total within32 dates/1000 history rows. Separate future progress
+at most16 UTC dates for elapsed plus future search. The pure step caps499 history
+rows; DB pages cap498 each plus up to four start/end/last-progress facts, keeping
+the total within32 dates/1000 history rows. Separate future progress
 survives ordinary observations; a new relevant pause/resume resets its anchor.
 An earlier first-response candidate resets only that goal's derived progress.
 Cycle progress, unique event, audit/outbox and receipt commit atomically; failure
 retains prior committed progress. Invalid/poison rows move their next check safely
 and cannot monopolize a bounded due batch.
 
-API gets SELECT/INSERT on states/goals, scoped state/event SELECT and no evaluator
-UPDATE or acceptance writer. Worker gets exact configuration, metadata history,
+API gets SELECT and column-only initial INSERT on states/goals, scoped event
+metadata SELECT and no evaluator UPDATE or acceptance writer. Server defaults
+and native checks keep initial elapsed zero/outcome evaluating; evaluated/error/
+end/response fields are absent from its INSERT grants. Worker gets exact configuration, metadata history,
 source-view and state/goal/fact/event privileges required by the real owners;
 it gains no ticket status, message/note body, identity or grant writer. Native
 status vocabulary is a dependency-free shared owner, reexported by the old DTO

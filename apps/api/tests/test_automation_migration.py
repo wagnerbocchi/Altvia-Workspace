@@ -8,6 +8,7 @@ import pytest
 from alembic import command
 from alembic.config import Config
 from altvia.models import ActivityEvent, AuditLog, IdempotencyRecord, OutboxEvent
+from sla_migration_support import pre_sla_ticket
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
@@ -39,6 +40,7 @@ def insert(connection, table, values):
 @pytest.fixture
 def ledger(admin_client, db_engine, seeded_user):
     context = make_link_context(admin_client, db_engine, seeded_user)
+    pre_sla_ticket(db_engine, context.ticket_id)
     rule = {
         "id": uuid4(),
         "client_id": context.client_id,

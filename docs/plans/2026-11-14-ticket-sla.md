@@ -147,7 +147,7 @@ ticket_api.create_record,tickets.transition,worker.py,activity.py and main.py.
 Add native cycle/worker/acceptance/privacy/migration tests. No SMTP function or
 old delivery envelope changes are needed: reuse actual durable accepted_at.
 
-Interfaces: freeze_cycle(db,ticket,history,correlation_id) -> None at actual
+Interfaces: freeze_cycle(db,ticket,history) -> None at actual
 new-ticket and resolved/closed -> open owners only. Same-state/committed replay
 does not call it. Capture accepted events with separate processed_events consumer
 sla_acceptance_v1, independently of activity status; no delivery-time watermark.
@@ -158,8 +158,9 @@ The internal sla_clock owner supplies immutable HistoryPoint/ClockProgress and
 bounded step results for the two actual response/resolution goals. It consumes
 integer microseconds and native ordered history; it has no account, transport or
 HTTP authority. Each goal gets at most16 UTC dates (actual plus future search)
-and499 history rows per step. Two goals plus the start/resolution source facts
-therefore remain within32 dates/1000 ordered history rows. Future search retains
+and499 history rows per pure step. The DB owner uses498-row pages and reserves
+up to four native start/resolution/last-progress facts, remaining within32 dates/
+1000 ordered history rows per cycle. Future search retains
 its own anchor, through instant and remaining budget; a new actual observation
 does not restart a long search. A relevant pause/resume invalidates only a future
 projection, retaining an actual deadline already reached. Equality is on time;
@@ -204,22 +205,22 @@ internal microseconds are exact. Stale/evaluating/unavailable must remain explic
 reads do not recompute/write. Legacy tickets without a tracked cycle return
 current:null; their first later tracked reopen is SLA cycle1, not invented history.
 
-- [ ] RED native create/reopen atomic snapshot and missing real evaluator effect.
+- [x] RED native create/reopen atomic snapshot and missing real evaluator effect.
   Cover policy selection/fallback refusal, current category/priority snapshot,
   no-policy/legacy, reference archival and authorizer exit with current read denial.
-- [ ] Implement current same-scope freeze after native history flush. Roll back
+- [x] Implement current same-scope freeze after native history flush. Roll back
   ticket/history/events/receipts on snapshot/config failure. No old envelope change.
-- [ ] RED/GREEN business-clock pause/resume/exact deadline, independent goals,
+- [x] RED/GREEN business-clock pause/resume/exact deadline, independent goals,
   accepted versus draft/queued/uncertain/private/incoming, old-cycle delayed draft,
   resolution without response, late owner evidence and preserved corrections.
-- [ ] Implement native serialized evaluator/event projection and exact credential
+- [x] Implement native serialized evaluator/event projection and exact credential
   grants. Identity precedes client/team/queue/ticket then cycle; no cycle-first
   inversion or mail transport row lock change. Worker cannot mutate ticket state.
-- [ ] Prove competing workers, rollback/crash/redelivery, historical wake-up,
+- [x] Prove competing workers, rollback/crash/redelivery, historical wake-up,
   invalid source/long/poison isolation, bounded caches and metadata privacy before
   page/cursor. New validated sla_worker activity is truthful and exposes no private
   delivery/source IDs. Preserve manual/schema1 metadata and historical rows.
-- [ ] Run full affected native/manual-mail/worker/privacy/storage tests, static
+- [x] Run full affected native/manual-mail/worker/privacy/storage tests, static
   gates, repeated contract export and package build. Commit coherent owners.
 
 ## Task 4: Actual Operate configuration and outcome interface

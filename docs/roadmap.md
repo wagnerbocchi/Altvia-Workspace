@@ -123,6 +123,19 @@ ADR0041 development is accepted; final integrated qualification remains open.
 The earlier isolated SMTP child exit remains an explicit integrated diagnostic
 follow-up; its root cause was not proved. See the evidence report.
 
+ADR0042 Task3 backend development is complete locally/natively: atomic creation/
+reopen cycles, bounded two-goal evaluator, strict independent accepted-response
+capture, append-only breach/correction and current scoped paged outcome API.
+Actual worker/Redis34, continuation2, corrected storage/incumbent49 and approved
+mail35 cases passed, with separately retained151 unchanged passing regressions.
+Native static gates, local127 pure/4 strict-bound cases, web check/build, stable
+repeated generated contracts(85 old paths/168 schemas unchanged), offline package
+build and source SAST0 blocking passed. Legacy migration fixtures now explicitly
+model pre-SLA tickets, preserving all old guard/parent/ACL assertions and refusing
+to remove configured obligations. See docs/ticket-sla-evidence.md for full failed
+runs, corrective proof and limits. UI/packaged whole-feature/hosted acceptance
+remain pending; Q07 production hours/targets and final qualification stay open.
+
 ADR0042 now selects the separate versioned SLA contract after independent builder
 check. Its bounded frozen-calendar arithmetic passed46 actual native cases,
 Ruff/format/mypy76 and cold/warm/memory bounds. Task2 persisted configuration now

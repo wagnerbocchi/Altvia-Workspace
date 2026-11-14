@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 import pytest
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from altvia import management, models, provision
 from altvia.business_time import freeze_timezone
 from conftest import TEST_PASSWORD
@@ -274,10 +275,27 @@ def test_actual_roles_allow_configuration_insert_but_not_snapshot_or_scope_mutat
             with app.begin() as connection, pytest.raises(DBAPIError) as caught:
                 connection.execute(text(statement))
             assert caught.value.orig.sqlstate == "42501"
+        readable = {"business_calendar_revisions", "sla_policy_revisions"}
         for table in sorted(TABLES):
-            with worker.begin() as connection, pytest.raises(DBAPIError) as caught:
-                connection.execute(text(f"SELECT * FROM {table}"))
-            assert caught.value.orig.sqlstate == "42501"
+            if table in readable:
+                # Actual evaluator reads immutable snapshots, never identities or
+                # configuration writes. Runtime-role Task3 tests prove its effect.
+                with worker.connect() as connection:
+                    assert connection.scalar(text(f"SELECT count(*) FROM {table}")) > 0
+            else:
+                with worker.begin() as connection, pytest.raises(DBAPIError) as caught:
+                    connection.execute(text(f"SELECT * FROM {table}"))
+                assert caught.value.orig.sqlstate == "42501"
+            for verb in ("INSERT", "UPDATE", "DELETE"):
+                with worker.connect() as connection:
+                    assert not connection.scalar(
+                        text(
+                            "SELECT has_table_privilege(current_user,:table,:verb)"
+                            if verb == "DELETE"
+                            else "SELECT has_any_column_privilege(current_user,:table,:verb)"
+                        ),
+                        {"table": table, "verb": verb},
+                    )
         for function in ["valid_business_calendar_windows", "valid_business_calendar_holidays"]:
             with worker.begin() as connection, pytest.raises(DBAPIError) as caught:
                 connection.execute(text(f"SELECT public.{function}('[]'::jsonb)"))
@@ -292,7 +310,10 @@ def test_populated_configuration_downgrade_refuses_before_ddl(db_engine, storage
     with pytest.raises(DBAPIError, match="Cannot contract SLA configuration/history"):
         command.downgrade(config, "b46087000030")
     with db_engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "b46087000031"
+        assert (
+            connection.scalar(text("SELECT version_num FROM alembic_version"))
+            == ScriptDirectory.from_config(config).get_current_head()
+        )
         assert connection.scalar(text("SELECT count(*) FROM business_calendar_revisions")) == 1
 
 

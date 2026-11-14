@@ -22,6 +22,7 @@ from altvia.models import (
 )
 from conftest import TEST_PASSWORD
 from fastapi.testclient import TestClient
+from sla_migration_support import pre_sla_ticket
 from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import DBAPIError
@@ -466,6 +467,7 @@ def test_ticket_bigint_number_exactness_and_guarded_schema_roundtrip(
     with db_engine.begin() as connection:
         connection.execute(text("ALTER SEQUENCE tickets_number_seq RESTART WITH 9007199254740993"))
     path = ticket(admin_client, refs)
+    pre_sla_ticket(db_engine, path)
     assert admin_client.get(path).json()["number"] == "9007199254740993"
     with pytest.raises(DBAPIError, match="Cannot downgrade while durable ticket"):
         command.downgrade(config, "b46087000014")
@@ -512,6 +514,7 @@ def test_ticket_history_sql_rejects_invalid_initial_state(
 ):
     refs = setup(admin_client, db_engine, seeded_user)
     path = ticket(admin_client, refs)
+    pre_sla_ticket(db_engine, path)
     # Use a separate ticket history version to isolate graph validation from uniqueness.
     with db_engine.begin() as connection:
         connection.execute(text("DELETE FROM ticket_status_history"))

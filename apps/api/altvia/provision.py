@@ -55,6 +55,9 @@ ROLE_PRIVILEGES = {
         "business_calendar_revisions": {"SELECT", "INSERT"},
         "sla_policies": {"SELECT", "INSERT"},
         "sla_policy_revisions": {"SELECT", "INSERT"},
+        "ticket_sla_states": {"SELECT"},
+        "ticket_sla_goals": {"SELECT"},
+        "ticket_sla_events": {"SELECT"},
         "ticket_status_history": {"SELECT", "INSERT"},
         "attachments": {"SELECT", "INSERT"},
         "ticket_notes": {"SELECT", "INSERT"},
@@ -74,6 +77,13 @@ ROLE_PRIVILEGES = {
         "work_item_status_history": {"SELECT", "INSERT"},
     },
     "altvia_worker": {
+        "business_calendar_revisions": {"SELECT"},
+        "sla_policy_revisions": {"SELECT"},
+        "ticket_sla_states": {"SELECT"},
+        "ticket_sla_goals": {"SELECT"},
+        "ticket_sla_acceptances": {"SELECT", "INSERT"},
+        "sla_public_acceptance_sources": {"SELECT"},
+        "ticket_sla_events": {"SELECT", "INSERT"},
         "automation_rules": {"SELECT"},
         "automation_rule_revisions": {"SELECT"},
         "automation_executions": {"SELECT"},
@@ -97,6 +107,33 @@ APP_COLUMN_READS = {
     "mail_triage_cases": READ_COLUMNS | ROUTING_COLUMNS | CASE_FILE_COLUMNS,
     "ticket_participants": {"id", "ticket_id", "contact_id", "email", "active", "version"},
 }
+APP_COLUMN_INSERTS = {
+    "ticket_sla_states": {
+        "ticket_id",
+        "cycle_number",
+        "client_id",
+        "queue_id",
+        "start_version",
+        "start_at",
+        "start_status",
+        "initial_category_id",
+        "initial_priority",
+        "policy_id",
+        "policy_version",
+        "state",
+        "next_check_at",
+    },
+    "ticket_sla_goals": {
+        "ticket_id",
+        "cycle_number",
+        "goal",
+        "evaluated_through_at",
+        "last_history_version",
+        "current_status",
+        "search_remaining_us",
+        "search_through_at",
+    },
+}
 APP_COLUMN_UPDATES = {
     "business_calendars": {"version", "updated_at"},
     "sla_policies": {"version", "updated_at"},
@@ -115,6 +152,7 @@ APP_COLUMN_UPDATES = {
     "attachments": RETRY_UPDATES,
 }
 WORKER_COLUMN_READS = {
+    "ticket_status_history": {"ticket_id", "version", "occurred_at", "from_status", "to_status"},
     # Incoming file publication adds no worker parent/name/case privileges.
     # Creation-only case-set triggers must not run on these scan updates.
     "attachments": SCAN_COLUMNS,
@@ -191,6 +229,28 @@ DELIVERY_STATUS_COLUMNS = {
 }
 WORKER_STATUS_COLUMNS = {"status", "attempts", "next_attempt_at", "lease_until", "last_error_code"}
 WORKER_COLUMN_UPDATES = {
+    "ticket_sla_states": {
+        "end_version",
+        "end_at",
+        "first_response_delivery_id",
+        "first_response_at",
+        "version",
+        "evaluated_at",
+        "computed_through_at",
+        "next_check_at",
+        "state",
+        "safe_error",
+    },
+    "ticket_sla_goals": {
+        "evaluated_through_at",
+        "last_history_version",
+        "current_status",
+        "elapsed_us",
+        "due_at",
+        "search_through_at",
+        "search_remaining_us",
+        "outcome",
+    },
     "outbox_events": WORKER_STATUS_COLUMNS,
     "outbound_messages": DELIVERY_STATUS_COLUMNS,
     "attachments": SCAN_UPDATES,
@@ -303,6 +363,10 @@ def _provision_role(connection: Connection, engine: Engine, login_url: str, name
                         and g.column_name in APP_COLUMN_READS.get(g.relname, set())
                     )
                     or (
+                        g.privilege_type == "INSERT"
+                        and g.column_name in APP_COLUMN_INSERTS.get(g.relname, set())
+                    )
+                    or (
                         g.privilege_type == "UPDATE"
                         and g.column_name in APP_COLUMN_UPDATES.get(g.relname, set())
                     )
@@ -376,6 +440,13 @@ def _provision_role(connection: Connection, engine: Engine, login_url: str, name
                 )
             )
     if name == "altvia_app":
+        for table, columns in APP_COLUMN_INSERTS.items():
+            raw.execute(
+                sql.SQL("GRANT INSERT ({}) ON {} TO altvia_app").format(
+                    sql.SQL(",").join(sql.Identifier(c) for c in sorted(columns)),
+                    sql.Identifier("public", table),
+                )
+            )
         for table, columns in APP_COLUMN_UPDATES.items():
             raw.execute(
                 sql.SQL("GRANT UPDATE ({}) ON {} TO altvia_app").format(

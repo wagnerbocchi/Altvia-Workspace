@@ -281,3 +281,30 @@ Worker column grants must deny password_hash/private content and authority
 mutations; metadata-only native scoped loads reuse the exact permission owners.
 Pre-feature producers/workers/readers are not safe activation/rollback peers.
 Actual compatible-image rollback and final x86-64-v1 qualification stay separate.
+
+## ADR0042 ticket SLA boundary
+
+Native cycles freeze an eligible policy/calendar revision atomically with actual
+creation/reopen history. Neither existing platform/team metadata authority nor a
+stored authorizer grants ticket access. Captured obligations continue after
+reference archival or authorizer departure, while every outcome/activity read
+uses current ticket scope before cursor interpretation and pagination.
+
+The existing worker calculates two bounded business clocks under identity/client/
+team/queue/ticket/cycle locks. It receives exact timing/configuration metadata and
+column-only derived writes, never ticket status, password, note/message/raw/file
+body or authority writes. A security-barrier public acceptance view excludes wire,
+recipient and body. Strict native schema1/version/time/source validation produces
+immutable facts and independent sla_acceptance_v1 receipts atomically. A receipt
+for invalid evidence is never proof; SQL failure preserves retryability. Rejection
+metadata stays private. Terminal cycles can wake for late validated evidence.
+
+Unique append-only breach/correction records preserve original observations and
+truthful system-actor activity. HTTP reads expose no delivery/source IDs, TZif or
+private evidence. They disclose partial/stale/failed clocks and the durable SMTP
+finalization definition; no transport observation is backdated. The API can
+initialize cycles/goals but cannot impersonate evaluated results. Runtime grants
+are tested through actual restricted credentials. Native migrations refuse
+populated state, observations, acceptance receipts or private rejection history;
+rollback retains the expanded schema and compatible writers/readers. This adds
+no service, production calendar/target, data import or deployment authorization.

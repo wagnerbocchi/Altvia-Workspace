@@ -2,9 +2,88 @@
 
 ADR0042 and docs/plans/2026-11-14-ticket-sla.md define the selected contract.
 SLA capability is not complete. Task1 calendar arithmetic and Task2's persisted
-configuration APIs have development evidence below. Native cycles/evaluator, UI
-and capability acceptance remain pending. No hours, holidays or targets are
+configuration APIs have development evidence below. Task3 native cycles, evaluator,
+accepted-response capture and outcome API are implemented with native development
+evidence below. UI and whole-capability acceptance remain pending. No hours, holidays or targets are
 configured for Altvia.
+
+## Native cycle, accepted-response and outcome progress
+
+Migration32 adds four private cycle/goal/acceptance/observation relations and a
+security-barrier metadata source view. Actual ticket creation/reopen freezes the
+selected immutable policy revision in its native transaction; no-op/replay and
+legacy tickets gain no synthetic cycle. Worker clocks are DB-local and bounded;
+strict public accepted-delivery capture has an independent processed receipt,
+validates message version/cycle/time/source and wakes historical cycles. It never
+uses ordinary activity completion as a delivery watermark. Unique breach and
+late-evidence corrections retain every original observation and safe activity.
+
+GET /tickets/{identifier}/sla applies current ticket scope before its actor/ticket
+cursor, exposes current plus bounded prior cycles, frozen labels/revisions and
+explicit unconfigured/evaluating/ready/stale/unavailable results. Elapsed values
+round down, remaining values round up; no read writes or recomputes a clock.
+Native end history remains visible before worker catch-up. Batched projections
+exclude message/recipient/wire/source IDs, TZif and calendar bodies. An ordinary
+SMTP acceptance time is durable finalization, not a backdated network observation.
+
+Actual acceptance-red01 failed6 missing-owner cases/28.99s before capture source.
+acceptance-green01 passed22 and failed2 fixtures/82.76s: reopen was not enabled,
+and a proposed synthetic backdate correctly hit message append-only protection.
+Fixtures now explicitly enable synthetic reopening and use actual pre-resolution
+reconciliation evidence without mutating message history. acceptance-green02
+passed7 and failed the one missing native worker-stage RED/38.20s. That stage now
+runs before broker calls. shutdown-red01 failed the missing cancellation control;
+actual stop checks now preserve pending transactions without interrupting commits.
+
+Final worker-green01 passed34 in122.63s with actual disposable PostgreSQL/Redis,
+restricted API/worker credentials, source capture/projection, concurrent workers,
+rollback/poison/cancellation and existing Redis loss/recovery cases. Its static
+Ruff/check/format and strict mypy86 passed. continuation-green01 independently
+passed2/12.06s: exact native pause/resume budget and1051 same-time ordered status
+changes over bounded continuation, while a separate ticket remains eligible.
+These counts overlap previous evidence and are never summed into a suite total.
+
+read-red01 failed5 missing-route cases/22.38s. outcome-green01 passed26 and failed
+all5 reads/111.28s; actual PostgreSQL ERROR identified an out-of-range INTEGER
+sentinel. The query now omits the absent bound instead. read-green02 passed all5
+in24.34s and native static gates; the later worker run additionally proves an
+ordinary viewer can read its obligation without SLA configuration authority.
+
+rejection-red01 proved a missing private rejection-audit contraction guard
+(1failure/3.68s). Added its exact implemented action to migration32 without changing
+any legacy guard. rejection-green01 passed all3 native storage/roundtrip/FK cases
+in9.03s, plus native static and Alembic metadata check. The subsequent storage-red01 completed184 cases in615.81s:151 passed/33 failed.
+The retained inventory identifies legacy fixture assumptions, rather than new
+permission bypasses: worker snapshot reads are now required, one assertion pinned
+revision31, and newly tracked no-policy cycles correctly block older migrations
+and source-history deletion. Explicit guarded pre_sla_ticket fixtures now model
+legacy tickets without obligations; they remove only their single unconfigured
+tracking row after asserting no goals/facts/events. They never remove a configured
+cycle, source history, message, receipt or event. The new negative proof enforces
+that boundary. Original older guard regexes, actual Alembic chain execution,
+parent counts/keys and incumbent ACL assertions remain intact. Only actual32
+objects were added to the existing descendant-only ACL comparison exclusion.
+Worker immutable snapshot reads pair with native configuration write/validator
+denials; the schema-head assertion now uses the actual Alembic head.
+
+Final storage-green01 passed49 in162.23s: all failed families, the entire affected
+automation migration module, new cycle storage/refusal/metadata cases and actual
+capture SQL rollback/retry. Native static gates all passed. The separate atomic
+run had passed its1 functional case/8.08s but failed a long SQL test literal in
+Ruff; line wrapping alone corrected it before the final49/static pass. Final
+promotion-green01 passed35 in130.99s, including incumbent native approved-mail
+creation/reopen/privacy behavior, with native Ruff/format/mypy86 all passing.
+Previously passing151 cases are retained evidence; overlapping counts are never
+summed or presented as a newly executed complete suite. Source publication and
+all exact-source hosted gates retain their distinct pending status.
+
+Local127 pure calendar/clock/schema cases passed0.63s;4 strict batch-bound cases
+passed0.18s. Ruff/check/format, strict mypy86, web check/build, native Sharp guard
+and offline source/wheel build passed. Repeated OpenAPI/TypeScript export is byte
+identical; all85 old paths and168 schemas remain exactly unchanged. No dependency,
+image, production hours/target, real data import or final target qualification is
+introduced or claimed. Complete frozen inputs, stdout/stderr and failure evidence
+remain private in the SLA task workspace and isolated development-host directory.
 
 ## Configuration publication f252182 and legacy rollback assertion
 

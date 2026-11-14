@@ -1124,6 +1124,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/tickets/{identifier}/sla": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Outcomes */
+        get: operations["outcomes_api_v1_tickets__identifier__sla_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tickets/{identifier}/status-history": {
         parameters: {
             query?: never;
@@ -3417,6 +3434,83 @@ export interface components {
              * Format: uuid
              */
             source_id: string;
+        };
+        /** SlaCycleOutput */
+        SlaCycleOutput: {
+            /** Calendar Name */
+            calendar_name: string | null;
+            /** Calendar Version */
+            calendar_version: number | null;
+            /** Computed Through At */
+            computed_through_at: string | null;
+            /** End At */
+            end_at: string | null;
+            /** Evaluated At */
+            evaluated_at: string | null;
+            first_response: components["schemas"]["SlaGoalOutput"] | null;
+            /** Initial Category Id */
+            initial_category_id: string | null;
+            /**
+             * Initial Priority
+             * @enum {string}
+             */
+            initial_priority: "low" | "medium" | "high" | "critical";
+            /** Number */
+            number: number;
+            /** Policy Name */
+            policy_name: string | null;
+            /** Policy Version */
+            policy_version: number | null;
+            resolution: components["schemas"]["SlaGoalOutput"] | null;
+            /** Safe Error */
+            safe_error: ("timing_inconsistent" | "calculation_unavailable" | "source_invalid" | "processing_failed") | null;
+            /**
+             * Start At
+             * Format: date-time
+             */
+            start_at: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "unconfigured" | "evaluating" | "ready" | "stale" | "unavailable";
+            /** Timezone */
+            timezone: string | null;
+        };
+        /** SlaCyclePage */
+        SlaCyclePage: {
+            current: components["schemas"]["SlaCycleOutput"] | null;
+            /** History */
+            history: components["schemas"]["SlaCycleOutput"][];
+            /** Next Cursor */
+            next_cursor: string | null;
+            /**
+             * Observed At
+             * Format: date-time
+             */
+            observed_at: string;
+        };
+        /** SlaGoalOutput */
+        SlaGoalOutput: {
+            /** Breached At */
+            breached_at: string | null;
+            /** Corrected */
+            corrected: boolean;
+            /** Due At */
+            due_at: string | null;
+            /** Elapsed Business Seconds */
+            elapsed_business_seconds: number;
+            /** Fulfilled At */
+            fulfilled_at: string | null;
+            /** Remaining Business Seconds */
+            remaining_business_seconds: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "evaluating" | "running" | "paused" | "approaching" | "fulfilled" | "unfulfilled" | "breached";
+            /** Target Minutes */
+            target_minutes: number;
         };
         /** StateOutput */
         StateOutput: {
@@ -7916,6 +8010,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TicketNoteOutput"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    outcomes_api_v1_tickets__identifier__sla_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                cursor?: string | null;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SlaCyclePage"];
                 };
             };
             /** @description Validation Error */

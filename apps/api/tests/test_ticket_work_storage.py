@@ -18,6 +18,7 @@ from altvia.models import (
     TicketQueue,
     WorkItem,
 )
+from sla_migration_support import pre_sla_ticket
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
@@ -44,7 +45,8 @@ PARENT_GRANTS = text(
     "WHERE table_schema='public' AND table_name NOT IN ('ticket_work_items',"
     "'automation_rules','automation_rule_revisions','automation_executions','automation_effects',"
     "'automation_assignment_sources','business_calendars','business_calendar_revisions',"
-    "'sla_policies','sla_policy_revisions') "
+    "'sla_policies','sla_policy_revisions','ticket_sla_states','ticket_sla_goals',"
+    "'ticket_sla_acceptances','ticket_sla_events','sla_public_acceptance_sources') "
     "ORDER BY grantee,table_name,privilege_type"
 )
 
@@ -119,6 +121,7 @@ def test_native_ticket_work_same_client_and_null_guard(admin_client, db_engine, 
 
 def test_ticket_work_pair_unique_and_parent_key_restricted(admin_client, db_engine, seeded_user):
     context = make_link_context(admin_client, db_engine, seeded_user)
+    pre_sla_ticket(db_engine, context.ticket_id)
     customer, queue, _, _, _, _ = alternatives(db_engine, context)
     # No older history FK on this owner-created work can mask the new composite FK.
     with Session(db_engine) as db, db.begin():
@@ -230,6 +233,7 @@ def test_downgrade_refuses_unlinked_history_or_receipt(
 ):
     # Every durable family/receipt must block contraction without any live join.
     context = make_link_context(admin_client, db_engine, seeded_user)
+    pre_sla_ticket(db_engine, context.ticket_id)
     with db_engine.begin() as connection:
         connection.execute(INSERT, values(context, seeded_user))
         connection.execute(text("DELETE FROM ticket_work_items"))
@@ -312,6 +316,7 @@ def test_empty_roundtrip_preserves_existing_parent_keys(admin_client, db_engine,
     from altvia.provision import provision_runtime
 
     context = make_link_context(admin_client, db_engine, seeded_user)
+    pre_sla_ticket(db_engine, context.ticket_id)
     # Exercise actual role grants even when this case runs without an earlier
     # runtime test; an empty owner-only ACL snapshot cannot prove preservation.
     provision_runtime(

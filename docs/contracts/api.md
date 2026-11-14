@@ -480,6 +480,38 @@ activity. Immutable revisions retain binary rollback; populated/history/protecte
 receipt downgrade refuses before DDL. Ticket SLA read/evaluation is Task3 of the
 selected plan and is not implied by this configuration foundation.
 
+### Ticket SLA outcome contract (ADR0042; Task3)
+
+GET /tickets/{identifier}/sla requires current ordinary ticket access before
+cursor decoding or outcome lookup. Unique known queries are limit1..100/default50
+and cursor(max300). The descending cycle-number cursor binds the actor and ticket;
+it grants no content and survives new cycles. The response has current(nullable
+latest tracked cycle), history(prior cycles only), next_cursor and observed_at
+(database clock). A legacy ticket has current:null/history:[] until a real reopen.
+No read writes or recomputes business time.
+
+Each cycle exposes number,start_at,end_at,initial_category_id,initial_priority,
+policy_name/policy_version,calendar_name/calendar_version,timezone,state,
+computed_through_at,evaluated_at,safe_error and first_response/resolution.
+Frozen labels/revisions explain that ticket's obligation, never configuration
+authority. No TZif, raw delivery/message/source ID, recipient or private body is
+returned. Unconfigured cycles have null configuration/goals. End time comes from
+native resolution history even before background evaluation. State is
+unconfigured|evaluating|ready|stale|unavailable. Pending native status history
+makes a previously ready result evaluating. An unfinished ready cycle whose last
+evaluation is over90seconds old is stale; completed cycles do not expire merely
+because the worker no longer polls them. Failure codes are fixed, body-free.
+
+Goals expose status,target_minutes,elapsed_business_seconds(floor),
+remaining_business_seconds(ceiling),due_at,fulfilled_at,breached_at,corrected.
+Status is evaluating|running|paused|approaching|fulfilled|unfulfilled|breached;
+partial recomputation is evaluating even while retaining its previous completed
+outcome internally. Breach/correction flags come from append-only observations,
+so correction never deletes the previous breach. No browser-derived countdown.
+Ordinary accepted_at is durable finalization after SMTP acceptance, not the
+instant a network250 was observed. Only validated owner reconciliation supplies
+an earlier evidence time. Delayed finalization can miss an ended cycle.
+
 ## State transitions and temporal semantics
 
 Phase3D private-note and queue note_access contracts are defined by ADR-0029.

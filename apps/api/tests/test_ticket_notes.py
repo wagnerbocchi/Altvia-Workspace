@@ -21,6 +21,7 @@ from altvia.models import (
     User,
 )
 from fastapi.testclient import TestClient
+from sla_migration_support import pre_sla_ticket
 from sqlalchemy import select, text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
@@ -425,6 +426,7 @@ def test_note_sql_immutability_constraints_and_guarded_downgrade(
 ):
     _, path = prepared(admin_client, db_engine, seeded_user)
     assert append(admin_client, path).status_code == 201
+    pre_sla_ticket(db_engine, path)
     for statement in ["UPDATE ticket_notes SET body_text='rewrite'", "DELETE FROM ticket_notes"]:
         with pytest.raises(DBAPIError, match="append-only"), db_engine.begin() as connection:
             connection.execute(text(statement))

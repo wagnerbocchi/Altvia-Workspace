@@ -616,6 +616,70 @@ work_item_count/active_no_due_date_count/all_missing_deadline_count must have
 distinct documented predicates and reconcile to authorized persisted data.
 No analytics endpoint or count is implemented by ADR0040's paginated read.
 
+### ADR0043 management analytics - selected, not yet implemented
+
+Three read-only routes: GET /analytics/overview, /analytics/team-workload and
+/analytics/scopes. Native managed-project or queue operations-manager authority
+AND current content visibility owns the data. analytics.read in /auth/me is
+derived operation availability from explicit content management bindings, never
+a customer/resource grant. Bare platform admin, team metadata, viewer and agent
+roles gain no analytics content. Existing My Work and its schema remain unchanged.
+
+AnalyticsFilters requires aware ISO reference_at,due_through with reference_at <
+due_through and an exact bounded PostgreSQL timezone name. Optional priority,
+client_id,team_id,project_id,responsible_id,unassigned=false,created_from,
+created_before; creation instants occur together and form a valid half-open range.
+Unknown/repeated/naive/numeric/NUL/malformed input is422. responsible_id matches
+work owner/ticket assignee, not every participant; it conflicts with unassigned.
+Project classification requires current managed project authority on both native
+candidate kinds. Common filters apply independently before full-set suppression.
+
+AnalyticsOverview contains observed_at, filters(normalized nonpaging
+AnalyticsFilters), and these exact nonnegative integer fields:
+work_item_count,ticket_count,represented_ticket_count,standalone_ticket_count,
+unified_count,active_work_item_count,active_ticket_count,active_unified_count,
+active_no_due_date_count,all_missing_deadline_count,ongoing_work_item_count,
+overdue_work_item_count,due_soon_work_item_count,later_due_work_item_count,
+blocked_work_item_count,unassigned_work_item_count,unassigned_ticket_count,
+pending_customer_ticket_count,pending_third_party_ticket_count,
+sla_legacy_ticket_count,sla_unconfigured_ticket_count,sla_configured_ticket_count,
+sla_recorded_breach_ticket_count,sla_corrected_ticket_count.
+Also fixed-key work_status_counts(todo,in_progress,blocked,done,cancelled),
+ticket_status_counts(new,open,pending_customer,pending_third_party,resolved,closed),
+work_priority_counts and ticket_priority_counts(low,medium,high,critical), and
+nullable aware sla_last_observation_at. No missing distribution key or arbitrary
+new status/priority is accepted. All counts use complete authorized datasets.
+
+Active excludes terminal domain states. No-due/overdue/soon/later buckets classify
+active ORDINARY work only; ongoing_work_item_count is the remaining active bucket.
+All-missing includes null deadlines in every work type/state. DateDue is overdue
+at its stored exclusive end boundary; InstantDue equality remains on time.
+Nonoverdue ordinary dated work is soon when due_at <= due_through, otherwise later.
+Recorded SLA observations use only the latest tracked cycle, preserve corrected
+breaches and are not current-risk or reference_at historical-state calculations.
+Exact count identities, parent/filter predicates and temporal labels are ADR0043.
+
+Workload query adds limit1..100/default50,cursor<=320. AnalyticsWorkloadPage is
+{items,next_cursor,overview}. AnalyticsWorkloadRow has paired nullable user_id/name,
+active_work_item_count,active_ticket_count,blocked_work_item_count,
+ongoing_work_item_count,active_no_due_date_count,overdue_work_item_count,
+due_soon_work_item_count,later_due_work_item_count. Groups use ACTIVE datasets;
+there is no per-person unified count, capacity, email, account-state or ranking.
+Return null principal first, then UUID ascending; do not invent null users.
+
+Scope query requires kind=client|project|team|responsible, limit1..100/default50,
+cursor<=320. AnalyticsScopePage is {items,next_cursor}; each item has UUID id and
+name1..150. Choices derive only from current management-visible records/parent
+contexts, include managed empty projects and actual referenced people, and remain
+independent of report filters. They never grant scope or promise positive counts.
+No account/contact/roster lookup is added. Use an explicit unassigned filter.
+
+All cursors are actor/collection/filter-bound and recheck current authority.
+Overview/workload each use one statement snapshot, fixed query count, bounded
+DTO output and native timeout/503 handling; an error never becomes a zero report.
+Normal session last_seen is the only incidental write. No new DB schema, runtime
+privilege, event, audit/outbox/domain write, counter worker or dependency.
+
 ## Durable event contract
 
 Envelope: event_id UUID, event_type allowlisted string, schema_version positive

@@ -453,6 +453,21 @@ Raw capture/cursor/source-version/audit/outbox commit together. No runtime table
 grant is added. Downgrade refuses state or durable private checkpoint history.
 
 
+## ADR0043 analytics read model
+
+No table, index, privilege, counter projection or write is selected. Native
+managed-project work and queue-manager tickets form actor-scoped SQL candidate
+sets. Existing ticket_work_items supplies full-set representation. Existing
+typed work deadline columns preserve date/instant boundaries; ongoing remains
+orthogonal to lifecycle. The latest existing ticket_sla_states cycle and its
+append-only ticket_sla_events supply explicitly recorded observations only.
+Overview and principal workload use one statement snapshot; metadata choices
+derive from these current management-visible resources/parent contexts. User
+names resolve only actual owner/assignee links, including former owners; no new
+account/contact/roster directory is granted. Null principals remain null. Exact
+predicates, reconciliation, cursor and timestamp contracts are ADR0043 and the
+API reference. Implementation/performance/acceptance remain pending.
+
 ## ADR0041 assignment automation model
 
 Migration30 adds the derived security-barrier automation_assignment_sources view

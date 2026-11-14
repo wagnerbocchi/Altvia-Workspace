@@ -40,7 +40,7 @@ Five actual native image identities were retained:
 | Redis | sha256:fbbd6e6494a0841f268900c9f9a4923d810156a70529894acf2ab201cddb3515 |
 
 All shipped image/build/configuration inputs still match the passing snapshot.
-Only this evidence document and a stronger host-proof --wait health condition
+Only documentation and a stronger host-proof --wait health condition
 changed afterward; that later fixture condition must pass in final exact-source
 hosted Container jobs. It is not claimed to have run in packaged05. The seven
 hosted image scans and final consolidated target qualification remain separate;

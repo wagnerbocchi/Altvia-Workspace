@@ -148,6 +148,15 @@ All shipped inputs match that native snapshot; a later host-proof readiness wait
 must still pass in final hosted Container jobs. Final hosted capability acceptance
 is pending; no whole-SLA or final target completion claim.
 
+ADR0043 selects the next read-only management analytics increment: real overview,
+paged principal workload and bounded permitted-context choices, with native
+management/content conjunctions before aggregation. All/active unified counts,
+ordinary versus ongoing no-deadline predicates, typed reference/window boundaries
+and recorded SLA observations are contracted before implementation. No table,
+counter worker, extra runtime grant or dependency is selected. Implementation
+and its proof follow docs/plans/2026-11-14-operational-analytics.md; the native SLA
+capability and exact final d040b04 hosted gates remain independently tracked.
+
 ADR0042 Task3 backend development is complete locally/natively: atomic creation/
 reopen cycles, bounded two-goal evaluator, strict independent accepted-response
 capture, append-only breach/correction and current scoped paged outcome API.

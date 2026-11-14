@@ -58,6 +58,19 @@ approved and audited emergency grant. Never implement blanket `is_admin` bypass.
 | Analytics/export | explicit analytics grant | permitted team/client | permitted projects | own My Work only by default | explicit read/export grant |
 | Import/raw payload/audit | explicit import/audit role | explicit delegated role | deny | deny | deny |
 
+ADR0043 selects management-only analytics reads. Native managed-project visibility
+AND its can_manage expression gates work; native ticket visibility AND queue
+operations_manager gates tickets. Client ceilings, current memberships and
+resource bindings remain necessary. The analytics.read capability is derived
+operation/navigation availability from client/queue operations_manager or project
+project_manager bindings, not a content grant. No new viewer, agent, team metadata
+or bare platform-admin analytics authority is introduced. Agents retain My Work.
+Names, null-principal buckets, suppression, counts, SLA observations and cursors
+all require current native management-visible scope before aggregate/pagination.
+Choices contain only existing resource context or actual principal identities,
+without account email/state, contact/roster enumeration or raw content. Reads add
+no domain write, timer, projection, privilege or schema; session last_seen remains.
+
 ADR0042 selects SLA configuration using the same explicit client/queue management
 conjunction as assignment configuration: active account, explicit customer ceiling
 and client operations_manager, explicit queue operations_manager and native queue

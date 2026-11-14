@@ -109,7 +109,21 @@ RED/GREEN fix;16 light/dark responsive captures are retained. Backend publicatio
 6cfc97d passed four hosted workflows but API hit its25-minute deadline with one
 legacy worker-ACL assertion failure. That test is corrected with18 native passes;
 the unchanged full suite has a35-minute CI budget. Packaged/complete hosted/whole-
-feature acceptance and final target qualification remain open. See the evidence report.
+feature acceptance and final target qualification remain open. The complete native
+packaged03 command passed648.629s with37644 frozen inputs, actual Redis message
+loss/lease recovery/off-on cancellation/retained receipt/privacy and incumbent
+proofs. The independent whole review found0 actionable findings. Four exactbcce2d6 workflows passed, including
+API1668/3 explicit skips; Browser failed2 parent-error
+cases. Actual native RED and50-case GREEN cover the corrected child panel, with
+check/build/guard and responsive error captures. New-head full hosted acceptance
+remains pending. The earlier isolated SMTP child exit remains an explicit
+integrated diagnostic follow-up; its root cause was not proved. See the evidence report.
+
+ADR0042 now selects the separate versioned SLA contract after independent builder
+check. No SLA capability is implemented yet. Q07 real hours/holidays/targets stay
+unconfigured. The selected authoritative clock is existing durable accepted_at,
+not an inferred wire-observation timestamp. Archived selected configuration fails
+explicitly rather than silently selecting another policy.
 
 Private-files Task4 is implemented in c5c668c with reviewed corrections 039a631.
 Local full175 at c5 and final scoped9 browser/3 child-output tests passed; final

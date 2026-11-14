@@ -12,6 +12,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import httpx
+from packaged_automation_proof import finish_automation, prepare_automation
 from packaged_file_proof import (
     capture_current_file_author,
     configure_files,
@@ -1500,11 +1501,18 @@ with Session(make_engine(Settings())) as db,db.begin():
                     ),
                 )
             )
+            automation_proof = prepare_automation(
+                run, compose, origin, secret_dir, password, teams[0], area_id
+            )
             run([*compose, "up", "-d", "--no-deps", "--no-build", "--force-recreate", "api"])
             await_ready(client)
             assert client.get("/api/v1/auth/me").status_code == 200
             run([*compose, "up", "-d", "--no-deps", "--force-recreate", "postgres"])
             await_ready(client)
+            finish_automation(run, compose, origin, secret_dir, automation_proof, work)
+            print(
+                "Packaged assignment Redis loss, lease recovery, floor and receipt privacy passed."
+            )
             mail_replay = intake_command(*intake_args, data=mail_bytes)
             assert mail_replay["replayed"] and mail_replay["state"] == "collision"
             assert mail_replay["variant_id"] == mail_first["variant_id"]

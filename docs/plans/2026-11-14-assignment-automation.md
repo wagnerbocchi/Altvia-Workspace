@@ -212,18 +212,18 @@ actor boundaries or add scripts/packaged_automation_proof.py to keep ownership
 clear; connect it to scripts/container_smoke.py without weakening old assertions.
 Add docs/assignment-automation-evidence.md; update ADR/roadmap/continuous ledger.
 
-- [ ] Prove actual configured disabled/no-rule behavior then explicit synthetic
+- [x] Prove actual configured disabled/no-rule behavior then explicit synthetic
   enable/assignment creates exactly one native task/link/effect. Recreate API/PG/
   worker and Redis; replay/new assignment preserves receipt and manually removed
   edge. Current revocation retains no hidden ticket/execution metadata. Native
   schema2 activity is projected exactly once. Preserve incumbent singleton canaries.
-- [ ] Run appropriate full packaged/static/native guards. Preserve exact source/
+- [x] Run appropriate full packaged/static/native guards. Preserve exact source/
   config/dependency input hashes, commands, logs, failures and narrow proof limits.
   Expected: actual pass, not a theoretical compatibility claim.
 - [ ] Publish authorized main commits and observe all five exact-source hosted
   workflows, both container jobs and seven actual image inventories. Run complete
   relevant failing logs through diagnosis if any check fails; no skip called pass.
-- [ ] Obtain one independent whole-increment source/visual review; resolve every
+- [x] Obtain one independent whole-increment source/visual review; resolve every
   Important/Critical once with actual RED/GREEN and passing affected/full gates.
   Record all rulings and evidence, then accept only this development increment.
 - [ ] Continue SLA as the next separate contract. Keep real Q-23 policies,

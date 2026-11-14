@@ -175,6 +175,43 @@ copy preserves child logs privately on failure and changes no application source
 transport assertion, health check or timeout. Root cause and a complete packaged
 result are not inferred from the earlier successful hosted Container job.
 
+## Task4 packaged recovery and source review
+
+packaged03 passed the complete actual uv run python scripts/container_smoke.py
+command in648.629s, with37644 source/tool/dependency inputs unchanged. Ruff/check/
+format passed. Its five native API/PostgreSQL/Redis/ingress/web image IDs are
+retained privately in image-ids.json. The14 transferred summary/proof/log/image
+files have a verified manifest. Runtime/helper hashes match the passing snapshot.
+The sole source-map difference in the SMTP fixture is an explicitly recorded
+private diagnostic context wrapper; it retains child logs only on exception.
+No exception occurred in this passing run. This is not claimed byte-identical
+to the ordinary fixture or a proved fix for packaged01's intermittent child exit.
+
+The actual restricted worker published two real automation messages without a
+consumer, then Redis was recreated and its automation queue was proved empty.
+API/PostgreSQL and worker were recreated. Actual database leases expired without
+fixture time updates: both source executions reached attempt2; the old off/on
+revision cancelled, while the eligible new revision created exactly one native
+task/link/effect. Disabled/no-rule tickets retained no execution after enabling.
+
+Protected create replay, manual unlink, rule title/priority edit, default-project
+clearing and unassign/reassign retained the same immutable receipt and unchanged
+task. The final database has one work,one effect,zero links,three executions
+(cancelled/succeeded/succeeded) and exactly three original schema2 domain events,
+each projected once. Queue revocation returned401 to the old session; the same
+account's fresh login returned404 for ticket/executions and200 for work. Only
+truthful automated work creation remained in a one-row activity page with no
+hidden ticket/source/execution IDs or cursor. No incumbent singleton assertion
+was removed. The complete existing SMTP/IMAPS/MIME/manual-link/ACL/lifecycle/
+search/TLS/non-root/SIGTERM/recreation proof also passed, with volumes preserved.
+
+New automation summaries are included in both Container workflow artifact paths;
+no token/body/account credential is exported by that summary. The ordinary
+unchanged SMTP fixture and complete hosted gates must run on the published new
+head. Retain the first native intermittent failure for integrated investigation,
+not as a corrected root cause. Whole-feature acceptance remains gated on that
+publication, and final target qualification remains deferred.
+
 ## Backend publication6cfc97d and CI correction
 
 The backend was published directly to main at

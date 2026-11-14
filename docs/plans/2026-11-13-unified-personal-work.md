@@ -100,14 +100,14 @@ returns list(cursor, signal, filters): Promise<UnifiedWorkPage> using generated
 types and existing authenticated transport. UnifiedPersonalWork consumes that
 transport and owns its filter/paging state inside the current private session.
 
-- [ ] Run Impeccable context workflow once for this surface; read current brief,
+- [x] Run Impeccable context workflow once for this surface; read current brief,
   DESIGN.md and craft floor before source. Preserve the Twenty-inspired Operate
   world. Select the real labeled Fila unificada/Somente tarefas button group.
-- [ ] First add actual browser tests for default consolidation, origin badges,
+- [x] First add actual browser tests for default consolidation, origin badges,
   hidden linked resources, all-page suppression, independent statuses, changing
   filters/reset, read failure/retry and old-session disposal. Observe RED on the
   missing behavior before implementing the real interface.
-- [ ] Add generated-type transport and current API queries, actual detail links,
+- [x] Add generated-type transport and current API queries, actual detail links,
   bounded visible origins and explicit domain/deadline labels. Keep existing
   TaskFilters/results in their separate keyed subtree. No client-side join,
   synthetic counts, privileged directory lookup or stale cached rows after denial.
@@ -123,7 +123,7 @@ Files: extend scripts/packaged_ticket_work_proof.py at its existing legitimate
 actor boundaries without changing incumbent version/count assertions; add
 docs/unified-work-evidence.md; update ADR status, roadmap and continuous ledger.
 
-- [ ] Read actual unified responses before and after the existing API/PG
+- [x] Read actual unified responses before and after the existing API/PG
   recreation for the Task4 dedicated pair. Before native queue revocation, assert
   one work row with its represented ticket; after old401 and same-actor login,
   require readable work and no hidden ticket origin/standalone row. Preserve the

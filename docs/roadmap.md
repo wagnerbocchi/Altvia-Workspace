@@ -74,10 +74,13 @@ review returned SPEC PASS/QUALITY APPROVED,0 actionable findings; manual links
 are accepted. See
 docs/ticket-work-link-evidence.md for original failures/source hashes/limits.
 Next ADR0040/planning commitf5c45f6 preserves legacy tasks while defining the
-authorized unified queue. Native backend passed34 new and114 affected API cases,
-Ruff/mypy and stable generated contracts. Concurrent unlink regression now uses
-one statement snapshot for suppression/badges. Browser implementation and its
-consolidated acceptance remain in progress, not accepted UI or
+authorized unified queue. Native backend passed36 final new cases plus the legacy
+BIGINT/migration case, with114 earlier affected cases, Ruff/mypy and stable
+generated contracts. Concurrent unlink uses one statement snapshot; decimal ticket
+numbers preserve native precision. Actual browser modules passed26 cases and5
+final cases, and the full packaged command passed591.728s with37,617 frozen inputs.
+Final exact-source hosted/security gates and independent review remain pending,
+not accepted UI or
 automation. Final integrated qualification remains deferred until development.
 
 Private-files Task4 is implemented in c5c668c with reviewed corrections 039a631.

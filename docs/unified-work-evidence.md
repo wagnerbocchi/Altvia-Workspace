@@ -108,7 +108,24 @@ networks selected for cleanup were verified as this task's internal networks wit
 zero endpoints. Only those networks were removed; containers, volumes and logs
 were preserved. No host/Docker/SSH security configuration changed. The exact
 cleanup record is network-cleanup01.json. Fresh packaged02 uses the corrected
-decimal source and remains pending. No failed run is counted as acceptance.
+decimal source. No failed run is counted as acceptance.
+
+packaged02 completed the entire unmodified uv run python scripts/container_smoke.py
+command in591.728s with exit0, empty stderr and37,617 unchanged mapped inputs.
+The dedicated pair produced exactly one work row and one ticket badge before
+and after actual API/PostgreSQL recreation. Existing unlink/no-op/replay/relink
+and independent lifecycle checks remain intact. Native queue revocation produced
+old-session401; the same actor's fresh login retained its in-progress task with
+no ticket row, badge, more flag or hidden ticket ID. No extra write was added to
+fit a count. The new record remains keys/states only, without titles or credentials.
+
+Runtime/configuration/dependency/proof bytes in that551-file source map match
+the completed source. Later changes are design/evidence documentation and the
+independently proved contact clock test, not the packaged runtime. Raw stdout
+SHA256 is94b50cba6a1c393df4f4964c6fa4fdf82b09e6bc77320fd7111a37719d5a74330;
+the common archive SHA256 for packaged02/browser-green04 is
+494e90910d8d1131c028d8c7ab8389d5666092d7c15e708bac06b0575ef603d5.
+Final exact-source hosted/security gates and independent review remain pending.
 
 ## Contact regression fixture correction
 

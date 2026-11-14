@@ -1,10 +1,55 @@
 # Assignment automation development evidence
 
 ADR0041's contract and plan are selected after independent builder check. The
-automation feature is NOT accepted: interface and packaged/hosted/
-final review have separate remaining gates. Task1 native configuration/staging
-is complete below, following the schema foundation. No production rule,
+automation feature is NOT accepted: packaged/hosted/final review have separate
+remaining gates. Task1 configuration/staging, Task2 backend and Task3 interface
+have development evidence below. No production rule,
 external policy, real import or final target qualification is implied.
+
+## Task3 scoped interface development
+
+The existing Twenty-inspired Operate system now exposes explicit managed-client
+selection, disabled rule creation, reviewed enable/edit/disable and scoped
+execution triage/retry. Both reviewed versions and the original protected intent
+survive uncertain writes. Acknowledged mutations retry their reads without
+resending the mutation. Native task links distinguish creation from adoption;
+creation history labels the authorizer without implying a manual action.
+
+Actual HTTPS/API/PostgreSQL/Redis browser evidence:
+
+- browser-red01 failed on the absent rule heading before interface source.
+- browser-green02 passed33 new/affected cases in3.0m, including the incumbent
+  ticket-queue, ticket/work and work-item modules.
+- browser-identity-red01 reproduced a stale query continuation after identity
+  replacement. The server denied404; no content disclosure was observed. Native
+  post-await session guards prevent the extra private query.
+- browser-rule-focus-red02 reproduced two Cancel focus failures. Retained opener
+  references restore keyboard focus after review/edit cancellation, fenced by
+  the current session. The earlier red01 helper compilation failure is not
+  counted as a product RED.
+- browser-focus-green01 passed all8 then-current automation cases in44.6s;
+  web check/build/native guard passed, with39678 inputs unchanged. Sixteen
+  form/rule/execution/recovery captures cover390/1440 and light/dark. Axe and
+  overflow checks passed. These are emulated Chromium widths, not physical touch
+  device evidence.
+- browser-adoption01 separately passed the added existing-work adoption case in
+  7.1s. The actual worker adopts an in-progress task with another owner, preserving
+  its full DTO and task count. UI/runtime source is unchanged from the eight-case
+  capture; only the additional test and documentation followed it. No claim that
+  all9 cases ran together is made.
+
+Impeccable context used the incumbent design and a local extension. The single
+detector result was empty. Independent finish review first requested the Cancel
+focus fix, then returned SHIP after the same16 captures were regenerated. This
+accepts the UI extension only. The documenter added its scoped surface brief and
+verified PRODUCT.md, DESIGN.md, the sidecar and shared surface brief unchanged.
+No CSS token, dependency or raster was added. Existing context drift and long
+operational pages remain disclosed; unrelated design changes were not made.
+
+Private screenshots, native commands/logs, source maps and the24-entry verified
+capture manifest remain under this plan's private evidence directory. Task4
+packaged recovery, complete hosted API execution and whole-increment acceptance
+remain open; no production activation or final target qualification is implied.
 
 ## Task2 worker and protected recovery verification
 

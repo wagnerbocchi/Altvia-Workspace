@@ -34,8 +34,8 @@ export function TicketActivity({ id, api }: { id: string; api: TicketApi }) {
     <Button variant="outline" disabled={query.isFetching} onClick={() => void query.refetch()}>Atualizar atividade</Button>
     {query.isPending ? <LoadingRows label="Carregando atividade..." /> : query.isError ? <ReadError retry={() => void query.refetch()} /> : query.data.items.length ?
       <ul className="record-list" aria-label="Atividade do chamado">{query.data.items.map(row => <li className="team-row" key={row.event_id}>
-        <div className="record-text"><strong>{labels[row.event_type] ?? "Alteracao registrada"}</strong>
-          <span className="record-meta">Autor {row.actor_id} - versao {row.aggregate_version}</span>
+        <div className="record-text"><strong>{row.actor_kind === "automation" ? "Tarefa vinculada por automacao" : labels[row.event_type] ?? "Alteracao registrada"}</strong>
+          <span className="record-meta">{row.actor_kind === "automation" ? `Automacao autorizada por: ${row.details.authorizer_id}` : `Autor ${row.actor_id}`} - versao {row.aggregate_version}</span>
           <time className="record-meta" dateTime={row.occurred_at}>{new Date(row.occurred_at).toLocaleString("pt-BR")}</time>
         </div>
       </li>)}</ul> : <p>Nenhuma atividade disponivel nesta pagina.</p>}

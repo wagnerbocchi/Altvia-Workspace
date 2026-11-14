@@ -186,22 +186,22 @@ createAutomationApi(csrf,onAuthError) with scoped list/detail/create/patch/runs/
 using existing abortable authenticated transport and protected intent owner.
 No hand-maintained duplicate DTO, client-side authorization or worker trigger.
 
-- [ ] Run Impeccable context workflow before UI; preserve DESIGN.md/Operate tokens.
+- [x] Run Impeccable context workflow before UI; preserve DESIGN.md/Operate tokens.
   Write real API/browser RED first. Native client choices must expose only current
   authorized client-manager scopes; selected client does not establish permission.
-- [ ] Build actual disabled create, review/enable/edit/disable with both versions,
+- [x] Build actual disabled create, review/enable/edit/disable with both versions,
   protected retry of uncertain intents and fresh GET after acknowledgement. Show
   action meaning and that disabling fences older queued revisions. Keep create
   mounted independently of list pagination/errors. Never populate real policy.
-- [ ] Build scoped actual execution/triage/retry, target links and truthful native
+- [x] Build scoped actual execution/triage/retry, target links and truthful native
   automation labels. Preserve manual activity strings and task/ticket independence.
   Test creation, assignment, delayed worker effect, adoption and recovery through
   actual API/PG/Redis launcher; no mocked successful business action.
-- [ ] Prove keyboard/focus, pending/empty/error/retry/conflict, uncertain protected
+- [x] Prove keyboard/focus, pending/empty/error/retry/conflict, uncertain protected
   intents, both revisions, identity replacement and delayed old response disposal.
   Capture390/1440 both themes, overflow/axe and inspect actual renders together.
   Test work-only hidden ticket/execution IDs in network responses and displayed UI.
-- [ ] Run new and affected browser modules, web check/build/native guard, resolve
+- [x] Run new and affected browser modules, web check/build/native guard, resolve
   source/visual defects. Expected: pass with real screenshots, no synthetic totals.
   Commit coherent interface/test/documentation batch.
 

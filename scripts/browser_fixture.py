@@ -539,4 +539,10 @@ if not os.environ.get("ALTVIA_E2E_EXPIRE") and not os.environ.get("ALTVIA_E2E_DI
                     "milestone_fixture_session",
                 )
             target.write(f"ALTVIA_E2E_MILESTONE_{kind}_SESSION={token}\n")
+if not os.environ.get("ALTVIA_E2E_EXPIRE") and not os.environ.get("ALTVIA_E2E_DISABLE_ROSTER"):
+    from browser_automation_fixture import automation_fixture
+
+    with Path(".env.browser-session").open("a", encoding="utf-8") as target:
+        for key, value in automation_fixture(engine, admin_email).items():
+            target.write(f"{key}={value}\n")
 engine.dispose()

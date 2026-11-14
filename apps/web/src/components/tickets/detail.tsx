@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { TicketWorkLinks } from "@/components/ticket-work/links";
+import { AssignmentRuns } from "@/components/automation/runs";
 import { AttachmentPicker } from "@/components/attachments";
 import { sameAttachments, type AttachmentSummary } from "@/lib/attachments";
 import { useCallback, useRef, useState } from "react";
@@ -158,6 +159,7 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
       onBusyChange={setLinksBusy} />}
     {row && <>
       <div className="admin-plane">
+        <AssignmentRuns ticketId={id} session={session} available={!query.isError} />
         {reviewed && reviewed.allowed_transitions.length > 0 && <section className="admin-section" aria-labelledby="ticket-transition-heading">
           <h2 id="ticket-transition-heading">Mudar estado</h2>
           <form noValidate onSubmit={event => { event.preventDefault(); transition(); }}>

@@ -102,9 +102,14 @@ ADR0041 Task2 backend development passed222 affected native checks, plus focused
 and generated-contract/web checks. Actual restricted API/worker roles and real
 Redis recovery passed; independent backend review found no Critical/Important
 issue. Migration30 exposes only derived assignment-source metadata, keeping API
-base-outbox reads denied. Task3 interface work has begun under Impeccable after
-an actual missing-control browser RED. Browser/visual/packaged/hosted whole-feature
-acceptance and final target qualification remain open; see the evidence report.
+base-outbox reads denied. Task3 interface development passed8 final automation
+browser cases plus1 focused adoption case,33 earlier affected cases and native
+web check/build/guard. Impeccable returned SHIP after the actual Cancel-focus
+RED/GREEN fix;16 light/dark responsive captures are retained. Backend publication
+6cfc97d passed four hosted workflows but API hit its25-minute deadline with one
+legacy worker-ACL assertion failure. That test is corrected with18 native passes;
+the unchanged full suite has a35-minute CI budget. Packaged/complete hosted/whole-
+feature acceptance and final target qualification remain open. See the evidence report.
 
 Private-files Task4 is implemented in c5c668c with reviewed corrections 039a631.
 Local full175 at c5 and final scoped9 browser/3 child-output tests passed; final

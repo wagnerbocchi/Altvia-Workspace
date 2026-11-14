@@ -91,13 +91,15 @@ else:
     with Session(engine) as db, db.begin():
         receipt = capture_message(db, key, 1, 1, raw)
     normalize_variant(engine, receipt.variant_id)
+    # Text-only cases need no store; binary sets still fail closed in the owner.
+    storage_path = os.environ.get("ALTVIA_STORAGE_FILE")
     published = attest_case(
         engine,
         receipt.variant_id,
         contact_id,
         version,
         "browser-synthetic-variant-only",
-        storage_file=Path(os.environ["ALTVIA_STORAGE_FILE"]),
+        storage_file=Path(storage_path) if storage_path else None,
     )
     if options.get("legacy"):
         # Historical migration fixture only: zero-file case, no assets discarded.

@@ -143,3 +143,52 @@ inactive name input, with8 other cases passing. That negative control proves the
 fixture correction retains the actual keyboard/focus regression check. Canonical
 contact production source was never reverted or changed. Final hosted gates on
 the completed increment remain pending.
+
+## Hosted runtime acceptance candidate85dd260
+
+All five workflows passed for85dd2604fc6b53704a77dcfbac70fca54580ffcd:
+
+| Gate | Actual result | Run |
+| --- | --- | --- |
+| API | 1602 passed,3 explicit native-console skips,0 failures/errors;1236.46s | [43549600451](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43549600451) |
+| Browser | 214 passed in8.7m | [43549600381](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43549600381) |
+| Containers | api-runtime and private-file-runtime both passed, including both packaged relationship proofs | [43549600541](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43549600541) |
+| Source security | Passed | [43549600490](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43549600490) |
+| Image security | Seven nonempty inventories;0 vulnerabilities | [43549600506](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43549600506) |
+
+The3 API skips name freshclam, freshclam-daemon and clamd foreground checks,
+which require an explicitly supplied prebuilt pinned native image. They are
+retained, not counted as passes. The separate actual private-file runtime job
+passed its native infrastructure/console and packaged checks. Complete logs,
+job metadata, API JUnit and actual image reports are in ci-85dd260. Package counts:
+API72, ClamAV38, ingress70, PostgreSQL49, Redis16, storage107 and web43; every
+report has zero vulnerabilities, including lower severities. No ignore added.
+
+The private native evidence archive collect01-proof.tar.gz has SHA256
+3fe1fcbb72692e5ba3f7d67f6c4373b96cfb493eca28c5f5e1a2ed309d60b10f.
+All471 manifest entries were verified after transfer;401 credential canaries
+matched no collected file. Audit/manifest metadata add two archive entries.
+
+## Manual visual harness compatibility
+
+The opt-in workspace capture suite is intentionally excluded from ordinary CI.
+Inspection found two old task-only state assertions that still opened the new
+default unified view. capture-red01 first stopped earlier at a fixture KeyError:
+the plain-text inbound sample unnecessarily required ALTVIA_STORAGE_FILE.
+Its owner already supports zero-file text without storage, so the guarded test
+fixture now passes an optional path. Binary staging still fails closed without
+real storage. No production mail owner behavior or grant changed.
+
+With that fixture correction, capture-red02 reached and reproduced the actual
+missing old task-empty message. Both old empty/error captures now explicitly
+select Somente tarefas and retain their original assertions. capture-green01
+passed the complete opt-in test in58.3s, producing120 real captures in30 groups
+and passing every320px overflow check. Ruff/scripts, web check/build/native guard
+and39,651 frozen input checks passed. Selected default/empty/error renders were
+inspected; the original unified native390/1440 light/dark captures remain.
+
+These follow-up edits affect only the guarded test fixture and opt-in capture
+test, with their own executed proof. Application runtime, dependencies and the
+runtime proof source remain byte-identical to85dd260. Reuse its passing runtime
+gates; do not claim they ran on a later test/documentation commit. Final fresh
+whole-increment review is still required before accepting this feature.

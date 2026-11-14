@@ -101,10 +101,10 @@ test("@redesign-capture all existing routes and representative states", async ({
   await capture("users", "/admin/users");
   await capture("user-detail", `/admin/users/${admin.id}`);
   await session(page, "WORK_READER");
-  await capture("empty-work", "/my-work", false, async () => { await expect(page.getByText("Nenhuma tarefa sua corresponde aos filtros.", { exact: false })).toBeVisible(); });
+  await capture("empty-work", "/my-work", false, async () => { await page.getByRole("button", { name: "Somente tarefas", exact: true }).click(); await expect(page.getByText("Nenhuma tarefa sua corresponde aos filtros.", { exact: false })).toBeVisible(); });
   await session(page, "WORK_MANAGER");
   await page.route("**/api/v1/my-work?**", route => route.abort());
-  await capture("work-error", "/my-work", false, async () => { await expect(page.locator(".workspace-content").getByRole("alert")).toContainText("Não foi possível carregar os dados"); });
+  await capture("work-error", "/my-work", false, async () => { await page.getByRole("button", { name: "Somente tarefas", exact: true }).click(); await expect(page.locator(".workspace-content").getByRole("alert")).toContainText("Não foi possível carregar os dados"); });
   await page.unroute("**/api/v1/my-work?**");
   await page.goto("/my-work"); await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => { document.documentElement.classList.add("dark"); document.documentElement.classList.remove("light"); });

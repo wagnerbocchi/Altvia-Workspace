@@ -107,10 +107,12 @@ Selectors and scope are immutable. Pydantic forbids extra fields, duplicate
 window/holiday/pause values, NUL, repeated/unknown query and caller TZif bytes.
 
 CalendarOutput: id,client_id,queue_id,version,queue_version,name,active,timezone,
-windows,holidays,tzif_sha256,created_at,updated_at. No raw TZif in HTTP.
+windows,holidays,tzif_sha256,can_edit,created_at,updated_at. No raw TZif in HTTP.
+CalendarSummary omits windows/holidays/hash; collection pages use summaries to
+avoid multiplying1000-holiday payloads by the page limit.
 PolicyOutput: id,client_id,queue_id,category_id,priority,version,queue_version,
 enabled,name,calendar_id,calendar_version,targets,approach,pause_states,
-authorizer_id,created_at,updated_at. Native choices expose only this scope.
+authorizer_id,can_edit,created_at,updated_at. Native choices expose only this scope.
 Receipt: calendar_id or policy_id with queue/client IDs, never full private data.
 Lists/Page follow ADR0042 limit/cursor, required unique client_id and no total.
 
@@ -124,7 +126,7 @@ calendar eligibility and existence/scope of that immutable revision.
 - [ ] Native actual RED before tables/routes. Prove composite customer/queue/
   calendar/category integrity, null-aware selector uniqueness, immutable revisions,
   insert-only exact runtime grants, populated downgrade refusal and empty roundtrip.
-- [ ] Implement only the five live configuration tables in31. No empty cycle
+- [ ] Implement only the four live configuration tables in31. No empty cycle
   scaffold, seeded calendar, enabled policy or fictitious hours. Later32 adds the
   cycle/evaluator tables when their actual owner is implemented.
 - [ ] Prove full current role conjunction/non-grants, strict bounds, initial

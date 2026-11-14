@@ -230,6 +230,48 @@ that those tables, endpoints or capabilities already exist.
 
 ## SLA, durable processing and provenance
 
+ADR0042 Task2 configuration storage is selected before migration31 source, not
+implemented by the pure-calendar foundation. Four native tables own it:
+
+| Table | Exact configuration invariants |
+| --- | --- |
+| business_calendars | UUID id; immutable client_id/queue_id; positive version; UTC created_at/updated_at; unique(id,client_id,queue_id); restrictive customer/queue FKs |
+| business_calendar_revisions | PK(calendar_id,version); matching client/queue composite parent FK; unique(calendar_id,version,client_id,queue_id); immutable active,name1..160,timezone1..100,windows JSONB,holidays JSONB,tzif bytea1..262144,tzif_sha256,created_at |
+| sla_policies | UUID id; immutable client/queue/category nullable/priority nullable; positive version and UTC timestamps; unique(id,client_id,queue_id); same-queue category FK; null-aware unique(queue,client,category,priority), including disabled identities |
+| sla_policy_revisions | PK(policy_id,version); matching parent and calendar revision composite context FKs; unique(policy_id,version,client_id,queue_id); immutable enabled,name,calendar_id/version,first_response_minutes/resolution_minutes1..525600,approach_minutes0..525600,pause_states,authorizer_id,created_at |
+
+Each calendar revision owns its complete holiday domain values in immutable
+canonical JSONB, like its weekly windows. No appendable holiday child table or
+duplicated holiday counter is needed. SQL invoker-only immutable validation
+functions, with a fixed pg_catalog search path and no table access, enforce
+1..28 exact ordered/coalesced nonoverlapping window objects and0..1000 unique
+ordered ISO-date/optional-label holiday objects. Reject unknown keys, bool/fractional
+window numbers, invalid dates, NUL/blank/oversized labels and mutable shape.
+PostgreSQL's existing built-in sha256/encode enforces the artifact hash as in raw
+mail storage; no extension/dependency or SECURITY DEFINER helper is required.
+
+API receives SELECT/INSERT on these four tables and UPDATE(version,updated_at)
+on identities only. Identity scope/selectors, revision data and frozen artifact
+columns receive no UPDATE/DELETE. No premature worker domain-writer/read grants;
+only strict private configuration event validation is needed until Task3. Native
+canonical ownership and immutable revision columns prevent later holiday/window
+append/mutation. Calendar summaries exclude full JSON/artifact data on list pages.
+
+Actual changes append a complete revision and advance queue/current identity
+once under identity/client/team/queue/own ordering. A current-version pointer
+selects the matching revision; avoid a circular creation FK and fail closed if
+missing. Revision versions and same-scope composite FKs are checked independently.
+Protected receipt kinds sla-calendar-create/patch and sla-policy-create/patch
+include immutable route, canonical body and original reviewed versions. Guarded
+contraction locks all four tables plus outbox/audit/idempotency history and refuses
+any row, configuration event or protected receipt before dropping derived schema.
+Preexisting native state/grants/history are preserved. Empty roundtrip and actual
+least-privilege/atomic rollback proof are required before accepting this schema.
+
+Cycle/evaluator storage in migration32 is a later owner, with its detailed
+counter/progress/event contract in docs/plans/2026-11-14-ticket-sla.md. The generic
+future-domain table below remains a planning overview, not implementation proof.
+
 | Tables | Contract |
 | --- | --- |
 | business_calendars/holidays | IANA timezone, weekly windows, revision, holiday DATE; validate ordered nonoverlapping windows |

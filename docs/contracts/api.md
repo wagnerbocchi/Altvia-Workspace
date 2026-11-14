@@ -395,7 +395,7 @@ filters; unsupported/repeated/invalid parameters return422. See ADR for boundari
 | GET `/attachments/{id}/content` | target read + note.read if applicable | 200 private stream, safe Content-Disposition; 404 denied |
 | GET `/analytics/overview`, `/analytics/team-workload` | analytics.read | Date range/timezone required for period metrics; authorized aggregates only |
 | GET/POST `/automation-rules` | automation.manage | Versioned structured schema; rejects expressions/arbitrary actions |
-| GET/POST `/sla-policies`, `/business-calendars` | sla.manage | Validated immutable revision on change |
+| GET/POST `/ticket-queues/{queue_id}/sla-policies`, `/ticket-queues/{queue_id}/business-calendars` | ADR0042 full customer/queue configuration conjunction | Selected contract; implementation pending |
 | POST `/imports/dry-runs` | import.manage | Hash + local upload + reference_date/timezone + mapping_version, 202 |
 | POST `/imports/{id}/commit` | import.manage | 202 approved batch, reject unresolved mappings/stale dry-run |
 | GET `/imports/{id}` | import.manage | 200 dispositions/counts without unrestricted raw payload |
@@ -404,6 +404,78 @@ filters; unsupported/repeated/invalid parameters return422. See ADR for boundari
 P1 APIs `/notifications`, `/time-entries` and `/exports` require a subsequent
 contract revision before implementation. No external caller-accessible IMAP
 ingestion endpoint; mailbox adapters run as restricted worker jobs.
+
+### Selected SLA configuration contract (ADR0042; not implemented yet)
+
+No global SLA collection or implicit platform/customer grant is introduced.
+Each calendar/policy belongs to immutable client_id and queue_id. All collection,
+detail, reference choice and write operations require current client ceiling plus
+client operations_manager, explicit queue operations_manager and native queue
+configuration management. Team/project authority alone supplies no such access.
+
+GET /ticket-queues/{queue_id}/business-calendars and /sla-policies require unique
+client_id, with limit1..100/default50 and optional actor/queue/client-bound cursor.
+Reject unknown/repeated query fields. Ascending UUID pages have items,next_cursor
+and no total. Calendar list uses summary IDs/name/timezone/active/own version/
+queue_version/can_edit/timestamps only, not1000 holidays or raw timezone bytes per
+row. Calendar detail includes canonical windows/holidays and TZif SHA256, never
+the artifact bytes. Policy pages/details include their finite reviewed action
+values and current queue_version/can_edit, with no private source/delivery data.
+
+POST calendars accepts client_id,name1..160,explicit active boolean,timezone IANA
+name,1..28 weekly windows{weekday0..6,start_minute0..1439,end_minute1..1440}, and
+holidays0..1000{date YYYY-MM-DD,label nullable1..160}. Windows are ordered and
+touching ranges coalesced; overlap/duplicate dates/ranges and noninteger/bool
+minute values are rejected. Dates are civil dates, not timestamp coercions.
+Reject NUL, invalid single-line names, unknown fields and caller-supplied TZif.
+
+POST policies accepts client_id,optional category_id/priority selector,name,
+calendar_id+calendar_version,first_response_minutes/resolution_minutes1..525600,
+approach_minutes0..525600 and explicit pause_states(unique subset of the two
+pending states, including empty). Creation fixes enabled=false; callers cannot
+force activation or choose an authorizer. One identity per null-aware selector
+includes disabled policies. Changing the selector requires a different identity.
+No invented calendar, timezone, pause list or target is seeded.
+
+GET detail returns own ETag. PATCH is nonempty, partial and non-null except the
+explicit nullable holiday label. Calendar editable fields are name/active/
+timezone/windows/holidays; policy fields are name/enabled/calendar pair/targets/
+approach/pause_states. Scope/selector/authorizer/bytes are never input. A submitted
+calendar pair must include both ID and immutable version. can_edit describes
+active client/team/queue eligibility; current scoped management is always required.
+
+POST requires queue If-Match and Idempotency-Key. PATCH requires own If-Match,
+If-Match-Queue and Idempotency-Key. Reject duplicate/malformed headers. Return201
+for new creation,200 for protected replay/PATCH, minimal queue_id/client_id plus
+calendar_id or policy_id; read detail after acknowledgment. Real changes create
+complete immutable revisions and advance own/queue version once. No-op records
+its intent without a new revision/event. Preserve the original canonical body,
+route and both reviewed versions in the protected fingerprint. Current action/
+scope and header syntax precede receipt disclosure; only new intents compare
+current versions. Replays never re-enable later disabled configuration.
+
+Lookup/capture of installed timezone bytes occurs only for an actual new
+revision after committed replay checks. A metadata/window edit omitting timezone
+retains its current frozen artifact; explicitly submitting timezone selects the
+current installed rules, even for the same name. A committed old receipt does
+not fail merely because the installed timezone catalog later changes. A real
+new timezone selection must be installed/valid; no silent fallback. Review UI
+must retain original field presence and selected revision through uncertainty.
+
+Parents must be active for new creation/action edits/activation. Authorized reads,
+disable-only changes, coherent no-op and already committed receipt replay survive
+archive. Policy activation checks the selected same-scope calendar revision,
+calendar current active state and any category's current same-queue eligibility.
+Hidden404, readable forbidden403, missing precondition428, invalid422 and stale409
+follow existing HTTP owners. Duplicate selector409 sla_policy_exists discloses no
+other scope. No DELETE, implicit delegation, cycle reset or production activation.
+
+Configuration emits private validated schema1 business_calendar.created/updated
+and sla_policy.created/updated metadata, with current actor and changed field
+names only. The activity worker acknowledges them without shared identity/ticket
+activity. Immutable revisions retain binary rollback; populated/history/protected
+receipt downgrade refuses before DDL. Ticket SLA read/evaluation is Task3 of the
+selected plan and is not implied by this configuration foundation.
 
 ## State transitions and temporal semantics
 

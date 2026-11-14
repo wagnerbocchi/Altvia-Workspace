@@ -68,6 +68,8 @@ pending_third_party pause states. No customer hours or pause default is inferred
 Approach is a display state within the remaining business-time budget, not a new
 notification service. Targets are independent; neither is forced to exceed the
 other. A captured revision remains authoritative after later edits/disable.
+The authorizer is provenance, not a recurring permission token: leaving the
+company does not itself disable an enabled business policy for new cycles.
 Existing cycles continue after reference archival or authorizer deactivation;
 evaluation fulfills a recorded obligation and grants no content access. Current
 ticket authorization still governs every read. Archival is not an implicit pause.
@@ -156,16 +158,15 @@ a separate explicit transport-evidence contract and new-cycle policy revision.
 
 ## Persistence, transactions and worker
 
-Reserve migration31 after b46087000030 for the five configuration tables. Add
+Reserve migration31 after b46087000030 for the four configuration tables. Add
 cycle/event storage in32 with its actual evaluator, rather than empty scaffolding.
 Tables:
 
 - business_calendars: UUID, immutable customer/queue, positive version and UTC
   created/updated, composite unique(id,client_id,queue_id).
 - business_calendar_revisions: PK(calendar_id,version), immutable active/name/timezone/
-  windows/TZif/hash and created_at, constrained parent context.
-- business_calendar_holidays: PK(calendar_id,version,local_date), restrictive
-  revision FK and optional label. Runtime revisions/holidays are insert-only.
+  windows/holidays/TZif/hash and created_at, constrained parent context. Holidays
+  are bounded canonical date/label values in this immutable JSONB snapshot.
 - sla_policies: UUID, immutable customer/queue/selector, positive version,
   canonical null-aware selector uniqueness and restrictive same-queue category FK.
 - sla_policy_revisions: PK(policy_id,version), immutable enabled/name/calendar
@@ -178,6 +179,14 @@ Tables:
 - ticket_sla_events: immutable cycle/goal/type/source identity and exact occurrence/
   observation metadata. Unique logical breach(ticket,cycle,goal); separate unique
   correction evidence key. No body, email address, raw exception or account hash.
+
+Storage ruling before migration source: own holidays inside the immutable
+calendar revision, like weekly windows. A separate insert-only holiday child
+table would still allow appending to an old revision, and enforcing the1000-row
+limit would require extra cross-row locking/triggers. One SQL-validated bounded
+snapshot preserves atomic immutability without a second write protocol. Holiday
+remains a domain value; no independent holiday resource is required. Future
+cross-calendar holiday reporting can project these values without copying them.
 
 Indexes own scoped configuration pages and due-cycle evaluation. New FK parents
 are restrictive, with same-client/queue composite keys enforced in SQL. Mutable

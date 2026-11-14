@@ -58,6 +58,29 @@ approved and audited emergency grant. Never implement blanket `is_admin` bypass.
 | Analytics/export | explicit analytics grant | permitted team/client | permitted projects | own My Work only by default | explicit read/export grant |
 | Import/raw payload/audit | explicit import/audit role | explicit delegated role | deny | deny | deny |
 
+ADR0042 selects SLA configuration using the same explicit client/queue management
+conjunction as assignment configuration: active account, explicit customer ceiling
+and client operations_manager, explicit queue operations_manager and native queue
+configuration management. Neither platform administration alone, team metadata,
+project membership nor assignment grants access. Scope lists/details/choices and
+protected receipt disclosure identically. There is no general global SLA read.
+Actual migration/API proof remains pending; pure calendar tests establish no grant.
+
+Identity serialization precedes authentication for writes, then native client/
+team/queue and calendar/policy locks. Current scope and valid headers precede
+saved receipt disclosure; only new intents compare current reviewed versions.
+Preserve minimal replay receipts and original field presence, including explicit
+timezone selection. Resolve installed bytes only after replay, with trusted IANA
+membership, bounded file reads and frozen hash. HTTP rejects binary/path uploads;
+calendar lists omit full1000-holiday snapshots and all endpoints omit raw TZif.
+
+Revision fields, scope/selectors and artifacts are insert-only under the actual
+API role; only identity version/updated_at may be updated. SQL validates nested
+snapshot bounds and hash without SECURITY DEFINER or new privileged functions.
+Private configuration metadata never becomes shared identity or ticket activity.
+No worker SLA content privilege is granted before its actual owner is implemented.
+No real calendar, target, pause policy or production activation follows from tests.
+
 ADR-0029 implements private note authority as explicit queue note_access
 none|read|write, default none, restricted to agent/operations_manager bindings.
 Current queue role and customer ceiling also apply. Configuration managers

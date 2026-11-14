@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StrictBool, field_validator
 
 from altvia.ticket_schemas import Status as TicketStatus
-from altvia.ticket_schemas import Subject
+from altvia.ticket_schemas import Subject, TicketNumber
 from altvia.work_schemas import MyWorkItem, Priority
 from altvia.work_schemas import Status as WorkStatus
 
@@ -38,7 +38,7 @@ class UnifiedWorkFilters(BaseModel):
 class LinkedTicketBadge(BaseModel):
     model_config = ConfigDict(extra="forbid")
     id: UUID
-    number: int = Field(ge=1)
+    number: TicketNumber
     subject: Subject
     status: TicketStatus
     priority: Priority

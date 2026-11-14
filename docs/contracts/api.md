@@ -487,7 +487,9 @@ current visible ticket origins contribute to badges/more; badges sort by ticket
 UUID independently of personal ticket assignment/status filters. A ticket row has
 id/number/subject/status/priority/client_id/queue_id/queue_name/created_at, without
 task deadline, private text/count, requester or mutation capability. A badge has
-id/number/subject/status/priority. Use the existing paged link panel for full
+id/number/subject/status/priority. Both number fields reuse TicketOutput's exact
+positive decimal string, including BIGINT values beyond JavaScript's safe range.
+Use the existing paged link panel for full
 origin discovery. No result total, effort or SLA value is fabricated.
 Candidate selection, full-set suppression and bounded badge enrichment share
 one PostgreSQL statement snapshot. Concurrent native link changes cannot mix

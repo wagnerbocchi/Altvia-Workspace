@@ -36,6 +36,7 @@ def _subject(value: object) -> object:
 
 
 Subject = Annotated[str, BeforeValidator(_subject), Field(min_length=1, max_length=300)]
+TicketNumber = Annotated[str, Field(pattern=r"^[1-9][0-9]{0,18}$")]
 Description = Annotated[str, BeforeValidator(_text), Field(max_length=20000)]
 
 
@@ -165,7 +166,7 @@ class TicketMessagePage(StrictModel):
 
 class TicketOutput(StrictModel):
     id: UUID
-    number: Annotated[str, Field(pattern=r"^[1-9][0-9]{0,18}$")]
+    number: TicketNumber
     client_id: UUID
     client_name: str
     queue_id: UUID

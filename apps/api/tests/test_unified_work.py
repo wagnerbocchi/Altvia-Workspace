@@ -12,7 +12,7 @@ from altvia import client_registry, identity
 from altvia.main import create_app
 from altvia.models import RoleBinding, Ticket, TicketQueue, User, WorkItem
 from fastapi.testclient import TestClient
-from sqlalchemy import Engine, event, select
+from sqlalchemy import Engine, event, select, text
 from sqlalchemy.orm import Session
 from test_team_api import admin_client, preconditions, sign_in
 from test_work_items import create_work, setup_project
@@ -106,6 +106,36 @@ def personal_pair(client, engine, user):
         response = client.patch(path, json=body, headers=preconditions())
         assert response.status_code == 200, response.text
     return context
+
+
+@pytest.mark.parametrize("number", [9007199254740993, 9223372036854775807])
+def test_decimal_ticket_number_preserves_native_precision(
+    admin_client, db_engine, seeded_user, number
+):
+    # Only the explicitly disposable test database changes its native identity
+    # sequence. Restore it so the BIGINT maximum does not exhaust later cases.
+    with db_engine.begin() as connection:
+        prior = connection.execute(
+            text("SELECT last_value,is_called FROM tickets_number_seq")
+        ).one()
+        connection.execute(
+            text("SELECT setval('tickets_number_seq', :number, false)"), {"number": number}
+        )
+    try:
+        context = personal_pair(admin_client, db_engine, seeded_user)
+        native = admin_client.get(f"/api/v1/tickets/{context.ticket_id}").json()
+        assert native["number"] == str(number)
+        standalone = next(row for row in listing(admin_client)["items"] if row["kind"] == "ticket")
+        assert standalone["number"] == native["number"]
+        connect(admin_client, context.ticket_id, context.work_item_id)
+        badge = listing(admin_client)["items"][0]["linked_tickets"][0]
+        assert badge["number"] == native["number"]
+    finally:
+        with db_engine.begin() as connection:
+            connection.execute(
+                text("SELECT setval('tickets_number_seq', :number, :called)"),
+                {"number": prior.last_value, "called": prior.is_called},
+            )
 
 
 def test_personal_union_reuses_full_authorized_work_set(admin_client, db_engine, seeded_user):

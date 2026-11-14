@@ -62,3 +62,47 @@ packaged recreation/current scope, independent whole-increment review and all
 five exact-source hosted/security workflows remain required. Compatible-image
 rollback, encrypted backup/restore and final integrated x86-64-v1 qualification
 remain separate gates. No production rollout, real import or retirement occurred.
+
+## Decimal compatibility correction
+
+Backend91ffdbf was published after the initial148-case proof. Rendered inspection
+then identified that the new summaries used numeric ticket numbers, unlike the
+incumbent exact decimal-string TicketOutput. The new interface is not accepted
+on that source. number-red01 was an invalid fixture attempt to UPDATE a GENERATED
+ALWAYS column. The corrected fixture drives the native identity sequence in its
+dedicated test database and restores it afterward. number-red03 reproduced both
+2^53+1 and BIGINT maximum as integer-versus-string assertion failures.
+
+TicketNumber now owns the existing TicketOutput pattern and is reused by the
+new summaries. Standalone formatting and the bounded SQL JSON aggregate both
+preserve decimal strings. No incumbent response schema changes. green06 passed
+all36 unified cases in121.21s, the legacy BIGINT/schema-roundtrip case in6.41s,
+Ruff/check/format and mypy68. Its6,001-row plan returned100+1 rows, Sort root101,
+execution42.524ms and planning10.536ms. generation02 repeated both exports with
+stable bytes and passed web check; all pre-increment OpenAPI component schemas
+and the complete legacy /my-work operation compare equal. Both new number
+properties exactly match TicketOutput's property.
+
+## Browser and isolated-stack progress
+
+browser-red01 failed four cases at the missing default control/search before UI
+implementation. browser-green01 passed4 cases in13.2s. browser-green02 passed26
+cases in2.1m: five new cases plus the complete incumbent discovery/link modules.
+This includes actual delayed old-response disposal after identity replacement,
+visible badge cap3/more, independent done/new states and real detail navigation.
+The existing task assertions remain and explicitly select Somente tarefas.
+
+Actual390/1440 light/dark captures, axe and overflow passed in the same batch.
+PhotoCraft was unavailable; the images were inspected directly. Rendered review
+found the closed filter disclosure vertically above its neighboring select; a
+local alignment rule and numeric render assertion corrected it. browser-green03
+passed all five cases in17.0s, including that geometry check. These runs precede
+the final browser decimal assertion; browser-green04 remains pending.
+
+packaged01 and number-red02 stopped before exercising their product checks:
+Docker reported all predefined address pools fully subnetted. All14 retired
+networks selected for cleanup were verified as this task's internal networks with
+zero endpoints. Only those networks were removed; containers, volumes and logs
+were preserved. No host/Docker/SSH security configuration changed. The exact
+cleanup record is network-cleanup01.json. Fresh packaged02 uses the corrected
+decimal source and remains pending. No failed run is counted as acceptance.

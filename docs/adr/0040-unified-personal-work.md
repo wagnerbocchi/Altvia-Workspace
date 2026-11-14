@@ -63,11 +63,13 @@ instant). items is a strict union discriminated by kind:
 
 - UnifiedWorkItem retains MyWorkItem's task fields and adds created_at,
   linked_tickets (maximum3) and has_more_linked_tickets (strict boolean).
-- UnifiedTicket has kind=ticket, id, positive number, subject (existing Subject,
+- UnifiedTicket has kind=ticket, id, positive decimal-string number (the existing
+  TicketOutput contract, never a JavaScript numeric value), subject (existing Subject,
   maximum300), ticket status, priority, client_id, queue_id, queue_name and
   created_at. It has no task due field, private text/count, requester or mutation
   capability.
-- LinkedTicketBadge has id, number, subject, ticket status and priority. Return
+- LinkedTicketBadge has id, the same exact decimal-string number, subject, ticket
+  status and priority. Preserve BIGINT values beyond JavaScript's safe range. Return
   the first3 visible linked tickets by UUID ascending, plus a boolean when more
   VISIBLE links exist. The existing paged relationship panel owns full discovery.
   Badges represent current visible origins independently of the actor's ticket

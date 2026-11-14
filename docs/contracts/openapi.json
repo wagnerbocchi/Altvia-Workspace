@@ -1743,9 +1743,9 @@
             "type": "string"
           },
           "number": {
-            "minimum": 1.0,
+            "pattern": "^[1-9][0-9]{0,18}$",
             "title": "Number",
-            "type": "integer"
+            "type": "string"
           },
           "priority": {
             "enum": [
@@ -4981,9 +4981,9 @@
             "type": "string"
           },
           "number": {
-            "minimum": 1.0,
+            "pattern": "^[1-9][0-9]{0,18}$",
             "title": "Number",
-            "type": "integer"
+            "type": "string"
           },
           "priority": {
             "enum": [

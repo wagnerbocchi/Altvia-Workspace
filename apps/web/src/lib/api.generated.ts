@@ -2109,7 +2109,7 @@ export interface components {
              */
             id: string;
             /** Number */
-            number: number;
+            number: string;
             /**
              * Priority
              * @enum {string}
@@ -3417,7 +3417,7 @@ export interface components {
              */
             kind: "ticket";
             /** Number */
-            number: number;
+            number: string;
             /**
              * Priority
              * @enum {string}

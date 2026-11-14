@@ -195,7 +195,7 @@ def _badges(actor_id: UUID, personal_page: Any, limit: int) -> Any:
         "id",
         ranked.c.id,
         "number",
-        ranked.c.number,
+        cast(ranked.c.number, String),
         "subject",
         ranked.c.subject,
         "status",
@@ -264,7 +264,7 @@ def page(
                 UnifiedTicket(
                     kind="ticket",
                     id=row.id,
-                    number=row.number,
+                    number=str(row.number),
                     subject=row.title,
                     status=row.status,
                     priority=row.priority,

@@ -9,6 +9,33 @@ passing evidence below; packaged and whole-capability acceptance remain pending.
 No hours, holidays or targets are
 configured for Altvia.
 
+## Whole-increment review correction
+
+The fresh independent source review of1e12078..22f22d4 and the initial packaged
+proof found one Important issue and no Critical or Minor findings. A new policy
+could display the broad category default after paging while retaining a specific
+submitted category UUID. category-red02 reproduced the actual empty selected
+value in7.8s. Retaining the chosen identity/label and controlling the native select
+fixes both unloaded-page and transient-fetch continuity without broadening scope.
+
+Final category-green03 passed all19 SLA/automation browser cases in2.7m
+(204.750s launcher), with native web check, build and Sharp guard. The new case
+uses genuine smaller server pages, visits both directions, submits while the
+next page is held, and checks visible selection, persisted UUID and activation
+review. A prior partial fix retained the option but still lost the uncontrolled
+native value; its failure is retained. The duplicate-selector regression now
+compares the complete policy set before/after rejection, preserving the new
+independent category policy. Automation's existing opener-focus assertions remain;
+the following Tab now correctly reaches the new SLA client selector.
+
+37 transferred evidence files passed SHA256 verification;39721 frozen inputs
+remained unchanged.28 captures retain the previous six states plus four new
+category-pagination views at1440/390 in light/dark. The four new views were opened
+and inspected. The earlier full Impeccable verdict remains scoped to its two
+visual findings; this source-review correction has its own RED/GREEN proof and
+does not claim a repeated complete visual review. Packaged/hosted acceptance and
+final target qualification remain separate gates.
+
 ## Configuration and outcome interface
 
 Queue managers can select an explicitly authorized client, configure calendar

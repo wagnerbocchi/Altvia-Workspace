@@ -309,7 +309,7 @@ for (const enabled of [true, false]) test(`@automation keyboard cancellation res
   await expect(panel.getByLabel("Titulo da tarefa gerada", { exact: true })).toBeFocused();
   await panel.getByRole("button", { name: "Cancelar edicao", exact: true }).click();
   await expect(edit).toBeFocused(); await page.keyboard.press("Tab");
-  await expect(page.getByRole("button", { name: "Atualizar historico", exact: true })).toBeFocused();
+  await expect(page.getByLabel("Cliente do SLA", { exact: true })).toBeFocused();
 });
 
 test("@automation adopts existing in-progress work without changing its executor or lifecycle", async ({ page }) => {

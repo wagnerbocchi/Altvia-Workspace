@@ -147,6 +147,79 @@ test("@sla configure frozen revisions, activate deliberately and read real worke
   await capture(page, "reopened-history");
 });
 
+test("@sla category selection remains visible across real category pages and persisted creation", async ({ page }) => {
+  const csrf = await login(page);
+  const queuePath = `${root}${env("QUEUE")}`;
+  for (let index = 0; index < 2; index++) {
+    const current = await (await page.request.get(queuePath)).json();
+    const response = await page.request.post(`${queuePath}/categories`, {
+      headers: headers(csrf, current.version), data: { name: "SLA paged category " + crypto.randomUUID() },
+    });
+    expect(response.status()).toBe(201);
+  }
+  // Request smaller genuine API pages; do not invent options, cursors or responses.
+  let holdNext = false;
+  const releasePages: (() => void)[] = [];
+  await page.route(`**${queuePath}/categories?*`, async route => {
+    const url = new URL(route.request().url());
+    url.searchParams.set("limit", "1");
+    if (holdNext && url.searchParams.has("cursor")) await new Promise<void>(resolve => releasePages.push(resolve));
+    await route.fulfill({ response: await route.fetch({ url: url.toString() }) });
+  });
+  const panel = await configuration(page);
+  await calendarForm(page, "SLA paged calendar " + crypto.randomUUID());
+  await page.getByRole("button", { name: "Cadastrar calendario revisado", exact: true }).click();
+  await confirmed(page);
+  await page.getByRole("button", { name: "Nova politica de SLA", exact: true }).click();
+  const policyName = "SLA paged policy " + crypto.randomUUID();
+  await page.getByLabel("Nome da politica", { exact: true }).fill(policyName);
+  const category = page.getByLabel("Categoria da politica", { exact: true });
+  await expect(category).toBeEnabled();
+  const choice = await category.locator("option").evaluateAll(options => {
+    const option = options.find(option => (option as HTMLOptionElement).value !== "") as HTMLOptionElement;
+    return { id: option.value, name: option.textContent };
+  });
+  await category.selectOption(choice.id);
+  const paging = panel.getByRole("navigation", { name: "Páginas de categorias", exact: true });
+  await paging.getByRole("button", { name: "Proximas categorias", exact: true }).click();
+  await expect(paging).toContainText("Página 2");
+  await expect(category).toBeEnabled();
+  await expect(category).toHaveValue(choice.id);
+  await expect(category.locator("option:checked")).toHaveText(choice.name!);
+  await paging.getByRole("button", { name: "Categorias anteriores", exact: true }).click();
+  await expect(category).toBeEnabled();
+  await expect(category.locator("option:checked")).toHaveText(choice.name!);
+  const calendar = page.getByLabel("Calendario da politica", { exact: true });
+  const calendarId = await calendar.locator("option").evaluateAll(options => (options.find(option => (option as HTMLOptionElement).value !== "") as HTMLOptionElement).value);
+  await calendar.selectOption(calendarId);
+  await page.getByRole("button", { name: "Usar esta revisao do calendario", exact: true }).click();
+  await page.getByLabel("Meta de primeira resposta (minutos uteis)", { exact: true }).fill("60");
+  await page.getByLabel("Meta de resolucao (minutos uteis)", { exact: true }).fill("240");
+  await page.getByLabel("Aproximacao do limite (minutos uteis)", { exact: true }).fill("0");
+  holdNext = true;
+  await paging.getByRole("button", { name: "Proximas categorias", exact: true }).click();
+  let response;
+  try {
+    await expect(category).toBeDisabled();
+    await expect(category).toHaveValue(choice.id);
+    await expect(category.locator("option:checked")).toHaveText(choice.name!);
+    await capture(page, "category-pagination");
+    const created = page.waitForResponse(response => response.request().method() === "POST" && response.url().endsWith(`${queuePath}/sla-policies`));
+    await page.getByRole("button", { name: "Cadastrar politica desativada", exact: true }).click();
+    response = await created;
+  } finally {
+    holdNext = false;
+    for (const release of releasePages) release();
+  }
+  expect(response.status()).toBe(201);
+  const id = (await response.json()).policy_id;
+  const persisted = await (await page.request.get(`${queuePath}/sla-policies/${id}`)).json();
+  expect(persisted.category_id).toBe(choice.id);
+  await confirmed(page);
+  await panel.getByRole("listitem").filter({ hasText: policyName }).getByRole("button", { name: "Revisar ativacao do SLA", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Ativar politica de SLA?", exact: true })).toContainText(choice.name!);
+});
+
 test("@sla uncertain calendar create retains original intent and newer revision", async ({ page }) => {
   const csrf = await login(page);
   let createdId: string | undefined;
@@ -284,6 +357,8 @@ test("@sla invalid timezone is actionable and duplicate selectors retain the ori
   await confirmed(page);
   const collection = `${root}${env("QUEUE")}/business-calendars?client_id=${env("CLIENT")}`;
   const calendar = (await (await page.request.get(collection)).json()).items.find((row: { name: string }) => row.name === name);
+  const policyCollection = `${root}${env("QUEUE")}/sla-policies?client_id=${env("CLIENT")}`;
+  const beforePolicies = await (await page.request.get(policyCollection)).json();
   await page.getByRole("button", { name: "Nova politica de SLA", exact: true }).click();
   await page.getByLabel("Nome da politica", { exact: true }).fill("Duplicata nao permitida");
   await page.getByLabel("Calendario da politica", { exact: true }).selectOption(calendar.id);
@@ -294,9 +369,10 @@ test("@sla invalid timezone is actionable and duplicate selectors retain the ori
   await page.getByRole("button", { name: "Cadastrar politica desativada", exact: true }).click();
   await expect(page.getByRole("region", { name: "SLA e calendarios", exact: true }).getByRole("alert")).toContainText("Ja existe uma politica");
   await expect(page.getByLabel("Cliente do SLA", { exact: true })).toBeDisabled();
-  const policies = await (await page.request.get(`${root}${env("QUEUE")}/sla-policies?client_id=${env("CLIENT")}`)).json();
-  expect(policies.items).toHaveLength(1); expect(policies.items[0].name).toBe("SLA sintetico geral");
-  expect(policies.items[0].enabled).toBe(true);
+  const policies = await (await page.request.get(policyCollection)).json();
+  expect(policies).toEqual(beforePolicies);
+  const original = policies.items.find((row: { category_id: string | null; priority: string | null }) => row.category_id === null && row.priority === null);
+  expect(original).toMatchObject({ name: "SLA sintetico geral", enabled: true });
   expect((await page.request.get("/api/v1/auth/me")).status()).toBe(200);
   expect(csrf).toBeTruthy();
 });

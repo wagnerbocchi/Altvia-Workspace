@@ -102,3 +102,20 @@ introduced, so no raster provenance entry is required. DESIGN.md and
 .impeccable/design.json are preserved; older product/sidecar coverage is reported
 without repair. This local extension evidence does not qualify new target images,
 production policy, rollout or representative production capacity.
+
+## Category continuity correction - 2026-11-14
+
+The independent whole-increment source review identified a local form-state
+defect after the earlier visual acceptance: a new policy's chosen category could
+disappear from the current category page while its UUID remained in the form.
+The native select now retains the chosen ID and label across paging/loading and
+uses a controlled value. No token, hierarchy, component world or asset changed.
+
+category-red02 reproduced the lost visible value. Final category-green03 passed
+all19 SLA/automation cases, web check/build and the native Sharp guard. Its genuine
+server-page test visits both directions, submits during a held fetch, verifies
+the persisted selector and checks the activation review.37 collected files passed
+SHA256 verification;39721 frozen inputs were unchanged. Four new category-paging
+captures at1440/390 in both themes were opened and inspected, alongside retained
+earlier visual evidence. Axe and overflow checks passed in the capture helper.
+This is a narrow state correction, not a new whole-surface visual verdict.

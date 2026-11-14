@@ -192,3 +192,23 @@ test, with their own executed proof. Application runtime, dependencies and the
 runtime proof source remain byte-identical to85dd260. Reuse its passing runtime
 gates; do not claim they ran on a later test/documentation commit. Final fresh
 whole-increment review is still required before accepting this feature.
+
+## Independent review and cursor correction
+
+The final fresh whole-increment source/visual review covered a1ec6d7..9a81bcd,
+all five review-focus risks, source/evidence compatibility and actual renders.
+It found one Important/P2 issue and no other actionable source/visual finding:
+aware boundary-year timestamps could parse but overflow when normalized to UTC.
+The report retains its original SPEC MISS/CHANGES REQUESTED verdict and exact
+reproduction; it is not silently rewritten as an unconditional approval.
+
+Native cursor-red01 reproduced the actual authenticated API OverflowError in
+8.43s using an otherwise valid actor/filter-bound cursor. The one fix pass adds
+OverflowError to the narrow validation exception boundary and both year/offset
+extremes to the existing real API grammar test, asserting422 and invalid_cursor.
+green07 passed the entire36-case unified suite in121.94s, Ruff/check/format and
+mypy68, with frozen inputs unchanged. No schema, query policy, dependency or
+browser behavior changed. No further reviewer is requested under the one-pass
+execution workflow; the supplied condition for accepting the P2 is satisfied by
+this regression proof. Final hosted gates for the corrected application source
+remain pending;85dd260's successful gates are historical, not its replacement.

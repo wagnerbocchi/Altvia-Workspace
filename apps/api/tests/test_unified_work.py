@@ -424,13 +424,16 @@ def test_cursor_binding_and_strict_grammar(admin_client, db_engine, seeded_user)
         (2, "4"),
         (2, "00"),
         (3, "2026-11-13T12:00:00"),
+        (3, "0001-01-01T00:00:00+01:00"),
+        (3, "9999-12-31T23:59:59-01:00"),
         (4, "not-uuid"),
         (5, "all"),
     ]:
         bad = parts.copy()
         bad[index] = value
         encoded = base64.urlsafe_b64encode("|".join(bad).encode()).decode().rstrip("=")
-        assert admin_client.get(PATH, params={"cursor": encoded}).status_code == 422
+        rejected = admin_client.get(PATH, params={"cursor": encoded})
+        assert rejected.status_code == 422 and rejected.json()["code"] == "invalid_cursor"
     for value in ["not-base64!", "a", cursor + "=", "", "YQ"]:
         assert admin_client.get(PATH, params={"cursor": value}).status_code == 422
     sign_in(admin_client, "admin@example.test")

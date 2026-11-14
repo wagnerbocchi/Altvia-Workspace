@@ -80,7 +80,7 @@ def cursor(value: str | None, bound_scope: str) -> UnifiedCursor | None:
         return UnifiedCursor(
             int(rank), instant.astimezone(UTC), UUID(identifier), type_cast(Kind, kind)
         )
-    except (ValueError, UnicodeError):
+    except (ValueError, UnicodeError, OverflowError):
         raise identity.IdentityError(422, "invalid_cursor") from None
 
 

@@ -62,13 +62,11 @@ test("@tickets persisted manual create edit assignment and all state paths", asy
   await page.getByRole("button", { name: "Editar fluxo", exact: true }).click();
   await page.getByLabel("Permitir fechamento manual", { exact: true }).check();
   await page.getByLabel("Permitir reabertura", { exact: true }).check();
-  await capture(page, "workflow");
   await page.getByRole("button", { name: "Salvar fluxo", exact: true }).click();
   await expect.poll(async () => (await (await page.request.get(api)).json()).allow_reopen).toBe(true);
   await login(page);
-  await fillCreation(page, true);
+  await fillCreation(page);
   await expect(page.getByRole("region", { name: "Revisar chamado", exact: true }).getByText("Solicitante com identidade nao verificada.", { exact: true })).toBeVisible();
-  await capture(page, "review");
   await page.getByRole("button", { name: "Criar chamado", exact: true }).focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/service-desk\/tickets\/[0-9a-f-]+$/);
@@ -77,7 +75,6 @@ test("@tickets persisted manual create edit assignment and all state paths", asy
   await page.getByRole("button", { name: "Editar chamado", exact: true }).click();
   await page.getByLabel("Responsavel", { exact: true }).selectOption(agent);
   await page.getByLabel("Prioridade", { exact: true }).selectOption("critical");
-  await capture(page, "edit");
   await page.getByRole("button", { name: "Salvar chamado", exact: true }).click();
   await expect(page.getByRole("button", { name: "Editar chamado", exact: true })).toBeEnabled();
   for (const status of ["open", "pending_customer", "open", "pending_third_party", "resolved", "closed", "open"]) {
@@ -90,12 +87,80 @@ test("@tickets persisted manual create edit assignment and all state paths", asy
   await page.reload();
   await expect(page.getByRole("list", { name: "Historico de estados", exact: true }).getByRole("listitem")).toHaveCount(8);
   await expect(page.getByText("Chamados AGENT", { exact: true })).toBeVisible();
-  await capture(page, "detail");
   await page.getByRole("link", { name: "Voltar aos chamados", exact: true }).click();
   await page.getByLabel("Busca nos chamados", { exact: true }).fill("Servidor");
   await page.getByRole("button", { name: "Aplicar filtros", exact: true }).click();
   await expect(page.getByRole("list", { name: "Chamados disponiveis", exact: true })).toContainText("Servidor <script>texto</script>");
-  await capture(page, "inbox");
+});
+
+
+// Each visual state has its own real setup and the original 30s budget. Keeping
+// all 24 Axe/capture variants in the lifecycle test exhausted its shared budget.
+async function visualTicket(page: Page, lifecycle: boolean) {
+  if (lifecycle) {
+    const csrf = await login(page, "CONFIG");
+    const path = `/api/v1/ticket-queues/${queue}`;
+    const current = await page.request.get(path);
+    expect(current.status()).toBe(200);
+    const version = (await current.json()).version;
+    expect((await page.request.patch(path, { headers: headers(csrf, version), data: { allow_manual_close: true, allow_reopen: true } })).status()).toBe(200);
+  }
+  const csrf = await login(page);
+  const marker = crypto.randomUUID();
+  const subject = `Servidor <script>texto</script> ${marker}`;
+  const created = await page.request.post("/api/v1/tickets", { headers: headers(csrf), data: {
+    queue_id: queue, client_id: client, requester_id: requester, subject,
+    description: "Conexao indisponivel <b>texto literal</b>", priority: "medium",
+  } });
+  expect(created.status()).toBe(201);
+  const id = (await created.json()).ticket_id as string;
+  const path = `/api/v1/tickets/${id}`;
+  if (lifecycle) {
+    expect((await page.request.patch(path, { headers: headers(csrf), data: { assignee_id: agent, priority: "critical" } })).status()).toBe(200);
+    for (const status of ["open", "pending_customer", "open", "pending_third_party", "resolved", "closed", "open"]) {
+      const current = await page.request.get(path);
+      expect(current.status()).toBe(200);
+      expect((await page.request.post(path + "/transitions", { headers: headers(csrf, (await current.json()).version), data: { target_status: status, reason: "Motivo de validacao" } })).status()).toBe(200);
+    }
+  }
+  return { id, subject, marker };
+}
+
+for (const state of ["workflow", "create", "review", "edit", "detail", "inbox"] as const) test(`@tickets visual ${state} preserves all themes and widths`, async ({ page }) => {
+  if (state === "workflow") {
+    await login(page, "CONFIG");
+    await page.goto(`/service-desk/queues/${queue}`);
+    await page.getByRole("button", { name: "Editar fluxo", exact: true }).click();
+    await page.getByLabel("Permitir fechamento manual", { exact: true }).check();
+    await page.getByLabel("Permitir reabertura", { exact: true }).check();
+  } else if (state === "create" || state === "review") {
+    await login(page);
+    await fillCreation(page, state === "create");
+    if (state === "create") return; // fillCreation captures the form before review.
+    await expect(page.getByRole("region", { name: "Revisar chamado", exact: true }).getByText("Solicitante com identidade nao verificada.", { exact: true })).toBeVisible();
+  } else {
+    const ticket = await visualTicket(page, state !== "edit");
+    await page.goto(`${directory}/${ticket.id}`);
+    await expect(page.getByRole("heading", { name: ticket.subject, exact: true })).toBeVisible();
+    await expect(page.getByText("Conexao indisponivel <b>texto literal</b>", { exact: true })).toBeVisible();
+    if (state === "edit") {
+      await page.getByRole("button", { name: "Editar chamado", exact: true }).click();
+      await page.getByLabel("Responsavel", { exact: true }).selectOption(agent);
+      await page.getByLabel("Prioridade", { exact: true }).selectOption("critical");
+    } else {
+      await expect(page.getByRole("list", { name: "Historico de estados", exact: true }).getByRole("listitem")).toHaveCount(8);
+      await expect(page.getByText("Chamados AGENT", { exact: true })).toBeVisible();
+      if (state === "inbox") {
+        await page.getByRole("link", { name: "Voltar aos chamados", exact: true }).click();
+        await page.getByLabel("Busca nos chamados", { exact: true }).fill(ticket.marker);
+        await page.getByRole("button", { name: "Aplicar filtros", exact: true }).click();
+        const list = page.getByRole("list", { name: "Chamados disponiveis", exact: true });
+        await expect(list.getByRole("listitem")).toHaveCount(1);
+        await expect(list).toContainText(ticket.subject);
+      }
+    }
+  }
+  await capture(page, state);
 });
 
 for (const committed of [false, true]) test(`@tickets uncertain create ${committed} retains original intent through failed choices`, async ({ page }) => {

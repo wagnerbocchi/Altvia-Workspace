@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { TicketWorkLinks } from "@/components/ticket-work/links";
 import { AttachmentPicker } from "@/components/attachments";
 import { sameAttachments, type AttachmentSummary } from "@/lib/attachments";
 import { useCallback, useRef, useState } from "react";
@@ -27,9 +28,10 @@ type Intent = { kind: "edit"; body: TicketPatch; version: number }
 export function TicketDetail({ id, api, queues, session }: { id: string; api: TicketApi; queues: QueueApi; session: WorkspaceSession }) {
   const cache = useQueryClient();
   const query = useQuery({ queryKey: ["ticket", id], queryFn: ({ signal }) => api.get(id, signal) });
-  const row = query.error instanceof ApiError && query.error.status === 404 ? undefined : query.data;
+  const row = query.error instanceof ApiError && [403, 404].includes(query.error.status) ? undefined : query.data;
   const [editor, setEditor] = useState<TicketRecord | null>(null);
   const [awaiting, setAwaiting] = useState(false);
+  const [linksBusy, setLinksBusy] = useState(false);
   const [messageFiles, setMessageFiles] = useState<AttachmentSummary[]>([]), [noteFiles, setNoteFiles] = useState<AttachmentSummary[]>([]);
   const [messageFilesBusy, setMessageFilesBusy] = useState(false), [noteFilesBusy, setNoteFilesBusy] = useState(false);
   const messageBusyChanged = useCallback((busy: boolean) => setMessageFilesBusy(busy), []), noteBusyChanged = useCallback((busy: boolean) => setNoteFilesBusy(busy), []);
@@ -100,7 +102,8 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
     if (session.isCurrent()) { setEditor(null); setTarget(""); setReason(""); setTransitionReview(null); setNoteDraft(null); setNoteFiles([]); setMessageFiles([]); setNoteError(""); setMessageDraft(null); setMessageReview(null); setDeliveryReview(null); setMessageError(""); setError(""); setNotice(""); }
   };
   const fileBusy = messageFilesBusy || noteFilesBusy;
-  const blocked = fileBusy || write.locked || awaiting || query.isFetching || query.isError;
+  const parentLocked = fileBusy || write.locked || awaiting || query.isFetching || query.isError;
+  const blocked = linksBusy || parentLocked;
   const reviewed = transitionReview ?? row;
   const startTransition = () => {
     if (row && transitionReview === null) setTransitionReview({ version: row.version, status: row.status, allowed_transitions: [...row.allowed_transitions] });
@@ -147,6 +150,14 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
             {!row.can_update && <p className="field-help">Edicao disponivel ao responsavel ou gestor, com cliente, equipe e fila ativos e chamado aberto para alteracoes.</p>}
           </>}
         </section>
+      </div>
+    </>}
+    {query.data && <TicketWorkLinks ticket={query.data} session={session}
+      parentAvailable={!!row && !query.isError}
+      parentLocked={parentLocked || editor !== null || transitionReview !== null || messageReview !== null || deliveryReview !== null}
+      onBusyChange={setLinksBusy} />}
+    {row && <>
+      <div className="admin-plane">
         {reviewed && reviewed.allowed_transitions.length > 0 && <section className="admin-section" aria-labelledby="ticket-transition-heading">
           <h2 id="ticket-transition-heading">Mudar estado</h2>
           <form noValidate onSubmit={event => { event.preventDefault(); transition(); }}>
@@ -179,7 +190,7 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
           write.submit({ kind: "delivery", review: deliveryReview, version: deliveryReview.version, key: deliveryReview.key });
         }} />}
         {(row.can_add_message || messageDraft !== null || messageReview !== null || messageFilesBusy) && <TicketMessageForm body={messageDraft?.body ?? ""} reviewed={messageReview?.body ?? null} disabled={blocked || editor !== null || !row.can_add_message} error={messageError} reviewedFiles={messageReview?.files ?? []}
-          attachments={<AttachmentPicker scope={{ owner: "ticket", id, purpose: "public" }} version={row.version} selected={messageFiles} change={files => { setMessageFiles(files); setMessageDraft({ body: messageDraft?.body ?? "", version: messageDraft?.version ?? row.version }); }} disabled={write.locked || awaiting || query.isFetching || query.isError || editor !== null || messageReview !== null || noteFilesBusy || !row.can_add_message} busyChanged={messageBusyChanged} />}
+          attachments={<AttachmentPicker scope={{ owner: "ticket", id, purpose: "public" }} version={row.version} selected={messageFiles} change={files => { setMessageFiles(files); setMessageDraft({ body: messageDraft?.body ?? "", version: messageDraft?.version ?? row.version }); }} disabled={linksBusy || write.locked || awaiting || query.isFetching || query.isError || editor !== null || messageReview !== null || noteFilesBusy || !row.can_add_message} busyChanged={messageBusyChanged} />}
           change={body => { setMessageDraft({ body, version: messageDraft?.version ?? row.version }); setMessageError(""); }}
           review={() => {
             if (blocked || !row.can_add_message) return;
@@ -198,7 +209,7 @@ export function TicketDetail({ id, api, queues, session }: { id: string; api: Ti
         {row.can_read_notes && !row.can_add_note && !noteDraft && !noteFilesBusy && !noteFiles.length && <AttachmentPicker scope={{ owner: "ticket", id, purpose: "note" }} version={row.version} selected={[]} change={() => {}} disabled busyChanged={noteBusyChanged} />}
         {row.can_read_notes && <TicketNotes id={id} api={api} />}
         {(row.can_add_note || noteDraft !== null || noteFilesBusy || noteFiles.length > 0) && <TicketNoteForm body={noteDraft?.body ?? ""} disabled={blocked || editor !== null || !row.can_add_note} error={noteError}
-          attachments={<AttachmentPicker scope={{ owner: "ticket", id, purpose: "note" }} version={row.version} selected={noteFiles} change={files => { setNoteFiles(files); setNoteDraft({ body: noteDraft?.body ?? "", version: noteDraft?.version ?? row.version }); }} disabled={write.locked || awaiting || query.isFetching || query.isError || editor !== null || messageFilesBusy || !row.can_add_note} busyChanged={noteBusyChanged} />}
+          attachments={<AttachmentPicker scope={{ owner: "ticket", id, purpose: "note" }} version={row.version} selected={noteFiles} change={files => { setNoteFiles(files); setNoteDraft({ body: noteDraft?.body ?? "", version: noteDraft?.version ?? row.version }); }} disabled={linksBusy || write.locked || awaiting || query.isFetching || query.isError || editor !== null || messageFilesBusy || !row.can_add_note} busyChanged={noteBusyChanged} />}
           change={body => { setNoteDraft({ body, version: noteDraft?.version ?? row.version }); setNoteError(""); }}
           submit={() => {
             if (blocked || !row.can_add_note || !noteDraft) { setNoteError("Escreva a nota interna."); return; }

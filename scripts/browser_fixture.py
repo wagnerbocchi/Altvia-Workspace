@@ -184,6 +184,66 @@ with Session(engine) as db, db.begin():
             ]
         )
         ticket_accounts = {}
+        # Isolated same-client relationship actors never broaden other suites.
+        link_team = Team(name="Equipe de vinculos - Validacao")
+        link_client = Client(
+            name="Cliente de vinculos - Validacao",
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        )
+        db.add_all([link_team, link_client])
+        db.flush()
+        link_project = Project(
+            name="Projeto de vinculos - Validacao",
+            scope_kind="client",
+            client_id=link_client.id,
+            team_id=link_team.id,
+        )
+        link_queue = TicketQueue(
+            team_id=link_team.id,
+            name="Fila de vinculos - Validacao",
+            allow_manual_close=True,
+            allow_reopen=True,
+        )
+        link_requester = ClientContact(
+            client_id=link_client.id,
+            display_name="Solicitante de vinculos",
+            email_normalized="link-requester@example.invalid",
+        )
+        db.add_all([link_project, link_queue, link_requester])
+        db.flush()
+        link_accounts = {}
+        for kind in ["MANAGER", "AGENT", "VIEWER", "TICKET_ONLY", "WORK_ONLY"]:
+            account_email = f"browser-link-{kind.lower()}-{secrets.token_hex(8)}@example.invalid"
+            account_password = secrets.token_urlsafe(30)
+            person = create_user(db, account_email, f"Vinculos {kind}", account_password)
+            link_accounts[kind] = (account_email, account_password, person.id)
+            db.add(
+                ClientAccessGrant(
+                    user_id=person.id,
+                    client_id=link_client.id,
+                    created_at=datetime.now(UTC),
+                )
+            )
+            if kind != "WORK_ONLY":
+                db.add(
+                    RoleBinding(
+                        user_id=person.id,
+                        scope_kind="queue",
+                        queue_id=link_queue.id,
+                        role_name={"AGENT": "agent", "VIEWER": "viewer"}.get(
+                            kind, "operations_manager"
+                        ),
+                        note_access="write" if kind == "MANAGER" else "none",
+                    )
+                )
+            if kind != "TICKET_ONLY":
+                set_project_access(
+                    db,
+                    account_email,
+                    link_project.id,
+                    {"AGENT": "agent", "VIEWER": "viewer"}.get(kind, "project_manager"),
+                )
         for kind, role in [
             ("MANAGER", "operations_manager"),
             ("AGENT", "agent"),
@@ -340,6 +400,12 @@ with Session(engine) as db, db.begin():
             encoding="utf-8",
         )
         with Path(".env.browser-session").open("a", encoding="utf-8") as target:
+            target.write(
+                f"ALTVIA_E2E_LINK_CLIENT_ID={link_client.id}\n"
+                f"ALTVIA_E2E_LINK_PROJECT_ID={link_project.id}\n"
+                f"ALTVIA_E2E_LINK_QUEUE_ID={link_queue.id}\n"
+                f"ALTVIA_E2E_LINK_REQUESTER_ID={link_requester.id}\n"
+            )
             target.write(f"ALTVIA_E2E_MEMBER_PROJECT_ID={member_project.id}\n")
             target.write(f"ALTVIA_E2E_MILESTONE_PROJECT_ID={milestone_project.id}\n")
             for kind, (member_email, member_password, member_id) in member_accounts.items():
@@ -390,6 +456,17 @@ if not os.environ.get("ALTVIA_E2E_EXPIRE") and not os.environ.get("ALTVIA_E2E_DI
                 db, admin_email, admin_password, "admin-fixture", "admin_fixture_session"
             )
         target.write(f"ALTVIA_E2E_ADMIN_SESSION={token}\n")
+        for kind, (account_email, account_password, account_id) in link_accounts.items():
+            with Session(engine) as db:
+                _, _, token = login(
+                    db, account_email, account_password, "link-fixture", "link_fixture_session"
+                )
+            target.write(
+                f"ALTVIA_E2E_LINK_{kind}_SESSION={token}\n"
+                f"ALTVIA_E2E_LINK_{kind}_ID={account_id}\n"
+                f"ALTVIA_E2E_LINK_{kind}_EMAIL={account_email}\n"
+                f"ALTVIA_E2E_LINK_{kind}_PASSWORD={account_password}\n"
+            )
         for kind, (account_email, account_password, account_id) in note_accounts.items():
             with Session(engine) as db:
                 _, _, token = login(

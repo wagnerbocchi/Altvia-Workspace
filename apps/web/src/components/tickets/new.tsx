@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import type { WorkspaceSession } from "@/components/workspace-session";
@@ -23,6 +23,10 @@ export function NewTicket({ api, queues, session }: { api: TicketApi; queues: Qu
   const [client, setClient] = useState<Choice | null>(null);
   const [revision, setRevision] = useState(0);
   const [review, setReview] = useState<{ body: TicketCreate; references: TicketReferences } | null>(null);
+  useLayoutEffect(() => {
+    // Finish initial review focus before the user can choose another control.
+    if (review) document.getElementById("ticket-review-heading")?.focus();
+  }, [review]);
   const [created, setCreated] = useState<string | null>(null);
   const write = useTeamWrite(session, (intent: { body: TicketCreate; key: string }) => api.create(intent.body, intent.key), receipt => {
     setCreated(receipt.ticket_id);
@@ -55,7 +59,7 @@ export function NewTicket({ api, queues, session }: { api: TicketApi; queues: Qu
       {queue && client && <section className="admin-section" aria-labelledby="ticket-fields-heading" hidden={review !== null}>
         <h2 id="ticket-fields-heading">Dados do chamado</h2>
         <TicketForm key={`${queue.id}:${client.id}:${revision}`} api={api} queues={queues} queue={queue.id} client={client.id} manage={queue.can_assign} actor={session.user} disabled={blocked}
-          submit={(body, references) => { setReview({ body: body as TicketCreate, references }); requestAnimationFrame(() => document.getElementById("ticket-review-heading")?.focus()); }}
+          submit={(body, references) => { setReview({ body: body as TicketCreate, references }); }}
           cancel={() => setRevision(value => value + 1)} />
       </section>}
       {review && <section className="admin-section" aria-labelledby="ticket-review-heading">

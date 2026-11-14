@@ -212,6 +212,44 @@ head. Retain the first native intermittent failure for integrated investigation,
 not as a corrected root cause. Whole-feature acceptance remains gated on that
 publication, and final target qualification remains deferred.
 
+## Published recovery proof1e12078 and keyboard focus correction
+
+Four exact1e12078 hosted workflows passed: API43573915707 with1668 passed,
+3 explicit scanner skips and1 retained Pydantic queue_id alias warning in1174.85s;
+Container43573915645 with both actual runtime jobs; source43573915643; image
+43573915644 with seven nonempty zero-vulnerability inventories. Both uploaded
+assignment-automation-proof.json artifacts were inspected:1 work/1 effect/0 links,
+three executions with cancelled2/succeeded2/succeeded1 attempts, and exactly three
+schema2 domain events each projected once. The ordinary SMTP fixture completed
+in both hosted jobs; this does not establish a root cause for the older isolated
+intermittent subprocess exit.
+
+Browser43573915680 genuinely failed:222 passed,1 failed in11.1m. The former
+parent-error cases passed. The failing incumbent manual lifecycle stayed on the
+new-ticket route after keyboard confirmation; its request window has no ticket
+POST. Original focused native browser-keyboard-red01 actually passed1 in9.3s,
+so it is not counted as RED or proof that the intermittent symptom was fixed.
+
+Investigation found a deferred review autofocus race capable of causing that
+symptom: a queued animation-frame callback can move focus to the heading after
+the user focuses Create. New browser-review-frame-red01 held this review's frame,
+focused the actual enabled button, then resumed the frame and reproduced the
+real expected-focused/received-inactive failure before production edits. The
+uninstrumented hosted run did not retain its active element; no stronger claim
+about that particular lost focus is made. The correction sets initial review
+focus in the synchronous layout effect, before paint/user focus, with no delayed
+callback remaining to steal later deliberate navigation.
+
+browser-review-frame-green01 passed all27 ticket/automation cases in1.9m,
+including the deterministic race, real keyboard create/lifecycle and all9
+current automation cases. Native web check/build/dependency guard passed,
+39685 inputs unchanged. Four actual review captures cover1440/390 light/dark,
+axe/overflow checks passed, and their9-entry image/metadata manifest was verified.
+Root inspected desktop-light/mobile-dark together; no visual/CSS/token change.
+The Impeccable hook reported no deterministic issue. Source/test hashes match
+that passing snapshot. Publish this tested fix and observe the complete next
+hosted source before whole-increment acceptance; no failed run is counted as pass.
+
 ## Backend publication6cfc97d and CI correction
 
 The backend was published directly to main at

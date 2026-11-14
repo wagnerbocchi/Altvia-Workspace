@@ -24,7 +24,7 @@ async function create(page: Page, csrf: string, subject = `Chamado ${crypto.rand
   expect(response.status()).toBe(201);
   return (await response.json()).ticket_id as string;
 }
-async function fillCreation(page: Page, captureForm = false) {
+async function fillCreationFields(page: Page, captureForm = false) {
   await page.goto(directory + "/new");
   await page.getByLabel("Fila do chamado", { exact: true }).selectOption(queue);
   await page.getByLabel("Cliente do chamado", { exact: true }).selectOption(client);
@@ -37,6 +37,9 @@ async function fillCreation(page: Page, captureForm = false) {
   await page.getByLabel("Assunto", { exact: true }).fill("Servidor <script>texto</script>");
   await page.getByLabel("Descricao", { exact: true }).fill("Conexao indisponivel <b>texto literal</b>");
   if (captureForm) await capture(page, "create");
+}
+async function fillCreation(page: Page, captureForm = false) {
+  await fillCreationFields(page, captureForm);
   await page.getByRole("button", { name: "Revisar chamado", exact: true }).click();
 }
 async function capture(page: Page, name: string) {
@@ -54,6 +57,36 @@ async function capture(page: Page, name: string) {
     }
   }
 }
+
+test("@tickets delayed review frame cannot steal deliberate confirmation focus", async ({ page }) => {
+  await login(page);
+  await fillCreationFields(page);
+  await page.evaluate(() => {
+    const original = window.requestAnimationFrame.bind(window);
+    const cancel = window.cancelAnimationFrame.bind(window);
+    const pending = new Map<number, FrameRequestCallback>();
+    let next = -1;
+    window.requestAnimationFrame = callback => { const id = next--; pending.set(id, callback); return id; };
+    window.cancelAnimationFrame = id => { if (id < 0) pending.delete(id); else cancel(id); };
+    const state = window as typeof window & { resumeReviewFrames?: () => void };
+    state.resumeReviewFrames = () => {
+      window.requestAnimationFrame = original; window.cancelAnimationFrame = cancel;
+      const callbacks = [...pending.values()]; pending.clear();
+      for (const callback of callbacks) callback(performance.now());
+      delete state.resumeReviewFrames;
+    };
+  });
+  // Dispatch after filling the real form so only this review's paint is held.
+  await page.getByRole("button", { name: "Revisar chamado", exact: true }).dispatchEvent("click");
+  const confirmation = page.getByRole("button", { name: "Criar chamado", exact: true });
+  await expect(confirmation).toBeEnabled();
+  await confirmation.focus();
+  await page.evaluate(() => (window as typeof window & { resumeReviewFrames?: () => void }).resumeReviewFrames?.());
+  await expect(confirmation).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/service-desk\/tickets\/[0-9a-f-]+$/);
+  await expect(page.getByRole("heading", { name: "Servidor <script>texto</script>", exact: true })).toBeVisible();
+});
 
 test("@tickets persisted manual create edit assignment and all state paths", async ({ page }) => {
   await login(page, "CONFIG");

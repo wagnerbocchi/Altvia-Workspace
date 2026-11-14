@@ -1,10 +1,31 @@
 # Assignment automation development evidence
 
-ADR0041's contract and plan are selected after independent builder check. The
-automation feature is NOT accepted: packaged/hosted/final review have separate
-remaining gates. Task1 configuration/staging, Task2 backend and Task3 interface
-have development evidence below. No production rule,
-external policy, real import or final target qualification is implied.
+ADR0041 development is accepted at c0479038a5c4282aa0fdf7a75bb1774b03ca1870:
+configuration, durable execution, real interface, packaged recovery, independent
+whole-increment review and all five exact-source hosted gates passed. Historical
+failed runs and their limits remain below. No production rule, external policy,
+real import or final target qualification is implied.
+
+## Final exact-source hosted acceptance c047903
+
+| Gate | Actual result | Run |
+| --- | --- | --- |
+| API |1714 passed,3 explicit scanner opt-in skips in1018.94s; JUnit1717 cases,0 failures/errors |[43576284512](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43576284512)|
+| Browser |224 passed in9.6m |[43576284577](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43576284577)|
+| Containers |Both api-runtime and private-file-runtime passed; both automation proof artifacts verified |[43576284555](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43576284555)|
+| Source security |Passed |[43576284544](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43576284544)|
+| Image security |Seven nonempty inventories,0 reported vulnerabilities |[43576284557](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43576284557)|
+
+Inventory package counts: API72,ClamAV38,ingress70,PostgreSQL49,Redis16,
+storage107,web43. The separate native container subset passed56 with3 explicit
+scanner opt-in skips; actual runtime commands passed independently. Each uploaded
+automation proof retains1 work/1 effect/0 links and three schema2 events projected
+once. Complete logs/artifacts are private in ci-c047903 under this plan's workspace.
+The ordinary SMTP fixture passed both hosted container jobs. Its earlier isolated
+subprocess exit still has no proved root cause and remains an integrated
+diagnostic follow-up. Pinned-action Node20 deprecation notices remain; no ignore
+or suppression was added. Final target qualification and remaining MVP features
+remain open; SLA proceeds under its separate ADR0042 plan.
 
 ## Task3 scoped interface development
 

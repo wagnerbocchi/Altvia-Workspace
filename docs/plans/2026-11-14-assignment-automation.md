@@ -220,13 +220,13 @@ Add docs/assignment-automation-evidence.md; update ADR/roadmap/continuous ledger
 - [x] Run appropriate full packaged/static/native guards. Preserve exact source/
   config/dependency input hashes, commands, logs, failures and narrow proof limits.
   Expected: actual pass, not a theoretical compatibility claim.
-- [ ] Publish authorized main commits and observe all five exact-source hosted
+- [x] Publish authorized main commits and observe all five exact-source hosted
   workflows, both container jobs and seven actual image inventories. Run complete
   relevant failing logs through diagnosis if any check fails; no skip called pass.
 - [x] Obtain one independent whole-increment source/visual review; resolve every
   Important/Critical once with actual RED/GREEN and passing affected/full gates.
   Record all rulings and evidence, then accept only this development increment.
-- [ ] Continue SLA as the next separate contract. Keep real Q-23 policies,
+- [x] Continue SLA as the next separate contract. Keep real Q-23 policies,
   compatible-image rollback/encrypted restore and final integrated x86-64-v1
   qualification open; no production rollout/import/retirement is implied.
 

@@ -115,9 +115,13 @@ loss/lease recovery/off-on cancellation/retained receipt/privacy and incumbent
 proofs. The independent whole review found0 actionable findings. Four exactbcce2d6 workflows passed, including
 API1668/3 explicit skips; Browser failed2 parent-error
 cases. Actual native RED and50-case GREEN cover the corrected child panel, with
-check/build/guard and responsive error captures. New-head full hosted acceptance
-remains pending. The earlier isolated SMTP child exit remains an explicit
-integrated diagnostic follow-up; its root cause was not proved. See the evidence report.
+check/build/guard and responsive error captures. Final c047903 passed all five
+exact-source hosted workflows:1714 API/3 explicit scanner skips,224 browser,
+both Container jobs and seven nonempty zero-vulnerability inventories. Both
+automation artifacts retain1 work/1 effect/0 links and three once-only projections.
+ADR0041 development is accepted; final integrated qualification remains open.
+The earlier isolated SMTP child exit remains an explicit integrated diagnostic
+follow-up; its root cause was not proved. See the evidence report.
 
 ADR0042 now selects the separate versioned SLA contract after independent builder
 check. Its bounded frozen-calendar arithmetic passed46 actual native cases,

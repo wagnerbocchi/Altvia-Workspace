@@ -331,6 +331,9 @@ def test_contraction_refuses_immutable_link_history(admin_client, db_engine, see
 
     refs = setup(admin_client, db_engine, seeded_user)
     path = ticket(admin_client, refs)
+    from sla_migration_support import pre_sla_ticket
+
+    pre_sla_ticket(db_engine, path)
     identifier = ready(admin_client, db_engine, path, tmp_path)
     assert post(admin_client, path, [identifier]).status_code == 201
     with pytest.raises(DBAPIError, match="Cannot contract immutable file content/history"):

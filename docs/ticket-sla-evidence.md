@@ -85,6 +85,40 @@ image, production hours/target, real data import or final target qualification i
 introduced or claimed. Complete frozen inputs, stdout/stderr and failure evidence
 remain private in the SLA task workspace and isolated development-host directory.
 
+## Publication7ee9536 and retained file migration fixtures
+
+Exact7ee9536 passed Browser224
+([43589432559](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43589432559)),
+both Container jobs
+([43589432617](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43589432617)),
+source security
+([43589432673](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43589432673))
+and service-image security
+([43589432544](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43589432544)).
+API [43589432527](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43589432527)
+failed4 old file-migration fixtures:1895 passed/3 explicit scanner skips/1 retained
+Pydantic alias warning in1614.75s. Actual JUnit1902 has4 failures,0 errors,3 skips.
+The complete log/metadata/artifacts were read and retained. File final verification
+and wheel build after pytest were skipped, not passes.
+
+All four failures hit the correct new SLA contraction guard before reaching their
+older file guard/legacy replay. They now use the existing explicit pre-SLA fixture
+for their one synthetic unconfigured ticket. Every immutable source/file/wire/
+receipt timestamp/hash assertion and original older refusal matcher remains.
+No configured obligation is deleted or guard weakened. The first native attempt
+passed5/3 explicit missing-S3 skips, which did not validate the skipped fixes.
+A real private TLS S3 fixture was therefore required. Its first setup stopped
+before tests because the bootstrap helper lacked the mounted source/PYTHONPATH;
+the exact setup error was diagnosed, task containers stopped, volumes retained,
+and the verified empty internal network removed. No host/SSH/security change.
+
+Final legacy-file-full02 passed all8 in33.86s with real private TLS S3 and no
+published ports or skips, including all4 failed cases and the4 SLA storage/fixture
+refusal cases. Frozen source, native Ruff/check/format/mypy86 all passed. Existing
+immutable native storage imagebb2be6417f25 was used as a development fixture, not
+claimed as a newly qualified production artifact. Complete failed and successful
+channels remain private. Exact subsequent-source hosted acceptance remains pending.
+
 ## Task4 review prerequisite
 
 The actual UI activation review cannot substitute the current calendar for an

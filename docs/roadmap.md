@@ -123,6 +123,15 @@ ADR0041 development is accepted; final integrated qualification remains open.
 The earlier isolated SMTP child exit remains an explicit integrated diagnostic
 follow-up; its root cause was not proved. See the evidence report.
 
+Publication7ee9536 passed Browser224, both Container jobs and source/image security.
+API1895 passed/4 failed/3 explicit skips/1 existing warning; the4 legacy file
+migration fixtures are corrected without weakening guards, source timestamps or
+receipt fingerprints. Actual private TLS S3/native revalidation passed8 with no
+skips, plus static gates. Final subsequent-source hosted acceptance remains pending;
+see docs/ticket-sla-evidence.md for exact runs and setup failures. Task4 SLA UI
+is in progress, with real browser SMTP, revision and recovery evidence; it is not
+yet accepted or published.
+
 ADR0042 Task3 backend development is complete locally/natively: atomic creation/
 reopen cycles, bounded two-goal evaluator, strict independent accepted-response
 capture, append-only breach/correction and current scoped paged outcome API.

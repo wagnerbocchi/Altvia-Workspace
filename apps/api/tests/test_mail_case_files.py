@@ -683,6 +683,9 @@ def test_migration_preserves_legacy_case_origin_staff_file_and_replays_without_s
 
     identifier = variant(db_engine)
     ticket_id = UUID(ticket(admin_client, context).rsplit("/", 1)[1])
+    from sla_migration_support import pre_sla_ticket
+
+    pre_sla_ticket(db_engine, ticket_id)
     config = Config("apps/api/alembic.ini")
     command.downgrade(config, "b46087000026")
     case_id, file_id = uuid4(), uuid4()

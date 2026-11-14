@@ -450,6 +450,9 @@ def test_migration_roundtrip_refusal_and_identity_immutability(
     assert inspect(db_engine).has_table("attachment_scan_attempts")
     refs = setup(admin_client, db_engine, seeded_user)
     parent = ticket(admin_client, refs)
+    from sla_migration_support import pre_sla_ticket
+
+    pre_sla_ticket(db_engine, parent)
     assert upload(admin_client, parent).status_code == 201
     for statement in [
         "UPDATE attachments SET filename='other.txt',version=version+1",

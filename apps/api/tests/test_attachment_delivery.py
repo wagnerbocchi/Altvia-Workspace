@@ -452,6 +452,9 @@ def test_legacy_migration_retains_wire_receipt_timestamps_and_fingerprints(
     from test_mail_delivery import enqueue
 
     _, path, message, account, participant = prepared(admin_client, db_engine, seeded_user)
+    from sla_migration_support import pre_sla_ticket
+
+    pre_sla_ticket(db_engine, path)
     key = uuid4().hex
     receipt = enqueue(admin_client, path, message, account, participant, key)
     assert receipt.status_code == 201

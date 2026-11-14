@@ -228,3 +228,27 @@ Retain compatible API feed filters and worker event readers on rollback; a pre-
 link API can expose counterpart history and is not a safe rollback image. Refuse
 contraction with links, history or receipts; no purge is authorized. Actual image-
 pair rollback rehearsal remains a consolidated integrated-hardening gate.
+
+
+## ADR0041 structured automation boundary (selected, not yet implemented)
+
+Configuration requires active queue configuration manager AND explicit queue
+operations_manager AND client operations_manager with ceiling. No platform/team/
+project shortcut. Worker rechecks that actual revision authorizer, native current
+source/default-project/assignee scopes and active state; stored event identity is
+not authorization. No session/CSRF, fake account or arbitrary expression/script.
+
+One finite disabled action uses explicit static task title/priority; private ticket
+subject/body/notes never become independently readable work text. Durable private
+triage records unresolved project/assignee/authority without creating grants.
+Stable effect receipt survives edits/reassign/reopen/manual unlink. A monotone
+disable floor fences queued old revisions even after reenable. Identity then native
+ticket-before-project-graph locks and unexpired token protect every atomic effect.
+
+Schema2 distinguishes automated creation/link from a human click. Work-only
+creation history excludes private execution/source IDs; reciprocal history and
+execution paging require current source AND target visibility before LIMIT.
+Worker column grants must deny password_hash/private content and authority
+mutations; metadata-only native scoped loads reuse the exact permission owners.
+Pre-feature producers/workers/readers are not safe activation/rollback peers.
+Actual compatible-image rollback and final x86-64-v1 qualification stay separate.

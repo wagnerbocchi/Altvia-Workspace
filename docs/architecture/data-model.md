@@ -331,3 +331,25 @@ progress within an epoch, permitting reset to0 only on a changed UIDVALIDITY.
 Source-row serialization and unexpired token checks fence every service write.
 Raw capture/cursor/source-version/audit/outbox commit together. No runtime table
 grant is added. Downgrade refuses state or durable private checkpoint history.
+
+
+## Selected ADR0041 assignment automation model (planned)
+
+Migration b46087000029 is reserved after manual links28; no execution is claimed.
+automation_rules owns immutable queue/client/action identity, unique scope, positive
+version and monotone cancelled_through_version0..version. Immutable numbered
+automation_rule_revisions stores bounded title/native priority/status set, enabled
+and real authorizer; native writer commits its matching current revision atomically.
+automation_executions references exact rule/action/scope/revision/source event and
+native ticket context, with unique rule/action/event, bounded attempts, paired
+processing token/expiry, safe state/code/version and due/history indexes.
+Insert-only automation_effects uses stable PK(rule_id,action_id,ticket_id), native
+same-client ticket/work/project composite FKs and matching origin execution.
+It deliberately survives deletion of the live N:N link. No cascade/purge.
+
+Activity actor CHECK expands only for the three known automated schema2 native
+creation/link events; manual schema1 stays intact. Downgrade refuses any ledger
+row, automation history/provenance or protected receipt before DDL. Runtime grants
+are explicit column/table allowlists; worker never gains account hashes, notes,
+raw mail, grants/session writes or owner credentials. Full SQL/lease/authority/
+rollback boundaries are ADR0041; implementation tasks/evidence are separate.

@@ -85,6 +85,15 @@ image inventories. See docs/unified-work-evidence.md for hashes, failures and
 limits. Structured durable automation is the next separate contract; SLA,
 analytics/import and integrated hardening/qualification remain open.
 
+ADR0041 and docs/plans/2026-11-14-assignment-automation.md now select the next
+finite durable assignment writer. Independent builder check found two important
+contract boundaries, resolved before source: a monotone disable-revision floor
+fences old executions after off/on; target-only automated creation retains truthful
+history without private execution/source IDs. The next migration is reserved29.
+Configuration, atomic staging, worker/effect, real UI and packaged acceptance are
+not yet implemented or accepted. Production title/status/scope is Q-23; leave
+real rules unconfigured while implementing controlled synthetic fixtures.
+
 Private-files Task4 is implemented in c5c668c with reviewed corrections 039a631.
 Local full175 at c5 and final scoped9 browser/3 child-output tests passed; final
 lint/types/build and contracts passed. Independent source review approved fixes;
@@ -746,6 +755,7 @@ currently covers this GitHub repository's main only, not production services.
 | Q-20 | Support/security owners should identify real internal-note readers and writers per queue | ADR-0029 defaults every old binding to none. Configuration managers can explicitly delegate read/write with current customer ceilings. Synthetic fixtures alone receive test grants | Real organizational note delegation and production privacy policy |
 | Q-21 | Support/infrastructure owners should approve actual inbound mail sizes, traffic and quarantine storage budget | Phase 3E-a bounds opaque raw intake to 2 MiB and 16 distinct variants per UID identity; refuse acknowledgement on overflow and never advance a mailbox checkpoint | Production connector/storage sizing; controlled synthetic intake can proceed |
 | Q-22 | Security/operations: should already scanned files expire or require a new scan/current scanner health at access time? | ADR0037 policy1 scans on upload; ready records its actual engine/definition decision, while current scope/hash/length remain mandatory at each access. No timeless-safe claim, expiry or company policy is invented | Production scan-validity policy; isolated core development continues |
+| Q-23 | Operations/support: which queue/client assignment rules, static task titles, initial task priorities and eligible ticket statuses should be enabled in production? | ADR0041 capability uses disabled rules and synthetic fixtures only; no ticket subject/body copy, invented default project or implicit grant. Preserve stable action identity and durable off/on cancellation | Real automation activation/pilot policy; independent capability development proceeds |
 
 ## Backlog after core
 

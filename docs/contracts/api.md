@@ -525,6 +525,44 @@ from position. Existing execution history retains the original rule revision.
 Transport is at least once. Exactly-once claims refer only to protected business
 effects, not Redis or SMTP delivery.
 
+### Selected assignment automation contract (not yet implemented)
+
+ADR0041 and docs/plans/2026-11-14-assignment-automation.md select one finite,
+disabled-by-default ticket.assigned/create_or_link action per queue/client.
+Rule/action IDs survive edits/disable; no delete/replacement/new-work endpoint.
+Rule revisions are immutable and executions capture the enabled revision in the
+actual assignment transaction. A separate durable execution/effect receipt owns
+the worker's business action; existing activity delivery is not that receipt.
+
+GET/POST /ticket-queues/{queue_id}/automation-rules and GET/PATCH on /{rule_id}
+require current queue configuration management AND explicit queue operations_manager
+AND client operations_manager with its customer ceiling. Collection GET requires
+client_id and native bounded UUID paging. POST is fixed disabled and reviews queue
+If-Match; PATCH reviews rule If-Match plus If-Match-Queue. Both require protected
+Idempotency-Key and return minimal ID receipts; current authority precedes replay.
+Strict fields/headers/errors/DTOs are pinned in the plan before source generation.
+
+Each real disable advances a monotone cancelled_through_version floor. Old jobs
+remain fenced after reenable, without reinterpreting ordinary captured revisions.
+The worker rechecks current authorizer, source/assignee and native same-client
+default-project eligibility. Missing/ambiguous resolution produces private triage,
+never an invented project, grant or copied private ticket text. Existing committed
+effect means no changed owner/state/due/link, including after manual unlink.
+
+GET /tickets/{ticket_id}/automation-executions pages actual scoped outcomes;
+current target scope is required before including mapped rows or cursor metadata.
+Protected POST on /{execution_id}/retry uses execution If-Match, current stronger
+configuration/content authority and the original immutable source/revision.
+No lease token, raw payload or generic private execution ID enters activity DTOs.
+Automated work creation may remain visible to a work-only reader with truthful
+automation/authorizer labels; reciprocal source history retains both scopes.
+
+The three automated native creation/link events use strict schema2 provenance;
+all manual schema1 envelopes remain unchanged. Activation requires a drained,
+compatible producer/worker/history-reader set. Pre-feature binaries are not
+compatible rollback images. Current documentation is a contract, not executed
+automation proof; real policy/title/scope stays unconfigured under Q-23.
+
 ## Phase 3A queue configuration under ADR-0026
 
 GET/POST /ticket-queues and GET/PATCH /ticket-queues/{queue_id} operate team-owned

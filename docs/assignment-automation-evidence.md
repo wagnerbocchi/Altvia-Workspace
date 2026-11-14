@@ -129,6 +129,52 @@ actual broad/packaged/browser acceptance and the UI explanation of native creati
 history: history retains the true authorizer, while schema2 activity supplies the
 automation discriminator. Task3 must reconcile both without private IDs.
 
+## Interface publication bcce2d6 and actual parent-error correction
+
+Published7756a50 andbcce2d6 directly to main. Exactbcce2d6 passed the full API
+workflow43571366772:1668 passed,3 explicit scanner opt-in skips in1395.34s.
+The retained JUnit has1671 cases,zero failures/errors and3 skips. Native storage
+and wheel stages completed in that hosted job. Source43571366886 and both
+Container43571366798 jobs passed. Image43571366799 produced seven nonempty
+inventories with0 vulnerabilities:72/38/70/49/16/107/43 packages respectively
+for API/ClamAV/ingress/PostgreSQL/Redis/storage/web. No ignore was added.
+
+Browser43571366802 is a genuine failed gate:221 passed,2 failed in11.4m. The
+complete log identifies both incumbent uncertain-message append variants. The
+new automation panel rendered its own generic read alert when its parent ticket
+was unavailable, duplicating the parent's alert and offering a child retry for
+a parent failure. Native browser-parent-red01 independently reproduced both
+strict-mode failures before the correction. Keep the parent recovery as owner;
+the disabled child now asks to update the ticket and shows its own loading/error
+only when the parent is available. No test assertion was removed or narrowed.
+
+Native browser-parent-green01 passed all50 cases in4.0m, covering all automation,
+ticket-message, private-note and ticket/work browser modules, including all9
+current automation cases together. Native web check/build/dependency guard passed;
+39681 inputs were unchanged. Four real parent-error captures cover1440/390 and
+both themes, with axe/overflow checks passing; their9-entry metadata/image
+manifest was verified after transfer. Root inspected desktop-light and mobile-dark
+as one batch. The design hook reported no deterministic issue. This is a narrow
+Impeccable hardening correction, with no token/CSS/dependency change.
+
+The independent whole-increment source/visual review found no confirmed Critical,
+Important or Minor findings and no declined behavior. It reviewed3551341..bcce2d6
+and the new packaged proof, plus the prior screenshots. The subsequent parent-
+error correction has the actual two-case RED/50-case GREEN above; no second
+whole-review loop was substituted for execution. Complete hosted evidence for
+the corrected source and the new packaged recovery remain open. The older
+Node20-action deprecation and standalone browser-launcher notices remain retained.
+
+Packaged01 failed in440.997s before the new automation proof, in the incumbent
+accepted SMTP incoming-reply restart stability check: the restarted child exited
+unexpectedly. The original exception, exact input map and private stdout/stderr
+are retained; that run is not accepted. Targeted kernel/Docker OOM evidence
+reported no matching entry. Diagnostic-only packaged02 stopped at Ruff before
+product execution; its formatting was corrected for packaged03. The diagnostic
+copy preserves child logs privately on failure and changes no application source,
+transport assertion, health check or timeout. Root cause and a complete packaged
+result are not inferred from the earlier successful hosted Container job.
+
 ## Backend publication6cfc97d and CI correction
 
 The backend was published directly to main at

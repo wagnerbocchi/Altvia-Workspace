@@ -6,6 +6,41 @@ configuration APIs have development evidence below. Native cycles/evaluator, UI
 and capability acceptance remain pending. No hours, holidays or targets are
 configured for Altvia.
 
+## Configuration publication f252182 and legacy rollback assertion
+
+The exact f252182 hosted result is partial. Browser passed224 in9.2m
+([43580550534](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43580550534));
+both Container jobs passed
+([43580550561](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43580550561));
+source security passed
+([43580550562](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43580550562));
+image security passed seven nonempty zero-vulnerability inventories
+([43580550517](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43580550517)).
+Counts remain API72,ClamAV38,ingress70,PostgreSQL49,Redis16,storage107,web43.
+Both automation artifacts retain1 work/1 effect/0 links and three once-only
+projections. The separate Container native subset passed56 with3 explicit skips.
+
+API [43580550544](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43580550544)
+failed one legacy rollback assertion:1831 passed,1 failed,3 explicit scanner
+opt-in skips and2 retained Pydantic alias warnings in1481.34s. Actual JUnit1835
+cases contains1 failure,0 errors and3 skips. Complete4751-line logs/artifacts are
+retained privately; expected SQL denials in passing negative tests are not new
+failures. The file-fixture final verification/package build were skipped after
+pytest failure, so the API gate is not accepted. Action deprecation notices remain.
+
+test_empty_roundtrip_preserves_existing_parent_keys accidentally included the
+four new SLA tables in its incumbent-parent ACL snapshot. Downgrade below28
+deliberately drops those descendants and their grants; upgrade creates their
+schema, while explicit runtime provisioning owns their grants. Its existing
+automation-descendant exclusion omitted the four SLA descendants. The test now
+provisions actual runtime roles itself, making this boundary deterministic rather
+than relying on a previous suite case. Native parent-acl-red01 reproduced the
+same eight-grant difference in7.43s before the exclusion fix. The same existing
+parent keys/counts/grants checks remain intact. Native parent-acl-green01 passed
+all63 relationship-storage/SLA-storage cases in202.82s plus Ruff/format/mypy82.
+Publish the corrected tested source and observe its complete hosted gates; this
+native pass is not a substitute for that remaining acceptance.
+
 ## Bounded response/resolution clock foundation
 
 Task3 now has an internal immutable clock step owner, with integer microseconds,

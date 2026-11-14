@@ -43,7 +43,8 @@ PARENT_GRANTS = text(
     # These descendants are recreated above28, not incumbent parent tables.
     "WHERE table_schema='public' AND table_name NOT IN ('ticket_work_items',"
     "'automation_rules','automation_rule_revisions','automation_executions','automation_effects',"
-    "'automation_assignment_sources') "
+    "'automation_assignment_sources','business_calendars','business_calendar_revisions',"
+    "'sla_policies','sla_policy_revisions') "
     "ORDER BY grantee,table_name,privilege_type"
 )
 
@@ -308,7 +309,16 @@ def test_downgrade_refuses_unlinked_history_or_receipt(
 
 
 def test_empty_roundtrip_preserves_existing_parent_keys(admin_client, db_engine, seeded_user):
+    from altvia.provision import provision_runtime
+
     context = make_link_context(admin_client, db_engine, seeded_user)
+    # Exercise actual role grants even when this case runs without an earlier
+    # runtime test; an empty owner-only ACL snapshot cannot prove preservation.
+    provision_runtime(
+        db_engine,
+        runtime_url(db_engine).render_as_string(hide_password=False),
+        runtime_url(db_engine).set(username="altvia_worker").render_as_string(hide_password=False),
+    )
     inspector = inspect(db_engine)
     tables = inspector.get_table_names()
     parents = ("projects", "work_items", "tickets")

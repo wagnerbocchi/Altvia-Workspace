@@ -71,19 +71,19 @@ skipped local minutes/dates contribute none. This handles historical non-minute
 offsets without guessing an ambiguous local boundary. Cache at most16 parsed TZif
 objects and256 immutable UTC-day interval results, never mutable DB/session data.
 
-- [ ] Write a missing-behavior RED for a real work window's exact elapsed time.
+- [x] Write a missing-behavior RED for a real work window's exact elapsed time.
   Then cover ordered/touching/overlapping windows, holiday/local midnight,
   weekends, partial microseconds and exact/zero budgets, bounds and invalid TZif.
-- [ ] Implement trusted installed timezone capture: IANA membership, bounded
+- [x] Implement trusted installed timezone capture: IANA membership, bounded
   read from native TZPATH or installed tzdata resource fallback, path traversal
   denial and SHA256 verification before ZoneInfo.from_file. No new package.
-- [ ] Prove US gap/fold partial windows, Australia/Lord_Howe half-hour shifts,
+- [x] Prove US gap/fold partial windows, Australia/Lord_Howe half-hour shifts,
   Pacific/Apia skipped date and Africa/Monrovia historical-second offset behavior
   where within the supported range (otherwise use a trusted synthetic TZif fixture
   purely to exercise arithmetic, never exposed through HTTP).
-- [ ] Implement canonical frozen windows/holidays and exact interval engine;
+- [x] Implement canonical frozen windows/holidays and exact interval engine;
   reject duplicates/overlap and coalesce touching windows. No fabricated defaults.
-- [ ] Run all pure cases with installed Python, Ruff/check/format/mypy. Native
+- [x] Run all pure cases with installed Python, Ruff/check/format/mypy. Native
   repeat on the selected isolated host must include cold32-day evaluation and
   repeated shared/distinct snapshot benchmarks, recorded bounds/cache sizes and
   unchanged inputs. Commit this foundation without claiming complete SLA.

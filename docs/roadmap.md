@@ -120,7 +120,9 @@ remains pending. The earlier isolated SMTP child exit remains an explicit
 integrated diagnostic follow-up; its root cause was not proved. See the evidence report.
 
 ADR0042 now selects the separate versioned SLA contract after independent builder
-check. No SLA capability is implemented yet. Q07 real hours/holidays/targets stay
+check. Its bounded frozen-calendar arithmetic passed46 actual native cases,
+Ruff/format/mypy76 and cold/warm/memory bounds; configuration/cycles/UI remain
+pending. See docs/ticket-sla-evidence.md. Q07 real hours/holidays/targets stay
 unconfigured. The selected authoritative clock is existing durable accepted_at,
 not an inferred wire-observation timestamp. Archived selected configuration fails
 explicitly rather than silently selecting another policy.

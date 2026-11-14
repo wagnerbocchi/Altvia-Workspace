@@ -1,7 +1,7 @@
 # ADR-0042 Versioned ticket SLA and business time
 
 Date2026-11-14. Status: selected contract after independent builder check;
-implementation and capability acceptance have not started.
+implementation is in progress; capability acceptance remains pending.
 Master FR-011/012 and8.3, ADR0004/0028/0035 and the current security/API/data-model
 contracts apply. Real calendars, targets and holidays remain Q-07. The user
 delegated continuous MVP development and implementation choices; this contract

@@ -32,6 +32,7 @@ from altvia.sla_schemas import (
     CalendarPage,
     CalendarPatch,
     CalendarReceipt,
+    PolicyCalendarSnapshot,
     PolicyCreate,
     PolicyOutput,
     PolicyPage,
@@ -198,6 +199,19 @@ def create_sla_router(engine: Engine, settings: Settings) -> APIRouter:
             permission = scope.access(db, actor.id, row.client_id, queue_id)
             _etag(response, row.version)
             return config.policy_output(db, row, permission)
+
+    @router.get(
+        "/sla-policies/{policy_id}/calendar-snapshot", response_model=PolicyCalendarSnapshot
+    )
+    def selected_calendar(
+        queue_id: UUID, policy_id: UUID, request: Request
+    ) -> PolicyCalendarSnapshot:
+        with Session(engine) as db, db.begin():
+            actor = authenticate_request(db, request, settings)
+            configuration_query(request)
+            row = config.policy(db, queue_id, policy_id)
+            scope.access(db, actor.id, row.client_id, queue_id)
+            return config.policy_calendar_output(db, row)
 
     @router.post(
         "/sla-policies",

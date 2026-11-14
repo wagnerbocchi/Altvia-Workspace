@@ -204,6 +204,17 @@ class CalendarOutput(CalendarSummary):
     tzif_sha256: str
 
 
+class PolicyCalendarSnapshot(StrictModel):
+    policy_version: int
+    calendar_id: UUID
+    version: int
+    name: str
+    timezone: str
+    windows: list[WeeklyWindow]
+    holidays: list[Holiday]
+    calendar_active: bool
+
+
 class PolicyOutput(StrictModel):
     id: UUID
     client_id: UUID

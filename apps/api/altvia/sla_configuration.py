@@ -22,6 +22,7 @@ from altvia.sla_schemas import (
     CalendarOutput,
     CalendarPatch,
     CalendarSummary,
+    PolicyCalendarSnapshot,
     PolicyCreate,
     PolicyOutput,
     PolicyPatch,
@@ -185,6 +186,26 @@ def policy_output(db: Session, row: SlaPolicy, permission: ConfigurationAccess) 
                     "authorizer_id",
                 )
             },
+        }
+    )
+
+
+def policy_calendar_output(db: Session, row: SlaPolicy) -> PolicyCalendarSnapshot:
+    selected = policy_revision(db, row)
+    frozen = db.get(BusinessCalendarRevision, (selected.calendar_id, selected.calendar_version))
+    current = calendar(db, row.queue_id, selected.calendar_id)
+    if frozen is None:
+        raise identity.IdentityError(503, "sla_configuration_unavailable")
+    return PolicyCalendarSnapshot.model_validate(
+        {
+            "policy_version": row.version,
+            "calendar_id": frozen.calendar_id,
+            "version": frozen.version,
+            "name": frozen.name,
+            "timezone": frozen.timezone,
+            "windows": frozen.windows,
+            "holidays": frozen.holidays,
+            "calendar_active": calendar_revision(db, current).active,
         }
     )
 

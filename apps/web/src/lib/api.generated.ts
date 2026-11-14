@@ -897,6 +897,23 @@ export interface paths {
         patch: operations["policy_patch_api_v1_ticket_queues__queue_id__sla_policies__policy_id__patch"];
         trace?: never;
     };
+    "/api/v1/ticket-queues/{queue_id}/sla-policies/{policy_id}/calendar-snapshot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Selected Calendar */
+        get: operations["selected_calendar_api_v1_ticket_queues__queue_id__sla_policies__policy_id__calendar_snapshot_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/tickets": {
         parameters: {
             query?: never;
@@ -2771,6 +2788,28 @@ export interface components {
         PlatformAdminInput: {
             /** Enabled */
             enabled: boolean;
+        };
+        /** PolicyCalendarSnapshot */
+        PolicyCalendarSnapshot: {
+            /** Calendar Active */
+            calendar_active: boolean;
+            /**
+             * Calendar Id
+             * Format: uuid
+             */
+            calendar_id: string;
+            /** Holidays */
+            holidays: components["schemas"]["Holiday"][];
+            /** Name */
+            name: string;
+            /** Policy Version */
+            policy_version: number;
+            /** Timezone */
+            timezone: string;
+            /** Version */
+            version: number;
+            /** Windows */
+            windows: components["schemas"]["WeeklyWindow"][];
         };
         /** PolicyCreate */
         PolicyCreate: {
@@ -7297,6 +7336,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PolicyReceipt"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    selected_calendar_api_v1_ticket_queues__queue_id__sla_policies__policy_id__calendar_snapshot_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                queue_id: string;
+                policy_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyCalendarSnapshot"];
                 };
             };
             /** @description Validation Error */

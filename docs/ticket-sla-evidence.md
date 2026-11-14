@@ -85,6 +85,19 @@ image, production hours/target, real data import or final target qualification i
 introduced or claimed. Complete frozen inputs, stdout/stderr and failure evidence
 remain private in the SLA task workspace and isolated development-host directory.
 
+## Task4 review prerequisite
+
+The actual UI activation review cannot substitute the current calendar for an
+older policy-selected revision. ADR0042 now records the small nested read-only
+calendar-snapshot route under the identical configuration conjunction. It returns
+frozen explanatory fields and a separate current calendar_active flag, never
+TZif or a new grant. Existing routes/DTOs remain byte-for-byte compatible.
+Actual snapshot-red01 failed the missing-route assertion in7.21s before source.
+snapshot-green01 passed26 in107.81s: exact frozen calendar after rename/revision/
+deactivation/reactivation, current configuration, outcome privacy and strict query
+regressions. Native Ruff/check/format and mypy86 passed. The frontend remains in
+progress and this API prerequisite does not claim UI or capability acceptance.
+
 ## Configuration publication f252182 and legacy rollback assertion
 
 The exact f252182 hosted result is partial. Browser passed224 in9.2m

@@ -482,6 +482,14 @@ selected plan and is not implied by this configuration foundation.
 
 ### Ticket SLA outcome contract (ADR0042; Task3)
 
+Task4 adds GET /ticket-queues/{queue_id}/sla-policies/{policy_id}/calendar-snapshot
+under the identical full configuration read authority. PolicyCalendarSnapshot
+contains policy_version,calendar_id,version,name,timezone,windows,holidays and
+calendar_active(the current identity's eligibility, not the historical active
+flag). This exact immutable selected revision supports truthful activation review
+after later calendar edits. No query keys, TZif, writes, grants or legacy DTO
+changes are added; missing immutable references fail503 without fallback.
+
 GET /tickets/{identifier}/sla requires current ordinary ticket access before
 cursor decoding or outcome lookup. Unique known queries are limit1..100/default50
 and cursor(max300). The descending cycle-number cursor binds the actor and ticket;

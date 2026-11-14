@@ -3026,6 +3026,62 @@
         "title": "PlatformAdminInput",
         "type": "object"
       },
+      "PolicyCalendarSnapshot": {
+        "additionalProperties": false,
+        "properties": {
+          "calendar_active": {
+            "title": "Calendar Active",
+            "type": "boolean"
+          },
+          "calendar_id": {
+            "format": "uuid",
+            "title": "Calendar Id",
+            "type": "string"
+          },
+          "holidays": {
+            "items": {
+              "$ref": "#/components/schemas/Holiday"
+            },
+            "title": "Holidays",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "policy_version": {
+            "title": "Policy Version",
+            "type": "integer"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "windows": {
+            "items": {
+              "$ref": "#/components/schemas/WeeklyWindow"
+            },
+            "title": "Windows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "policy_version",
+          "calendar_id",
+          "version",
+          "name",
+          "timezone",
+          "windows",
+          "holidays",
+          "calendar_active"
+        ],
+        "title": "PolicyCalendarSnapshot",
+        "type": "object"
+      },
       "PolicyCreate": {
         "additionalProperties": false,
         "properties": {
@@ -13034,6 +13090,59 @@
           }
         },
         "summary": "Policy Patch",
+        "tags": [
+          "Ticket SLA configuration"
+        ]
+      }
+    },
+    "/api/v1/ticket-queues/{queue_id}/sla-policies/{policy_id}/calendar-snapshot": {
+      "get": {
+        "operationId": "selected_calendar_api_v1_ticket_queues__queue_id__sla_policies__policy_id__calendar_snapshot_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "queue_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Queue Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Policy Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyCalendarSnapshot"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Selected Calendar",
         "tags": [
           "Ticket SLA configuration"
         ]

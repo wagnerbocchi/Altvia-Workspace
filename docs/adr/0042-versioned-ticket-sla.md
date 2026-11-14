@@ -234,6 +234,16 @@ Integrated rollback must prove that limitation explicitly.
 
 ## HTTP and frontend boundary
 
+Task4 UI ruling: activation review needs the exact policy-selected calendar,
+including when a later calendar edit has created a different current revision.
+Add the read-only nested GET /ticket-queues/{queue_id}/sla-policies/{policy_id}/calendar-snapshot.
+It reuses the full configuration conjunction before reading that policy revision's
+immutable calendar. Return policy_version, calendar_id/version, frozen name,
+timezone/windows/holidays and separate current calendar_active. No TZif, new grant,
+writer, historical rebaseline or change to existing DTOs is introduced. This small
+read exists for the actual review caller; displaying the current calendar as the
+historical selection or silently forcing rebaseline would misstate the decision.
+
 Use existing authenticated transport, strict typed models, generated OpenAPI/TS,
 exact Origin/CSRF, reviewed versions and durable protected intents:
 

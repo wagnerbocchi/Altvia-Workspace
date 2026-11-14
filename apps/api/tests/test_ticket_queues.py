@@ -435,10 +435,26 @@ def test_queue_actual_runtime_writes_and_restricted_worker(admin_client, db_engi
         assert (
             client.patch(child, json={"active": False}, headers=preconditions()).status_code == 200
         )
+        registered = client.get(path).json()
+    # The assignment writer now needs native queue metadata. This is read
+    # authority only; it must never become queue configuration authority.
+    engine = create_engine(worker, hide_parameters=True)
+    try:
+        with engine.connect() as connection:
+            metadata = connection.execute(
+                text("SELECT name,active,allow_manual_close,allow_reopen FROM ticket_queues")
+            ).one()
+            assert tuple(metadata) == tuple(
+                registered[key] for key in ("name", "active", "allow_manual_close", "allow_reopen")
+            )
+    finally:
+        engine.dispose()
     for credential, statement in [
         (runtime, "DELETE FROM ticket_queues"),
         (runtime, "DELETE FROM ticket_categories"),
-        (worker, "SELECT * FROM ticket_queues"),
+        (worker, "UPDATE ticket_queues SET allow_manual_close=NOT allow_manual_close"),
+        (worker, "UPDATE ticket_queues SET active=active"),
+        (worker, "UPDATE ticket_queues SET team_id=team_id"),
         (worker, "SELECT * FROM ticket_categories"),
     ]:
         engine = create_engine(credential, hide_parameters=True)

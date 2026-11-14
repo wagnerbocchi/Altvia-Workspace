@@ -84,6 +84,54 @@ actual broad/packaged/browser acceptance and the UI explanation of native creati
 history: history retains the true authorizer, while schema2 activity supplies the
 automation discriminator. Task3 must reconcile both without private IDs.
 
+## Backend publication6cfc97d and CI correction
+
+The backend was published directly to main at
+6cfc97d58cc6a29a7c4483680762906735f0c56c under the standing authorization.
+Its hosted result is partial, not a full pass:
+
+| Gate | Actual result | Run |
+| --- | --- | --- |
+| Browser |214 passed in7.9m; predates the new automation interface |[43566202395](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43566202395)|
+| Containers |api-runtime and private-file-runtime passed |[43566202484](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43566202484)|
+| Source security |Passed |[43566202380](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43566202380)|
+| Image security |Seven nonempty inventories,zero vulnerabilities |[43566202448](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43566202448)|
+| API |Cancelled at the25-minute job deadline; one test failure recorded before cancellation |[43566202446](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43566202446)|
+
+Complete logs and artifacts are retained privately in ci-6cfc97d. Image package
+counts are API72,ClamAV38,ingress70,PostgreSQL49,Redis16,storage107,web43; every
+inventory has zero reported vulnerabilities, with no ignore added. The Container
+job's separate native subset passed56 with3 explicit foreground-console opt-in
+skips; its real private-file runtime command passed independently.
+
+The complete API log contains1584 completed reports of1671 collected cases before
+cancellation, including one F and3 explicit skips. The failing ordinal1418 maps to
+test_ticket_queues.test_queue_actual_runtime_writes_and_restricted_worker. Native
+queue-acl-red01 independently reproduced DID NOT RAISE DBAPIError in5.19s: this
+incumbent test expected the worker to lack queue metadata SELECT. ADR0041's real
+native writer now deliberately reads that metadata through explicit column grants.
+The correction proves the actual readable metadata matches the API and preserves
+denial of queue workflow/active/team changes plus category reads. No product grant
+was broadened or assertion skipped. Native queue-acl-green01 passed the complete
+queue module and actual restricted automation writer:18 cases in45.39s, with
+Ruff/check/format,mypy and frozen inputs passing.
+
+The GitHub annotation explicitly reports the25m0s deadline. Setup consumed about
+2m43s; the incomplete full test command then ran about22m29s. Increase only that
+CI job budget to35 minutes and retain the entire test command, adding a20-case
+slow-duration report for diagnosis. Application timeouts/retries/health checks,
+assertions and required gates remain unchanged. A new full hosted pass, storage
+verification and wheel build are still required; this cancelled run supplies none.
+Retain the hosted Node20-action deprecation warning for integrated tooling work;
+the runner already forced those pinned actions to Node24, and the warning is
+separate from the actual test failure and deadline.
+
+The Task2 private proof archive has SHA256
+f859c8e32a6893d4f81a04dd13575ef32014ab808836e5d5ccc42a07f6a59212.
+All392 manifest hashes were verified after transfer;20 owned fixture credential
+canaries matched no collected file. Fixture secret/config files were excluded.
+This archive precedes the separate queue ACL correction and UI work above.
+
 ## Schema foundation
 
 Migration b46087000029 expands the native schema with rules, immutable revisions,

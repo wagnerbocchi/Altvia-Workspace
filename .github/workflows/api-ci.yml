@@ -11,7 +11,7 @@ permissions:
 jobs:
   identity:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 35
     services:
       postgres:
         image: postgres:17-bookworm@sha256:73bedc9eaa0121b92b9b26bb52e5141b3f6f37479c7ef913c0160455763ca80a
@@ -53,7 +53,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: uv run python scripts/ci_file_storage.py start
-      - run: uv run pytest -q --junitxml=.superpowers/api-tests.xml
+      - run: uv run pytest -q --durations=20 --junitxml=.superpowers/api-tests.xml
       - run: uv run python scripts/ci_file_storage.py verify
       - run: uv build
       - if: always()

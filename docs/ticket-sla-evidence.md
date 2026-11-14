@@ -44,8 +44,12 @@ explicit historical math revision after reactivation. Native
 config-integrity-green01 passed all55 cases in227.02s: current configuration,
 cursor/concurrency/artifact/privacy/integrity boundaries and the full automation
 execution suite. Current API product hashes match that passing frozen snapshot.
-Its subsequent Ruff check failed one formatting-only long test line; local
-formatting/static checks pass after correction, with a final native batch pending.
+Its subsequent Ruff check failed one formatting-only long test line. After that
+correction, final native config-final01 passed125 cases in101.51s, covering every
+configuration API/schema/boundary/integrity case and the46 calendar cases, with
+Ruff/check/format and strict mypy80 all passing. Task2 persisted configuration is
+complete; the earlier161 incumbent/storage passes and55 execution/integrity
+passes remain separately retained, with overlapping counts never added together.
 
 OpenAPI/TypeScript generation ran twice with identical bytes. All81 prior paths
 and155 prior components remain exactly unchanged. Local web typegen/ESLint/types

@@ -123,19 +123,19 @@ new actual changes advance queue and own version once; no-op/replay does not.
 Policy calendar_id/version are an explicit reviewed pair; check both current
 calendar eligibility and existence/scope of that immutable revision.
 
-- [ ] Native actual RED before tables/routes. Prove composite customer/queue/
+- [x] Native actual RED before tables/routes. Prove composite customer/queue/
   calendar/category integrity, null-aware selector uniqueness, immutable revisions,
   insert-only exact runtime grants, populated downgrade refusal and empty roundtrip.
-- [ ] Implement only the four live configuration tables in31. No empty cycle
+- [x] Implement only the four live configuration tables in31. No empty cycle
   scaffold, seeded calendar, enabled policy or fictitious hours. Later32 adds the
   cycle/evaluator tables when their actual owner is implemented.
-- [ ] Prove full current role conjunction/non-grants, strict bounds, initial
+- [x] Prove full current role conjunction/non-grants, strict bounds, initial
   disabled state, version overflow rollback, no-op/archive-disable/replay and
   protected uncertain create/patch. Delayed replay must preserve newer revisions.
-- [ ] Implement native owner, minimal protected receipts, metadata-only private
+- [x] Implement native owner, minimal protected receipts, metadata-only private
   configuration events and explicit scope choices. Current selector helper ranks
   exact > category > priority > default, then validates current selected references.
-- [ ] Run affected automation/queue/client/config/schema regressions and static
+- [x] Run affected automation/queue/client/config/schema regressions and static
   gates. Generate OpenAPI/TS twice and compare all old operations/components.
   Commit complete persisted configuration without claiming cycle support.
 

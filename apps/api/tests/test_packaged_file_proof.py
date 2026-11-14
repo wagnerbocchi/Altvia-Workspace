@@ -213,23 +213,27 @@ def test_actual_smtp_checker_refuses_corrupt_or_private_mime(failure):
         "credential-secret",
     ],
 )
-def test_late_service_diagnostics_reject_file_canaries(marker):
+def test_late_service_diagnostics_reject_file_canaries(marker, tmp_path):
     event_id = str(uuid4())
     logs = "safe"
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "scripts/packaged_smtp_proof.py").write_bytes(
+        (SCRIPTS / "packaged_smtp_proof.py").read_bytes()
+    )
 
     def run(command, **kwargs):
         if "logs" in command:
             return logs
-        if "run" in command:
+        if "migrate" in command:
             return json.dumps({"event_ids": [event_id]})
         return json.dumps({"delivered_and_processed": True})
 
     context = {"ids": [str(uuid4())], "ticket_id": str(uuid4()), "markers": [marker]}
-    result = proof.privacy_checkpoint(run, [], SCRIPTS.parent, context, "after-recreation")
+    result = proof.privacy_checkpoint(run, [], tmp_path, context, "after-recreation")
     assert result["service_diagnostics_checked"]
     logs = json.dumps({"log": "first\n" + marker + "\nlast"})
     with pytest.raises(AssertionError):
-        proof.privacy_checkpoint(run, [], SCRIPTS.parent, context, "after-recreation")
+        proof.privacy_checkpoint(run, [], tmp_path, context, "after-recreation")
 
 
 @pytest.mark.parametrize("corruption", [None, "length", "hash", "restore-bytes"])
@@ -776,7 +780,7 @@ def test_packaged_saved_session_is_revoked_by_later_team_role_change(
             store.close()
 
 
-def test_snapshot_fourth_timeout_filename_is_rejected_by_actual_diagnostic_guard():
+def test_snapshot_fourth_timeout_filename_is_rejected_by_actual_diagnostic_guard(tmp_path):
     fourth = "timeout-authoritative-" + uuid4().hex + ".txt"
     snapshot = {
         "files": [
@@ -792,18 +796,22 @@ def test_snapshot_fourth_timeout_filename_is_rejected_by_actual_diagnostic_guard
         "markers": proof.snapshot_file_markers(snapshot),
     }
     logs = "safe"
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "scripts/packaged_smtp_proof.py").write_bytes(
+        (SCRIPTS / "packaged_smtp_proof.py").read_bytes()
+    )
 
     def run(command, **kwargs):
         if "logs" in command:
             return logs
-        if "run" in command:
+        if "migrate" in command:
             return json.dumps({"event_ids": [str(uuid4())]})
         return json.dumps({"delivered_and_processed": True})
 
-    proof.privacy_checkpoint(run, [], SCRIPTS.parent, context, "after-recreation")
+    proof.privacy_checkpoint(run, [], tmp_path, context, "after-recreation")
     logs = json.dumps({"details": {"filename": fourth}})
     with pytest.raises(AssertionError):
-        proof.privacy_checkpoint(run, [], SCRIPTS.parent, context, "after-recreation")
+        proof.privacy_checkpoint(run, [], tmp_path, context, "after-recreation")
 
 
 @pytest.mark.parametrize(

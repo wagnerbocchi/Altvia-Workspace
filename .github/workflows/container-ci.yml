@@ -42,6 +42,7 @@ jobs:
             .superpowers/container-tests/*/mail-delivery-proof.json
             .superpowers/container-tests/*/incoming-conversation-proof.json
             .superpowers/container-tests/*/assignment-automation-proof.json
+            .superpowers/container-tests/*/ticket-sla-proof.json
           if-no-files-found: error
           retention-days: 14
 
@@ -82,6 +83,7 @@ jobs:
             .superpowers/file-infra/*/[0-9]*.stderr
             .superpowers/container-tests/*/packaged-file-proof.json
             .superpowers/container-tests/*/assignment-automation-proof.json
+            .superpowers/container-tests/*/ticket-sla-proof.json
             .superpowers/container-tests/*/file-browser-failure.json
             .superpowers/container-tests/*/file-command-proof.json
             .superpowers/container-tests/*/file-source-proof.json

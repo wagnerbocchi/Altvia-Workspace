@@ -250,17 +250,28 @@ Consume generated DTOs and existing authenticated transport/write recovery.
 Files: dedicated packaged SLA proof through existing container_smoke boundaries,
 docs/ticket-sla-evidence.md, roadmap and continuous completion ledger.
 
-- [ ] Prove synthetic explicit configuration, actual accepted public response,
+- [x] Prove synthetic explicit configuration, actual accepted public response,
   pause/resolve/reopen, late evidence correction and once-only breach/event under
   API/PG/worker/Redis recreation with actual installed images and restricted role.
   Preserve all incumbent canaries and the automation proof. No production policy.
 - [ ] Run full packaged/static/native gates; freeze exact source/dependency/
   configuration/image identities and retain complete private success/failure logs.
   Reconcile prior intermittent SMTP child exit rather than silently calling it fixed.
-- [ ] Obtain one fresh independent whole-increment source/visual review. Resolve
+- [x] Obtain one fresh independent whole-increment source/visual review. Resolve
   Important/Critical in one RED/GREEN fix pass and run required regression gates.
 - [ ] Publish authorized main commits and observe all five exact-source workflows,
   both Container jobs and seven nonempty image inventories. No timeout/skip is pass.
 - [ ] Accept only the development capability, retaining Q07/real policy, integrated
   rollback/encrypted restore and final target qualification. Continue analytics/
   guarded importer under a separate contract; no real import or rollout.
+
+Task5 progress: native packaged05 passed the complete771.557s command,37682 frozen
+inputs,29 verified evidence files, native SMTP/pause/reopen/late correction and
+once-only projection after recreation. The later host-proof health wait is newer
+than that native snapshot; all shipped image inputs are unchanged. Native148
+harness cases with real TLS S3, local Node-child proof,19 SLA/automation browser
+cases and static gates pass. Fresh whole-increment review's sole Important
+category-continuity issue has actual RED/GREEN proof; no minors were deferred.
+Prior full Impeccable visual acceptance and four new inspected paging captures
+remain separately attributed. Exact final hosted workflows, both strengthened
+Container commands and all seven inventories remain pending before acceptance.

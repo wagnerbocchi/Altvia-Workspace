@@ -17,6 +17,7 @@ from uuid import uuid4
 from packaged_smtp_proof import (
     OWNER_SETUP,
     assert_worker_diagnostics,
+    worker_probe_command,
 )
 from private_file_infra_proof import require_capacity
 
@@ -514,7 +515,7 @@ def privacy_checkpoint(run, compose, root, context, phase):
     )
     checkpoint = json.loads(
         run(
-            [*compose, "exec", "-T", "worker", "python", "-c", code],
+            worker_probe_command(compose, root, code),
             data=json.dumps(
                 {"phase": phase, "event_ids": snapshot["event_ids"], "metadata_markers": markers}
             ),
@@ -525,7 +526,9 @@ def privacy_checkpoint(run, compose, root, context, phase):
         grants.append(
             json.loads(
                 run(
-                    [*compose, "exec", "-T", service, "python", "-c", PRIVILEGES],
+                    worker_probe_command(compose, root, PRIVILEGES)
+                    if service == "worker"
+                    else [*compose, "exec", "-T", service, "python", "-c", PRIVILEGES],
                     data=json.dumps({"role": role}),
                 )
             )
@@ -715,19 +718,7 @@ def prepare_packaged_files(
     smtp_code += "\npackaged_smtp_worker_proof(synthetic_relay)\n"
     smtp = json.loads(
         run(
-            [
-                *compose,
-                "run",
-                "--rm",
-                "--no-deps",
-                "-T",
-                "-e",
-                "ALTVIA_ALLOW_CONTAINER_TEST=1",
-                "worker",
-                "python",
-                "-c",
-                smtp_code,
-            ],
+            worker_probe_command(compose, root, smtp_code),
             data=json.dumps(
                 {
                     **browser,

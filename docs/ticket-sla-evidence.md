@@ -5,9 +5,46 @@ SLA capability is not complete. Task1 calendar arithmetic and Task2's persisted
 configuration APIs have development evidence below. Task3 native cycles, evaluator,
 accepted-response capture and outcome API are implemented with native development
 evidence below. Task4's real browser interface and two review corrections have
-passing evidence below; packaged and whole-capability acceptance remain pending.
-No hours, holidays or targets are
+passing evidence below. Task5's native packaged development proof now passes;
+exact final hosted capability acceptance remains pending. No hours, holidays or targets are
 configured for Altvia.
+
+## Installed SLA acceptance
+
+Ordinary-source packaged05 ran the complete scripts/container_smoke.py command
+successfully in771.557s.37682 frozen source/dependency inputs remained unchanged;
+29 collected evidence files passed SHA256 checks. No diagnostic override was
+used. The independent synthetic client/queue explicitly configured UTC weekly
+windows, pauses and targets. Real TLS SMTP acceptance fulfilled response timing;
+lost/held final replies remained uncertain. Actual pause/resume, resolution,
+two-minute breach, revised calendar/policy and reopen used native history/time.
+After draining the actual worker, synthetic owner evidence corrected the prior
+cycle without deleting its observed breach or fulfilling the new cycle.
+
+API/PostgreSQL/Redis/worker recreation retained two acceptance facts and three
+SLA events, each projected exactly once. Repeated worker recreation retained
+identical cardinality. All three SMTP scenarios and their restarts exited0 on
+SIGTERM.1455 resource samples across18 worker/observer containers recorded zero
+OOM kills. The complete incumbent mail, privacy, receipts, assignment Redis-loss/
+lease recovery, current-scope relationship history, browser, GIN, secret and
+shutdown proofs also passed. Task containers stopped; volumes remain preserved.
+
+Five actual native image identities were retained:
+
+| Service | Image ID |
+| --- | --- |
+| API/worker | sha256:fc786b799eb868d5d5012a21ff44caa3faee000d8011d05d6eeec91f26b14fe6 |
+| PostgreSQL | sha256:f4095b2168d11c6c29a2cd4a154a09a6f0f97c669cb17976373c727fbeafb55a |
+| Ingress | sha256:c165ccad19876b52dfafb4e0c3f5e76a87045bfe17dce4f650a2b76c2491ff4e |
+| Web | sha256:ef4411ff387efab346b5e05a5fdf047ee3125174aad41450609ac1e67520cfb7 |
+| Redis | sha256:fbbd6e6494a0841f268900c9f9a4923d810156a70529894acf2ab201cddb3515 |
+
+All shipped image/build/configuration inputs still match the passing snapshot.
+Only this evidence document and a stronger host-proof --wait health condition
+changed afterward; that later fixture condition must pass in final exact-source
+hosted Container jobs. It is not claimed to have run in packaged05. The seven
+hosted image scans and final consolidated target qualification remain separate;
+no scan result from a different image ID is attributed to these native images.
 
 ## Whole-increment review correction
 
@@ -35,6 +72,44 @@ and inspected. The earlier full Impeccable verdict remains scoped to its two
 visual findings; this source-review correction has its own RED/GREEN proof and
 does not claim a repeated complete visual review. Packaged/hosted acceptance and
 final target qualification remain separate gates.
+
+## Installed-proof diagnostics and harness correction
+
+Original-source packaged01 failed491.277s before the new SLA fixture: an incoming
+privacy command ran a second Python inside the live worker and exited137 with
+empty channels. Kernel records show its256MiB cgroup saturated. packaged02 then
+reproduced the previously unresolved SMTP early-child exit in the accepted case.
+Diagnostic-only packaged03 failed274.054s in lost/delivery_wait, preserving a
+child exit-9, memory.peak=max268435456, oom3 and oom_kill2. Its private worker log
+was247 bytes. Independent sampling recorded zero OOM deaths for the normal main
+worker. Diagnostic source is explicitly different from ordinary acceptance source;
+raw logs, exact failed-source identities and five image IDs remain private.
+
+The synthetic relay/worker driver inherited the daemon healthcheck, spawning an
+additional Python for a daemon state directory it did not own. Worker/privacy/
+privilege test commands now use an ordinary restricted one-off container and a
+temporary Compose override that disables only this inapplicable driver check.
+The actual daemon keeps its healthcheck and256MiB limit; all helper limits,
+credentials and networks remain unchanged. Real child heartbeat, readiness,
+verified TLS, exact wire, SIGTERM and no-second-DATA assertions remain. The file
+profile reuses the same command owner. No transport or infrastructure setting was
+changed. packaged04 reached the separate SLA namespace with zero observed OOM
+deaths: sampled helper peak191655936 bytes and main peak231690240 bytes. It then failed the
+existing strict source_identity_conflict guard because the new synthetic queue
+reused the old fixture's global source key. The SLA fixture now explicitly uses
+packaged-sla; legacy callers keep packaged-smtp.
+
+Harness-green03 passed148 native cases with actual verified-TLS S3/PostgreSQL,
+zero skips, in34.05s. Ruff/check/format and mypy86 passed;39 transferred files were
+SHA256 verified. One Node-child case was deliberately deselected in this API-only
+image and passed locally using the actual installed Node process. The final full
+hosted API gate must still run it on Linux. Earlier runs without a configured
+disposable DB, Node or S3 are retained failures, not acceptance. Unit doubles now
+distinguish worker observers from owner commands and write only temporary fixture
+directories. A native setup attempt also exhausted Docker's automatic subnet
+pool; four empty internal test networks were matched to prior runner sources,
+rechecked by exact ID/name and removed. No active stack or retained volume was
+removed. Final exact-source installed/hosted acceptance remains pending.
 
 ## Configuration and outcome interface
 

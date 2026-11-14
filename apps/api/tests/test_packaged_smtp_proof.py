@@ -339,7 +339,7 @@ def test_late_worker_checkpoint_rejects_actual_decoded_redis_values(
 
 
 @pytest.mark.parametrize("canary", INCOMING_CANARIES)
-def test_late_main_diagnostics_reject_actual_checker_multiline_json(canary):
+def test_late_main_diagnostics_reject_actual_checker_multiline_json(canary, tmp_path):
     from uuid import uuid4
 
     context = {
@@ -348,22 +348,24 @@ def test_late_main_diagnostics_reject_actual_checker_multiline_json(canary):
         "metadata_markers": INCOMING_CANARIES,
     }
     logs = "safe"
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "scripts/packaged_smtp_proof.py").write_bytes(PROOF.read_bytes())
 
     def run(command, **kwargs):
         if "logs" in command:
             return logs
-        if "exec" in command:
+        if "worker" in command:
             return json.dumps({"completed_events": 1})
         return json.dumps(
             [{"event_id": str(uuid4()), "type": "ticket.message_received", "schema": 1}]
         )
 
-    assert proof.incoming_privacy_checkpoint(run, [], PROOF.parents[1], context, "after-append")[
+    assert proof.incoming_privacy_checkpoint(run, [], tmp_path, context, "after-append")[
         "main_diagnostics_checked"
     ]
     logs = json.dumps({"body": "first\n" + canary + "\nlast"})
     with pytest.raises(AssertionError):
-        proof.incoming_privacy_checkpoint(run, [], PROOF.parents[1], context, "after-append")
+        proof.incoming_privacy_checkpoint(run, [], tmp_path, context, "after-append")
 
 
 def test_event_completion_requires_every_exact_event_delivered_and_processed():

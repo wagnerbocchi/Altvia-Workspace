@@ -37,6 +37,34 @@ SMTP_PHASES = {
 SMTP_SCENARIOS = {"unknown", "accepted", "lost", "held"}
 
 
+def worker_probe_command(compose, root, code):
+    """Keep test interpreters outside the daemon's unchanged memory allowance."""
+    override = root / ".superpowers/container-tests/worker-probe.compose.json"
+    override.parent.mkdir(parents=True, exist_ok=True)
+    # A CLI driver is not the daemon at /run/altvia. Its real worker child has
+    # explicit heartbeat/readiness assertions below. The daemon's own healthcheck
+    # remains enabled; this override is used only for disposable `compose run`.
+    override.write_text(
+        json.dumps({"services": {"worker": {"healthcheck": {"disable": True}}}}),
+        encoding="utf-8",
+    )
+    return [
+        *compose,
+        "-f",
+        str(override),
+        "run",
+        "--rm",
+        "--no-deps",
+        "-T",
+        "-e",
+        "ALTVIA_ALLOW_CONTAINER_TEST=1",
+        "worker",
+        "python",
+        "-c",
+        code,
+    ]
+
+
 def smtp_failure_summary(stderr):
     """Project one bounded child signal; raw stderr and tracebacks remain private."""
     lines = [
@@ -290,7 +318,7 @@ def incoming_privacy_checkpoint(run, compose, root, context, phase):
     )
     result = json.loads(
         run(
-            [*compose, "exec", "-T", "worker", "python", "-c", code],
+            worker_probe_command(compose, root, code),
             data=json.dumps(
                 {**context, "phase": phase, "event_ids": [row["event_id"] for row in events]}
             ),
@@ -298,6 +326,8 @@ def incoming_privacy_checkpoint(run, compose, root, context, phase):
     )
     # Same diagnostic checker as the stopped SMTP child; this checks the existing
     # main process only after actual relevant events have been delivered/processed.
+    # Run the observer under its own unchanged service limit: a second Python
+    # interpreter must not consume the live worker's production memory allowance.
     assert_worker_diagnostics(
         run([*compose, "logs", "--no-color", "api", "worker"]),
         tuple(value.encode() for value in context["metadata_markers"]),
@@ -316,7 +346,7 @@ from altvia.mail_participants import register_sender,attest_requester
 from altvia.mail_settings import SMTPAccount
 p=json.load(sys.stdin)
 with Session(make_engine(DatabaseSettings())) as db,db.begin():
-    source=register_source(db,'packaged-smtp',UUID(p['queue_id']))
+    source=register_source(db,p.get('source_key','packaged-smtp'),UUID(p['queue_id']))
     account=SMTPAccount.model_validate({**p['account'],'source_id':source.id})
     register_sender(db,account)
     participant=attest_requester(db,UUID(p['ticket_id']),p['version'],'synthetic-packaged-only')
@@ -619,19 +649,7 @@ def prepare_packaged_incoming(
     code += "\npackaged_smtp_worker_proof(synthetic_relay)\n"
     worker = json.loads(
         run(
-            [
-                *compose,
-                "run",
-                "--rm",
-                "--no-deps",
-                "-T",
-                "-e",
-                "ALTVIA_ALLOW_CONTAINER_TEST=1",
-                "worker",
-                "python",
-                "-c",
-                code,
-            ],
+            worker_probe_command(compose, root, code),
             data=json.dumps(
                 {
                     "delivery_id": queued.json()["delivery_id"],
@@ -796,7 +814,9 @@ print(json.dumps({'alias_preserved_receipt':True,'late_raw_collision':True}))
         role_proofs.append(
             json.loads(
                 run(
-                    [*compose, "exec", "-T", service, "python", "-c", INCOMING_PRIVILEGES],
+                    worker_probe_command(compose, root, INCOMING_PRIVILEGES)
+                    if service == "worker"
+                    else [*compose, "exec", "-T", service, "python", "-c", INCOMING_PRIVILEGES],
                     data=json.dumps(
                         {
                             "role": role,
@@ -902,7 +922,9 @@ def verify_packaged_incoming_restart(client, proof, run, compose, work):
     )
 
 
-def prepare_packaged_smtp(client, ticket_body, run, compose, root, secret_dir):
+def prepare_packaged_smtp(
+    client, ticket_body, run, compose, root, secret_dir, *, source_key="packaged-smtp"
+):
     """Create independent fixtures using the current ordinary authenticated binding."""
     private_marker = "packaged-private-" + uuid4().hex
     account = {
@@ -955,6 +977,7 @@ def prepare_packaged_smtp(client, ticket_body, run, compose, root, secret_dir):
             OWNER_SETUP,
             {
                 "account": account,
+                "source_key": source_key,
                 "ticket_id": ticket_id,
                 "queue_id": ticket_body["queue_id"],
                 "version": 3,
@@ -981,19 +1004,11 @@ def prepare_packaged_smtp(client, ticket_body, run, compose, root, secret_dir):
         }
         proof = json.loads(
             run(
-                [
-                    *compose,
-                    "run",
-                    "--rm",
-                    "--no-deps",
-                    "-T",
-                    "-e",
-                    "ALTVIA_ALLOW_CONTAINER_TEST=1",
-                    "worker",
-                    "python",
-                    "-c",
+                worker_probe_command(
+                    compose,
+                    root,
                     fixture + "\n" + proof_code + "\npackaged_smtp_worker_proof(synthetic_relay)\n",
-                ],
+                ),
                 data=json.dumps(
                     {
                         **record,

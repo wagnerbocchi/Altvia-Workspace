@@ -23,6 +23,7 @@ from packaged_file_proof import (
     verify_packaged_files,
 )
 from packaged_incoming_file_proof import prepare_packaged_incoming_files
+from packaged_sla_proof import finish_sla, prepare_sla
 from packaged_smtp_proof import (
     prepare_packaged_incoming,
     prepare_packaged_smtp,
@@ -1501,6 +1502,7 @@ with Session(make_engine(Settings())) as db,db.begin():
                     ),
                 )
             )
+            sla_proof = prepare_sla(run, compose, origin, secret_dir, password, teams[0], ROOT)
             automation_proof = prepare_automation(
                 run, compose, origin, secret_dir, password, teams[0], area_id
             )
@@ -1510,6 +1512,8 @@ with Session(make_engine(Settings())) as db,db.begin():
             run([*compose, "up", "-d", "--no-deps", "--force-recreate", "postgres"])
             await_ready(client)
             finish_automation(run, compose, origin, secret_dir, automation_proof, work)
+            finish_sla(run, compose, origin, secret_dir, sla_proof, work)
+            print("Packaged SLA acceptance, pause, reopen and retained correction passed.")
             print(
                 "Packaged assignment Redis loss, lease recovery, floor and receipt privacy passed."
             )

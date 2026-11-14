@@ -135,8 +135,18 @@ deactivation. Native web check/build/Sharp guard passed. The fresh Impeccable
 review found two actual visual/state issues, both reproduced RED and resolved
 in one batch; the final9-case GREEN and24 theme/viewport recaptures passed. Its
 verdict scored both fixes resolved, ship at that scope. Shipped documentation
-preserved the incumbent design files. Task5 packaged/whole-increment acceptance
-and final hosted gates remain pending; no whole-SLA or target completion claim.
+preserved the incumbent design files. Task5 native packaged05 passed771.557s,
+37682 frozen inputs and29 verified evidence files, with actual pause/reopen,
+late retained correction, once-only events and all incumbent canaries. The
+independent whole-source review's sole Important category-continuity issue was
+reproduced and fixed;19 SLA/automation browser cases passed.148 native TLS S3
+harness cases/static gates passed; the Node-child case passed locally. The
+previous SMTP early-child failure was traced to extra test interpreters exhausting
+the helper cgroup; helper-only healthcheck isolation retained daemon checks and
+256MiB limits.1455 samples across18 containers recorded zero OOM kills afterward.
+All shipped inputs match that native snapshot; a later host-proof readiness wait
+must still pass in final hosted Container jobs. Final hosted capability acceptance
+is pending; no whole-SLA or final target completion claim.
 
 ADR0042 Task3 backend development is complete locally/natively: atomic creation/
 reopen cycles, bounded two-goal evaluator, strict independent accepted-response

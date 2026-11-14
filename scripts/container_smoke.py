@@ -29,6 +29,11 @@ from packaged_smtp_proof import (
     verify_packaged_incoming_restart,
     verify_packaged_smtp_restart,
 )
+from packaged_ticket_work_proof import (
+    PROJECTION_COUNTS,
+    assert_ticket_work,
+    prepare_ticket_work,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -911,6 +916,92 @@ with Session(make_engine(WorkerSettings())) as db:
             )
             # Real scoped work exists before API/PostgreSQL recreation. Separate
             # authenticated clients keep the configuration operator out of content.
+            # This actor/customer/project/queue is disjoint from all incumbent
+            # exact personal-list, version, activity and account canaries.
+            link_login = {"email": "ticket-work@example.test", "password": password}
+            link_actor = client.post(
+                "/api/v1/users",
+                json={**link_login, "display_name": "Packaged link actor"},
+                headers={"Idempotency-Key": uuid4().hex},
+            )
+            assert link_actor.status_code == 201
+            link_actor_id = link_actor.json()["id"]
+            link_customer = client.post(
+                "/api/v1/clients",
+                json={"name": "Packaged link customer", "manager_user_id": link_actor_id},
+                headers={"Idempotency-Key": uuid4().hex},
+            )
+            assert link_customer.status_code == 201
+            link_customer_id = link_customer.json()["client_id"]
+            link_project = client.post(
+                "/api/v1/projects",
+                json={
+                    "name": "Packaged link project",
+                    "scope_kind": "client",
+                    "client_id": link_customer_id,
+                    "team_id": teams[0],
+                    "operational_area_id": area_id,
+                    "manager_user_id": link_actor_id,
+                },
+                headers={"Idempotency-Key": uuid4().hex},
+            )
+            assert link_project.status_code == 201
+            link_queue = client.post(
+                "/api/v1/ticket-queues",
+                json={"team_id": teams[0], "name": "Packaged link queue"},
+                headers={"Idempotency-Key": uuid4().hex},
+            )
+            assert link_queue.status_code == 201
+            link_queue_id = link_queue.json()["queue_id"]
+            link_queue_path = "/api/v1/ticket-queues/" + link_queue_id
+            link_queue_detail = client.get(link_queue_path)
+            assert link_queue_detail.status_code == 200
+            assert (
+                client.post(
+                    link_queue_path + "/members",
+                    json={"email": link_login["email"], "role_name": "operations_manager"},
+                    headers={
+                        "If-Match": link_queue_detail.headers["etag"],
+                        "Idempotency-Key": uuid4().hex,
+                    },
+                ).status_code
+                == 201
+            )
+            with httpx.Client(
+                base_url=origin,
+                verify=str(secret_dir / "tls_cert"),
+                headers={"Origin": origin},
+                timeout=15,
+                trust_env=False,
+            ) as link_client:
+                link_auth = link_client.post("/api/v1/auth/sessions", json=link_login)
+                assert link_auth.status_code == 201
+                link_client.headers["X-CSRF-Token"] = link_auth.json()["csrf_token"]
+                link_contact = link_client.post(
+                    f"/api/v1/clients/{link_customer_id}/contacts",
+                    json={"display_name": "Link requester", "email": "link-requester@example.test"},
+                    headers={"Idempotency-Key": uuid4().hex},
+                )
+                assert link_contact.status_code == 201
+                ticket_work_proof = prepare_ticket_work(
+                    link_client,
+                    {
+                        "queue_id": link_queue_id,
+                        "client_id": link_customer_id,
+                        "requester_id": link_contact.json()["contact_id"],
+                        "subject": "Packaged independent linked ticket",
+                        "priority": "medium",
+                        "assignee_id": link_actor_id,
+                    },
+                    {
+                        "project_id": link_project.json()["project_id"],
+                        "title": "Packaged independent linked work",
+                        "priority": "medium",
+                        "work_type": "one_off",
+                        "owner_id": link_actor_id,
+                        "assignee_ids": [link_actor_id],
+                    },
+                )
             work_ids = []
             child_id = None
             contact_ids = {}
@@ -1557,6 +1648,65 @@ with Session(make_engine(Settings())) as db,db.begin():
             )
             assert login.status_code == 201 and login.json()["user"]["capabilities"] == []
             client.headers["X-CSRF-Token"] = login.json()["csrf_token"]
+            with (
+                httpx.Client(
+                    base_url=origin,
+                    verify=str(secret_dir / "tls_cert"),
+                    headers={"Origin": origin},
+                    timeout=15,
+                    trust_env=False,
+                ) as link_client,
+                httpx.Client(
+                    base_url=origin,
+                    verify=str(secret_dir / "tls_cert"),
+                    headers={"Origin": origin},
+                    timeout=15,
+                    trust_env=False,
+                ) as configuration_client,
+            ):
+                for target, body in (
+                    (link_client, link_login),
+                    (configuration_client, {"email": "admin@example.test", "password": password}),
+                ):
+                    fresh = target.post("/api/v1/auth/sessions", json=body)
+                    assert fresh.status_code == 201
+                    target.headers["X-CSRF-Token"] = fresh.json()["csrf_token"]
+                ticket_work_result = assert_ticket_work(
+                    link_client,
+                    ticket_work_proof,
+                    configuration_client=configuration_client,
+                    login_body=link_login,
+                )
+            projected_links = json.loads(
+                run(
+                    [
+                        *compose,
+                        "run",
+                        "--rm",
+                        "--no-deps",
+                        "-T",
+                        "migrate",
+                        "python",
+                        "-c",
+                        PROJECTION_COUNTS,
+                    ],
+                    data=json.dumps(ticket_work_result),
+                )
+            )
+            assert projected_links["projected_count_by_event"] == {
+                identifier: 1 for identifier in ticket_work_result["link_event_ids"]
+            }
+            assert (
+                projected_links["retained_link_pairs"]
+                == ticket_work_proof["before_recreation_link_pairs"]
+            )
+            (work / "ticket-work-proof.json").write_text(
+                json.dumps({**ticket_work_result, **projected_links}, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            print(
+                "Packaged ticket/work recreation, receipts and current-ACL history privacy passed."
+            )
             if args.files:
                 capture_current_file_author(client, file_proof)
                 prepare_packaged_incoming_files(

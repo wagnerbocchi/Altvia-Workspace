@@ -187,15 +187,22 @@ Alembic checks. API/events9a45874/correction657167d are independently approved
 after208 relevant native cases, two covering correction cases and native static/
 schema/repeated-generation checks, with no final skips/warnings. Both endpoints'
 current authority, two reviewed versions, protected unlink-after-relink replay,
-SQL history privacy and real concurrency/rollback are covered. Operate/browser
-and packaged relationship proof remain pending. A post-closure6dd5eb2 browser
+SQL history privacy and real concurrency/rollback are covered. Packaged
+relationship proof remains pending; reviewed browser delivery is recorded below. A post-closure6dd5eb2 browser
 run184/1 exposed an existing manager-
 pagination test oracle: it expected the first raw account even when not selectable.
 Correction9a3e225 has independent approval, frozen controlled RED/GREEN and5
 canonical project passes. Original failed-row metadata remains unknown. All old
 failures/limits are retained. All five prior exact5c0d423 hosted gates passed:
 1493 API/3 explicit native-console skips/no warnings,185 browser,both container
-jobs/source/image security. New API-source full hosted acceptance remains pending.
+jobs/source/image security. Exactbb45 API-source gates then all passed:1566 API/
+3 explicit skips/1 retained Pydantic limit-alias warning,185 browser,both container
+jobs/source/images. Panels2413417 now have independent source approval, visual
+ship,17 focused browser cases and17 complete ticket-module cases after a measured
+test-only capture split. Original52/53 failure and diagnostics remain retained;
+no deadline/retry/coverage weakening. Panel-source full hosted and packaged
+relationship recreation/current-ACL proof remain pending. Native runtime notices
+and the known Pydantic warning remain explicit hardening/runtime follow-ups.
 See docs/ticket-work-link-evidence.md for scope, archives and follow-through.
 No state synchronization, task creation, automation or unified My Work is implied.
 Retain a link-aware compatible API/worker; actual image rollback rehearsal and

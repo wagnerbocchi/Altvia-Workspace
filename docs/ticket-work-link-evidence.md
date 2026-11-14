@@ -1,11 +1,12 @@
 # Ticket/work link development evidence
 
-Updated2026-11-13. ADR0039 Tasks1/2 schema and protected API are implemented and
-independently reviewed atb4c31e5 and9a45874/657167d. The earlier exact5c0d423
-hosted gates all passed. Current API source has208 relevant native passes plus
-two covering passes for its generated-response correction; current full hosted
-acceptance remains pending. Operate panels, packaged relationship proof,
-whole-feature/MVP acceptance and final target qualification are not claimed.
+Updated2026-11-13. ADR0039 Tasks1-3 schema, protected API and Operate panels are
+implemented and independently reviewed atb4c31e5,9a45874/657167d and2413417.
+All five exactbb45df9 API-source hosted gates passed, including1566 API cases
+with3 explicit skips/1 retained warning and185 browser cases. Current panel
+source has native focused/contextual proof and independent visual disposition
+ship; its exact hosted gates, packaged relationship proof, whole-feature/MVP
+acceptance and final target qualification remain pending.
 
 ## Native schema slice
 
@@ -183,10 +184,89 @@ Writable private caches, corrected formatting and the accurate503/no-effects
 assertion preceded final passing checks. Controlled mutation failures and archive/
 transport preparation errors also remain preserved; none is counted green.
 
+## Exact API-source hosted acceptance
+
+All five workflows at bb45df99b6fa72954790f4ad52a52bce88ef9c72 passed:
+API43520920146, browser43520920226, containers43520920157, source43520920204
+and images43520920240. API1566 passed/3 explicit native-console skips/1 warning;
+browser185 passed and both container jobs passed. The warning is the previously
+observed Pydantic limit-alias warning in concurrent queue-access testing; its
+cause is not claimed fixed and remains an integrated-hardening follow-up.
+
+Root verified221 API/18 infrastructure/267 combined source hashes against that
+Git archive,16 API and314 combined successful commands, and66 infrastructure
+commands with only intentional negatives009/063. All complete logs have no error
+annotations. Seven nonempty hash-verified image reports contain no reported
+vulnerabilities;27 LOW SAST observations exactly match5c0, with no blocker or
+detected secret. Signed incoming2-file and6-object matching restore/current-ACL
+proof passed. These are incumbent proofs, not a new relationship recreation test.
+The279-entry CRC-verified archive SHA256 is
+80d24c2c3308bbde5dda0c1806a87db8da4dfead722e992c05bb3edc17abfff6.
+
+## Operate panels and browser recovery
+
+Source2413417102fd5a505fae31ff62af80282592d91b adds real reciprocal panels,
+generated-type transport and dedicated synthetic role fixtures. Ticket detail
+offers paged search/review/link/unlink; work detail offers reciprocal consultation
+and unlink. Both original versions/key survive uncertain replies. Known committed
+writes await fresh parents and relationship lists, then retry only reads if a
+refresh fails. Denied parents hide cached content while keeping generic recovery
+mounted. Session replacement disposes intent; parent edits and all file pickers
+respect child ownership. States, people and deadlines remain independent.
+
+| Native scope | Result and limit |
+| --- | --- |
+| Focused actual browser/API relationships |17 passed; paired replay, acknowledgment/read errors, two-version conflict, current ACL, session disposal, paging, terminal independence and keyboard/axe |
+| Static/build |Fixture Ruff/format, web check/build passed with unchanged frozen inputs |
+| Original five affected modules |52/53 passed; one existing global30s capture-budget failure, retained as FAILED |
+| Unchanged isolated reproduction |Same case failed30.1s; source/input unchanged |
+| Resolving complete tickets module |17 passed after test-owner correction; all original functional assertions30s/retries0 plus six independent visual-state tests |
+| Independent source review |Spec pass/quality approved,0 Critical/Important; one deferred runtime-notice Minor |
+| Independent Impeccable finish |disposition: ship, no material visual fixes |
+
+The bounded timing diagnostic measured22.731s capture work versus6.839s functional/
+hook work inside the original30s case.18 Axe calls completed;17 screenshots
+completed cleanly and the next was interrupted. It did not reach all24 variants.
+Memory had no pressure/OOM; CPU pressure existed, so no absence of host contention
+is claimed. The responsible correction preserves the original lifecycle, keyboard,
+persistence, history and inbox assertions under30s and moves all six-state/four-
+variant Axe/overflow/capture work into independent real-state tests. The unchanged
+capture helper/paths and all later tests remain. Functional duration became6.8s;
+visual cases5.3-8.6s each. No timeout, retry, coverage or app optimization change.
+Unchanged focused/application and other affected-case evidence was reused; the
+old53-case failure is not relabeled a complete passing run.
+
+The builder inspected all28 new-feature captures at1440/390 in light/dark themes;
+root opened8, and the fresh finish reviewer inspected6 plus2 incumbent references.
+All24 newly separated incumbent state captures were also inspected. Two first
+desktop-light workflow/create images retain the old helper's scrolled fixed-rail
+framing; they are not clean top-viewport navigation proof. New-feature GREEN04
+captures supply that proof. The pinned Twenty world, DESIGN and sidecar remain;
+accurate surface documentation records the extension and existing freshness drift.
+
+Root verified all539 executed source files against2413417, seven staged code/
+test/fixture blobs,161 command/exported-stream records,14 helpers and56 screenshot
+hashes. The sole additional Git file is the surface brief. All782 members of nine
+safe archives match extracted proof and their native export hashes. Known cookies,
+derived CSRF, passwords and storage canaries were scanned; dynamic relogin tokens
+are not separately canaried, and their headers are never exported. One initial
+full inspect remains private; its exported projection is explicitly redacted and
+is not represented as original stdout. Two mistyped report checksums were corrected
+from bytes/native records, preserving the original report and correction audit.
+
+Primary focused archive SHA256:
+d587825b5c03415312cb06d08c7eab075857cf50b56326bae62a4f57b9abe460.
+Resolving contextual archive SHA256:
+b7985e2c4d401777b6492a90ac433b7045f2ae477cbea3c94cdcdf424d446216.
+Earlier missing-panel, search-oracle, focus-race and test-oracle failures remain
+preserved. All task services stopped, fixtures/evidence retained and SSH closed.
+Next standalone-launcher, isolated PG local-trust and Redis host-overcommit
+notices remain disclosed for concrete packaged/runtime disposition; no host or
+security policy changed to silence them.
+
 ## Remaining gates
 
-Observe current exact-source hosted workflows and continue the real Operate
-panels, browser recovery/accessibility/visual checks and packaged relationship
+Observe panel-source exact hosted workflows and implement packaged relationship
 recreation/current-ACL proof. Obtain independent task and whole-increment reviews.
 Link lifecycle remains independent; task creation/automation/unified My Work
 require the next contract. Passing native backend checks alone does not close

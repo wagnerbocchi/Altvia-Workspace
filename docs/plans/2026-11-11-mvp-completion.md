@@ -44,7 +44,7 @@ target-VM qualification follows development, not each slice.
 | Inbound mail | Restricted authorized triage, explicit verified sender/thread evidence, safe creation/append/reopen, no subject/From-only trust | Development/CI complete36e4642:1040 API/154 browser, all five gates; actual IMAPS/HTTPS/TLS reply/append/reopen/alias/privacy/recreation; R1 proof gap corrected/re-reviewed; MIME files follow the private-files stage; final target deferred |
 | Private files | Private object storage, bounded streaming, fail-closed scanning, authorized ticket/work links and downloads | Staff-file core development/CI completec12d6e1:1266 API/3 explicit native skips,175 browser,both packaged/security jobs; actual signed scanner/MIME/privacy/recreation/4-object matching restore; independent reviews accepted; final target deferred |
 | Incoming files | Concrete immutable case-owned files, owner extraction/publication, current scoped triage/conversation/download | Accepted62dbeeb:1469 API/3 explicit skips/1 warning,185 browser,all five gates;new signed incoming and6-object matching restore;whole-increment review0 actionable findings. Earlier SMTP failure retained,original cause unknown |
-| Ticket/work links | Same-client N:N authorization of both endpoints, independent state, real browser links | ADR0039 schema b4c31e5 and API9a45874/657167d independently approved;208 native passes plus2 covering correction cases; exact prior5c0 hosted1493 API/3 explicit skips,185 browser/all gates passed; current hosted, new UI and packaged relationship proof pending |
+| Ticket/work links | Same-client N:N authorization of both endpoints, independent state, real browser links | ADR0039 schema/API/panels2413417 independently approved;17 focused browser and17 resolving ticket-module passes, visual ship; API-source exactbb45 hosted1566 API/3 explicit skips/1 retained warning,185 browser/all gates passed; panel-source hosted and packaged relationship proof pending |
 | Automation/unified work | Structured durable rules, idempotent assignment/reopen/race behavior, visible failures, consolidated scoped My Work | Pending |
 | SLA | Versioned configurable calendars/holidays/timezone/pause/reopen, first accepted public response and resolution/breach proof | Pending; actual policy Q07 |
 | Analytics | Authorized real overview/team/client/project/assignee metrics, explicit reference date, pagination and reconciliation | Pending |
@@ -56,6 +56,12 @@ Notifications/time tracking/export remain P1 after the core MVP; advanced planni
 portal, mobile, AI/search engines and billing stay outside this completion scope.
 
 ## Boundaries while answers are pending
+
+Native-output follow-ups: retain and diagnose the previously observed Pydantic
+limit-alias warning. Compare the browser standalone-launcher, private PG initdb
+and Redis overcommit notices with actual packaged startup in Task4, then integrated
+hardening. Do not alter host/security settings merely to hide output. These remain
+explicit operational limitations, not new browser authorization failures.
 
 Private-file Task5 follow-up2026-11-13: whole-increment source approved, with
 consolidated correction133e163 and22 covering passes. Exact6d620f2 passed1244 API/

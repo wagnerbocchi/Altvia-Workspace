@@ -7,8 +7,11 @@ await answers. This does not authorize production deployment or real data import
 ## Current authorized development scope
 
 Latest user continuation resumes the remaining MVP after the accepted redesign.
-The staff-file core is accepted atc12d6e1 and incoming files at62dbeeb. Next are
-same-client ticket/work links and the remaining ordered stages in
+Staff/incoming files, same-client links, unified work, assignment automation and
+SLA are development accepted; SLA's final source isd040b04 with all five hosted
+gates,1900 API/3 explicit skips,234 browser,both Container jobs and seven nonempty
+zero-vulnerability image inventories. Next are analytics under ADR0043, the
+guarded importer and integrated hardening in
 docs/plans/2026-11-11-mvp-completion.md.
 Use the established Twenty-inspired Operate interface. The earlier stop-before-
 design boundary is superseded. Keep local/CI validation per slice and final
@@ -146,7 +149,11 @@ the helper cgroup; helper-only healthcheck isolation retained daemon checks and
 256MiB limits.1455 samples across18 containers recorded zero OOM kills afterward.
 All shipped inputs match that native snapshot; a later host-proof readiness wait
 must still pass in final hosted Container jobs. Final hosted capability acceptance
-is pending; no whole-SLA or final target completion claim.
+has now passed atd040b04:1900 API/3 explicit skips,234 browser,both Container jobs,
+0 blocking source findings and seven nonempty zero-vulnerability inventories.
+Both final packaged SLA artifacts retain2 acceptances/3 once-only projected events.
+SLA development is accepted; Q07 real policy, integrated recovery and final target
+qualification remain separate. See ticket-sla-evidence.md for exact IDs/limits.
 
 ADR0043 selects the next read-only management analytics increment: real overview,
 paged principal workload and bounded permitted-context choices, with native

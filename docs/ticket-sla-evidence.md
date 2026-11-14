@@ -1,13 +1,45 @@
 # Ticket SLA development evidence
 
 ADR0042 and docs/plans/2026-11-14-ticket-sla.md define the selected contract.
-SLA capability is not complete. Task1 calendar arithmetic and Task2's persisted
+SLA development capability is accepted at source commitd040b04. Task1 calendar arithmetic and Task2's persisted
 configuration APIs have development evidence below. Task3 native cycles, evaluator,
 accepted-response capture and outcome API are implemented with native development
 evidence below. Task4's real browser interface and two review corrections have
-passing evidence below. Task5's native packaged development proof now passes;
-exact final hosted capability acceptance remains pending. No hours, holidays or targets are
+passing evidence below. Task5's native packaged proof and all exact-source hosted
+gates pass. No hours, holidays or targets are
 configured for Altvia.
+
+## Final hosted acceptance
+
+All five source-producing d040b04aa8fbeaf3de6b8fc902d27338b821f4cd workflows passed:
+
+- [API43599790320](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43599790320):
+  1900 passed/3 explicit scanner-console skips,1217.11s. JUnit1903 has0 failures/
+  errors; the skips require an explicitly supplied prebuilt pinned ClamAV image.
+  Real signed-S3 verification, package build, upload and cleanup steps passed.
+- [Browser43599790291](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43599790291):
+  all234 cases passed in10.1m, including the category and automation focus fixes.
+- [Container43599790269](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43599790269):
+  both api-runtime/private-file-runtime jobs passed. Both exported SLA proofs
+  contain2 acceptance facts/3 events, each projected once, with every synthetic
+  lifecycle/recreation/correction assertion true. These final commands include
+  the stronger daemon health wait absent from the earlier native snapshot.
+- [Source43599790273](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43599790273):
+  SAST and secret summaries report0 blocking findings; no ignore was added.
+- [Images43599790302](https://github.com/wagnerbocchi/Altvia-Workspace/actions/runs/43599790302):
+  all7 nonempty inventories have0 reported vulnerabilities. API72, ClamAV38,
+  ingress70, PostgreSQL49, Redis16, storage107 and web43 package records. The
+  manifest passed against database SHA256
+  39f64e2ce29dba2cab51984a7975b0c3fe9cdef5905b6f4bf43ba0019271005a.
+
+Full run metadata/logs, JUnit, both packaged artifacts, source summaries and all
+exact-ID image reports were downloaded and inspected privately in ci-d040b04.
+No overlapping test cohorts are added together. Earlier22f22d4's two obsolete
+browser adjacency failures and all installed diagnostic failures remain retained.
+This accepts only the real development capability. Q07 company policy, real
+provider configuration, integrated rollback/encrypted restore, production/pilot
+and final consolidated x86-64-v1 qualification remain separate. Continue analytics
+and guarded importer development; no production activation or real import.
 
 ## Installed SLA acceptance
 
@@ -42,8 +74,8 @@ Five actual native image identities were retained:
 All shipped image/build/configuration inputs still match the passing snapshot.
 Only documentation and a stronger host-proof --wait health condition
 changed afterward; that later fixture condition must pass in final exact-source
-hosted Container jobs. It is not claimed to have run in packaged05. The seven
-hosted image scans and final consolidated target qualification remain separate;
+hosted Container jobs; both have now passed. It is not claimed to have run in
+packaged05. The seven hosted image scans and final consolidated target qualification remain separate;
 no scan result from a different image ID is attributed to these native images.
 
 ## Whole-increment review correction
@@ -71,7 +103,8 @@ category-pagination views at1440/390 in light/dark. The four new views were open
 and inspected. The earlier full Impeccable verdict remains scoped to its two
 visual findings; this source-review correction has its own RED/GREEN proof and
 does not claim a repeated complete visual review. Packaged/hosted acceptance and
-final target qualification remain separate gates.
+final target qualification remain separate gates. The later hosted acceptance
+above closes the development gates without repeating a full visual review.
 
 ## Installed-proof diagnostics and harness correction
 

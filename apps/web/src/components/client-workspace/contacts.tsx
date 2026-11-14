@@ -23,9 +23,12 @@ const schema = z.object({ display_name: nameSchema.shape.name, email: emailSchem
 type Fields = z.infer<typeof schema>;
 const explanation = "Contatos sao pessoas externas deste cliente. O cadastro nao cria uma conta nem concede acesso. O e-mail permanece nao verificado.";
 function ContactFields({ form, disabled }: { form: UseFormReturn<Fields>; disabled: boolean }) {
-  useLayoutEffect(() => { form.setFocus("display_name"); }, [form]);
+  const name = useRef<HTMLInputElement>(null);
+  const { ref: registerName, ...nameField } = form.register("display_name");
+  // Focus during mount; a deferred form.setFocus can interrupt the next field.
+  useLayoutEffect(() => { name.current?.focus(); }, []);
   return <div className="account-form-grid">
-    <div><label htmlFor="contact-name">Nome do contato</label><input id="contact-name" maxLength={300} {...form.register("display_name")} disabled={disabled} aria-invalid={!!form.formState.errors.display_name} aria-describedby="contact-name-error" />
+    <div><label htmlFor="contact-name">Nome do contato</label><input id="contact-name" maxLength={300} {...nameField} ref={node => { registerName(node); name.current = node; }} disabled={disabled} aria-invalid={!!form.formState.errors.display_name} aria-describedby="contact-name-error" />
       <p id="contact-name-error" className="field-error">{form.formState.errors.display_name?.message}</p></div>
     <div><label htmlFor="contact-email">E-mail do contato</label><input id="contact-email" type="email" autoCapitalize="none" maxLength={254} {...form.register("email")} disabled={disabled} aria-invalid={!!form.formState.errors.email} aria-describedby="contact-email-error" />
       <p id="contact-email-error" className="field-error">{form.formState.errors.email?.message}</p></div>

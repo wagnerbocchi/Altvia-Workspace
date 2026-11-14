@@ -109,6 +109,29 @@ test("@contacts lost create reply retains original body and key through refresh"
   expect((await (await page.request.get(`/api/v1${path}/contacts?limit=100`)).json()).items.filter((item: { email_normalized: string }) => item.email_normalized === email)).toHaveLength(1);
 });
 
+test("@contacts opening contact fields focuses immediately without a pending timer stealing typed email", async ({ page }) => {
+  await login(page);
+  await page.goto(`${path}/contacts`);
+  const trigger = page.getByRole("button", { name: "Novo contato", exact: true });
+  await trigger.focus();
+  const now = new Date();
+  await page.clock.install({ time: now });
+  await page.clock.pauseAt(now);
+  await page.keyboard.press("Enter");
+  const name = page.getByLabel("Nome do contato", { exact: true });
+  const email = page.getByLabel("E-mail do contato", { exact: true });
+  await expect(name).toBeFocused();
+  await page.keyboard.type("Foco preservado");
+  await page.keyboard.press("Tab");
+  await expect(email).toBeFocused();
+  await page.clock.runFor(1);
+  await expect(email).toBeFocused();
+  await page.keyboard.type("focus@example.test");
+  await expect(name).toHaveValue("Foco preservado");
+  await expect(email).toHaveValue("focus@example.test");
+  await page.clock.resume();
+});
+
 test("@contacts stale contact and default edits require deliberate reload", async ({ page }) => {
   const csrf = await login(page);
   const receipt = await page.request.post(`/api/v1${path}/contacts`, { data: { display_name: "Conflito controlado", email: `conflict-${crypto.randomUUID()}@example.test` }, headers: headers(csrf) });

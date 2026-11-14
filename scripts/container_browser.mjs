@@ -106,6 +106,8 @@ try {
   assert.deepEqual((await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze()).violations, []);
   await capture("account-mobile.png");
   const navigate = async name => {
+    // Back links can resolve before the destination replaces the previous shell.
+    await expect(page.getByRole("heading", { name: "Minha conta", exact: true })).toBeFocused();
     const toggle = page.getByRole("button", { name: "Navegacao principal", exact: true });
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
     await toggle.click();
